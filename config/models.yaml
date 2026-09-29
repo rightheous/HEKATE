@@ -1,0 +1,3 @@
+version: "unconfigured"
+hekate: null # Pin a provider, model, limits, classification, and guard requirement.
+critic: null # Pin a provider, model, limits, classification, and guard requirement.

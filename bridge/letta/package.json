@@ -1,0 +1,11 @@
+{
+  "name": "@hekate/letta-bridge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
