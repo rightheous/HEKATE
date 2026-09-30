@@ -1,9 +1,9 @@
 import {
   LettaAgentClient,
-  type AnyAgentTool,
   type LettaCodeSession,
   type SDKMessage,
 } from "@letta-ai/letta-agent-sdk";
+import { readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import {
@@ -18,6 +18,7 @@ import {
   type RuntimeBinding,
   type SessionBinding,
 } from "./protocol.js";
+import { mergeUsageUpdate, normalizeUsageStatistics } from "./usage.js";
 
 interface SessionEntry {
   session: LettaCodeSession;
@@ -33,7 +34,7 @@ interface SessionEntry {
 }
 
 const MAX_FRAME_BYTES = 1_048_576;
-const enableToolBoundaryProbe = process.env.HEKATE_TOOL_BOUNDARY_PROBE === "1";
+const structuredOutputProbe = process.env.HEKATE_STRUCTURED_OUTPUT_PROBE === "1";
 const sessions = new Map<string, SessionEntry>();
 const appServerUrl = process.env.HEKATE_LETTA_URL;
 if (!appServerUrl) throw new Error("HEKATE_LETTA_URL is required");
@@ -46,6 +47,10 @@ const client = new LettaAgentClient({
     : {}),
   requestTimeoutMs: 30_000,
 });
+
+const positionCommitSchema = structuredOutputProbe
+  ? JSON.parse(readFileSync("/workspace/contracts/generated/position-commit.v1.schema.json", "utf8"))
+  : undefined;
 
 function matchesTag(tags: unknown, tag: string): boolean {
   return Array.isArray(tags) && tags.some((candidate) => candidate === tag);
@@ -76,6 +81,19 @@ function reply(command: Command, status: Reply["status"], result?: Record<string
   };
 }
 
+function summarizeUsage(message: SDKMessage): BridgeEvent["usage"] {
+  if (message.type !== "stream_event" || !message.event || typeof message.event !== "object") {
+    return { completeness: "UNKNOWN" };
+  }
+  return normalizeUsageStatistics(message.event);
+}
+
+function trustedOperationOtid(operationId: string, binding: SessionBinding): string {
+  const envelope = Buffer.from(JSON.stringify({ version: 1, operation_id: operationId, ...binding }))
+    .toString("base64url");
+  return `hekate:v1:${envelope}`;
+}
+
 function summarizeSdkMessage(
   message: SDKMessage,
   operationId: string,
@@ -83,13 +101,21 @@ function summarizeSdkMessage(
   index: number,
 ): BridgeEvent {
   const result = message.type === "result" ? message : undefined;
+  const streamEvent = message.type === "stream_event" && message.event && typeof message.event === "object"
+    ? message.event as Record<string, unknown>
+    : undefined;
+  const eventType = streamEvent?.message_type === "usage_statistics"
+    ? "usage_statistics"
+    : streamEvent?.message_type === "event_message" && streamEvent.event_type === "compaction"
+      ? "compaction"
+      : message.type;
   return {
     schema_version: "1",
     event_id: `${operationId}:${index}:${message.type}`,
     operation_id: operationId,
     binding,
-    event_type: message.type,
-    usage: { completeness: "UNKNOWN" },
+    event_type: eventType,
+    usage: summarizeUsage(message),
     ...(result?.errorCode ? { error_code: result.errorCode } : {}),
     ...(result ? { success: result.success } : {}),
   };
@@ -111,8 +137,21 @@ async function runTurn(
       };
       const event = summarizeSdkMessage(message, command.operation_id, binding, index++);
       encodeEvent(event);
-      entry.events.push(event);
+      const callId = event.usage.accounting_call_id;
+      const previousIndex = callId
+        ? entry.events.findIndex((candidate) => candidate.usage.accounting_call_id === callId)
+        : -1;
+      if (previousIndex >= 0) {
+        entry.events[previousIndex] = {
+          ...event,
+          usage: mergeUsageUpdate(entry.events[previousIndex].usage, event.usage),
+        };
+      } else {
+        entry.events.push(event);
+      }
       if (message.type === "result") {
+        // SDK 0.8.25 emits trailing usage before result, or after its 100 ms
+        // grace timeout when the App Server never sends usage.
         resultSeen = true;
         entry.turnState = message.success ? "COMPLETE" : "FAILED";
         break;
@@ -122,7 +161,9 @@ async function runTurn(
 
   try {
     const stream = consume();
-    await entry.session.send(command.message, { otid: command.operation_id });
+    await entry.session.send(command.message, {
+      otid: trustedOperationOtid(command.operation_id, command.binding),
+    });
     await stream;
     if (!resultSeen) entry.turnState = "FAILED";
   } catch (error) {
@@ -180,8 +221,8 @@ export async function routeCommand(command: Command): Promise<Reply> {
           provider_usage_by_call_id: false,
         },
         limitations: [
-          "Provider-call authorization is not exposed by the SDK; the probe uses an external fake-provider gate.",
-          "SDK events omit provider call IDs and complete token/cost usage; usage is reported UNKNOWN.",
+          "Provider-call authorization is enforced by the probe gateway using metadata emitted by its pinned runtime patch.",
+          "Runtime usage fields are forwarded when present; the stock SDK contract does not guarantee physical provider-call identity.",
         ],
       });
 
@@ -286,37 +327,19 @@ export async function routeCommand(command: Command): Promise<Reply> {
       const previous = sessions.get(command.binding.provider_agent_id);
       previous?.session.close();
       const toolStats = { executorCalls: 0, blockedAttempts: 0 };
-      const allowedClientTools = new Set<string>();
-      const blockedProbe: AnyAgentTool = {
-        label: "HEKATE denied tool probe",
-        name: "hekate_forbidden_probe",
-        description: "An inert tool used only to observe tool allowlist enforcement.",
-        parameters: { type: "object", properties: {}, additionalProperties: false },
-        execute: async () => {
-          toolStats.blockedAttempts += 1;
-          if (!allowedClientTools.has("hekate_forbidden_probe")) {
-            return {
-              content: [{ type: "text", text: "Denied by bridge executor allowlist." }],
-              isError: true,
-            };
-          }
-          toolStats.executorCalls += 1;
-          return { content: [{ type: "text", text: "No operation performed." }] };
-        },
-      };
       const session = client.createSession(command.binding.provider_agent_id, {
-        ...(enableToolBoundaryProbe
+        allowedTools: [],
+        toolset: { base: "none" as const },
+        tools: [],
+        ...(positionCommitSchema
           ? {
-              permissionMode: "unrestricted" as const,
-              allowedTools: ["hekate_forbidden_probe"],
-              toolset: { base: "default" as const },
-              tools: [blockedProbe],
+              outputFormat: {
+                type: "json_schema" as const,
+                schema: positionCommitSchema,
+                maxRetries: 0,
+              },
             }
-          : {
-              allowedTools: [],
-              toolset: { base: "none" as const },
-              tools: [],
-            }),
+          : {}),
       });
       const ready = await session.ready();
       const rawInfo = await session.sendCommand(

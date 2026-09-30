@@ -128,10 +128,13 @@ class TurnResult(ContractModel):
 
 class BridgeUsage(ContractModel):
     completeness: Literal["UNKNOWN", "PARTIAL", "COMPLETE"]
+    source: Literal["runtime_reported", "provider_reported", "runtime_estimated"] | None = None
+    accounting_call_id: str | None = None
     provider_call_id: str | None = None
     input_tokens: int | None = None
     output_tokens: int | None = None
-    cost_usd: float | None = None
+    total_tokens: int | None = None
+    cost_usd: str | None = None
 
 
 SdkErrorCode: TypeAlias = Literal[

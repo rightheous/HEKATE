@@ -302,6 +302,7 @@ def test_checked_in_schemas_match_the_generator(tmp_path) -> None:
     checked_in = Path(__file__).resolve().parents[2] / "contracts" / "generated"
     schemas = export_schemas()
     expected_files = {
+        "bridge.v1.schema.json",
         "task-capsule.v1.schema.json",
         "conclusion-capsule.v1.schema.json",
         "hekate-proposal.v1.schema.json",
@@ -310,12 +311,18 @@ def test_checked_in_schemas_match_the_generator(tmp_path) -> None:
     assert set(schemas) == expected_files
     assert set(report.schemas) == expected_files
     assert {path.name for path in checked_in.glob("*.json")} == expected_files
-    assert not (tmp_path / "bridge.v1.schema.json").exists()
+    assert (tmp_path / "bridge.v1.schema.json").exists()
 
     def assert_closed_objects(value: object) -> None:
         if isinstance(value, dict):
             if value.get("type") == "object":
-                assert value.get("additionalProperties") is False
+                open_maps = {
+                    "Model Settings": True,
+                    "Capabilities": {"type": "boolean"},
+                    "App Server Info": True,
+                }
+                expected = open_maps.get(value.get("title"), False)
+                assert value.get("additionalProperties") == expected
             for child in value.values():
                 assert_closed_objects(child)
         elif isinstance(value, list):
@@ -326,9 +333,14 @@ def test_checked_in_schemas_match_the_generator(tmp_path) -> None:
         assert (checked_in / filename).read_bytes() == (tmp_path / filename).read_bytes()
         generated = json.loads((tmp_path / filename).read_text(encoding="utf-8"))
         assert generated["$schema"] == "https://json-schema.org/draft/2020-12/schema"
-        assert generated["$comment"] == (
-            f"Parser enforces a {MAX_CONTRACT_BYTES}-byte UTF-8 JSON payload limit."
-        )
+        if filename == "bridge.v1.schema.json":
+            assert generated["$comment"] == (
+                "Private JSONL bridge contract. Frames are limited to 1 MiB by the transport."
+            )
+        else:
+            assert generated["$comment"] == (
+                f"Parser enforces a {MAX_CONTRACT_BYTES}-byte UTF-8 JSON payload limit."
+            )
         if generated.get("type") == "object":
             assert generated["additionalProperties"] is False
         assert_closed_objects(generated)

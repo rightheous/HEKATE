@@ -1,0 +1,293 @@
+diff --git a/src/backend/dev/pi-request-headers.ts b/src/backend/dev/pi-request-headers.ts
+index 38113a59..9f8a54b9 100644
+--- a/src/backend/dev/pi-request-headers.ts
++++ b/src/backend/dev/pi-request-headers.ts
+@@ -1,3 +1,77 @@
++export interface HekateOperationContext {
++  version: 1;
++  operation_id: string;
++  task_id: string;
++  attempt_id: string;
++  agent_registry_id: string;
++  provider_agent_id: string;
++  input_revision: number;
++  fence: number;
++  conversation_id: string;
++}
++
++export function decodeHekateOperationContext(
++  otid: string | null | undefined,
++): HekateOperationContext | undefined {
++  if (!otid?.startsWith("hekate:v1:")) return undefined;
++  try {
++    const value: unknown = JSON.parse(Buffer.from(otid.slice("hekate:v1:".length), "base64url").toString("utf8"));
++    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
++    const item = value as Record<string, unknown>;
++    if (
++      item.version !== 1 ||
++      typeof item.operation_id !== "string" ||
++      typeof item.task_id !== "string" ||
++      typeof item.attempt_id !== "string" ||
++      typeof item.agent_registry_id !== "string" ||
++      typeof item.provider_agent_id !== "string" ||
++      typeof item.input_revision !== "number" ||
++      !Number.isSafeInteger(item.input_revision) ||
++      typeof item.fence !== "number" ||
++      !Number.isSafeInteger(item.fence) ||
++      typeof item.conversation_id !== "string"
++    ) return undefined;
++    return item as unknown as HekateOperationContext;
++  } catch {
++    return undefined;
++  }
++}
++
++export function hekateProviderCallHeaders(input: {
++  otid: string | null | undefined;
++  agentId: string;
++  conversationId: string;
++  model: string;
++  maxOutputTokens?: number;
++  callKind: "turn" | "compaction";
++  accountingCallId: string;
++}): Record<string, string> {
++  const context = decodeHekateOperationContext(input.otid);
++  if (!context) {
++    if (process.env.HEKATE_REQUIRE_PROVIDER_BINDING === "1") {
++      throw new Error("HEKATE provider call missing trusted operation context");
++    }
++    return {};
++  }
++  if (context.provider_agent_id !== input.agentId || context.conversation_id !== input.conversationId) {
++    throw new Error("HEKATE provider call binding mismatch");
++  }
++  return {
++    "x-hekate-task-id": context.task_id,
++    "x-hekate-attempt-id": context.attempt_id,
++    "x-hekate-operation-id": context.operation_id,
++    "x-hekate-agent-registry-id": context.agent_registry_id,
++    "x-hekate-provider-agent-id": context.provider_agent_id,
++    "x-hekate-input-revision": String(context.input_revision),
++    "x-hekate-fence": String(context.fence),
++    "x-hekate-conversation-id": context.conversation_id,
++    "x-hekate-accounting-call-id": input.accountingCallId,
++    "x-hekate-call-kind": input.callKind,
++    "x-hekate-model": input.model,
++    "x-hekate-max-output-tokens": input.maxOutputTokens === undefined ? "" : String(input.maxOutputTokens),
++  };
++}
++
+ export function resolvePiRequestHeaders(input: {
+   provider: string;
+   configuredHeaders: Record<string, string> | undefined;
+diff --git a/src/backend/dev/pi-stream-adapter.ts b/src/backend/dev/pi-stream-adapter.ts
+index 334c67bf..49d253f8 100644
+--- a/src/backend/dev/pi-stream-adapter.ts
++++ b/src/backend/dev/pi-stream-adapter.ts
+@@ -1,3 +1,4 @@
++import { randomUUID } from "node:crypto";
+ import type {
+   AssistantMessage,
+   AssistantMessageEvent,
+@@ -38,7 +39,7 @@ import {
+   resolvePiModelForAgent,
+ } from "./pi-model-factory";
+ import { LocalPiModelsRuntime } from "./pi-models-runtime";
+-import { resolvePiRequestHeaders } from "./pi-request-headers";
++import { hekateProviderCallHeaders, resolvePiRequestHeaders } from "./pi-request-headers";
+ import { isPiModelOutputEvent } from "./pi-stream-output";
+ import type {
+   LlmEndErrorInfo,
+@@ -573,6 +574,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+ 
+   private async *streamOnce(
+     input: ProviderTurnInput,
++    operationOtid?: string,
+   ): AsyncIterable<ProviderStreamEvent> {
+     const tools = toPiTools(input.clientTools);
+     const localModel = await resolveAvailableLocalModelForTurn({
+@@ -609,11 +611,26 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+       input.agent.model,
+       resolved.model,
+     );
+-    const headers = resolvePiRequestHeaders({
++    const accountingCallId = randomUUID();
++    const configuredHeaders = resolvePiRequestHeaders({
+       provider: resolved.model.provider,
+       configuredHeaders: resolved.headers,
+       conversationId: input.conversationId,
+     });
++    const userOtid = operationOtid ??
++      [...input.uiMessages].reverse().find((message) => message.role === "user")?.otid;
++    const headers = {
++      ...configuredHeaders,
++      ...hekateProviderCallHeaders({
++        otid: userOtid,
++        agentId: input.agentId,
++        conversationId: input.conversationId,
++        model: resolved.model.id,
++        maxOutputTokens: maxTokensForSettings(input.agent.model_settings),
++        callKind: "turn",
++        accountingCallId,
++      }),
++    };
+     const options: SimpleStreamOptions & Record<string, unknown> = {
+       ...resolved.providerOptions,
+       ...(resolved.apiKey ? { apiKey: resolved.apiKey } : {}),
+@@ -723,7 +740,11 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+           finalLocalMessage = toLocalAssistantMessage(part.message, input);
+           yield providerLocalMessage(finalLocalMessage);
+         }
+-        yield providerStreamPart(part);
++        yield providerStreamPart(
++          part,
++          accountingCallId,
++          part.type === "done" ? part.message.responseId : undefined,
++        );
+       }
+ 
+       if (streamError) throw streamError;
+@@ -793,6 +814,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+   }
+ 
+   async *stream(input: ProviderTurnInput): AsyncIterable<ProviderStreamEvent> {
++    const operationOtid = [...input.uiMessages].reverse().find((message) => message.role === "user")?.otid;
+     let activeInput = input;
+     let preflightCompactionChecked = false;
+     let contextOverflowCompactions = 0;
+@@ -816,7 +838,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+       let emittedModelOutput = false;
+       let emittedLocalMessage = false;
+       try {
+-        for await (const event of this.streamOnce(activeInput)) {
++        for await (const event of this.streamOnce(activeInput, operationOtid)) {
+           if (isPiModelOutputEvent(event)) emittedModelOutput = true;
+           if (event.type === "local-message") emittedLocalMessage = true;
+           yield event;
+diff --git a/src/backend/dev/provider-turn-executor.ts b/src/backend/dev/provider-turn-executor.ts
+index b2ddd013..f2794b1d 100644
+--- a/src/backend/dev/provider-turn-executor.ts
++++ b/src/backend/dev/provider-turn-executor.ts
+@@ -79,15 +79,27 @@ export interface LlmEndInfo {
+ }
+ 
+ export type ProviderStreamEvent =
+-  | { type: "provider-part"; part: ProviderStreamPart }
++  | {
++      type: "provider-part";
++      part: ProviderStreamPart;
++      accounting_call_id?: string;
++      provider_call_id?: string;
++    }
+   | { type: "local-message"; message: LocalMessage }
+   | { type: "letta-chunk"; chunk: LettaStreamingResponse }
+   | { type: "error"; error: unknown };
+ 
+ export function providerStreamPart(
+   part: ProviderStreamPart,
++  accountingCallId?: string,
++  providerCallId?: string,
+ ): ProviderStreamEvent {
+-  return { type: "provider-part", part };
++  return {
++    type: "provider-part",
++    part,
++    ...(accountingCallId ? { accounting_call_id: accountingCallId } : {}),
++    ...(providerCallId ? { provider_call_id: providerCallId } : {}),
++  };
+ }
+ 
+ export function providerLocalMessage(
+@@ -303,6 +315,8 @@ export function estimateProviderRequestBytes(
+ function createUsageStatisticsChunk(
+   usage: Usage | undefined,
+   contextTokensEstimate?: number,
++  accountingCallId?: string,
++  providerCallId?: string,
+ ): LettaStreamingResponse | undefined {
+   const promptTokens = usage?.input;
+   const completionTokens = usage?.output;
+@@ -325,6 +339,8 @@ function createUsageStatisticsChunk(
+   }
+   return {
+     message_type: "usage_statistics",
++    ...(accountingCallId ? { accounting_call_id: accountingCallId } : {}),
++    ...(providerCallId ? { provider_call_id: providerCallId } : {}),
+     ...(promptTokens !== undefined ? { prompt_tokens: promptTokens } : {}),
+     ...(completionTokens !== undefined
+       ? { completion_tokens: completionTokens }
+@@ -454,7 +470,7 @@ function createProviderLettaStream(
+             continue;
+           }
+ 
+-          const { part } = event;
++          const { part, accounting_call_id, provider_call_id } = event;
+           if (part.type === "text_delta") {
+             const identity = identityForContentSegment(
+               assistantIdentities,
+@@ -511,6 +527,8 @@ function createProviderLettaStream(
+               const usageChunk = createUsageStatisticsChunk(
+                 part.message.usage,
+                 contextTokensEstimate,
++                accounting_call_id,
++                provider_call_id ?? part.message.responseId,
+               );
+               if (usageChunk) {
+                 sawUsageStatistics = true;
+diff --git a/src/backend/local/compaction.ts b/src/backend/local/compaction.ts
+index fa634595..dc7e4cc9 100644
+--- a/src/backend/local/compaction.ts
++++ b/src/backend/local/compaction.ts
+@@ -1,3 +1,4 @@
++import { randomUUID } from "node:crypto";
+ import type {
+   AssistantMessage,
+   Context,
+@@ -12,7 +13,7 @@ import {
+   resolvePiModelForAgent,
+ } from "@/backend/dev/pi-model-factory";
+ import { LocalPiModelsRuntime } from "@/backend/dev/pi-models-runtime";
+-import { resolvePiRequestHeaders } from "@/backend/dev/pi-request-headers";
++import { hekateProviderCallHeaders, resolvePiRequestHeaders } from "@/backend/dev/pi-request-headers";
+ import { estimateLocalMessagesTokens } from "@/backend/local/local-context-estimate";
+ import { isRecord } from "@/utils/type-guards";
+ import type { LocalMessage } from "./local-message";
+@@ -463,11 +464,27 @@ async function runGenerateText(
+     localModel.model,
+     resolved.model,
+   );
+-  const headers = resolvePiRequestHeaders({
++  const configuredHeaders = resolvePiRequestHeaders({
+     provider: resolved.model.provider,
+     configuredHeaders: resolved.headers,
+     conversationId: input.conversationId,
+   });
++  const accountingCallId = randomUUID();
++  const userOtid = [...input.messages].reverse().find((message) => message.role === "user")?.otid;
++  const headers = {
++    ...configuredHeaders,
++    ...hekateProviderCallHeaders({
++      otid: userOtid,
++      agentId: input.agent.id,
++      conversationId: input.conversationId,
++      model: resolved.model.id,
++      maxOutputTokens: typeof localModel.modelSettings.max_tokens === "number"
++        ? localModel.modelSettings.max_tokens
++        : undefined,
++      callKind: "compaction",
++      accountingCallId,
++    }),
++  };
+   const options: SimpleStreamOptions & Record<string, unknown> = {
+     ...resolved.providerOptions,
+     ...(resolved.apiKey ? { apiKey: resolved.apiKey } : {}),
+@@ -481,6 +498,9 @@ async function runGenerateText(
+     // those models reject with a 400 invalid_request_error — breaking every
+     // compaction (automatic and manual /compact).
+     ...(reasoning ? { reasoning } : {}),
++    ...(typeof localModel.modelSettings.max_tokens === "number"
++      ? { maxTokens: localModel.modelSettings.max_tokens }
++      : {}),
+     maxRetries: 0,
+     sessionId: input.conversationId,
+   };

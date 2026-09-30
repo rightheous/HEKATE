@@ -1,0 +1,1881 @@
+{
+  "estimated_real_provider_cost_usd": 0,
+  "evidence_artifact": "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json",
+  "executed_at": "2026-09-30T08:58:56Z",
+  "gates": {
+    "G1": {
+      "guarantees": [
+        "SDK 0.8.25 connected through remote App Server transport.",
+        "App Server runtime reported protocol 1 and Letta Code 0.33.8."
+      ],
+      "limitations": [
+        "Advertised capability flags are recorded as claims, not as end-to-end proofs."
+      ],
+      "runtime_test_status": "pass",
+      "source_status": "pass"
+    },
+    "G2": {
+      "guarantees": [
+        "A tagged probe agent was created, retrieved, and listed by owner plus creation tag.",
+        "The SDK provider agent ID remained distinct from the HEKATE registry ID."
+      ],
+      "limitations": [
+        "Creation-response-loss recovery is deferred to G3."
+      ],
+      "runtime_test_status": "pass",
+      "source_status": "pass"
+    },
+    "G5": {
+      "guarantees": [
+        "Provider tool lists were [] before close and [] after session reprepare; executor calls were 0 and 0.",
+        "No model-facing tools were observed before/after reprepare=True; the test model also returned a tool call absent from its offered list."
+      ],
+      "limitations": [
+        "The local probe covers the model-facing client tool list only; Bash, file/web, MCP and native subagent server surfaces were not individually invoked or audited."
+      ],
+      "runtime_test_status": "blocked",
+      "source_status": "pass"
+    },
+    "G6": {
+      "guarantees": [
+        "Normal provider call matched task/attempt/operation/agent/revision/fence and accounting ID: True; counts={'provider_requests': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}.",
+        "Cross-operation, binding, replay, expiry, model, output, missing-context and permit-provider-unavailable cases were blocked before provider=True.",
+        "500 retry counts={'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}; empty response counts={'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}; zero-permit counts={'provider_requests': 0, 'gateway_attempts': 1, 'permits_issued': 0, 'permits_consumed': 0, 'denied_attempts': 1}; compaction without its own permit was blocked=True; observed compaction counts={'provider_requests': 2, 'gateway_attempts': 2, 'permits_issued': 2, 'permits_consumed': 2, 'denied_attempts': 0}."
+      ],
+      "limitations": [
+        "This is an in-memory probe permit provider, not the production atomic budget ledger.",
+        "Coverage is limited to the observed local preflight compaction path and its following turn."
+      ],
+      "runtime_test_status": "pass",
+      "source_status": "pass"
+    },
+    "G7": {
+      "guarantees": [
+        "500 retry was denied before a second provider request=True; counts={'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}.",
+        "Position Commit schema-invalid response with SDK maxRetries=0 used exactly one provider request and produced structured_output_error=True; counts={'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}."
+      ],
+      "limitations": [
+        "Transport reconnect/resume was not exercised. Reopening a session or resending a message would be a new execution, not resume evidence.",
+        "The empty-response scenario ended after one request; no automatic retry was observed in this runtime path."
+      ],
+      "runtime_test_status": "blocked",
+      "source_status": "pass"
+    },
+    "G8": {
+      "guarantees": [
+        "Agent readback contained context_window_limit=16384 and max_tokens=64; fake provider observed model='hekate-fake-model', max_tokens=None, max_completion_tokens=64."
+      ],
+      "limitations": [
+        "hekate-fake-model has no tokenizer profile. context_window_limit is only an App Server setting and the fake provider request exposes no exact input-token count; under/over-bound probes cannot prove a hard input-token cap."
+      ],
+      "runtime_test_status": "blocked",
+      "source_status": "pass"
+    },
+    "G9": {
+      "guarantees": [
+        "The pinned Letta Code patch attaches a new trusted accounting_call_id and the provider responseId to each usage_statistics event.",
+        "Normal-turn fake fixture values and both IDs matched one normalized BridgeEvent=True; usage was not summed across events.",
+        "Per-call settlement rows=10; unsettled calls=3."
+      ],
+      "limitations": [
+        "The fixture is synthetic, not provider billing evidence. Compaction usage is not emitted as a bridge usage event; provider-error and any missing-usage calls remain unsettled. Live late/duplicate SDK events were not observed."
+      ],
+      "runtime_test_status": "blocked",
+      "source_status": "pass"
+    }
+  },
+  "observations": {
+    "agent_lifecycle": {
+      "compaction_agent_deleted_present": false,
+      "context_window_limit_setting": 16384,
+      "created_provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+      "deleted_present": false,
+      "listed": true,
+      "max_output_tokens_setting": 64,
+      "model": "openai-compatible/hekate-fake-model",
+      "post_delete_present": false,
+      "retrieved_present": true
+    },
+    "app_server_info": {
+      "backend": "local",
+      "capabilities": {
+        "agent_free_conversations": true,
+        "agent_management": true,
+        "conversation_management": true,
+        "launch_subagent": true,
+        "memory_management": true,
+        "runtime_external_tools_update": true,
+        "runtime_start": true,
+        "runtime_workspace_sandbox": true,
+        "split_channels": false,
+        "structured_outputs": false
+      },
+      "letta_code_version": "0.33.8",
+      "protocol_version": "1",
+      "structured_outputs": false
+    },
+    "compaction": {
+      "delta": {
+        "denied_attempts": 0,
+        "gateway_attempts": 2,
+        "permits_consumed": 2,
+        "permits_issued": 2,
+        "provider_requests": 2
+      },
+      "observed": true,
+      "operation_checks": [
+        {
+          "accounting_call_id": "b784ab5e-0075-414f-9ea8-d010e0518306",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-df8a3b1ff76a",
+            "attempt_id": "attempt-context-compaction",
+            "conversation_id": "local-conv-9",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-911b8ff5-a23b-4f37-8fd3-f153e685945f",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "compaction",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:context-compaction-turn",
+          "permit_id": "probe-permit-9",
+          "request_max_output_tokens": 1
+        },
+        {
+          "accounting_call_id": "dfa9afdf-c97d-4c99-bdd8-bc090c311f35",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-df8a3b1ff76a",
+            "attempt_id": "attempt-context-compaction",
+            "conversation_id": "local-conv-9",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-911b8ff5-a23b-4f37-8fd3-f153e685945f",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:context-compaction-turn",
+          "permit_id": "probe-permit-10",
+          "request_max_output_tokens": 1
+        }
+      ],
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "compaction",
+          "stream_event",
+          "assistant",
+          "usage_statistics",
+          "loop_status",
+          "result"
+        ],
+        "state": "COMPLETE",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "COMPLETE",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": [
+          {
+            "event_id": "p1-20260930T085856Z-c8fc25fd:context-compaction-turn:7:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "p1-20260930T085856Z-c8fc25fd:context-compaction-turn",
+            "usage": {
+              "accounting_call_id": "dfa9afdf-c97d-4c99-bdd8-bc090c311f35",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 2,
+              "provider_call_id": "fake-call-0009",
+              "source": "runtime_reported",
+              "total_tokens": 39
+            }
+          }
+        ]
+      },
+      "warmup": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "compaction",
+          "stream_event",
+          "assistant",
+          "usage_statistics",
+          "loop_status",
+          "result"
+        ],
+        "state": "COMPLETE",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "COMPLETE",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": [
+          {
+            "event_id": "p1-20260930T085856Z-c8fc25fd:compaction-warmup:9:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "p1-20260930T085856Z-c8fc25fd:compaction-warmup",
+            "usage": {
+              "accounting_call_id": "62395739-b2ef-46ba-bc74-5b2a324b56c3",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 2,
+              "provider_call_id": "fake-call-0007",
+              "source": "runtime_reported",
+              "total_tokens": 39
+            }
+          }
+        ]
+      }
+    },
+    "compaction_without_permit": {
+      "blocked_before_provider": true,
+      "checks": [
+        {
+          "accounting_call_id": "17c2f200-6531-4718-94cc-f17b624ad9eb",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-a0dcde6fe31d",
+            "attempt_id": "attempt-compaction-no-permit",
+            "conversation_id": "local-conv-8",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-911b8ff5-a23b-4f37-8fd3-f153e685945f",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "compaction",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:compaction-no-permit",
+          "reason": "call_kind_mismatch",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        }
+      ],
+      "delta": {
+        "denied_attempts": 1,
+        "gateway_attempts": 1,
+        "permits_consumed": 0,
+        "provider_requests": 0
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "error"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "error",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": []
+      }
+    },
+    "empty_response_retry": {
+      "delta": {
+        "denied_attempts": 0,
+        "gateway_attempts": 1,
+        "permits_consumed": 1,
+        "permits_issued": 1,
+        "provider_requests": 1
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "usage_statistics",
+          "loop_status",
+          "result"
+        ],
+        "state": "COMPLETE",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "COMPLETE",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": [
+          {
+            "event_id": "p1-20260930T085856Z-c8fc25fd:empty-turn:6:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "p1-20260930T085856Z-c8fc25fd:empty-turn",
+            "usage": {
+              "accounting_call_id": "b9346664-c2e7-4504-93a1-b0ac44b0ad5d",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 2,
+              "provider_call_id": "fake-call-0005",
+              "source": "runtime_reported",
+              "total_tokens": 39
+            }
+          }
+        ]
+      }
+    },
+    "fake_provider": {
+      "checks": [
+        {
+          "accounting_call_id": "da09db6a-c51e-4b3c-956e-5f19c4307d67",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-tool-boundary",
+            "conversation_id": "local-conv-2",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:tool-turn",
+          "permit_id": "probe-permit-1",
+          "request_max_output_tokens": 64
+        },
+        {
+          "accounting_call_id": "d54f58ad-80a0-4a7c-8841-423e7519a02b",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-tool-boundary",
+            "conversation_id": "local-conv-2",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:tool-turn",
+          "reason": "no_permit_for_operation",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "25d57c5a-b3a6-4e73-8f25-503e34dbb715",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-tool-boundary-reopened",
+            "conversation_id": "local-conv-3",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:tool-turn-reopened",
+          "permit_id": "probe-permit-2",
+          "request_max_output_tokens": 64
+        },
+        {
+          "accounting_call_id": "5a86f7a4-e579-4c43-97b3-4bb4f39d97a9",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-tool-boundary-reopened",
+            "conversation_id": "local-conv-3",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:tool-turn-reopened",
+          "reason": "no_permit_for_operation",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "21b4bcf2-8299-440d-87fe-e485c05134bc",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-normal-inference",
+            "conversation_id": "local-conv-4",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:normal-turn",
+          "permit_id": "probe-permit-3",
+          "request_max_output_tokens": 64
+        },
+        {
+          "accounting_call_id": "147e2c8b-9198-416e-ab6b-e533ad067d9f",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-provider-retry",
+            "conversation_id": "local-conv-5",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:retry-turn",
+          "permit_id": "probe-permit-4",
+          "request_max_output_tokens": 64
+        },
+        {
+          "accounting_call_id": "820f8797-9e1b-4d37-a198-2ed2356b0939",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-provider-retry",
+            "conversation_id": "local-conv-5",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:retry-turn",
+          "reason": "no_permit_for_operation",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "b9346664-c2e7-4504-93a1-b0ac44b0ad5d",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-empty-response-retry",
+            "conversation_id": "local-conv-6",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:empty-turn",
+          "permit_id": "probe-permit-5",
+          "request_max_output_tokens": 64
+        },
+        {
+          "accounting_call_id": "17c2f200-6531-4718-94cc-f17b624ad9eb",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-a0dcde6fe31d",
+            "attempt_id": "attempt-compaction-no-permit",
+            "conversation_id": "local-conv-8",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-911b8ff5-a23b-4f37-8fd3-f153e685945f",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "compaction",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:compaction-no-permit",
+          "reason": "call_kind_mismatch",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "a69061d5-85cf-470c-8632-68518616bfe5",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-df8a3b1ff76a",
+            "attempt_id": "attempt-context-compaction",
+            "conversation_id": "local-conv-9",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-911b8ff5-a23b-4f37-8fd3-f153e685945f",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "compaction",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:compaction-warmup",
+          "permit_id": "probe-permit-7",
+          "request_max_output_tokens": 64
+        },
+        {
+          "accounting_call_id": "62395739-b2ef-46ba-bc74-5b2a324b56c3",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-df8a3b1ff76a",
+            "attempt_id": "attempt-context-compaction",
+            "conversation_id": "local-conv-9",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-911b8ff5-a23b-4f37-8fd3-f153e685945f",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:compaction-warmup",
+          "permit_id": "probe-permit-8",
+          "request_max_output_tokens": 1
+        },
+        {
+          "accounting_call_id": "b784ab5e-0075-414f-9ea8-d010e0518306",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-df8a3b1ff76a",
+            "attempt_id": "attempt-context-compaction",
+            "conversation_id": "local-conv-9",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-911b8ff5-a23b-4f37-8fd3-f153e685945f",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "compaction",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:context-compaction-turn",
+          "permit_id": "probe-permit-9",
+          "request_max_output_tokens": 1
+        },
+        {
+          "accounting_call_id": "dfa9afdf-c97d-4c99-bdd8-bc090c311f35",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-df8a3b1ff76a",
+            "attempt_id": "attempt-context-compaction",
+            "conversation_id": "local-conv-9",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-911b8ff5-a23b-4f37-8fd3-f153e685945f",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:context-compaction-turn",
+          "permit_id": "probe-permit-10",
+          "request_max_output_tokens": 1
+        },
+        {
+          "accounting_call_id": "97f90b0c-4174-4906-9649-df25144be2cc",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-structured-output",
+            "conversation_id": "local-conv-10",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:structured-output-turn",
+          "permit_id": "probe-permit-11",
+          "request_max_output_tokens": 64
+        },
+        {
+          "accounting_call_id": "e7f4bd43-8050-4450-b6b3-d9dbb4c12ff8",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-5c84979f2bc1",
+            "attempt_id": "attempt-permit-denied",
+            "conversation_id": "local-conv-11",
+            "fence": 1,
+            "input_revision": 1,
+            "provider_agent_id": "agent-local-12011993-5a6c-4a50-b656-1a3369f4b03d",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-denied",
+          "reason": "no_permit_for_operation",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": null,
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": null,
+            "attempt_id": null,
+            "conversation_id": null,
+            "fence": -1,
+            "input_revision": -1,
+            "provider_agent_id": null,
+            "task_id": null
+          },
+          "call_kind": null,
+          "context_max_output_tokens": null,
+          "model": null,
+          "operation_id": null,
+          "reason": "missing_accounting_call_id",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "permit-cross-operation",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-permit-b",
+            "attempt_id": "attempt-b",
+            "conversation_id": "conversation-permit-b",
+            "fence": 7,
+            "input_revision": 2,
+            "provider_agent_id": "agent-permit-probe",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd-permit-b"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-b",
+          "reason": "no_permit_for_operation",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "permit-wrong-binding",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-permit-b",
+            "attempt_id": "attempt-b",
+            "conversation_id": "conversation-permit-b",
+            "fence": 7,
+            "input_revision": 2,
+            "provider_agent_id": "agent-permit-probe",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd-permit-b"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-a",
+          "reason": "binding_mismatch",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "permit-valid-call-1",
+          "authorized": true,
+          "binding": {
+            "agent_registry_id": "ha-permit-a",
+            "attempt_id": "attempt-a",
+            "conversation_id": "conversation-permit-a",
+            "fence": 7,
+            "input_revision": 2,
+            "provider_agent_id": "agent-permit-probe",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd-permit-a"
+          },
+          "call_kind": "turn",
+          "max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-a",
+          "permit_id": "probe-permit-12",
+          "request_max_output_tokens": 64
+        },
+        {
+          "accounting_call_id": "permit-valid-call-1",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-permit-a",
+            "attempt_id": "attempt-a",
+            "conversation_id": "conversation-permit-a",
+            "fence": 7,
+            "input_revision": 2,
+            "provider_agent_id": "agent-permit-probe",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd-permit-a"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-a",
+          "reason": "accounting_call_id_reused",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "permit-expired-call",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-permit-a",
+            "attempt_id": "attempt-a",
+            "conversation_id": "conversation-permit-a",
+            "fence": 7,
+            "input_revision": 2,
+            "provider_agent_id": "agent-permit-probe",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd-permit-a"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-expired",
+          "reason": "permit_expired",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "permit-output-call",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-permit-a",
+            "attempt_id": "attempt-a",
+            "conversation_id": "conversation-permit-a",
+            "fence": 7,
+            "input_revision": 2,
+            "provider_agent_id": "agent-permit-probe",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd-permit-a"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 128,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-output-mismatch",
+          "reason": "output_limit_mismatch",
+          "request_max_output_tokens": 128,
+          "request_model": "hekate-fake-model"
+        },
+        {
+          "accounting_call_id": "permit-model-call",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-permit-a",
+            "attempt_id": "attempt-a",
+            "conversation_id": "conversation-permit-a",
+            "fence": 7,
+            "input_revision": 2,
+            "provider_agent_id": "agent-permit-probe",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd-permit-a"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "other-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-model-mismatch",
+          "reason": "model_mismatch",
+          "request_max_output_tokens": 64,
+          "request_model": "other-model"
+        },
+        {
+          "accounting_call_id": "permit-unavailable-call",
+          "authorized": false,
+          "binding": {
+            "agent_registry_id": "ha-permit-a",
+            "attempt_id": "attempt-a",
+            "conversation_id": "conversation-permit-a",
+            "fence": 7,
+            "input_revision": 2,
+            "provider_agent_id": "agent-permit-probe",
+            "task_id": "task-p1-20260930T085856Z-c8fc25fd-permit-a"
+          },
+          "call_kind": "turn",
+          "context_max_output_tokens": 64,
+          "model": "hekate-fake-model",
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:permit-provider-unavailable",
+          "reason": "permit_provider_unavailable",
+          "request_max_output_tokens": 64,
+          "request_model": "hekate-fake-model"
+        }
+      ],
+      "denied_attempts": 13,
+      "gateway_attempts": 24,
+      "model_discovery_count": 2,
+      "model_requests": [
+        {
+          "accounting_call_id": "da09db6a-c51e-4b3c-956e-5f19c4307d67",
+          "behavior": "tool_call",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0001",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 1,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "25d57c5a-b3a6-4e73-8f25-503e34dbb715",
+          "behavior": "tool_call",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0002",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 2,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "21b4bcf2-8299-440d-87fe-e485c05134bc",
+          "behavior": "normal",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0003",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 3,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "147e2c8b-9198-416e-ab6b-e533ad067d9f",
+          "behavior": "error",
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0004",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 4,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "b9346664-c2e7-4504-93a1-b0ac44b0ad5d",
+          "behavior": "empty",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0005",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 5,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "a69061d5-85cf-470c-8632-68518616bfe5",
+          "behavior": "normal",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0006",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 6,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "62395739-b2ef-46ba-bc74-5b2a324b56c3",
+          "behavior": "normal",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 1,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0007",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 7,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "b784ab5e-0075-414f-9ea8-d010e0518306",
+          "behavior": "normal",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 1,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0008",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 8,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "dfa9afdf-c97d-4c99-bdd8-bc090c311f35",
+          "behavior": "normal",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 1,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0009",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options"
+          ],
+          "sequence": 9,
+          "stream": true,
+          "tool_names": []
+        },
+        {
+          "accounting_call_id": "97f90b0c-4174-4906-9649-df25144be2cc",
+          "behavior": "invalid_schema",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0010",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "store",
+            "stream",
+            "stream_options",
+            "tools"
+          ],
+          "sequence": 10,
+          "stream": true,
+          "tool_names": [
+            "StructuredOutput"
+          ]
+        },
+        {
+          "accounting_call_id": "permit-valid-call-1",
+          "behavior": "normal",
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_response_id": "fake-call-0011",
+          "request_header_names": [
+            "accept-encoding",
+            "connection",
+            "content-length",
+            "content-type",
+            "host",
+            "user-agent",
+            "x-hekate-accounting-call-id"
+          ],
+          "request_keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "stream"
+          ],
+          "sequence": 11,
+          "stream": false,
+          "tool_names": []
+        }
+      ],
+      "pending_operation_ids": [
+        "p1-20260930T085856Z-c8fc25fd:compaction-no-permit",
+        "p1-20260930T085856Z-c8fc25fd:permit-expired",
+        "p1-20260930T085856Z-c8fc25fd:permit-model-mismatch",
+        "p1-20260930T085856Z-c8fc25fd:permit-output-mismatch",
+        "p1-20260930T085856Z-c8fc25fd:permit-provider-unavailable"
+      ],
+      "permits_consumed": 11,
+      "permits_issued": 16,
+      "provider_request_count": 11
+    },
+    "hello": {
+      "backend": "remote",
+      "capabilities": {
+        "agent_create": true,
+        "agent_delete": true,
+        "agent_get": true,
+        "agent_list": true,
+        "event_collection": true,
+        "pre_provider_call": false,
+        "provider_usage_by_call_id": false,
+        "session_prepare": true,
+        "session_turn": true
+      },
+      "kind": "capabilities",
+      "limitations": [
+        "Provider-call authorization is enforced by the probe gateway using metadata emitted by its pinned runtime patch.",
+        "Runtime usage fields are forwarded when present; the stock SDK contract does not guarantee physical provider-call identity."
+      ],
+      "protocol_version": "1",
+      "sdk_version": "0.8.25"
+    },
+    "input_limit_profile": {
+      "app_server_context_window_limit": 16384,
+      "exact_token_cap_test": "not_run_no_tokenizer_profile",
+      "model": "hekate-fake-model",
+      "tokenizer_profile": null
+    },
+    "network_internal": true,
+    "node_version": "22.19.0",
+    "normal_turn": {
+      "delta": {
+        "denied_attempts": 0,
+        "permits_consumed": 1,
+        "permits_issued": 1,
+        "provider_requests": 1
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "assistant",
+          "usage_statistics",
+          "loop_status",
+          "result"
+        ],
+        "state": "COMPLETE",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "COMPLETE",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": [
+          {
+            "event_id": "p1-20260930T085856Z-c8fc25fd:normal-turn:7:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "p1-20260930T085856Z-c8fc25fd:normal-turn",
+            "usage": {
+              "accounting_call_id": "21b4bcf2-8299-440d-87fe-e485c05134bc",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 2,
+              "provider_call_id": "fake-call-0003",
+              "source": "runtime_reported",
+              "total_tokens": 39
+            }
+          }
+        ]
+      }
+    },
+    "permit_binding_negative_tests": {
+      "all_denials_prevented_forwarding": true,
+      "background_without_operation": {
+        "blocked_before_provider": true,
+        "status": 402
+      },
+      "cross_operation": {
+        "blocked_before_provider": true,
+        "status": 402
+      },
+      "expired": {
+        "blocked_before_provider": true,
+        "status": 402
+      },
+      "model_mismatch": {
+        "blocked_before_provider": true,
+        "status": 402
+      },
+      "output_mismatch": {
+        "blocked_before_provider": true,
+        "status": 402
+      },
+      "permit_provider_unavailable": {
+        "blocked_before_provider": true,
+        "status": 402
+      },
+      "replay": {
+        "blocked_before_provider": true,
+        "status": 402
+      },
+      "valid_call": {
+        "provider_requests": 1,
+        "status": 200
+      },
+      "wrong_binding": {
+        "blocked_before_provider": true,
+        "status": 402
+      }
+    },
+    "provider_error_retry": {
+      "delta": {
+        "denied_attempts": 1,
+        "gateway_attempts": 2,
+        "permits_consumed": 1,
+        "permits_issued": 1,
+        "provider_requests": 1
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "error"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "stream_event",
+          "error",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": []
+      }
+    },
+    "structured_output": {
+      "delta": {
+        "denied_attempts": 0,
+        "gateway_attempts": 1,
+        "permits_consumed": 1,
+        "permits_issued": 1,
+        "provider_requests": 1
+      },
+      "schema": "Position Commit v1",
+      "sdk_max_retries": 0,
+      "test_pass": true,
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "structured_output_error"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "assistant",
+          "usage_statistics",
+          "loop_status",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "COMPLETE",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": [
+          {
+            "event_id": "p1-20260930T085856Z-c8fc25fd:structured-output-turn:7:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "p1-20260930T085856Z-c8fc25fd:structured-output-turn",
+            "usage": {
+              "accounting_call_id": "97f90b0c-4174-4906-9649-df25144be2cc",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 2,
+              "provider_call_id": "fake-call-0010",
+              "source": "runtime_reported",
+              "total_tokens": 39
+            }
+          }
+        ]
+      }
+    },
+    "tool_boundary": {
+      "provider_request_count": 1,
+      "provider_tool_names": [],
+      "reprepared_agent_tools": [],
+      "reprepared_provider_tool_names": [],
+      "reprepared_turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "approval_conflict"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "tool_call",
+          "usage_statistics",
+          "stream_event",
+          "loop_status",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "COMPLETE",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": [
+          {
+            "event_id": "p1-20260930T085856Z-c8fc25fd:tool-turn-reopened:7:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "p1-20260930T085856Z-c8fc25fd:tool-turn-reopened",
+            "usage": {
+              "accounting_call_id": "25d57c5a-b3a6-4e73-8f25-503e34dbb715",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 2,
+              "provider_call_id": "fake-call-0002",
+              "source": "runtime_reported",
+              "total_tokens": 39
+            }
+          }
+        ]
+      },
+      "session_ready_agent_tools": [],
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "approval_conflict"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "tool_call",
+          "usage_statistics",
+          "stream_event",
+          "loop_status",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "COMPLETE",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": [
+          {
+            "event_id": "p1-20260930T085856Z-c8fc25fd:tool-turn:7:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "p1-20260930T085856Z-c8fc25fd:tool-turn",
+            "usage": {
+              "accounting_call_id": "da09db6a-c51e-4b3c-956e-5f19c4307d67",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 2,
+              "provider_call_id": "fake-call-0001",
+              "source": "runtime_reported",
+              "total_tokens": 39
+            }
+          }
+        ]
+      }
+    },
+    "usage_reconciliation": {
+      "all_reported_usage_matched": false,
+      "calls": [
+        {
+          "accounting_call_id": "da09db6a-c51e-4b3c-956e-5f19c4307d67",
+          "bridge_usage": {
+            "accounting_call_id": "da09db6a-c51e-4b3c-956e-5f19c4307d67",
+            "completeness": "COMPLETE",
+            "cost_usd": null,
+            "input_tokens": 37,
+            "output_tokens": 2,
+            "provider_call_id": "fake-call-0001",
+            "source": "runtime_reported",
+            "total_tokens": 39
+          },
+          "call_kind": "turn",
+          "duplicate_usage_events": 1,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:tool-turn",
+          "provider_response_id": "fake-call-0001",
+          "settlement": "MATCHED"
+        },
+        {
+          "accounting_call_id": "25d57c5a-b3a6-4e73-8f25-503e34dbb715",
+          "bridge_usage": {
+            "accounting_call_id": "25d57c5a-b3a6-4e73-8f25-503e34dbb715",
+            "completeness": "COMPLETE",
+            "cost_usd": null,
+            "input_tokens": 37,
+            "output_tokens": 2,
+            "provider_call_id": "fake-call-0002",
+            "source": "runtime_reported",
+            "total_tokens": 39
+          },
+          "call_kind": "turn",
+          "duplicate_usage_events": 1,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:tool-turn-reopened",
+          "provider_response_id": "fake-call-0002",
+          "settlement": "MATCHED"
+        },
+        {
+          "accounting_call_id": "21b4bcf2-8299-440d-87fe-e485c05134bc",
+          "bridge_usage": {
+            "accounting_call_id": "21b4bcf2-8299-440d-87fe-e485c05134bc",
+            "completeness": "COMPLETE",
+            "cost_usd": null,
+            "input_tokens": 37,
+            "output_tokens": 2,
+            "provider_call_id": "fake-call-0003",
+            "source": "runtime_reported",
+            "total_tokens": 39
+          },
+          "call_kind": "turn",
+          "duplicate_usage_events": 1,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:normal-turn",
+          "provider_response_id": "fake-call-0003",
+          "settlement": "MATCHED"
+        },
+        {
+          "accounting_call_id": "147e2c8b-9198-416e-ab6b-e533ad067d9f",
+          "bridge_usage": null,
+          "call_kind": "turn",
+          "duplicate_usage_events": 0,
+          "fake_usage_fixture": null,
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:retry-turn",
+          "provider_response_id": "fake-call-0004",
+          "settlement": "UNSETTLED"
+        },
+        {
+          "accounting_call_id": "b9346664-c2e7-4504-93a1-b0ac44b0ad5d",
+          "bridge_usage": {
+            "accounting_call_id": "b9346664-c2e7-4504-93a1-b0ac44b0ad5d",
+            "completeness": "COMPLETE",
+            "cost_usd": null,
+            "input_tokens": 37,
+            "output_tokens": 2,
+            "provider_call_id": "fake-call-0005",
+            "source": "runtime_reported",
+            "total_tokens": 39
+          },
+          "call_kind": "turn",
+          "duplicate_usage_events": 1,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:empty-turn",
+          "provider_response_id": "fake-call-0005",
+          "settlement": "MATCHED"
+        },
+        {
+          "accounting_call_id": "a69061d5-85cf-470c-8632-68518616bfe5",
+          "bridge_usage": null,
+          "call_kind": "compaction",
+          "duplicate_usage_events": 0,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:compaction-warmup",
+          "provider_response_id": "fake-call-0006",
+          "settlement": "UNSETTLED"
+        },
+        {
+          "accounting_call_id": "62395739-b2ef-46ba-bc74-5b2a324b56c3",
+          "bridge_usage": {
+            "accounting_call_id": "62395739-b2ef-46ba-bc74-5b2a324b56c3",
+            "completeness": "COMPLETE",
+            "cost_usd": null,
+            "input_tokens": 37,
+            "output_tokens": 2,
+            "provider_call_id": "fake-call-0007",
+            "source": "runtime_reported",
+            "total_tokens": 39
+          },
+          "call_kind": "turn",
+          "duplicate_usage_events": 1,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:compaction-warmup",
+          "provider_response_id": "fake-call-0007",
+          "settlement": "MATCHED"
+        },
+        {
+          "accounting_call_id": "b784ab5e-0075-414f-9ea8-d010e0518306",
+          "bridge_usage": null,
+          "call_kind": "compaction",
+          "duplicate_usage_events": 0,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:context-compaction-turn",
+          "provider_response_id": "fake-call-0008",
+          "settlement": "UNSETTLED"
+        },
+        {
+          "accounting_call_id": "dfa9afdf-c97d-4c99-bdd8-bc090c311f35",
+          "bridge_usage": {
+            "accounting_call_id": "dfa9afdf-c97d-4c99-bdd8-bc090c311f35",
+            "completeness": "COMPLETE",
+            "cost_usd": null,
+            "input_tokens": 37,
+            "output_tokens": 2,
+            "provider_call_id": "fake-call-0009",
+            "source": "runtime_reported",
+            "total_tokens": 39
+          },
+          "call_kind": "turn",
+          "duplicate_usage_events": 1,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:context-compaction-turn",
+          "provider_response_id": "fake-call-0009",
+          "settlement": "MATCHED"
+        },
+        {
+          "accounting_call_id": "97f90b0c-4174-4906-9649-df25144be2cc",
+          "bridge_usage": {
+            "accounting_call_id": "97f90b0c-4174-4906-9649-df25144be2cc",
+            "completeness": "COMPLETE",
+            "cost_usd": null,
+            "input_tokens": 37,
+            "output_tokens": 2,
+            "provider_call_id": "fake-call-0010",
+            "source": "runtime_reported",
+            "total_tokens": 39
+          },
+          "call_kind": "turn",
+          "duplicate_usage_events": 1,
+          "fake_usage_fixture": {
+            "completion_tokens": 2,
+            "prompt_tokens": 37,
+            "total_tokens": 39
+          },
+          "operation_id": "p1-20260930T085856Z-c8fc25fd:structured-output-turn",
+          "provider_response_id": "fake-call-0010",
+          "settlement": "MATCHED"
+        }
+      ],
+      "fixture_is_synthetic": true,
+      "provider_usage_fixture": {
+        "completion_tokens": 2,
+        "prompt_tokens": 37,
+        "total_tokens": 39
+      },
+      "unsettled_call_count": 3,
+      "usage_duplicate_counts": {
+        "21b4bcf2-8299-440d-87fe-e485c05134bc": 1,
+        "25d57c5a-b3a6-4e73-8f25-503e34dbb715": 1,
+        "62395739-b2ef-46ba-bc74-5b2a324b56c3": 1,
+        "97f90b0c-4174-4906-9649-df25144be2cc": 1,
+        "b9346664-c2e7-4504-93a1-b0ac44b0ad5d": 1,
+        "da09db6a-c51e-4b3c-956e-5f19c4307d67": 1,
+        "dfa9afdf-c97d-4c99-bdd8-bc090c311f35": 1
+      }
+    },
+    "zero_permit_turn": {
+      "delta": {
+        "denied_attempts": 1,
+        "gateway_attempts": 1,
+        "permits_consumed": 0,
+        "permits_issued": 0,
+        "provider_requests": 0
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "error"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "error",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "usage_events": []
+      }
+    }
+  },
+  "overall_status": "blocked",
+  "profile": {
+    "app_server": {
+      "backend": "local",
+      "image": "ghcr.io/letta-ai/letta-code",
+      "image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+      "letta_code_version": "0.33.8",
+      "protocol_version": "1",
+      "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+    },
+    "app_server_base_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_image": "hekate/letta-code-p1:0bb6f741-6f2f46e9",
+    "app_server_image_id": "sha256:f65cb93007ddf149e271f36605d2e125dce779c268bea8de17cc085e79691bb1",
+    "backend": "local",
+    "model": "openai-compatible/hekate-fake-model",
+    "network": "dedicated Docker bridge with --internal",
+    "node_version": "22.19.0",
+    "runtime_patch": {
+      "file": "integration/letta/patches/provider-call-context-usage.patch",
+      "name": "provider-call-context-usage",
+      "sha256": "6f2f46e95def3430729fa822a161bd6328de415b6cb3d41da76e4e1413638cdd",
+      "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+    },
+    "sdk": {
+      "name": "@letta-ai/letta-agent-sdk",
+      "npm_integrity": "sha512-DDp7PFgwd3W7H/hJW+hA7iRAOCtYdx7aVuRQrQbNcM3UqqzgsEiuVVQgRFYhVI+ktviWfweStnpJDVM9PU/OgQ==",
+      "source_commit": "07180877b65b4c2633150316dc504c39159a45ca",
+      "version": "0.8.25"
+    }
+  },
+  "real_provider_calls": 0,
+  "run_id": "p1-20260930T085856Z-c8fc25fd",
+  "schema_version": "1"
+}

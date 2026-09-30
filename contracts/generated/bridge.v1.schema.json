@@ -637,6 +637,18 @@
     "BridgeUsage": {
       "additionalProperties": false,
       "properties": {
+        "accounting_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Accounting Call Id"
+        },
         "completeness": {
           "enum": [
             "UNKNOWN",
@@ -649,7 +661,7 @@
         "cost_usd": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "string"
             },
             {
               "type": "null"
@@ -693,6 +705,35 @@
           ],
           "default": null,
           "title": "Provider Call Id"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "enum": [
+                "runtime_reported",
+                "provider_reported",
+                "runtime_estimated"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "total_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Tokens"
         }
       },
       "required": [

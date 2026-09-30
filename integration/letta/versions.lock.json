@@ -19,5 +19,12 @@
     "transport": "private JSONL over stdin/stdout",
     "bridge_protocol_schema": "contracts/generated/bridge.v1.schema.json"
   },
-  "patches": []
+  "patches": [
+    {
+      "file": "integration/letta/patches/provider-call-context-usage.patch",
+      "name": "provider-call-context-usage",
+      "sha256": "6f2f46e95def3430729fa822a161bd6328de415b6cb3d41da76e4e1413638cdd",
+      "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+    }
+  ]
 }

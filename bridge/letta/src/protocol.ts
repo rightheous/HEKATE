@@ -55,10 +55,13 @@ export interface BridgeEvent {
   event_type: string;
   usage: {
     completeness: "UNKNOWN" | "PARTIAL" | "COMPLETE";
+    source?: "runtime_reported" | "provider_reported" | "runtime_estimated" | null;
+    accounting_call_id?: string | null;
     provider_call_id?: string | null;
     input_tokens?: number | null;
     output_tokens?: number | null;
-    cost_usd?: number | null;
+    total_tokens?: number | null;
+    cost_usd?: string | null;
   };
   error_code?:
     | "approval_conflict"
@@ -187,7 +190,7 @@ export function negotiateVersion(info: unknown): {
     },
     limitations: [
       "The App Server info response is a capability advertisement, not proof of provider-call accounting.",
-      "Usage events do not expose provider call IDs or complete token/cost quantities in this bridge.",
+      "Provider-call IDs are present only when the selected runtime emits them; stock SDK stream events alone do not guarantee call identity.",
     ],
   };
 }

@@ -2,20 +2,20 @@
   "error": null,
   "estimated_real_provider_cost_usd": 0,
   "evidence_artifacts": [
-    "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json"
+    "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json"
   ],
-  "executed_at": "2026-09-30T07:22:30Z",
+  "executed_at": "2026-09-30T08:58:56Z",
   "fake_provider_counts": {
-    "denied_attempts": 3,
-    "gateway_attempts": 7,
-    "permits_consumed": 4,
-    "permits_issued": 4,
-    "provider_request_count": 4
+    "denied_attempts": 13,
+    "gateway_attempts": 24,
+    "permits_consumed": 11,
+    "permits_issued": 16,
+    "provider_request_count": 11
   },
   "gates": {
     "G1": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json"
+        "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json"
       ],
       "guarantees": [
         "SDK 0.8.25 connected through remote App Server transport.",
@@ -29,7 +29,7 @@
     },
     "G2": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json"
+        "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json"
       ],
       "guarantees": [
         "A tagged probe agent was created, retrieved, and listed by owner plus creation tag.",
@@ -43,80 +43,81 @@
     },
     "G5": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json"
+        "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json"
       ],
       "guarantees": [
-        "Agent creation passed baseTools:[]; the session used the default client toolset constrained to one SDK allowlist entry and an empty bridge executor allowlist.",
-        "Provider advertised tool names: ['hekate_forbidden_probe']; executor calls: 0; guarded denied attempts: 1."
+        "Provider tool lists were [] before close and [] after session reprepare; executor calls were 0 and 0.",
+        "No model-facing tools were observed before/after reprepare=True; the test model also returned a tool call absent from its offered list."
       ],
       "limitations": [
-        "Only the inert test probe tool is exercised; production client-tool dispatch is not enabled by this phase."
+        "The local probe covers the model-facing client tool list only; Bash, file/web, MCP and native subagent server surfaces were not individually invoked or audited."
       ],
-      "runtime_test_status": "pass",
+      "runtime_test_status": "blocked",
       "source_status": "pass"
     },
     "G6": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json"
+        "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json"
       ],
       "guarantees": [
-        "The local App Server used an isolated Docker network with --internal and its only model provider was the fake-provider gateway.",
-        "Every fake inference forwarded to the model endpoint consumed exactly one test-only permit; unpermitted attempts were denied before the fake model endpoint.",
-        "Observed normal turn: {'provider_requests': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}; provider-error path: {'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}; empty-response path: {'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}; zero-permit turn: {'provider_requests': 0, 'gateway_attempts': 1, 'permits_issued': 0, 'permits_consumed': 0, 'denied_attempts': 1}."
+        "Normal provider call matched task/attempt/operation/agent/revision/fence and accounting ID: True; counts={'provider_requests': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}.",
+        "Cross-operation, binding, replay, expiry, model, output, missing-context and permit-provider-unavailable cases were blocked before provider=True.",
+        "500 retry counts={'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}; empty response counts={'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}; zero-permit counts={'provider_requests': 0, 'gateway_attempts': 1, 'permits_issued': 0, 'permits_consumed': 0, 'denied_attempts': 1}; compaction without its own permit was blocked=True; observed compaction counts={'provider_requests': 2, 'gateway_attempts': 2, 'permits_issued': 2, 'permits_consumed': 2, 'denied_attempts': 0}."
       ],
       "limitations": [
-        "This is a probe-only egress gate and permit source, not the production atomic budget ledger.",
-        "Compaction was not triggered; source trace shows compaction calls use LocalPiModelsRuntime.streamSimple and therefore the same configured provider endpoint.",
-        "No real provider credentials or models were used."
+        "This is an in-memory probe permit provider, not the production atomic budget ledger.",
+        "Coverage is limited to the observed local preflight compaction path and its following turn."
       ],
       "runtime_test_status": "pass",
       "source_status": "pass"
     },
     "G7": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json"
+        "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json"
       ],
       "guarantees": [
-        "One-permit retry enforcement observed=True. Provider-error path: {'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}; empty-response path: {'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}."
+        "500 retry was denied before a second provider request=True; counts={'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}.",
+        "Position Commit schema-invalid response with SDK maxRetries=0 used exactly one provider request and produced structured_output_error=True; counts={'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}."
       ],
       "limitations": [
-        "The profile did not enable SDK structured-output repair; transport reconnection was not exercised, so the full gate remains blocked.",
-        "The external gate enforces one model request per issued permit; it does not claim a Letta step limit."
+        "Transport reconnect/resume was not exercised. Reopening a session or resending a message would be a new execution, not resume evidence.",
+        "The empty-response scenario ended after one request; no automatic retry was observed in this runtime path."
       ],
       "runtime_test_status": "blocked",
       "source_status": "pass"
     },
     "G8": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json"
+        "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json"
       ],
       "guarantees": [
         "Agent readback contained context_window_limit=16384 and max_tokens=64; fake provider observed model='hekate-fake-model', max_tokens=None, max_completion_tokens=64."
       ],
       "limitations": [
-        "The input limit maps to App Server context_window_limit, not a provider request field; the fake provider cannot independently attest the exact tokenizer count, so exact input-cap enforcement remains blocked."
+        "hekate-fake-model has no tokenizer profile. context_window_limit is only an App Server setting and the fake provider request exposes no exact input-token count; under/over-bound probes cannot prove a hard input-token cap."
       ],
       "runtime_test_status": "blocked",
       "source_status": "pass"
     },
     "G9": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json"
+        "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json"
       ],
       "guarantees": [
-        "The fake provider returned a call ID and usage values in its OpenAI-compatible response.",
-        "The bridge event stream reported usage completeness UNKNOWN and did not expose provider_call_id or token quantities."
+        "The pinned Letta Code patch attaches a new trusted accounting_call_id and the provider responseId to each usage_statistics event.",
+        "Normal-turn fake fixture values and both IDs matched one normalized BridgeEvent=True; usage was not summed across events.",
+        "Per-call settlement rows=10; unsettled calls=3."
       ],
       "limitations": [
-        "Error, cancellation, duplicate-terminal, and compaction usage reconciliation remain unverified."
+        "The fixture is synthetic, not provider billing evidence. Compaction usage is not emitted as a bridge usage event; provider-error and any missing-usage calls remain unsettled. Live late/duplicate SDK events were not observed."
       ],
-      "runtime_test_status": "fail",
-      "source_status": "blocked"
+      "runtime_test_status": "blocked",
+      "source_status": "pass"
     }
   },
   "overall_status": "blocked",
   "real_provider_calls": 0,
-  "run_id": "p1-20260930T072230Z-4235d5eb",
+  "run_id": "p1-20260930T085856Z-c8fc25fd",
   "schema_version": "1",
   "selected_profile": {
     "app_server": {
@@ -127,11 +128,19 @@
       "protocol_version": "1",
       "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
     },
-    "app_server_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_base_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_image": "hekate/letta-code-p1:0bb6f741-6f2f46e9",
+    "app_server_image_id": "sha256:f65cb93007ddf149e271f36605d2e125dce779c268bea8de17cc085e79691bb1",
     "backend": "local",
     "model": "openai-compatible/hekate-fake-model",
     "network": "dedicated Docker bridge with --internal",
     "node_version": "22.19.0",
+    "runtime_patch": {
+      "file": "integration/letta/patches/provider-call-context-usage.patch",
+      "name": "provider-call-context-usage",
+      "sha256": "6f2f46e95def3430729fa822a161bd6328de415b6cb3d41da76e4e1413638cdd",
+      "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+    },
     "sdk": {
       "name": "@letta-ai/letta-agent-sdk",
       "npm_integrity": "sha512-DDp7PFgwd3W7H/hJW+hA7iRAOCtYdx7aVuRQrQbNcM3UqqzgsEiuVVQgRFYhVI+ktviWfweStnpJDVM9PU/OgQ==",
