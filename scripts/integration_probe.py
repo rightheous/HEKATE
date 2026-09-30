@@ -266,7 +266,7 @@ class FakeProvider:
                     self.respond(400, {"error": "invalid JSON"})
                     return
                 with owner.lock:
-                    owner.model_requests.append({
+                    model_request = {
                         "sequence": len(owner.model_requests) + 1,
                         "model": request.get("model"),
                         "max_tokens": request.get("max_tokens"),
@@ -280,17 +280,19 @@ class FakeProvider:
                             for tool in request.get("tools", [])
                             if isinstance(tool, dict)
                         ],
-                    })
+                    }
+                    owner.model_requests.append(model_request)
                     behavior = owner.behaviors.popleft() if owner.behaviors else "normal"
-                    call_id = f"fake-call-{len(owner.model_requests):04d}"
-                    owner.model_requests[-1]["provider_response_id"] = call_id
-                    owner.model_requests[-1]["behavior"] = behavior
+                    model_request["behavior"] = behavior
                 if behavior == "error":
                     self.respond(500, {"error": {"message": "probe provider error", "type": "server_error"}})
                     return
+                call_id = f"fake-call-{model_request['sequence']:04d}"
+                with owner.lock:
+                    model_request["provider_response_id"] = call_id
                 usage = dict(FAKE_USAGE)
                 with owner.lock:
-                    owner.model_requests[-1]["fake_usage"] = usage
+                    model_request["fake_usage"] = usage
                 if behavior == "tool_call":
                     delta = {"role": "assistant", "tool_calls": [{
                         "index": 0,
@@ -1017,14 +1019,14 @@ def reconcile_fake_usage(
         if item.get("accounting_call_id")
     }
     usage_by_call: dict[str, dict[str, Any]] = {}
-    duplicates: dict[str, int] = {}
+    usage_event_counts: dict[str, int] = {}
     for turn in turns.values():
         for event in turn.get("usage_events", []):
             usage = event.get("usage") or {}
             call_id = usage.get("accounting_call_id")
             if not call_id:
                 continue
-            duplicates[call_id] = duplicates.get(call_id, 0) + 1
+            usage_event_counts[call_id] = usage_event_counts.get(call_id, 0) + 1
             usage_by_call[call_id] = usage
 
     rows = []
@@ -1049,20 +1051,26 @@ def reconcile_fake_usage(
             "operation_id": operation,
             "call_kind": check.get("call_kind"),
             "accounting_call_id": call_id,
+            "provider_behavior": request.get("behavior"),
             "provider_response_id": request.get("provider_response_id"),
             "fake_usage_fixture": fixture,
             "bridge_usage": normalized,
             "settlement": "MATCHED" if matches else "UNSETTLED",
-            "duplicate_usage_events": duplicates.get(call_id, 0),
+            "bridge_usage_event_count": usage_event_counts.get(call_id, 0),
+            "duplicate_usage_events": max(usage_event_counts.get(call_id, 0) - 1, 0),
         })
 
     return {
         "fixture_is_synthetic": True,
+        "usage_count_scope": "events.collect records after bridge same-call updates are merged",
         "provider_usage_fixture": FAKE_USAGE,
         "calls": rows,
         "all_reported_usage_matched": all(row["settlement"] == "MATCHED" for row in rows),
         "unsettled_call_count": sum(row["settlement"] == "UNSETTLED" for row in rows),
-        "usage_duplicate_counts": duplicates,
+        "usage_event_counts": usage_event_counts,
+        "usage_duplicate_counts": {
+            call_id: max(count - 1, 0) for call_id, count in usage_event_counts.items()
+        },
     }
 
 
@@ -1436,7 +1444,7 @@ def probe(base_image: str) -> dict[str, Any]:
                 f"Position Commit schema-invalid response with SDK maxRetries=0 used exactly one provider request and produced structured_output_error={structured_test_pass}; counts={structured_delta}.",
             ]
             gates["G7"]["limitations"] = [
-                "Transport reconnect/resume was not exercised. Reopening a session or resending a message would be a new execution, not resume evidence.",
+                "Pinned SDK 0.8.25 AppServerSession calls watchTransportDisconnect without recoverWhenIdle; RemoteClientSessionCore closes an in-flight turn and session on disconnect. The recoverWhenIdle path is Cloud-only, and App Server resumeSession() rehydrates a conversation without an in-flight execution cursor. Same-execution transport resume is therefore unsupported by this profile and was not runtime-tested.",
                 "The empty-response scenario ended after one request; no automatic retry was observed in this runtime path.",
             ]
 
@@ -1448,7 +1456,7 @@ def probe(base_image: str) -> dict[str, Any]:
                 f"{normal_request.get('max_completion_tokens')!r}.",
             ]
             gates["G8"]["limitations"] = [
-                "hekate-fake-model has no tokenizer profile. context_window_limit is only an App Server setting and the fake provider request exposes no exact input-token count; under/over-bound probes cannot prove a hard input-token cap.",
+                "hekate-fake-model has no tokenizer profile, so the fake provider request exposes no exact input-token count and an under/over-bound probe cannot prove the cap. A v0.1 model profile must provide a validated tokenizer and exact accounting for the full provider request (system prompt, tool schemas, memory, and history), reserve output tokens from the context window, and reject over-bound input before forwarding.",
             ]
 
             turns = {
@@ -1470,17 +1478,32 @@ def probe(base_image: str) -> dict[str, Any]:
                 row["operation_id"] == normal_operation and row["settlement"] == "MATCHED"
                 for row in usage_reconciliation["calls"]
             )
+            provider_error_unknown_linked = any(
+                row["operation_id"] == retry_operation and
+                row["provider_behavior"] == "error" and
+                row["provider_response_id"] is None and
+                row["bridge_usage"] is not None and
+                row["bridge_usage"].get("completeness") == "UNKNOWN" and
+                row["bridge_usage"].get("accounting_call_id") == row["accounting_call_id"] and
+                row["bridge_usage"].get("provider_call_id") is None
+                for row in usage_reconciliation["calls"]
+            )
+            usage_reconciliation["provider_error_unknown_linked"] = provider_error_unknown_linked
             gates["G9"]["source_status"] = "pass"
             gates["G9"]["runtime_test_status"] = (
-                "pass" if normal_usage_match and usage_reconciliation["unsettled_call_count"] == 0 else "blocked"
+                "pass"
+                if normal_usage_match and provider_error_unknown_linked and usage_reconciliation["unsettled_call_count"] == 0
+                else "blocked"
             )
             gates["G9"]["guarantees"] = [
-                "The pinned Letta Code patch attaches a new trusted accounting_call_id and the provider responseId to each usage_statistics event.",
-                f"Normal-turn fake fixture values and both IDs matched one normalized BridgeEvent={normal_usage_match}; usage was not summed across events.",
+                "The prior loss was in bridge summarizeSdkMessage, which replaced every SDK message's usage with UNKNOWN; SDK 0.8.25 carries the stream_event.event payload. The bridge now normalizes that payload and the fake usage reaches Python reconciliation with its trusted accounting call ID.",
+                f"Normal-turn fake fixture values and both IDs matched one normalized BridgeEvent={normal_usage_match}; same-call updates are merged without summing.",
+                f"Provider HTTP 500 retained its accounting call ID as UNKNOWN with no provider response ID={provider_error_unknown_linked}.",
+                "Pinned SDK source defers the terminal result for a 100 ms trailing-usage grace after stop_reason.",
                 f"Per-call settlement rows={len(usage_reconciliation['calls'])}; unsettled calls={usage_reconciliation['unsettled_call_count']}.",
             ]
             gates["G9"]["limitations"] = [
-                "The fixture is synthetic, not provider billing evidence. Compaction usage is not emitted as a bridge usage event; provider-error and any missing-usage calls remain unsettled. Live late/duplicate SDK events were not observed.",
+                "The fixture is synthetic, not provider billing evidence. Compaction calls do not emit a bridge usage_statistics event. The 500 call is linked as UNKNOWN but remains unsettled. The fake provider sends usage in the final response, so delayed-after-stop delivery was source-checked but not runtime-probed; usage arriving after the SDK's 100 ms grace remains unresolved. events.collect exposes records after same-call merge, so raw late/duplicate SDK deliveries are not counted by this probe.",
             ]
 
             report["observations"] = {
@@ -1533,8 +1556,16 @@ def probe(base_image: str) -> dict[str, Any]:
                     "tokenizer_profile": None,
                     "app_server_context_window_limit": (observed.get("model_settings") or {}).get("context_window_limit"),
                     "exact_token_cap_test": "not_run_no_tokenizer_profile",
+                    "v0_1_support_condition": "validated tokenizer plus exact full-request accounting for system prompt, tool schemas, memory, and history; reserve output tokens from the context window and reject over-bound input before provider forwarding",
                 },
                 "usage_reconciliation": usage_reconciliation,
+                "usage_delivery_profile": {
+                    "original_drop_layer": "bridge summarizeSdkMessage replaced every SDK message's usage with UNKNOWN",
+                    "sdk_message_type": "stream_event",
+                    "sdk_payload_type": "SDKStreamEventPayload",
+                    "sdk_trailing_usage_grace_ms": 100,
+                    "delayed_after_stop_runtime_probe": "not_run_fake_usage_arrived_in_final_response",
+                },
                 "fake_provider": provider.snapshot(),
                 "network_internal": True,
                 "node_version": node_version,

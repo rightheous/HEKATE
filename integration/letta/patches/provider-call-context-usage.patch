@@ -81,7 +81,7 @@ index 38113a59..9f8a54b9 100644
    provider: string;
    configuredHeaders: Record<string, string> | undefined;
 diff --git a/src/backend/dev/pi-stream-adapter.ts b/src/backend/dev/pi-stream-adapter.ts
-index 334c67bf..49d253f8 100644
+index 334c67bf..a5de23bf 100644
 --- a/src/backend/dev/pi-stream-adapter.ts
 +++ b/src/backend/dev/pi-stream-adapter.ts
 @@ -1,3 +1,4 @@
@@ -134,7 +134,15 @@ index 334c67bf..49d253f8 100644
      const options: SimpleStreamOptions & Record<string, unknown> = {
        ...resolved.providerOptions,
        ...(resolved.apiKey ? { apiKey: resolved.apiKey } : {}),
-@@ -723,7 +740,11 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -710,6 +727,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+             isRetryableLocalProviderError(error)
+           ) {
+             streamError = error;
++            yield providerStreamPart(part, accountingCallId);
+             break;
+           }
+           if (part.error.content.length > 0) {
+@@ -723,7 +741,11 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
            finalLocalMessage = toLocalAssistantMessage(part.message, input);
            yield providerLocalMessage(finalLocalMessage);
          }
@@ -147,7 +155,7 @@ index 334c67bf..49d253f8 100644
        }
  
        if (streamError) throw streamError;
-@@ -793,6 +814,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -793,6 +815,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
    }
  
    async *stream(input: ProviderTurnInput): AsyncIterable<ProviderStreamEvent> {
@@ -155,7 +163,7 @@ index 334c67bf..49d253f8 100644
      let activeInput = input;
      let preflightCompactionChecked = false;
      let contextOverflowCompactions = 0;
-@@ -816,7 +838,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -816,7 +839,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
        let emittedModelOutput = false;
        let emittedLocalMessage = false;
        try {
@@ -165,10 +173,18 @@ index 334c67bf..49d253f8 100644
            if (event.type === "local-message") emittedLocalMessage = true;
            yield event;
 diff --git a/src/backend/dev/provider-turn-executor.ts b/src/backend/dev/provider-turn-executor.ts
-index b2ddd013..f2794b1d 100644
+index b2ddd013..6d4f2d6e 100644
 --- a/src/backend/dev/provider-turn-executor.ts
 +++ b/src/backend/dev/provider-turn-executor.ts
-@@ -79,15 +79,27 @@ export interface LlmEndInfo {
+@@ -1,7 +1,6 @@
+ import { randomUUID } from "node:crypto";
+ import type {
+   AssistantMessage,
+-  AssistantMessageEvent,
+   Usage,
+ } from "@earendil-works/pi-ai";
+ import type { Stream } from "@letta-ai/letta-client/core/streaming";
+@@ -79,15 +78,27 @@ export interface LlmEndInfo {
  }
  
  export type ProviderStreamEvent =
@@ -198,7 +214,7 @@ index b2ddd013..f2794b1d 100644
  }
  
  export function providerLocalMessage(
-@@ -303,6 +315,8 @@ export function estimateProviderRequestBytes(
+@@ -303,6 +314,8 @@ export function estimateProviderRequestBytes(
  function createUsageStatisticsChunk(
    usage: Usage | undefined,
    contextTokensEstimate?: number,
@@ -207,7 +223,16 @@ index b2ddd013..f2794b1d 100644
  ): LettaStreamingResponse | undefined {
    const promptTokens = usage?.input;
    const completionTokens = usage?.output;
-@@ -325,6 +339,8 @@ function createUsageStatisticsChunk(
+@@ -319,12 +332,16 @@ function createUsageStatisticsChunk(
+     cachedInputTokens === undefined &&
+     cacheWriteTokens === undefined &&
+     reasoningTokens === undefined &&
+-    contextTokens === undefined
++    contextTokens === undefined &&
++    !accountingCallId &&
++    !providerCallId
+   ) {
+     return undefined;
    }
    return {
      message_type: "usage_statistics",
@@ -216,7 +241,27 @@ index b2ddd013..f2794b1d 100644
      ...(promptTokens !== undefined ? { prompt_tokens: promptTokens } : {}),
      ...(completionTokens !== undefined
        ? { completion_tokens: completionTokens }
-@@ -454,7 +470,7 @@ function createProviderLettaStream(
+@@ -343,11 +360,6 @@ function createUsageStatisticsChunk(
+   } as unknown as LettaStreamingResponse;
+ }
+ 
+-function errorFromAssistantEvent(part: AssistantMessageEvent): Error {
+-  if (part.type !== "error") return new Error("Unknown provider stream error");
+-  return new Error(part.error.errorMessage ?? "Unknown local provider error");
+-}
+-
+ type StreamedMessageType = "assistant_message" | "reasoning_message";
+ 
+ function contentMatchesMessageType(
+@@ -434,7 +446,6 @@ function createProviderLettaStream(
+     async *[Symbol.asyncIterator]() {
+       let sawToolCall = false;
+       let pendingStopReason: LettaStreamingResponse | undefined;
+-      let sawUsageStatistics = false;
+       const assistantIdentities = new Map<number, ProviderSegmentIdentity>();
+       const reasoningIdentities = new Map<number, ProviderSegmentIdentity>();
+       try {
+@@ -454,7 +465,7 @@ function createProviderLettaStream(
              continue;
            }
  
@@ -225,15 +270,47 @@ index b2ddd013..f2794b1d 100644
            if (part.type === "text_delta") {
              const identity = identityForContentSegment(
                assistantIdentities,
-@@ -511,6 +527,8 @@ function createProviderLettaStream(
-               const usageChunk = createUsageStatisticsChunk(
-                 part.message.usage,
-                 contextTokensEstimate,
-+                accounting_call_id,
-+                provider_call_id ?? part.message.responseId,
-               );
-               if (usageChunk) {
-                 sawUsageStatistics = true;
+@@ -507,15 +518,14 @@ function createProviderLettaStream(
+           }
+ 
+           if (part.type === "done") {
+-            if (!sawUsageStatistics) {
+-              const usageChunk = createUsageStatisticsChunk(
+-                part.message.usage,
+-                contextTokensEstimate,
+-              );
+-              if (usageChunk) {
+-                sawUsageStatistics = true;
+-                yield usageChunk;
+-              }
++            const usageChunk = createUsageStatisticsChunk(
++              part.message.usage,
++              contextTokensEstimate,
++              accounting_call_id,
++              provider_call_id ?? part.message.responseId,
++            );
++            if (usageChunk) {
++              yield usageChunk;
+             }
+             pendingStopReason = {
+               message_type: "stop_reason",
+@@ -530,8 +540,14 @@ function createProviderLettaStream(
+           }
+ 
+           if (part.type === "error") {
+-            yield* createProviderErrorChunks(errorFromAssistantEvent(part));
+-            return;
++            const usageChunk = createUsageStatisticsChunk(
++              undefined,
++              undefined,
++              accounting_call_id,
++              provider_call_id,
++            );
++            if (usageChunk) yield usageChunk;
++            continue;
+           }
+         }
+         if (pendingStopReason) {
 diff --git a/src/backend/local/compaction.ts b/src/backend/local/compaction.ts
 index fa634595..dc7e4cc9 100644
 --- a/src/backend/local/compaction.ts

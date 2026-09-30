@@ -41,6 +41,13 @@ test("marks unbound and partial usage honestly and rejects malformed quantities"
   assert.deepEqual(normalizeUsageStatistics({ message_type: "stop_reason" }), {
     completeness: "UNKNOWN",
   });
+  assert.deepEqual(normalizeUsageStatistics({
+    message_type: "usage_statistics",
+    accounting_call_id: "failed-call-1",
+  }), {
+    completeness: "UNKNOWN",
+    accounting_call_id: "failed-call-1",
+  });
 });
 
 test("same-call updates replace duplicate usage and allow later fields to fill gaps", () => {

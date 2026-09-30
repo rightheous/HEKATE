@@ -23,7 +23,7 @@
     {
       "file": "integration/letta/patches/provider-call-context-usage.patch",
       "name": "provider-call-context-usage",
-      "sha256": "6f2f46e95def3430729fa822a161bd6328de415b6cb3d41da76e4e1413638cdd",
+      "sha256": "2926e5cfd5f4666651a47b4d6320bd88a61acebe8cac3d007565860f2da43c69",
       "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
     }
   ]
