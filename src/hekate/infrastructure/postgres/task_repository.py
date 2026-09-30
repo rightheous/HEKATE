@@ -1,17 +1,285 @@
 from __future__ import annotations
 
-from hekate.domain.models import Attempt, AuthorizationSnapshot, Task
-from hekate.domain.types import AttemptId, ScopeId, TaskId
+from collections.abc import Mapping
+from datetime import datetime
+
+from sqlalchemy import insert, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from hekate.domain.errors import Conflict, PolicyDenied, StaleInput
+from hekate.domain.models import (
+    Attempt,
+    AuthorizationSnapshot,
+    InputChange,
+    Task,
+    TaskCounters,
+)
+from hekate.domain.types import (
+    AttemptId,
+    AttemptStatus,
+    AttemptEvent,
+    PrincipalId,
+    RegistryId,
+    ScopeId,
+    TaskEvent,
+    TaskId,
+    TaskStatus,
+    StopReason,
+    TopicId,
+)
+from hekate.domain.transitions import transition_attempt, transition_task
+
+from . import tables
+from .common import aware_now, json_value
 
 
 class PostgresTaskRepository:
-    def __init__(self, connection: object) -> None:
+    def __init__(self, connection: AsyncSession) -> None:
         self.connection = connection
 
-    async def lock_scope(self, scope: ScopeId) -> AuthorizationSnapshot: raise NotImplementedError
-    async def insert_task(self, task: Task) -> None: raise NotImplementedError
-    async def lock_task(self, task_id: TaskId) -> Task: raise NotImplementedError
-    async def get_attempt(self, attempt_id: AttemptId, for_update: bool = False) -> Attempt: raise NotImplementedError
-    async def insert_attempt(self, attempt: Attempt) -> None: raise NotImplementedError
-    async def compare_and_set_state(self, task_id: TaskId, expected: object, update: object) -> bool: raise NotImplementedError
-    async def increment_counter_if_below(self, task_id: TaskId, counter: str, cap: int) -> bool: raise NotImplementedError
+    async def insert_scope(self, snapshot: AuthorizationSnapshot) -> None:
+        await self.connection.execute(insert(tables.authorization_scopes).values(
+            id=snapshot.scope,
+            principal_id=snapshot.principal_id,
+            policy_version=snapshot.policy_version,
+            authz_epoch=snapshot.authz_epoch,
+        ))
+
+    async def lock_scope(self, scope: ScopeId) -> AuthorizationSnapshot:
+        row = (await self.connection.execute(
+            select(tables.authorization_scopes).where(tables.authorization_scopes.c.id == scope).with_for_update()
+        )).mappings().one_or_none()
+        if row is None:
+            raise PolicyDenied("authorization scope is unavailable")
+        return AuthorizationSnapshot(
+            scope=ScopeId(row["id"]),
+            principal_id=PrincipalId(row["principal_id"]),
+            policy_version=row["policy_version"],
+            authz_epoch=row["authz_epoch"],
+        )
+
+    async def insert_task(self, task: Task, constraints: Mapping[str, object] | None = None) -> None:
+        counters = task.counters
+        await self.connection.execute(insert(tables.tasks).values(
+            id=task.id,
+            owner_scope=task.scope,
+            question=task.question,
+            input_revision=task.input_revision,
+            constraints_hash=task.constraints_hash,
+            status=task.status.value,
+            topic_id=task.topic_id,
+            base_position_version=task.base_position_version,
+            deadline=task.deadline,
+            critic_agents=counters.critic_agents,
+            review_rounds=counters.review_rounds,
+            schema_repairs=counters.schema_repairs,
+            transient_retries=counters.transient_retries,
+            tool_calls=counters.tool_calls,
+            provider_calls=counters.provider_calls,
+            outcome=task.outcome,
+            stop_reason=task.stop_reason,
+        ))
+        await self.connection.execute(insert(tables.task_inputs).values(
+            task_id=task.id,
+            revision=task.input_revision,
+            question=task.question,
+            constraints=json_value(constraints or {}),
+            constraints_hash=task.constraints_hash,
+        ))
+
+    async def lock_task(self, task_id: TaskId) -> Task:
+        row = (await self.connection.execute(
+            select(tables.tasks).where(tables.tasks.c.id == task_id).with_for_update()
+        )).mappings().one_or_none()
+        if row is None:
+            raise StaleInput("task is unavailable")
+        return self._task(row)
+
+    @staticmethod
+    def _task(row) -> Task:
+        return Task(
+            id=TaskId(row["id"]),
+            scope=ScopeId(row["owner_scope"]),
+            question=row["question"],
+            input_revision=row["input_revision"],
+            constraints_hash=row["constraints_hash"],
+            status=TaskStatus(row["status"]),
+            topic_id=TopicId(row["topic_id"]) if row["topic_id"] else None,
+            base_position_version=row["base_position_version"],
+            deadline=row["deadline"],
+            counters=TaskCounters(
+                critic_agents=row["critic_agents"],
+                review_rounds=row["review_rounds"],
+                schema_repairs=row["schema_repairs"],
+                transient_retries=row["transient_retries"],
+                tool_calls=row["tool_calls"],
+                provider_calls=row["provider_calls"],
+            ),
+            outcome=row["outcome"],
+            stop_reason=row["stop_reason"],
+        )
+
+    async def get_attempt(self, attempt_id: AttemptId, for_update: bool = False) -> Attempt:
+        query = select(tables.attempts).where(tables.attempts.c.id == attempt_id)
+        if for_update:
+            query = query.with_for_update()
+        row = (await self.connection.execute(query)).mappings().one_or_none()
+        if row is None:
+            raise StaleInput("attempt is unavailable")
+        return Attempt(
+            id=AttemptId(row["id"]),
+            task_id=TaskId(row["task_id"]),
+            kind=row["kind"],
+            parent_attempt_id=AttemptId(row["parent_attempt_id"]) if row["parent_attempt_id"] else None,
+            review_round=row["review_round"],
+            input_revision=row["input_revision"],
+            agent_registry_id=RegistryId(row["agent_registry_id"]),
+            status=AttemptStatus(row["status"]),
+            operation_id=row["operation_id"],
+            reservation_id=row["reservation_id"],
+            deadline=row["deadline"],
+        )
+
+    async def attempt_exists(self, attempt_id: AttemptId) -> bool:
+        return (await self.connection.execute(select(tables.attempts.c.id).where(
+            tables.attempts.c.id == attempt_id,
+        ))).first() is not None
+
+    async def insert_attempt(self, attempt: Attempt) -> None:
+        await self.connection.execute(insert(tables.attempts).values(
+            id=attempt.id,
+            task_id=attempt.task_id,
+            kind=attempt.kind,
+            parent_attempt_id=attempt.parent_attempt_id,
+            review_round=attempt.review_round,
+            input_revision=attempt.input_revision,
+            agent_registry_id=attempt.agent_registry_id,
+            status=attempt.status.value,
+            operation_id=attempt.operation_id,
+            reservation_id=attempt.reservation_id,
+            deadline=attempt.deadline,
+        ))
+
+    async def set_attempt_reservation(self, attempt_id: AttemptId, reservation_id) -> None:
+        result = await self.connection.execute(update(tables.attempts).where(
+            tables.attempts.c.id == attempt_id,
+            tables.attempts.c.reservation_id.is_(None),
+        ).values(reservation_id=reservation_id))
+        if result.rowcount != 1:
+            raise Conflict("attempt reservation binding changed")
+
+    async def observe_attempt(self, attempt_id: AttemptId, event: AttemptEvent) -> Attempt:
+        attempt = await self.get_attempt(attempt_id, for_update=True)
+        if attempt.status in {AttemptStatus.SUCCEEDED, AttemptStatus.FAILED, AttemptStatus.TIMED_OUT, AttemptStatus.CANCELLED}:
+            return attempt
+        if attempt.status == AttemptStatus.PENDING and event in {AttemptEvent.START, AttemptEvent.SUCCEED}:
+            status = transition_attempt(attempt.status, AttemptEvent.DISPATCH)
+            if event == AttemptEvent.SUCCEED:
+                status = transition_attempt(status, event)
+            else:
+                status = transition_attempt(status, event)
+        else:
+            status = transition_attempt(attempt.status, event)
+        await self.connection.execute(update(tables.attempts).where(
+            tables.attempts.c.id == attempt_id,
+        ).values(status=status.value))
+        return attempt.model_copy(update={"status": status})
+
+    async def apply_admission(self, task: Task, attempt_kind: str) -> None:
+        status = task.status
+        if status == TaskStatus.QUEUED:
+            status = transition_task(status, TaskEvent.START)
+        elif status == TaskStatus.WAITING:
+            status = transition_task(status, TaskEvent.RESUME)
+        elif status in {TaskStatus.RUNNING}:
+            pass
+        else:
+            raise PolicyDenied("task does not admit new attempts")
+        increments: dict[str, int] = {}
+        if attempt_kind == "critic_review":
+            if task.counters.review_rounds >= 2:
+                raise PolicyDenied("task review-round cap reached")
+            increments["review_rounds"] = 1
+        elif attempt_kind == "schema_repair":
+            if task.counters.schema_repairs >= 1:
+                raise PolicyDenied("task schema-repair cap reached")
+            increments["schema_repairs"] = 1
+        elif attempt_kind == "transient_retry":
+            if task.counters.transient_retries >= 1:
+                raise PolicyDenied("task transient-retry cap reached")
+            increments["transient_retries"] = 1
+        values: dict[str, object] = {"status": status.value}
+        values.update({name: getattr(tables.tasks.c, name) + count for name, count in increments.items()})
+        await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task.id,
+        ).values(**values))
+
+    async def revise_input(
+        self,
+        task_id: TaskId,
+        expected_revision: int,
+        change: InputChange,
+        constraints_hash: str,
+        *,
+        accepted_at: datetime | None = None,
+    ) -> Task:
+        task = await self.lock_task(task_id)
+        if task.input_revision != expected_revision:
+            raise StaleInput("input revision changed")
+        if task.status in {TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED, TaskStatus.STOPPING}:
+            raise PolicyDenied("terminal or stopping task cannot be revised")
+        next_revision = expected_revision + 1
+        await self.connection.execute(insert(tables.task_inputs).values(
+            task_id=task_id,
+            revision=next_revision,
+            question=change.text,
+            constraints=json_value(change.constraints),
+            constraints_hash=constraints_hash,
+            accepted_at=accepted_at or aware_now(),
+        ))
+        await self.connection.execute(update(tables.tasks).where(tables.tasks.c.id == task_id).values(
+            question=change.text,
+            input_revision=next_revision,
+            constraints_hash=constraints_hash,
+        ))
+        return task.model_copy(update={"question": change.text, "input_revision": next_revision, "constraints_hash": constraints_hash})
+
+    async def request_cancel(self, task_id: TaskId, reason: StopReason) -> Task:
+        task = await self.lock_task(task_id)
+        if task.status in {TaskStatus.STOPPING, TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED}:
+            return task
+        next_status = transition_task(task.status, TaskEvent.CANCEL)
+        now = aware_now()
+        await self.connection.execute(update(tables.tasks).where(tables.tasks.c.id == task_id).values(
+            status=next_status.value,
+            cancel_requested_at=now,
+            stop_reason=reason.value,
+        ))
+        return task.model_copy(update={"status": next_status, "stop_reason": reason.value})
+
+    async def confirm_cancelled(self, task_id: TaskId) -> Task:
+        task = await self.lock_task(task_id)
+        if task.status == TaskStatus.CANCELLED:
+            return task
+        if task.status != TaskStatus.STOPPING:
+            raise PolicyDenied("task is not stopping")
+        status = transition_task(task.status, TaskEvent.CANCEL)
+        await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+        ).values(status=status.value))
+        return task.model_copy(update={"status": status})
+
+    async def increment_counter_if_below(self, task_id: TaskId, counter: str, cap: int) -> bool:
+        allowed = {"critic_agents", "review_rounds", "schema_repairs", "transient_retries", "tool_calls", "provider_calls"}
+        if counter not in allowed:
+            raise ValueError("unknown task counter")
+        result = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            getattr(tables.tasks.c, counter) < cap,
+        ).values({counter: getattr(tables.tasks.c, counter) + 1}))
+        return result.rowcount == 1
+
+    async def increment_provider_calls(self, task_id: TaskId) -> None:
+        await self.connection.execute(update(tables.tasks).where(tables.tasks.c.id == task_id).values(
+            provider_calls=tables.tasks.c.provider_calls + 1,
+        ))

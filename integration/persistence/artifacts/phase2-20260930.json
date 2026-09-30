@@ -1,0 +1,66 @@
+{
+  "schema_version": "1",
+  "executed_at": "2026-09-30T21:33:15Z",
+  "branch": "phase2-persistence-ledger",
+  "base_revision": "2ba36018f27d8af221fc618dd9a856f29819ffcb",
+  "postgres": {
+    "version": "16.14",
+    "database": "hekate_phase2_test",
+    "host_scope": "loopback disposable test database",
+    "migration_head": "0002_budget",
+    "upgrade_head": "pass",
+    "downgrade_base": "pass",
+    "upgrade_after_downgrade": "pass",
+    "alembic_check": "pass"
+  },
+  "database_tests": {
+    "command": "uv run --locked python -m unittest discover -s tests/persistence -v",
+    "result": "pass",
+    "passed": 12,
+    "failed": 0,
+    "scenarios": {
+      "rollback_atomicity": "pass",
+      "operation_replay_and_conflict": "pass",
+      "outbox_fence_and_inbox_payload_conflict": "pass",
+      "concurrent_system_reservation": "one admitted; one denied; no partial hold",
+      "permit_single_use_expiry_fence_and_cancel": "pass",
+      "separate_final_response_reservation": "pass",
+      "unknown_execution_after_engine_reconnect": "hold retained; new operation blocked",
+      "usage_completion_duplicate_conflict_overrun_adjustment": "pass",
+      "task_input_revision_history_and_stale_revision": "pass",
+      "database_unavailable_permit_fail_closed": "pass"
+    }
+  },
+  "ledger_scenario_usd": {
+    "operation_reservation": "8.00",
+    "task_and_system_initial_held_each": "8.00",
+    "call_a_actual_cost": "5.00",
+    "call_b_actual_cost": "2.00",
+    "task_spent_after_settlement": "7.00",
+    "system_spent_after_settlement": "7.00",
+    "task_and_system_held_after_settlement_each": "0.00",
+    "conflict_after_settlement": "prior spend retained; reservation pending",
+    "idempotent_task_adjustment": "0.25",
+    "task_spent_after_adjustment": "7.25",
+    "system_spent_after_adjustment": "7.00"
+  },
+  "bridge": {
+    "command": "npm test",
+    "runtime": "Node 24.18.0",
+    "result": "pass",
+    "passed": 14,
+    "failed": 0,
+    "route_blocks_running_and_unknown_turn_or_prepare": "pass",
+    "both_conflicting_usage_observations_collectible": "pass"
+  },
+  "other_checks": {
+    "python_compileall": "pass",
+    "git_diff_check": "pass"
+  },
+  "real_provider_calls": 0,
+  "limitations": [
+    "Production TypeScript bridge/runtime guard is not connected to the PostgreSQL permit service.",
+    "G7 same-execution resume and G8 exact input-token bounding remain unresolved.",
+    "No production model, tokenizer, or pricing profile was enabled or verified."
+  ]
+}

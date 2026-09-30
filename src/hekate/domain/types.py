@@ -19,6 +19,8 @@ ReservationId = NewType("ReservationId", str)
 ProviderAgentId = NewType("ProviderAgentId", str)
 ConversationId = NewType("ConversationId", str)
 ProviderCallId = NewType("ProviderCallId", str)
+AccountingCallId = NewType("AccountingCallId", str)
+PermitId = NewType("PermitId", str)
 ResultId = NewType("ResultId", str)
 PrincipalId = NewType("PrincipalId", str)
 ScopeId = NewType("ScopeId", str)
@@ -40,6 +42,8 @@ class IdKind(StrEnum):
     EVIDENCE = "evidence"
     TOPIC = "topic"
     RESERVATION = "reservation"
+    ACCOUNTING_CALL = "accounting_call"
+    PERMIT = "permit"
     RESULT = "result"
 
 
@@ -111,6 +115,24 @@ class AgentEvent(StrEnum):
     DELETE = "DELETE"
     DELETED = "DELETED"
     FAIL = "FAIL"
+
+
+class ReservationPurpose(StrEnum):
+    OPERATION_ENVELOPE = "operation_envelope"
+    FINAL_RESPONSE = "final_response"
+
+
+class ExecutionState(StrEnum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    UNKNOWN = "UNKNOWN"
+    QUIESCENT = "QUIESCENT"
+
+
+class UsageState(StrEnum):
+    UNKNOWN = "UNKNOWN"
+    PARTIAL = "PARTIAL"
+    COMPLETE = "COMPLETE"
 
 
 class StopReason(StrEnum):

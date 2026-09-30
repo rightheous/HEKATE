@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Literal, Mapping, TypeAlias, TypeVar
@@ -8,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .contracts import MAX_CONTRACT_ITEMS
 from .types import (
-    AttemptId, AttemptStatus, DomainId, EvidenceId, OperationId, ProviderAgentId,
+    AccountingCallId, AttemptId, AttemptStatus, DomainId, EvidenceId, OperationId, PermitId, ProviderAgentId,
     PrincipalId, ProviderCallId, RegistryId, ReservationId, Revision, ScopeId,
     ObservationState, TaskId, TaskStatus, TopicId,
 )
@@ -70,7 +71,10 @@ class Attempt(ContractModel):
 
 class AgentRecord(ContractModel):
     registry_id: RegistryId
+    owner_scope: ScopeId
     kind: Literal["hekate", "critic"]
+    task_id: TaskId | None = None
+    persistence: Literal["persistent", "ephemeral"] = "ephemeral"
     creation_operation_id: OperationId
     provider_id: ProviderAgentId | None = None
     intended_state: str
@@ -307,15 +311,20 @@ class RuntimeEvent(ContractModel):
 
 
 class UsageRecord(ContractModel):
-    provider_call_id: ProviderCallId
+    accounting_call_id: AccountingCallId
+    binding: GuardBinding
+    observation_identity: str
+    source: str
+    observed_at: datetime
+    provider_call_id: ProviderCallId | None = None
     input_tokens: int | None = None
     output_tokens: int | None = None
+    total_tokens: int | None = None
     cache_tokens: int | None = None
     reasoning_tokens: int | None = None
-    pricing_version: str
     completeness: str
+    pricing_version: str | None = None
     monetary_amount: Decimal | None = None
-    observed_at: datetime
 
 
 class BudgetReservation(ContractModel):
@@ -326,6 +335,250 @@ class BudgetReservation(ContractModel):
     settled_amount: Decimal | None = None
     status: str
     pricing_version: str
+
+
+@dataclass(frozen=True, slots=True)
+class AccountSnapshot:
+    id: str
+    scope_kind: str
+    scope_ref: str
+    period_id: str
+    limit_amount: Decimal
+    spent_amount: Decimal
+    held_amount: Decimal
+
+    @property
+    def available(self) -> Decimal:
+        return self.limit_amount - self.spent_amount - self.held_amount
+
+
+@dataclass(frozen=True, slots=True)
+class Account(AccountSnapshot):
+    pass
+
+
+@dataclass(frozen=True, slots=True)
+class ReservationRequest:
+    id: ReservationId
+    operation_id: OperationId
+    purpose: str
+    amount: Decimal
+    task_id: TaskId
+    task_account_id: str
+    system_account_id: str
+    pricing_version: str
+    system_period_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class GuardBinding:
+    task_id: TaskId
+    attempt_id: AttemptId
+    agent_registry_id: RegistryId
+    provider_agent_id: ProviderAgentId
+    principal_id: PrincipalId
+    scope: ScopeId
+    input_revision: Revision
+    policy_version: str
+    authz_epoch: int
+    fence: int
+    conversation_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeLimits:
+    max_input_tokens: int
+    max_output_tokens: int
+    max_billable_calls: int
+    deadline: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PriceTable:
+    model: str
+    version: str
+    input_usd_per_million: Decimal
+    output_usd_per_million: Decimal
+    model_profile_verified: bool = False
+    pricing_verified: bool = False
+    tokenizer_verified: bool = False
+    synthetic: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class AdmissionRequest:
+    binding: GuardBinding
+    reservation: ReservationRequest
+    envelope: ExecutionEnvelope
+    attempt_kind: str
+    parent_attempt_id: AttemptId | None
+    operation_kind: str
+    payload: Mapping[str, object]
+    lease_owner: str
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorizationSnapshot:
+    scope: ScopeId
+    principal_id: PrincipalId
+    policy_version: str
+    authz_epoch: int
+
+
+@dataclass(frozen=True, slots=True)
+class OperationClaim:
+    operation_id: OperationId
+    owner_scope: ScopeId
+    request_hash: str
+    state: str
+    receipt: AdmissionReceipt | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class AdmissionReceipt:
+    operation_id: OperationId
+    attempt_id: AttemptId
+    reservation_id: ReservationId
+    state: str
+    replayed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class Lease:
+    registry_id: RegistryId
+    owner: str
+    fence: int
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class BillableCallIntent:
+    accounting_call_id: AccountingCallId
+    permit_id: PermitId
+    operation_id: OperationId
+    call_kind: str
+    slot_key: str
+    binding: GuardBinding
+    model: str
+    allocation_amount: Decimal
+    limits: RuntimeLimits
+    price_table: PriceTable
+    permit_expires_at: datetime
+    lease_owner: str
+    test_only: bool = False
+    reservation_id: ReservationId | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CallPermit:
+    permit_id: PermitId
+    accounting_call_id: AccountingCallId
+    operation_id: OperationId
+    model: str
+    max_input_tokens: int
+    max_output_tokens: int
+    expires_at: datetime
+    consumed: bool
+    test_only: bool
+
+
+@dataclass(frozen=True, slots=True)
+class NormalizedUsage:
+    completeness: str
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cache_tokens: int | None = None
+    reasoning_tokens: int | None = None
+    total_tokens: int | None = None
+    reported_cost_usd: Decimal | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class UsageObservation:
+    accounting_call_id: AccountingCallId
+    source: str
+    observation_identity: str
+    usage: NormalizedUsage
+    binding: GuardBinding
+    observed_at: datetime
+    provider_call_id: ProviderCallId | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CallObservation:
+    accounting_call_id: AccountingCallId
+    binding: GuardBinding
+    state: str
+    source: str
+    observed_at: datetime
+    lease_owner: str
+    observer_fence: int
+    provider_call_id: ProviderCallId | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class UsageReceipt:
+    accounting_call_id: AccountingCallId
+    observation_id: str
+    duplicate: bool
+    conflict: bool
+    completeness: str
+    settlement_state: str
+    accepted: bool = True
+    reason: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class SettlementReceipt:
+    accounting_call_id: AccountingCallId
+    settled: bool
+    pending_reason: str | None
+    actual_cost: Decimal | None
+    task_spent: Decimal
+    task_held: Decimal
+    system_spent: Decimal
+    system_held: Decimal
+    overrun: bool
+
+
+@dataclass(frozen=True, slots=True)
+class OutboxJob:
+    id: str
+    operation_id: OperationId
+    kind: str
+    generation: int
+    payload: Mapping[str, object]
+    status: str
+    claim_owner: str | None = None
+    claim_fence: int | None = None
+    claim_expires_at: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class InboxReceipt:
+    id: str
+    duplicate: bool
+    conflict: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionObservation:
+    operation_id: OperationId
+    binding: GuardBinding
+    lease_owner: str
+    observer_fence: int
+    state: str
+    source: str
+    observed_at: datetime
+    outcome: str | None = None
+    reason: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class DatabaseHealth:
+    available: bool
+    postgres_version: str | None
+    migration_head: str | None
 
 
 class PositionVersionRecord(ContractModel):
@@ -445,13 +698,7 @@ ValidationReport: TypeAlias = Mapping[str, object]
 ResultDisposition: TypeAlias = Mapping[str, object]
 RejectionReason: TypeAlias = str
 AuditRef: TypeAlias = str
-ReservationRequest: TypeAlias = Mapping[str, object]
-GuardBinding: TypeAlias = Mapping[str, object]
-BillableCallIntent: TypeAlias = Mapping[str, object]
-CallPermit: TypeAlias = Mapping[str, object]
 UsageCompleteness: TypeAlias = Mapping[str, object]
-UsageReceipt: TypeAlias = Mapping[str, object]
-SettlementReceipt: TypeAlias = Mapping[str, object]
 ReadLimits: TypeAlias = Mapping[str, object]
 EvidenceView: TypeAlias = Mapping[str, object]
 ReferenceValidation: TypeAlias = Mapping[str, object]
@@ -483,15 +730,10 @@ CancelObservation: TypeAlias = Mapping[str, object]
 TurnInput: TypeAlias = Mapping[str, object]
 ProviderCursor: TypeAlias = str
 MemoryProjection: TypeAlias = Mapping[str, object]
-Lease: TypeAlias = Mapping[str, object]
-Account: TypeAlias = Mapping[str, object]
 Reservation: TypeAlias = Mapping[str, object]
-OperationClaim: TypeAlias = Mapping[str, object]
 Job: TypeAlias = Mapping[str, object]
-DatabaseHealth: TypeAlias = Mapping[str, object]
 HealthReport: TypeAlias = Mapping[str, object]
 Principal: TypeAlias = Mapping[str, object]
-AuthorizationSnapshot: TypeAlias = Mapping[str, object]
 SafeEvent: TypeAlias = Mapping[str, object]
 EvalSpec: TypeAlias = Mapping[str, object]
 EvaluationArtifact: TypeAlias = Mapping[str, object]
@@ -507,9 +749,6 @@ ScopeSnapshot: TypeAlias = Mapping[str, object]
 CapabilityGrant: TypeAlias = Mapping[str, object]
 ProposedAction: TypeAlias = Mapping[str, object]
 PolicySnapshot: TypeAlias = Mapping[str, object]
-PriceTable: TypeAlias = Mapping[str, object]
-NormalizedUsage: TypeAlias = Mapping[str, object]
-AccountSnapshot: TypeAlias = Mapping[str, object]
 SchemaFailure: TypeAlias = Mapping[str, object]
 ApprovedAction: TypeAlias = Mapping[str, object]
 CommitReceipt: TypeAlias = Mapping[str, object]
@@ -517,7 +756,6 @@ Command: TypeAlias = Mapping[str, object]
 BridgeFrame: TypeAlias = Mapping[str, object]
 BridgeReply: TypeAlias = Mapping[str, object]
 TemplateResponse: TypeAlias = Mapping[str, object]
-RuntimeLimits: TypeAlias = Mapping[str, int]
 JsonSchema: TypeAlias = Mapping[str, object]
 CapabilityReport: TypeAlias = Mapping[str, object]
 DeploymentProfile: TypeAlias = Mapping[str, object]

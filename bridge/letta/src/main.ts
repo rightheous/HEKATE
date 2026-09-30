@@ -140,29 +140,35 @@ async function runTurn(
         conversation_id: entry.conversationId,
       };
       const event = summarizeSdkMessage(message, command.operation_id, binding, index++);
-      encodeEvent(event);
       const callId = event.usage.accounting_call_id;
-      const previousIndex = callId
-        ? entry.events.findIndex((candidate) => candidate.usage.accounting_call_id === callId)
-        : -1;
-      if (previousIndex >= 0) {
-        if (entry.events[previousIndex].event_type === "usage_conflict") continue;
-        try {
-          entry.events[previousIndex] = {
-            ...event,
-            usage: mergeUsageUpdate(entry.events[previousIndex].usage, event.usage),
-          };
-        } catch (error) {
-          if (!(error instanceof UsageConflictError)) throw error;
-          entry.events[previousIndex] = {
-            ...event,
-            event_type: "usage_conflict",
-            usage: { completeness: "UNKNOWN", accounting_call_id: callId },
-          };
+      let recorded = event;
+      if (callId) {
+        const prior = entry.events.filter((candidate) => candidate.usage.accounting_call_id === callId);
+        let projection: BridgeEvent["usage"] | undefined;
+        let conflict = prior.some((candidate) => candidate.event_type === "usage_conflict");
+        for (const candidate of prior) {
+          try {
+            projection = projection
+              ? mergeUsageUpdate(projection, candidate.usage)
+              : candidate.usage;
+          } catch (error) {
+            if (!(error instanceof UsageConflictError)) throw error;
+            conflict = true;
+            break;
+          }
         }
-      } else {
-        entry.events.push(event);
+        if (!conflict && projection) {
+          try {
+            mergeUsageUpdate(projection, event.usage);
+          } catch (error) {
+            if (!(error instanceof UsageConflictError)) throw error;
+            conflict = true;
+          }
+        }
+        if (conflict) recorded = { ...event, event_type: "usage_conflict" };
       }
+      encodeEvent(recorded);
+      entry.events.push(recorded);
       if (message.type === "result") {
         // SDK 0.8.25 emits trailing usage before result, or after its 100 ms
         // grace timeout when the App Server never sends usage.
@@ -221,7 +227,11 @@ async function waitForTurn(entry: SessionEntry): Promise<void> {
   }
 }
 
-export async function routeCommand(command: Command): Promise<Reply> {
+export async function routeCommand(
+  command: Command,
+  dependencies: { client: LettaAgentClient; sessions: Map<string, SessionEntry> } = { client, sessions },
+): Promise<Reply> {
+  const { client, sessions } = dependencies;
   switch (command.command) {
     case "hello":
       return reply(command, "CONFIRMED", {
@@ -322,7 +332,16 @@ export async function routeCommand(command: Command): Promise<Reply> {
     }
 
     case "agent.delete": {
-      sessions.get(command.provider_agent_id)?.session.close();
+      const previous = sessions.get(command.provider_agent_id);
+      if (previous && (previous.turnState === "RUNNING" || previous.turnState === "UNKNOWN")) {
+        return reply(command, "UNKNOWN", {
+          kind: "agent",
+          provider_agent_id: command.provider_agent_id,
+          execution_state: previous.turnState,
+          unresolved_operation_id: previous.turnOperationId ?? null,
+        }, "agent has an unresolved execution");
+      }
+      previous?.session.close();
       sessions.delete(command.provider_agent_id);
       try {
         await client.agents.delete(command.provider_agent_id);
@@ -345,6 +364,14 @@ export async function routeCommand(command: Command): Promise<Reply> {
 
     case "session.prepare": {
       const previous = sessions.get(command.binding.provider_agent_id);
+      if (previous && (previous.turnState === "RUNNING" || previous.turnState === "UNKNOWN")) {
+        return reply(command, "UNKNOWN", {
+          kind: "session",
+          state: previous.turnState,
+          unresolved_operation_id: previous.turnOperationId ?? null,
+          conversation_id: previous.conversationId,
+        }, "agent has an unresolved execution");
+      }
       previous?.session.close();
       const toolStats = { executorCalls: 0, blockedAttempts: 0 };
       const session = client.createSession(command.binding.provider_agent_id, {
@@ -404,13 +431,14 @@ export async function routeCommand(command: Command): Promise<Reply> {
       if (command.binding.conversation_id !== entry.conversationId) {
         return reply(command, "REJECTED", undefined, "binding mismatch: conversation_id");
       }
-      if (entry.turnState === "RUNNING") {
-        return reply(command, "UNKNOWN", { kind: "turn", state: "UNKNOWN" }, "turn already running");
+      if (entry.turnState === "RUNNING" || entry.turnState === "UNKNOWN") {
+        return reply(command, "UNKNOWN", {
+          kind: "turn",
+          state: entry.turnState,
+          unresolved_operation_id: entry.turnOperationId ?? null,
+        }, "agent has an unresolved execution");
       }
       if (entry.turnOperationId === command.operation_id) {
-        if (entry.turnState === "UNKNOWN") {
-          return reply(command, "UNKNOWN", { kind: "turn", state: "UNKNOWN" }, "execution outcome is unknown");
-        }
         return reply(command, "CONFIRMED", { kind: "turn", state: entry.turnState === "COMPLETE" ? "COMPLETED" : "FAILED" });
       }
       entry.turnOperationId = command.operation_id;
