@@ -855,6 +855,7 @@
             "RUNNING",
             "COMPLETE",
             "FAILED",
+            "UNKNOWN",
             "EMPTY"
           ],
           "title": "State",

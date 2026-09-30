@@ -81,7 +81,7 @@ index 38113a59..9f8a54b9 100644
    provider: string;
    configuredHeaders: Record<string, string> | undefined;
 diff --git a/src/backend/dev/pi-stream-adapter.ts b/src/backend/dev/pi-stream-adapter.ts
-index 334c67bf..a5de23bf 100644
+index 334c67bf..4fa1e9ef 100644
 --- a/src/backend/dev/pi-stream-adapter.ts
 +++ b/src/backend/dev/pi-stream-adapter.ts
 @@ -1,3 +1,4 @@
@@ -98,7 +98,24 @@ index 334c67bf..a5de23bf 100644
  import { isPiModelOutputEvent } from "./pi-stream-output";
  import type {
    LlmEndErrorInfo,
-@@ -573,6 +574,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -525,6 +526,16 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+       event_type: "compaction",
+       event_data: { trigger },
+     } as never);
++    for (const call of compaction.stats?.provider_calls ?? []) {
++      yield providerLettaChunk({
++        message_type: "usage_statistics",
++        accounting_call_id: call.accounting_call_id,
++        ...(call.provider_call_id ? { provider_call_id: call.provider_call_id } : {}),
++        prompt_tokens: call.prompt_tokens,
++        completion_tokens: call.completion_tokens,
++        total_tokens: call.total_tokens,
++      } as never);
++    }
+     yield providerLettaChunk({
+       message_type: "summary_message",
+       summary: compaction.summary,
+@@ -573,6 +584,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
  
    private async *streamOnce(
      input: ProviderTurnInput,
@@ -106,7 +123,7 @@ index 334c67bf..a5de23bf 100644
    ): AsyncIterable<ProviderStreamEvent> {
      const tools = toPiTools(input.clientTools);
      const localModel = await resolveAvailableLocalModelForTurn({
-@@ -609,11 +611,26 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -609,11 +621,26 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
        input.agent.model,
        resolved.model,
      );
@@ -134,7 +151,7 @@ index 334c67bf..a5de23bf 100644
      const options: SimpleStreamOptions & Record<string, unknown> = {
        ...resolved.providerOptions,
        ...(resolved.apiKey ? { apiKey: resolved.apiKey } : {}),
-@@ -710,6 +727,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -710,6 +737,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
              isRetryableLocalProviderError(error)
            ) {
              streamError = error;
@@ -142,7 +159,7 @@ index 334c67bf..a5de23bf 100644
              break;
            }
            if (part.error.content.length > 0) {
-@@ -723,7 +741,11 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -723,7 +751,11 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
            finalLocalMessage = toLocalAssistantMessage(part.message, input);
            yield providerLocalMessage(finalLocalMessage);
          }
@@ -155,7 +172,7 @@ index 334c67bf..a5de23bf 100644
        }
  
        if (streamError) throw streamError;
-@@ -793,6 +815,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -793,6 +825,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
    }
  
    async *stream(input: ProviderTurnInput): AsyncIterable<ProviderStreamEvent> {
@@ -163,7 +180,7 @@ index 334c67bf..a5de23bf 100644
      let activeInput = input;
      let preflightCompactionChecked = false;
      let contextOverflowCompactions = 0;
-@@ -816,7 +839,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
+@@ -816,7 +849,7 @@ export class PiStreamAdapter implements ProviderStreamAdapter {
        let emittedModelOutput = false;
        let emittedLocalMessage = false;
        try {
@@ -311,8 +328,27 @@ index b2ddd013..6d4f2d6e 100644
            }
          }
          if (pendingStopReason) {
+diff --git a/src/backend/local/compaction.test.ts b/src/backend/local/compaction.test.ts
+index b84cef0d..ae35b3b4 100644
+--- a/src/backend/local/compaction.test.ts
++++ b/src/backend/local/compaction.test.ts
+@@ -113,7 +113,13 @@ describe("local compaction summarizer options", () => {
+         },
+       });
+ 
+-      expect(summary).toBe("summary of prior work");
++      expect(summary.text).toBe("summary of prior work");
++      expect(summary.provider_calls).toHaveLength(1);
++      expect(summary.provider_calls[0]).toMatchObject({
++        prompt_tokens: 0,
++        completion_tokens: 0,
++        total_tokens: 0,
++      });
+       // Fable 5 can refuse compaction-summarizer prompts and pi-ai currently
+       // masks that refusal as "An unknown error occurred". Use Opus for the
+       // auxiliary summary call while preserving the session reasoning level.
 diff --git a/src/backend/local/compaction.ts b/src/backend/local/compaction.ts
-index fa634595..dc7e4cc9 100644
+index fa634595..fde8a718 100644
 --- a/src/backend/local/compaction.ts
 +++ b/src/backend/local/compaction.ts
 @@ -1,3 +1,4 @@
@@ -329,7 +365,33 @@ index fa634595..dc7e4cc9 100644
  import { estimateLocalMessagesTokens } from "@/backend/local/local-context-estimate";
  import { isRecord } from "@/utils/type-guards";
  import type { LocalMessage } from "./local-message";
-@@ -463,11 +464,27 @@ async function runGenerateText(
+@@ -108,6 +109,13 @@ export interface LocalCompactionStats {
+   context_window?: number;
+   messages_count_before?: number;
+   messages_count_after?: number;
++  provider_calls?: Array<{
++    accounting_call_id: string;
++    provider_call_id?: string;
++    prompt_tokens: number;
++    completion_tokens: number;
++    total_tokens: number;
++  }>;
+ }
+ 
+ export type LocalCompleteFunction = (
+@@ -406,7 +414,10 @@ async function runGenerateText(
+   input: LocalAllCompactionInput,
+   transcript: string,
+   defaultPrompt: string,
+-): Promise<{ text: string }> {
++): Promise<{
++  text: string;
++  provider_call: NonNullable<LocalCompactionStats["provider_calls"]>[number];
++}> {
+   const systemPrompt = input.prompt ?? defaultPrompt;
+   const modelsRuntime =
+     input.modelsRuntime ??
+@@ -463,11 +474,27 @@ async function runGenerateText(
      localModel.model,
      resolved.model,
    );
@@ -358,7 +420,7 @@ index fa634595..dc7e4cc9 100644
    const options: SimpleStreamOptions & Record<string, unknown> = {
      ...resolved.providerOptions,
      ...(resolved.apiKey ? { apiKey: resolved.apiKey } : {}),
-@@ -481,6 +498,9 @@ async function runGenerateText(
+@@ -481,6 +508,9 @@ async function runGenerateText(
      // those models reject with a 400 invalid_request_error — breaking every
      // compaction (automatic and manual /compact).
      ...(reasoning ? { reasoning } : {}),
@@ -368,3 +430,106 @@ index fa634595..dc7e4cc9 100644
      maxRetries: 0,
      sessionId: input.conversationId,
    };
+@@ -497,18 +527,27 @@ async function runGenerateText(
+   if (result.stopReason === "error" || result.stopReason === "aborted") {
+     throw new Error(result.errorMessage ?? "Local compaction failed");
+   }
+-  return { text: assistantMessageText(result) };
++  return {
++    text: assistantMessageText(result),
++    provider_call: {
++      accounting_call_id: accountingCallId,
++      ...(result.responseId ? { provider_call_id: result.responseId } : {}),
++      prompt_tokens: result.usage.input,
++      completion_tokens: result.usage.output,
++      total_tokens: result.usage.totalTokens,
++    },
++  };
+ }
+ 
+ async function summarizeLocalMessagesWithPrompt(
+   input: LocalAllCompactionInput,
+   defaultPrompt: string,
+-): Promise<string> {
+-  if (input.messages.length === 0) return "No prior conversation messages.";
++): Promise<{ text: string; provider_calls: NonNullable<LocalCompactionStats["provider_calls"]> }> {
++  if (input.messages.length === 0) return { text: "No prior conversation messages.", provider_calls: [] };
+   const primaryTranscript = formatLocalMessagesForSummary(input.messages, {
+     truncationChars: LOCAL_SUMMARY_TOOL_RETURN_TRUNCATION_CHARS,
+   });
+-  let result: { text: string } | undefined;
++  let result: Awaited<ReturnType<typeof runGenerateText>> | undefined;
+   try {
+     result = await runGenerateText(input, primaryTranscript, defaultPrompt);
+   } catch (error) {
+@@ -545,12 +584,12 @@ async function summarizeLocalMessagesWithPrompt(
+   if (clipChars !== null && summary.length > clipChars) {
+     summary = `${summary.slice(0, clipChars)}${SUMMARY_TRUNCATION_SUFFIX}`;
+   }
+-  return summary;
++  return { text: summary, provider_calls: [result.provider_call] };
+ }
+ 
+ export async function summarizeLocalMessagesAll(
+   input: LocalAllCompactionInput,
+-): Promise<string> {
++): Promise<{ text: string; provider_calls: NonNullable<LocalCompactionStats["provider_calls"]> }> {
+   return summarizeLocalMessagesWithPrompt(input, LOCAL_ALL_COMPACTION_PROMPT);
+ }
+ 
+@@ -668,7 +707,7 @@ export function planLocalAllCompaction(
+ 
+ export async function summarizeLocalMessagesSlidingWindow(
+   input: LocalAllCompactionInput,
+-): Promise<string> {
++): Promise<{ text: string; provider_calls: NonNullable<LocalCompactionStats["provider_calls"]> }> {
+   return summarizeLocalMessagesWithPrompt(
+     input,
+     LOCAL_SLIDING_WINDOW_COMPACTION_PROMPT,
+diff --git a/src/backend/local/local-backend.ts b/src/backend/local/local-backend.ts
+index 812cc979..21c77a60 100644
+--- a/src/backend/local/local-backend.ts
++++ b/src/backend/local/local-backend.ts
+@@ -802,7 +802,7 @@ export class LocalBackend extends HeadlessBackend {
+     const messages = this.store.listLocalMessages(conversationId, agentId);
+     const contextTokensBefore = estimateLocalMessageTokens(messages);
+     const plan = planLocalAllCompaction(messages);
+-    const summary = await summarizeLocalMessagesAll({
++    const compacted = await summarizeLocalMessagesAll({
+       conversationId,
+       agent,
+       messages: plan.messagesToSummarize,
+@@ -812,8 +812,10 @@ export class LocalBackend extends HeadlessBackend {
+       localProviderAuthStorageDir: this.storageDir,
+       modelsRuntime: this.piModelsRuntime,
+     });
++    const summary = compacted.text;
+     const stats: LocalCompactionStats = {
+       trigger,
++      provider_calls: compacted.provider_calls,
+       context_tokens_before: contextTokensBefore,
+       context_tokens_after:
+         Math.ceil(summary.length / 4) +
+@@ -856,7 +858,7 @@ export class LocalBackend extends HeadlessBackend {
+       slidingWindowPercentage: settings.slidingWindowPercentage,
+       contextWindow,
+     });
+-    const summary = await summarizeLocalMessagesSlidingWindow({
++    const compacted = await summarizeLocalMessagesSlidingWindow({
+       conversationId,
+       agent,
+       messages: plan.messagesToSummarize,
+@@ -866,11 +868,13 @@ export class LocalBackend extends HeadlessBackend {
+       localProviderAuthStorageDir: this.storageDir,
+       modelsRuntime: this.piModelsRuntime,
+     });
++    const summary = compacted.text;
+     const contextTokensAfter =
+       Math.ceil(summary.length / 4) +
+       estimateLocalMessageTokens(plan.messagesToKeep);
+     const stats: LocalCompactionStats = {
+       trigger,
++      provider_calls: compacted.provider_calls,
+       context_tokens_before: estimateLocalMessageTokens(messages),
+       context_tokens_after: contextTokensAfter,
+       context_window: contextWindow,

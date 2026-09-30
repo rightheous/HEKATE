@@ -2,20 +2,20 @@
   "error": null,
   "estimated_real_provider_cost_usd": 0,
   "evidence_artifacts": [
-    "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json"
+    "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json"
   ],
-  "executed_at": "2026-09-30T09:35:40Z",
+  "executed_at": "2026-09-30T13:24:08Z",
   "fake_provider_counts": {
     "denied_attempts": 13,
-    "gateway_attempts": 24,
-    "permits_consumed": 11,
-    "permits_issued": 16,
-    "provider_request_count": 11
+    "gateway_attempts": 25,
+    "permits_consumed": 12,
+    "permits_issued": 17,
+    "provider_request_count": 12
   },
   "gates": {
     "G1": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json"
+        "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json"
       ],
       "guarantees": [
         "SDK 0.8.25 connected through remote App Server transport.",
@@ -29,7 +29,7 @@
     },
     "G2": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json"
+        "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json"
       ],
       "guarantees": [
         "A tagged probe agent was created, retrieved, and listed by owner plus creation tag.",
@@ -43,21 +43,22 @@
     },
     "G5": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json"
+        "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json"
       ],
       "guarantees": [
         "Provider tool lists were [] before close and [] after session reprepare; executor calls were 0 and 0.",
-        "No model-facing tools were observed before/after reprepare=True; the test model also returned a tool call absent from its offered list."
+        "No model-facing tools were observed before/after reprepare=True; the test model also returned a tool call absent from its offered list.",
+        "Pinned App Server session config disables the toolset (`allowedTools: []`, `base: none`, `tools: []`); static source audit found no reachable Bash, filesystem, web, MCP, or subagent tool route in this probe profile."
       ],
       "limitations": [
-        "The local probe covers the model-facing client tool list only; Bash, file/web, MCP and native subagent server surfaces were not individually invoked or audited."
+        "This result applies to the pinned local App Server profile and isolated probe state; it does not establish tool isolation for other backends or deployments."
       ],
-      "runtime_test_status": "blocked",
+      "runtime_test_status": "pass",
       "source_status": "pass"
     },
     "G6": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json"
+        "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json"
       ],
       "guarantees": [
         "Normal provider call matched task/attempt/operation/agent/revision/fence and accounting ID: True; counts={'provider_requests': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}.",
@@ -73,22 +74,24 @@
     },
     "G7": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json"
+        "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json"
       ],
       "guarantees": [
         "500 retry was denied before a second provider request=True; counts={'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}.",
-        "Position Commit schema-invalid response with SDK maxRetries=0 used exactly one provider request and produced structured_output_error=True; counts={'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}."
+        "Position Commit schema-invalid response with SDK maxRetries=0 used exactly one provider request and produced structured_output_error=True; counts={'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}.",
+        "App Server process loss after dispatch left execution UNKNOWN and issued no retry=True; counts={'provider_requests': 1, 'gateway_attempts': 1, 'permits_consumed': 1, 'denied_attempts': 0}."
       ],
       "limitations": [
-        "Pinned SDK 0.8.25 AppServerSession calls watchTransportDisconnect without recoverWhenIdle; RemoteClientSessionCore closes an in-flight turn and session on disconnect. The recoverWhenIdle path is Cloud-only, and App Server resumeSession() rehydrates a conversation without an in-flight execution cursor. Same-execution transport resume is therefore unsupported by this profile and was not runtime-tested.",
-        "The empty-response scenario ended after one request; no automatic retry was observed in this runtime path."
+        "Pinned SDK 0.8.25 AppServerSession calls watchTransportDisconnect without recoverWhenIdle; RemoteClientSessionCore closes an in-flight turn and session on disconnect. The recoverWhenIdle path is Cloud-only, and App Server resumeSession() rehydrates a conversation without an in-flight execution cursor. Same-execution resume after transport restoration is unsupported by this profile and remains untested.",
+        "The empty-response scenario ended after one request; no automatic retry was observed in this runtime path.",
+        "This fault probe kills the isolated App Server after the fake gateway observes the request; the unresolved call remains pending and the profile does not resume the same execution."
       ],
       "runtime_test_status": "blocked",
       "source_status": "pass"
     },
     "G8": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json"
+        "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json"
       ],
       "guarantees": [
         "Agent readback contained context_window_limit=16384 and max_tokens=64; fake provider observed model='hekate-fake-model', max_tokens=None, max_completion_tokens=64."
@@ -101,25 +104,27 @@
     },
     "G9": {
       "evidence_artifacts": [
-        "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json"
+        "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json"
       ],
       "guarantees": [
-        "The prior loss was in bridge summarizeSdkMessage, which replaced every SDK message's usage with UNKNOWN; SDK 0.8.25 carries the stream_event.event payload. The bridge now normalizes that payload and the fake usage reaches Python reconciliation with its trusted accounting call ID.",
-        "Normal-turn fake fixture values and both IDs matched one normalized BridgeEvent=True; same-call updates are merged without summing.",
-        "Provider HTTP 500 retained its accounting call ID as UNKNOWN with no provider response ID=True.",
-        "Pinned SDK source defers the terminal result for a 100 ms trailing-usage grace after stop_reason.",
-        "Per-call settlement rows=10; unsettled calls=3."
+        "The prior loss was in bridge summarizeSdkMessage, which replaced every SDK message's usage with UNKNOWN; SDK 0.8.25 carries the stream_event.event payload. The bridge now normalizes that payload and preserves accounting call IDs.",
+        "All successful authorized turn and compaction calls matched fake usage and provider response IDs; G9 evaluation=True.",
+        "Provider HTTP 500 is linked as EXPECTED_PENDING, without claiming settlement=True.",
+        "Post-dispatch App Server process loss is UNKNOWN with no automatic retry, and its call is EXPECTED_PENDING by gateway accounting ID=True.",
+        "Runtime requests=11; non-runtime gateway checks=9; direct gateway provider requests=1; gateway denials=13; permits issued/consumed=17/12; total provider endpoint requests=12.",
+        "Pinned SDK source defers terminal results for a 100 ms trailing-usage grace after stop_reason.",
+        "Per-call rows=16; pending or unsettled calls=2; blocking missing/mismatch/forwarding-unknown calls=0."
       ],
       "limitations": [
-        "The fixture is synthetic, not provider billing evidence. Compaction calls do not emit a bridge usage_statistics event. The 500 call is linked as UNKNOWN but remains unsettled. The fake provider sends usage in the final response, so delayed-after-stop delivery was source-checked but not runtime-probed; usage arriving after the SDK's 100 ms grace remains unresolved. events.collect exposes records after same-call merge, so raw late/duplicate SDK deliveries are not counted by this probe."
+        "The fixture is synthetic, not provider billing evidence. HTTP 500 and transport-loss calls remain EXPECTED_PENDING because no usage was delivered; neither is reported as settled. The 100 ms SDK trailing-usage behavior is source-checked only: this local runtime emits usage before stop_reason, while that grace path is for hosted streams that send usage after stop_reason. events.collect exposes records after same-call merge, so raw late/duplicate SDK deliveries are not counted by this probe."
       ],
-      "runtime_test_status": "blocked",
+      "runtime_test_status": "pass",
       "source_status": "pass"
     }
   },
   "overall_status": "blocked",
   "real_provider_calls": 0,
-  "run_id": "p1-20260930T093540Z-21f6965e",
+  "run_id": "p1-20260930T132408Z-907c3d1d",
   "schema_version": "1",
   "selected_profile": {
     "app_server": {
@@ -131,8 +136,8 @@
       "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
     },
     "app_server_base_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
-    "app_server_image": "hekate/letta-code-p1:0bb6f741-2926e5cf",
-    "app_server_image_id": "sha256:4ee04355dd5d17e2b6018896d8a4a9219efb025e48b5c27a1925324867c30d21",
+    "app_server_image": "hekate/letta-code-p1:0bb6f741-e45bab7a",
+    "app_server_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
     "backend": "local",
     "model": "openai-compatible/hekate-fake-model",
     "network": "dedicated Docker bridge with --internal",
@@ -140,7 +145,7 @@
     "runtime_patch": {
       "file": "integration/letta/patches/provider-call-context-usage.patch",
       "name": "provider-call-context-usage",
-      "sha256": "2926e5cfd5f4666651a47b4d6320bd88a61acebe8cac3d007565860f2da43c69",
+      "sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
       "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
     },
     "sdk": {

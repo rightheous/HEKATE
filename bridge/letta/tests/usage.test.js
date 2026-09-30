@@ -78,3 +78,17 @@ test("same-call updates replace duplicate usage and allow later fields to fill g
     prompt_tokens: 99,
   })).accounting_call_id, "call-2");
 });
+
+test("same-call conflicting usage is rejected instead of overwriting the first value", () => {
+  const initial = normalizeUsageStatistics({
+    message_type: "usage_statistics",
+    accounting_call_id: "call-1",
+    prompt_tokens: 17,
+  });
+  const conflict = normalizeUsageStatistics({
+    message_type: "usage_statistics",
+    accounting_call_id: "call-1",
+    prompt_tokens: 18,
+  });
+  assert.throws(() => mergeUsageUpdate(initial, conflict), /conflicting usage fields/);
+});

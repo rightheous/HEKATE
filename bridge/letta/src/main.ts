@@ -18,7 +18,7 @@ import {
   type RuntimeBinding,
   type SessionBinding,
 } from "./protocol.js";
-import { mergeUsageUpdate, normalizeUsageStatistics } from "./usage.js";
+import { mergeUsageUpdate, normalizeUsageStatistics, UsageConflictError } from "./usage.js";
 
 interface SessionEntry {
   session: LettaCodeSession;
@@ -27,7 +27,7 @@ interface SessionEntry {
   appServerInfo: Record<string, unknown>;
   agentTools: string[];
   turnOperationId?: string;
-  turnState: "IDLE" | "RUNNING" | "COMPLETE" | "FAILED";
+  turnState: "IDLE" | "RUNNING" | "COMPLETE" | "FAILED" | "UNKNOWN";
   events: BridgeEvent[];
   toolStats: { executorCalls: number; blockedAttempts: number };
   turnTask?: Promise<void>;
@@ -101,6 +101,9 @@ function summarizeSdkMessage(
   index: number,
 ): BridgeEvent {
   const result = message.type === "result" ? message : undefined;
+  const errorCode = message.type === "error" || message.type === "result"
+    ? message.errorCode
+    : undefined;
   const streamEvent = message.type === "stream_event" && message.event && typeof message.event === "object"
     ? message.event as Record<string, unknown>
     : undefined;
@@ -116,7 +119,7 @@ function summarizeSdkMessage(
     binding,
     event_type: eventType,
     usage: summarizeUsage(message),
-    ...(result?.errorCode ? { error_code: result.errorCode } : {}),
+    ...(errorCode ? { error_code: errorCode } : {}),
     ...(result ? { success: result.success } : {}),
   };
 }
@@ -128,6 +131,7 @@ async function runTurn(
   entry.turnState = "RUNNING";
   entry.events = [];
   let resultSeen = false;
+  let dispatchAccepted = false;
   const consume = async (): Promise<void> => {
     let index = 0;
     for await (const message of entry.session.stream()) {
@@ -142,10 +146,20 @@ async function runTurn(
         ? entry.events.findIndex((candidate) => candidate.usage.accounting_call_id === callId)
         : -1;
       if (previousIndex >= 0) {
-        entry.events[previousIndex] = {
-          ...event,
-          usage: mergeUsageUpdate(entry.events[previousIndex].usage, event.usage),
-        };
+        if (entry.events[previousIndex].event_type === "usage_conflict") continue;
+        try {
+          entry.events[previousIndex] = {
+            ...event,
+            usage: mergeUsageUpdate(entry.events[previousIndex].usage, event.usage),
+          };
+        } catch (error) {
+          if (!(error instanceof UsageConflictError)) throw error;
+          entry.events[previousIndex] = {
+            ...event,
+            event_type: "usage_conflict",
+            usage: { completeness: "UNKNOWN", accounting_call_id: callId },
+          };
+        }
       } else {
         entry.events.push(event);
       }
@@ -153,8 +167,13 @@ async function runTurn(
         // SDK 0.8.25 emits trailing usage before result, or after its 100 ms
         // grace timeout when the App Server never sends usage.
         resultSeen = true;
-        entry.turnState = message.success ? "COMPLETE" : "FAILED";
+        entry.turnState = message.errorCode === "stream_closed" || entry.turnState === "UNKNOWN"
+          ? "UNKNOWN"
+          : message.success ? "COMPLETE" : "FAILED";
         break;
+      }
+      if (message.type === "error" && message.errorCode === "stream_closed") {
+        entry.turnState = "UNKNOWN";
       }
     }
   };
@@ -164,8 +183,9 @@ async function runTurn(
     await entry.session.send(command.message, {
       otid: trustedOperationOtid(command.operation_id, command.binding),
     });
+    dispatchAccepted = true;
     await stream;
-    if (!resultSeen) entry.turnState = "FAILED";
+    if (!resultSeen) entry.turnState = dispatchAccepted ? "UNKNOWN" : "FAILED";
   } catch (error) {
     const binding: SessionBinding = {
       ...entry.binding,
@@ -181,7 +201,7 @@ async function runTurn(
     };
     encodeEvent(event);
     entry.events.push(event);
-    entry.turnState = "FAILED";
+    entry.turnState = dispatchAccepted ? "UNKNOWN" : "FAILED";
     process.stderr.write(`turn failed: ${cleanError(error)}\\n`);
   }
 }
@@ -388,6 +408,9 @@ export async function routeCommand(command: Command): Promise<Reply> {
         return reply(command, "UNKNOWN", { kind: "turn", state: "UNKNOWN" }, "turn already running");
       }
       if (entry.turnOperationId === command.operation_id) {
+        if (entry.turnState === "UNKNOWN") {
+          return reply(command, "UNKNOWN", { kind: "turn", state: "UNKNOWN" }, "execution outcome is unknown");
+        }
         return reply(command, "CONFIRMED", { kind: "turn", state: entry.turnState === "COMPLETE" ? "COMPLETED" : "FAILED" });
       }
       entry.turnOperationId = command.operation_id;
@@ -408,7 +431,8 @@ export async function routeCommand(command: Command): Promise<Reply> {
       await waitForTurn(entry);
       const state = entry.turnState === "RUNNING" ? "RUNNING"
         : entry.turnState === "COMPLETE" ? "COMPLETE"
-          : entry.turnState === "FAILED" ? "FAILED" : "EMPTY";
+          : entry.turnState === "FAILED" ? "FAILED"
+            : entry.turnState === "UNKNOWN" ? "UNKNOWN" : "EMPTY";
       return reply(command, entry.turnState === "RUNNING" ? "UNKNOWN" : "CONFIRMED", {
         kind: "events",
         state,

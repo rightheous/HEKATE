@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertBinding, decodeCommand, encodeEvent, negotiateVersion } from "../dist/protocol.js";
+import { assertBinding, decodeCommand, encodeEvent, encodeReply, negotiateVersion } from "../dist/protocol.js";
 
 const binding = {
   task_id: "task-1",
@@ -73,4 +73,21 @@ test("bridge events accept only typed SDK error codes", () => {
   };
   assert.doesNotThrow(() => encodeEvent(event));
   assert.throws(() => encodeEvent({ ...event, error_code: "raw provider error" }));
+});
+
+test("bridge.v1 preserves an unknown turn outcome after dispatch", () => {
+  assert.doesNotThrow(() => encodeReply({
+    schema_version: "1",
+    request_id: "r-unknown",
+    operation_id: "o-unknown",
+    command: "events.collect",
+    status: "CONFIRMED",
+    result: {
+      kind: "events",
+      state: "UNKNOWN",
+      events: [],
+      tool_executor_calls: 0,
+      blocked_tool_attempts: 0,
+    },
+  }));
 });

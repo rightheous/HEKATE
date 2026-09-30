@@ -163,7 +163,7 @@ class BridgeEvent(ContractModel):
 
 class EventsResult(ContractModel):
     kind: Literal["events"]
-    state: Literal["RUNNING", "COMPLETE", "FAILED", "EMPTY"]
+    state: Literal["RUNNING", "COMPLETE", "FAILED", "UNKNOWN", "EMPTY"]
     events: tuple[BridgeEvent, ...] = Field(max_length=1_000)
     tool_executor_calls: int = Field(default=0, ge=0)
     blocked_tool_attempts: int = Field(default=0, ge=0)

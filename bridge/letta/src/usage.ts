@@ -1,5 +1,12 @@
 import type { BridgeEvent } from "./protocol.js";
 
+export class UsageConflictError extends Error {
+  constructor() {
+    super("conflicting usage fields for one accounting call");
+    this.name = "UsageConflictError";
+  }
+}
+
 function tokenCount(value: unknown): number | undefined {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
     ? value
@@ -50,6 +57,14 @@ export function mergeUsageUpdate(
 ): BridgeEvent["usage"] {
   if (!previous.accounting_call_id || previous.accounting_call_id !== next.accounting_call_id) {
     return next;
+  }
+  for (const key of [
+    "provider_call_id", "input_tokens", "output_tokens", "total_tokens", "cost_usd", "source",
+  ] as const) {
+    if (previous[key] !== undefined && previous[key] !== null &&
+        next[key] !== undefined && next[key] !== null && previous[key] !== next[key]) {
+      throw new UsageConflictError();
+    }
   }
   const merged = { ...previous, ...next };
   const updated = {
