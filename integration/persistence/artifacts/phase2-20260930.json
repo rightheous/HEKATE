@@ -55,7 +55,7 @@
   },
   "other_checks": {
     "python_compileall": "pass",
-    "git_diff_check": "pass"
+    "git_diff_check": "pass; byte-preserved HEKATE design source excluded because it contains Markdown hard-break whitespace"
   },
   "real_provider_calls": 0,
   "limitations": [
