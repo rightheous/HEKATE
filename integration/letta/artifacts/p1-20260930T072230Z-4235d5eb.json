@@ -1,0 +1,498 @@
+{
+  "estimated_real_provider_cost_usd": 0,
+  "evidence_artifact": "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json",
+  "executed_at": "2026-09-30T07:22:30Z",
+  "gates": {
+    "G1": {
+      "guarantees": [
+        "SDK 0.8.25 connected through remote App Server transport.",
+        "App Server runtime reported protocol 1 and Letta Code 0.33.8."
+      ],
+      "limitations": [
+        "Advertised capability flags are recorded as claims, not as end-to-end proofs."
+      ],
+      "runtime_test_status": "pass",
+      "source_status": "pass"
+    },
+    "G2": {
+      "guarantees": [
+        "A tagged probe agent was created, retrieved, and listed by owner plus creation tag.",
+        "The SDK provider agent ID remained distinct from the HEKATE registry ID."
+      ],
+      "limitations": [
+        "Creation-response-loss recovery is deferred to G3."
+      ],
+      "runtime_test_status": "pass",
+      "source_status": "pass"
+    },
+    "G5": {
+      "guarantees": [
+        "Agent creation passed baseTools:[]; the session used the default client toolset constrained to one SDK allowlist entry and an empty bridge executor allowlist.",
+        "Provider advertised tool names: ['hekate_forbidden_probe']; executor calls: 0; guarded denied attempts: 1."
+      ],
+      "limitations": [
+        "Only the inert test probe tool is exercised; production client-tool dispatch is not enabled by this phase."
+      ],
+      "runtime_test_status": "pass",
+      "source_status": "pass"
+    },
+    "G6": {
+      "guarantees": [
+        "The local App Server used an isolated Docker network with --internal and its only model provider was the fake-provider gateway.",
+        "Every fake inference forwarded to the model endpoint consumed exactly one test-only permit; unpermitted attempts were denied before the fake model endpoint.",
+        "Observed normal turn: {'provider_requests': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}; provider-error path: {'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}; empty-response path: {'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}; zero-permit turn: {'provider_requests': 0, 'gateway_attempts': 1, 'permits_issued': 0, 'permits_consumed': 0, 'denied_attempts': 1}."
+      ],
+      "limitations": [
+        "This is a probe-only egress gate and permit source, not the production atomic budget ledger.",
+        "Compaction was not triggered; source trace shows compaction calls use LocalPiModelsRuntime.streamSimple and therefore the same configured provider endpoint.",
+        "No real provider credentials or models were used."
+      ],
+      "runtime_test_status": "pass",
+      "source_status": "pass"
+    },
+    "G7": {
+      "guarantees": [
+        "One-permit retry enforcement observed=True. Provider-error path: {'provider_requests': 1, 'gateway_attempts': 2, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 1}; empty-response path: {'provider_requests': 1, 'gateway_attempts': 1, 'permits_issued': 1, 'permits_consumed': 1, 'denied_attempts': 0}."
+      ],
+      "limitations": [
+        "The profile did not enable SDK structured-output repair; transport reconnection was not exercised, so the full gate remains blocked.",
+        "The external gate enforces one model request per issued permit; it does not claim a Letta step limit."
+      ],
+      "runtime_test_status": "blocked",
+      "source_status": "pass"
+    },
+    "G8": {
+      "guarantees": [
+        "Agent readback contained context_window_limit=16384 and max_tokens=64; fake provider observed model='hekate-fake-model', max_tokens=None, max_completion_tokens=64."
+      ],
+      "limitations": [
+        "The input limit maps to App Server context_window_limit, not a provider request field; the fake provider cannot independently attest the exact tokenizer count, so exact input-cap enforcement remains blocked."
+      ],
+      "runtime_test_status": "blocked",
+      "source_status": "pass"
+    },
+    "G9": {
+      "guarantees": [
+        "The fake provider returned a call ID and usage values in its OpenAI-compatible response.",
+        "The bridge event stream reported usage completeness UNKNOWN and did not expose provider_call_id or token quantities."
+      ],
+      "limitations": [
+        "Error, cancellation, duplicate-terminal, and compaction usage reconciliation remain unverified."
+      ],
+      "runtime_test_status": "fail",
+      "source_status": "blocked"
+    }
+  },
+  "observations": {
+    "agent_lifecycle": {
+      "context_window_limit_setting": 16384,
+      "created_provider_agent_id": "agent-local-3911f1a9-2ca3-4310-94fd-86f30b731c88",
+      "deleted_present": false,
+      "listed": true,
+      "max_output_tokens_setting": 64,
+      "model": "openai-compatible/hekate-fake-model",
+      "post_delete_present": false,
+      "retrieved_present": true
+    },
+    "app_server_info": {
+      "backend": "local",
+      "capabilities": {
+        "agent_free_conversations": true,
+        "agent_management": true,
+        "conversation_management": true,
+        "launch_subagent": true,
+        "memory_management": true,
+        "runtime_external_tools_update": true,
+        "runtime_start": true,
+        "runtime_workspace_sandbox": true,
+        "split_channels": false,
+        "structured_outputs": false
+      },
+      "letta_code_version": "0.33.8",
+      "protocol_version": "1",
+      "structured_outputs": false
+    },
+    "empty_response_retry": {
+      "delta": {
+        "denied_attempts": 0,
+        "gateway_attempts": 1,
+        "permits_consumed": 1,
+        "permits_issued": 1,
+        "provider_requests": 1
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "stream_event",
+          "loop_status",
+          "result"
+        ],
+        "state": "COMPLETE",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ]
+      }
+    },
+    "fake_provider": {
+      "checks": [
+        {
+          "authorized": true,
+          "operation_id": "p1-20260930T072230Z-4235d5eb:tool-turn"
+        },
+        {
+          "authorized": false,
+          "operation_id": null
+        },
+        {
+          "authorized": true,
+          "operation_id": "p1-20260930T072230Z-4235d5eb:normal-turn"
+        },
+        {
+          "authorized": true,
+          "operation_id": "p1-20260930T072230Z-4235d5eb:retry-turn"
+        },
+        {
+          "authorized": false,
+          "operation_id": null
+        },
+        {
+          "authorized": true,
+          "operation_id": "p1-20260930T072230Z-4235d5eb:empty-turn"
+        },
+        {
+          "authorized": false,
+          "operation_id": null
+        }
+      ],
+      "denied_attempts": 3,
+      "gateway_attempts": 7,
+      "model_discovery_count": 1,
+      "model_requests": [
+        {
+          "behavior": "tool_call",
+          "estimated_input_tokens": 7349,
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 7349,
+            "total_tokens": 7351
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_call_id": "fake-call-0001",
+          "sequence": 1,
+          "stream": true,
+          "tool_names": [
+            "hekate_forbidden_probe"
+          ]
+        },
+        {
+          "behavior": "normal",
+          "estimated_input_tokens": 7345,
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 7345,
+            "total_tokens": 7347
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_call_id": "fake-call-0002",
+          "sequence": 2,
+          "stream": true,
+          "tool_names": [
+            "hekate_forbidden_probe"
+          ]
+        },
+        {
+          "behavior": "error",
+          "estimated_input_tokens": 7345,
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_call_id": "fake-call-0003",
+          "sequence": 3,
+          "stream": true,
+          "tool_names": [
+            "hekate_forbidden_probe"
+          ]
+        },
+        {
+          "behavior": "empty",
+          "estimated_input_tokens": 7345,
+          "fake_usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 7345,
+            "total_tokens": 7347
+          },
+          "max_completion_tokens": 64,
+          "max_tokens": null,
+          "model": "hekate-fake-model",
+          "provider_call_id": "fake-call-0004",
+          "sequence": 4,
+          "stream": true,
+          "tool_names": [
+            "hekate_forbidden_probe"
+          ]
+        }
+      ],
+      "permits_consumed": 4,
+      "permits_issued": 4,
+      "provider_request_count": 4
+    },
+    "hello": {
+      "backend": "remote",
+      "capabilities": {
+        "agent_create": true,
+        "agent_delete": true,
+        "agent_get": true,
+        "agent_list": true,
+        "event_collection": true,
+        "pre_provider_call": false,
+        "provider_usage_by_call_id": false,
+        "session_prepare": true,
+        "session_turn": true
+      },
+      "kind": "capabilities",
+      "limitations": [
+        "Provider-call authorization is not exposed by the SDK; the probe uses an external fake-provider gate.",
+        "SDK events omit provider call IDs and complete token/cost usage; usage is reported UNKNOWN."
+      ],
+      "protocol_version": "1",
+      "sdk_version": "0.8.25"
+    },
+    "network_internal": true,
+    "node_version": "22.19.0",
+    "normal_turn": {
+      "delta": {
+        "denied_attempts": 0,
+        "permits_consumed": 1,
+        "permits_issued": 1,
+        "provider_requests": 1
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "assistant",
+          "stream_event",
+          "loop_status",
+          "result"
+        ],
+        "state": "COMPLETE",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ]
+      }
+    },
+    "provider_error_retry": {
+      "delta": {
+        "denied_attempts": 1,
+        "gateway_attempts": 2,
+        "permits_consumed": 1,
+        "permits_issued": 1,
+        "provider_requests": 1
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "error"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "stream_event",
+          "error",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ]
+      }
+    },
+    "tool_boundary": {
+      "provider_request_count": 1,
+      "provider_tool_names": [
+        "hekate_forbidden_probe"
+      ],
+      "session_ready_agent_tools": [],
+      "turn": {
+        "blocked_tool_attempts": 1,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "error"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "tool_call",
+          "stream_event",
+          "stream_event",
+          "loop_status",
+          "loop_status",
+          "stream_event",
+          "stream_event",
+          "tool_result",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "error",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ]
+      }
+    },
+    "zero_permit_turn": {
+      "delta": {
+        "denied_attempts": 1,
+        "gateway_attempts": 1,
+        "permits_consumed": 0,
+        "permits_issued": 0,
+        "provider_requests": 0
+      },
+      "turn": {
+        "blocked_tool_attempts": 0,
+        "dispatch_state": "DISPATCHED",
+        "dispatch_status": "CONFIRMED",
+        "error_codes": [
+          "error"
+        ],
+        "event_status": "CONFIRMED",
+        "event_types": [
+          "loop_status",
+          "queue_update",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "loop_status",
+          "error",
+          "result"
+        ],
+        "state": "FAILED",
+        "tool_executor_calls": 0,
+        "usage_completeness": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ]
+      }
+    }
+  },
+  "overall_status": "blocked",
+  "profile": {
+    "app_server": {
+      "backend": "local",
+      "image": "ghcr.io/letta-ai/letta-code",
+      "image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+      "letta_code_version": "0.33.8",
+      "protocol_version": "1",
+      "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+    },
+    "app_server_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "backend": "local",
+    "model": "openai-compatible/hekate-fake-model",
+    "network": "dedicated Docker bridge with --internal",
+    "node_version": "22.19.0",
+    "sdk": {
+      "name": "@letta-ai/letta-agent-sdk",
+      "npm_integrity": "sha512-DDp7PFgwd3W7H/hJW+hA7iRAOCtYdx7aVuRQrQbNcM3UqqzgsEiuVVQgRFYhVI+ktviWfweStnpJDVM9PU/OgQ==",
+      "source_commit": "07180877b65b4c2633150316dc504c39159a45ca",
+      "version": "0.8.25"
+    }
+  },
+  "real_provider_calls": 0,
+  "run_id": "p1-20260930T072230Z-4235d5eb",
+  "schema_version": "1"
+}

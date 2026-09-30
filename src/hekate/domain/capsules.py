@@ -56,6 +56,8 @@ def validate_capsule_binding(
 
 
 def export_schemas() -> Mapping[str, JsonSchema]:
+    from .bridge_contracts import bridge_schema
+
     models = {
         "task-capsule.v1.schema.json": TaskCapsule,
         "conclusion-capsule.v1.schema.json": ConclusionCapsule,
@@ -75,4 +77,5 @@ def export_schemas() -> Mapping[str, JsonSchema]:
             f"Parser enforces a {MAX_CONTRACT_BYTES}-byte UTF-8 JSON payload limit."
         )
         schemas[filename] = schema
+    schemas["bridge.v1.schema.json"] = bridge_schema()
     return schemas

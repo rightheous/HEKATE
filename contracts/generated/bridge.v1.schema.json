@@ -1,0 +1,1060 @@
+{
+  "$comment": "Private JSONL bridge contract. Frames are limited to 1 MiB by the transport.",
+  "$defs": {
+    "AgentCreateCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "agent.create",
+          "title": "Command",
+          "type": "string"
+        },
+        "creation_tag": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Creation Tag",
+          "type": "string"
+        },
+        "max_input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Input Tokens"
+        },
+        "max_output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Output Tokens"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "owner": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Owner",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "role": {
+          "default": "hekate",
+          "enum": [
+            "hekate",
+            "critic"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "owner",
+        "creation_tag"
+      ],
+      "title": "AgentCreateCommand",
+      "type": "object"
+    },
+    "AgentDeleteCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "agent.delete",
+          "title": "Command",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "provider_agent_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "provider_agent_id"
+      ],
+      "title": "AgentDeleteCommand",
+      "type": "object"
+    },
+    "AgentGetCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "agent.get",
+          "title": "Command",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "provider_agent_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "provider_agent_id"
+      ],
+      "title": "AgentGetCommand",
+      "type": "object"
+    },
+    "AgentListCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "agent.list",
+          "title": "Command",
+          "type": "string"
+        },
+        "creation_tag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Creation Tag"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "owner": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Owner",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "owner"
+      ],
+      "title": "AgentListCommand",
+      "type": "object"
+    },
+    "AgentListResult": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "agents",
+          "title": "Kind",
+          "type": "string"
+        },
+        "provider_agent_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provider Agent Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "provider_agent_ids"
+      ],
+      "title": "AgentListResult",
+      "type": "object"
+    },
+    "AgentResult": {
+      "additionalProperties": false,
+      "properties": {
+        "creation_tag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Creation Tag"
+        },
+        "kind": {
+          "const": "agent",
+          "title": "Kind",
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "model_settings": {
+          "additionalProperties": true,
+          "title": "Model Settings",
+          "type": "object"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner"
+        },
+        "present": {
+          "title": "Present",
+          "type": "boolean"
+        },
+        "provider_agent_id": {
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "tools": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "provider_agent_id",
+        "present"
+      ],
+      "title": "AgentResult",
+      "type": "object"
+    },
+    "BridgeBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_registry_id": {
+          "title": "Agent Registry Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "fence": {
+          "minimum": 0,
+          "title": "Fence",
+          "type": "integer"
+        },
+        "input_revision": {
+          "minimum": 0,
+          "title": "Input Revision",
+          "type": "integer"
+        },
+        "provider_agent_id": {
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "attempt_id",
+        "agent_registry_id",
+        "provider_agent_id",
+        "input_revision",
+        "fence"
+      ],
+      "title": "BridgeBinding",
+      "type": "object"
+    },
+    "BridgeCommand": {
+      "discriminator": {
+        "mapping": {
+          "agent.create": "#/$defs/AgentCreateCommand",
+          "agent.delete": "#/$defs/AgentDeleteCommand",
+          "agent.get": "#/$defs/AgentGetCommand",
+          "agent.list": "#/$defs/AgentListCommand",
+          "events.collect": "#/$defs/EventsCollectCommand",
+          "hello": "#/$defs/HelloCommand",
+          "session.prepare": "#/$defs/SessionPrepareCommand",
+          "session.turn": "#/$defs/SessionTurnCommand"
+        },
+        "propertyName": "command"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/HelloCommand"
+        },
+        {
+          "$ref": "#/$defs/AgentCreateCommand"
+        },
+        {
+          "$ref": "#/$defs/AgentGetCommand"
+        },
+        {
+          "$ref": "#/$defs/AgentListCommand"
+        },
+        {
+          "$ref": "#/$defs/AgentDeleteCommand"
+        },
+        {
+          "$ref": "#/$defs/SessionPrepareCommand"
+        },
+        {
+          "$ref": "#/$defs/SessionTurnCommand"
+        },
+        {
+          "$ref": "#/$defs/EventsCollectCommand"
+        }
+      ]
+    },
+    "BridgeEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "binding": {
+          "$ref": "#/$defs/BridgeSessionBinding"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "enum": [
+                "approval_conflict",
+                "approval_conflict_terminal",
+                "protocol_error",
+                "error",
+                "llm_api_error",
+                "max_steps",
+                "interrupted",
+                "stream_closed",
+                "structured_output_error"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "event_id": {
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_type": {
+          "minLength": 1,
+          "title": "Event Type",
+          "type": "string"
+        },
+        "operation_id": {
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "success": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Success"
+        },
+        "usage": {
+          "$ref": "#/$defs/BridgeUsage"
+        }
+      },
+      "required": [
+        "schema_version",
+        "event_id",
+        "operation_id",
+        "binding",
+        "event_type",
+        "usage"
+      ],
+      "title": "BridgeEvent",
+      "type": "object"
+    },
+    "BridgeReply": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "agent": "#/$defs/AgentResult",
+                  "agents": "#/$defs/AgentListResult",
+                  "capabilities": "#/$defs/CapabilitiesResult",
+                  "events": "#/$defs/EventsResult",
+                  "session": "#/$defs/SessionResult",
+                  "turn": "#/$defs/TurnResult"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/CapabilitiesResult"
+                },
+                {
+                  "$ref": "#/$defs/AgentResult"
+                },
+                {
+                  "$ref": "#/$defs/AgentListResult"
+                },
+                {
+                  "$ref": "#/$defs/SessionResult"
+                },
+                {
+                  "$ref": "#/$defs/TurnResult"
+                },
+                {
+                  "$ref": "#/$defs/EventsResult"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "CONFIRMED",
+            "REJECTED",
+            "UNKNOWN"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "status"
+      ],
+      "title": "BridgeReply",
+      "type": "object"
+    },
+    "BridgeSessionBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_registry_id": {
+          "title": "Agent Registry Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "conversation_id": {
+          "title": "Conversation Id",
+          "type": "string"
+        },
+        "fence": {
+          "minimum": 0,
+          "title": "Fence",
+          "type": "integer"
+        },
+        "input_revision": {
+          "minimum": 0,
+          "title": "Input Revision",
+          "type": "integer"
+        },
+        "provider_agent_id": {
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "attempt_id",
+        "agent_registry_id",
+        "provider_agent_id",
+        "input_revision",
+        "fence",
+        "conversation_id"
+      ],
+      "title": "BridgeSessionBinding",
+      "type": "object"
+    },
+    "BridgeUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "completeness": {
+          "enum": [
+            "UNKNOWN",
+            "PARTIAL",
+            "COMPLETE"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Usd"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Tokens"
+        },
+        "provider_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider Call Id"
+        }
+      },
+      "required": [
+        "completeness"
+      ],
+      "title": "BridgeUsage",
+      "type": "object"
+    },
+    "CapabilitiesResult": {
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "const": "remote",
+          "title": "Backend",
+          "type": "string"
+        },
+        "capabilities": {
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "title": "Capabilities",
+          "type": "object"
+        },
+        "kind": {
+          "const": "capabilities",
+          "title": "Kind",
+          "type": "string"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "protocol_version": {
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "sdk_version": {
+          "title": "Sdk Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "sdk_version",
+        "backend",
+        "protocol_version",
+        "capabilities",
+        "limitations"
+      ],
+      "title": "CapabilitiesResult",
+      "type": "object"
+    },
+    "EventsCollectCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "binding": {
+          "$ref": "#/$defs/BridgeSessionBinding"
+        },
+        "command": {
+          "const": "events.collect",
+          "title": "Command",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "binding"
+      ],
+      "title": "EventsCollectCommand",
+      "type": "object"
+    },
+    "EventsResult": {
+      "additionalProperties": false,
+      "properties": {
+        "blocked_tool_attempts": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Blocked Tool Attempts",
+          "type": "integer"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/BridgeEvent"
+          },
+          "maxItems": 1000,
+          "title": "Events",
+          "type": "array"
+        },
+        "kind": {
+          "const": "events",
+          "title": "Kind",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "RUNNING",
+            "COMPLETE",
+            "FAILED",
+            "EMPTY"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "tool_executor_calls": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Tool Executor Calls",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "state",
+        "events"
+      ],
+      "title": "EventsResult",
+      "type": "object"
+    },
+    "HelloCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "hello",
+          "title": "Command",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command"
+      ],
+      "title": "HelloCommand",
+      "type": "object"
+    },
+    "SessionPrepareCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "binding": {
+          "$ref": "#/$defs/BridgeBinding"
+        },
+        "command": {
+          "const": "session.prepare",
+          "title": "Command",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "binding"
+      ],
+      "title": "SessionPrepareCommand",
+      "type": "object"
+    },
+    "SessionResult": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_tools": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Agent Tools",
+          "type": "array"
+        },
+        "app_server_info": {
+          "additionalProperties": true,
+          "title": "App Server Info",
+          "type": "object"
+        },
+        "blocked_tool_attempts": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Blocked Tool Attempts",
+          "type": "integer"
+        },
+        "conversation_id": {
+          "title": "Conversation Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "session",
+          "title": "Kind",
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "provider_agent_id": {
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "tool_executor_calls": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Tool Executor Calls",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "provider_agent_id",
+        "conversation_id",
+        "app_server_info"
+      ],
+      "title": "SessionResult",
+      "type": "object"
+    },
+    "SessionTurnCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "binding": {
+          "$ref": "#/$defs/BridgeSessionBinding"
+        },
+        "command": {
+          "const": "session.turn",
+          "title": "Command",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 65536,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "binding",
+        "message"
+      ],
+      "title": "SessionTurnCommand",
+      "type": "object"
+    },
+    "TurnResult": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "turn",
+          "title": "Kind",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "DISPATCHED",
+            "COMPLETED",
+            "FAILED",
+            "UNKNOWN"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "state"
+      ],
+      "title": "TurnResult",
+      "type": "object"
+    }
+  },
+  "$id": "urn:hekate:bridge:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/BridgeCommand"
+    },
+    {
+      "$ref": "#/$defs/BridgeReply"
+    },
+    {
+      "$ref": "#/$defs/BridgeEvent"
+    }
+  ]
+}
