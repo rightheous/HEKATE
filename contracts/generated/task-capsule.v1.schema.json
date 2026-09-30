@@ -1,0 +1,205 @@
+{
+  "$comment": "Parser enforces a 1048576-byte UTF-8 JSON payload limit.",
+  "$defs": {
+    "ExpectedOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "title": "Schema",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema"
+      ],
+      "title": "ExpectedOutput",
+      "type": "object"
+    },
+    "Premise": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "kind"
+      ],
+      "title": "Premise",
+      "type": "object"
+    },
+    "RuntimeLimitsCapsule": {
+      "additionalProperties": false,
+      "properties": {
+        "deadline_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deadline At"
+        },
+        "max_output_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Output Tokens"
+        },
+        "max_tool_calls": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Tool Calls"
+        }
+      },
+      "title": "RuntimeLimitsCapsule",
+      "type": "object"
+    },
+    "TargetPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "topic_id": {
+          "title": "Topic Id",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "topic_id",
+        "version",
+        "summary"
+      ],
+      "title": "TargetPosition",
+      "type": "object"
+    }
+  },
+  "$id": "urn:hekate:contract:task-capsule:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": {
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "capability_profile": {
+      "title": "Capability Profile",
+      "type": "string"
+    },
+    "constraints": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 1000,
+      "title": "Constraints",
+      "type": "array"
+    },
+    "evidence_refs": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 1000,
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "expected_output": {
+      "$ref": "#/$defs/ExpectedOutput"
+    },
+    "input_revision": {
+      "title": "Input Revision",
+      "type": "integer"
+    },
+    "mode": {
+      "title": "Mode",
+      "type": "string"
+    },
+    "objective": {
+      "title": "Objective",
+      "type": "string"
+    },
+    "premises": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Premise"
+      },
+      "maxItems": 1000,
+      "title": "Premises",
+      "type": "array"
+    },
+    "reasoning_role": {
+      "title": "Reasoning Role",
+      "type": "string"
+    },
+    "runtime_limits": {
+      "$ref": "#/$defs/RuntimeLimitsCapsule"
+    },
+    "schema_version": {
+      "const": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "target_position": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TargetPosition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "attempt_id",
+    "input_revision",
+    "objective",
+    "reasoning_role",
+    "mode",
+    "expected_output",
+    "capability_profile"
+  ],
+  "title": "TaskCapsule",
+  "type": "object"
+}

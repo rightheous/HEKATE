@@ -1,0 +1,153 @@
+{
+  "$comment": "Parser enforces a 1048576-byte UTF-8 JSON payload limit.",
+  "$defs": {
+    "Confidence": {
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Basis",
+          "type": "array"
+        },
+        "level": {
+          "title": "Level",
+          "type": "string"
+        },
+        "missing_evidence": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Missing Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "level",
+        "basis"
+      ],
+      "title": "Confidence",
+      "type": "object"
+    },
+    "PositionBody": {
+      "additionalProperties": false,
+      "description": "Wire body: applicability is content; authorization scope is supplied separately.",
+      "properties": {
+        "applicability": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Applicability",
+          "type": "array"
+        },
+        "assumptions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Assumptions",
+          "type": "array"
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "dissent_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Dissent Refs",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        },
+        "uncertainty": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uncertainty"
+        }
+      },
+      "required": [
+        "statement",
+        "confidence"
+      ],
+      "title": "PositionBody",
+      "type": "object"
+    }
+  },
+  "$id": "urn:hekate:contract:position-commit:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "base_version": {
+      "title": "Base Version",
+      "type": "integer"
+    },
+    "input_revision": {
+      "title": "Input Revision",
+      "type": "integer"
+    },
+    "operation_id": {
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "proposed_position": {
+      "$ref": "#/$defs/PositionBody"
+    },
+    "reason_for_change": {
+      "title": "Reason For Change",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "topic_id": {
+      "title": "Topic Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "operation_id",
+    "task_id",
+    "topic_id",
+    "base_version",
+    "input_revision",
+    "proposed_position",
+    "reason_for_change"
+  ],
+  "title": "PositionCommitRequest",
+  "type": "object"
+}

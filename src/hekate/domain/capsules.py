@@ -2,10 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from pydantic import TypeAdapter
+
+from .contracts import MAX_CONTRACT_BYTES, check_json_payload
 from .models import (
-    Attempt, Capsule, ConclusionCapsule, EvidenceView, JsonSchema, RuntimeBinding,
-    TaskCapsule, TaskSnapshot,
+    Attempt, ConclusionCapsule, EvidenceInput, EvidenceView,
+    HekateProposal, JsonSchema, PositionCommitRequest, RuntimeBinding, TaskCapsule,
+    TaskSnapshot,
 )
+from .types import Revision
 
 
 def build_task_capsule(
@@ -15,12 +20,59 @@ def build_task_capsule(
 
 
 def parse_conclusion(payload: bytes) -> ConclusionCapsule:
-    raise NotImplementedError
+    return ConclusionCapsule.model_validate_json(check_json_payload(payload), strict=True)
 
 
-def validate_capsule_binding(capsule: Capsule, binding: RuntimeBinding) -> None:
-    raise NotImplementedError
+def parse_task_capsule(payload: bytes) -> TaskCapsule:
+    return TaskCapsule.model_validate_json(check_json_payload(payload), strict=True)
+
+
+def parse_position_commit(payload: bytes) -> PositionCommitRequest:
+    return PositionCommitRequest.model_validate_json(check_json_payload(payload), strict=True)
+
+
+def parse_evidence(payload: bytes) -> EvidenceInput:
+    return EvidenceInput.model_validate_json(check_json_payload(payload), strict=True)
+
+
+def validate_capsule_binding(
+    capsule: ConclusionCapsule, binding: RuntimeBinding
+) -> Revision:
+    """Compare wire claims with trusted binding values; perform no auth or lookup."""
+    mismatches = [
+        name
+        for name, actual, expected in (
+            ("task_id", capsule.task_id, binding.task_id),
+            ("attempt_id", capsule.attempt_id, binding.attempt_id),
+            ("agent_id", capsule.agent_id, binding.agent_registry_id),
+        )
+        if actual != expected
+    ]
+    if capsule.input_revision is not None and capsule.input_revision != binding.input_revision:
+        mismatches.append("input_revision")
+    if mismatches:
+        raise ValueError(f"capsule does not match runtime binding: {', '.join(mismatches)}")
+    return binding.input_revision
 
 
 def export_schemas() -> Mapping[str, JsonSchema]:
-    raise NotImplementedError
+    models = {
+        "task-capsule.v1.schema.json": TaskCapsule,
+        "conclusion-capsule.v1.schema.json": ConclusionCapsule,
+        "hekate-proposal.v1.schema.json": TypeAdapter(HekateProposal),
+        "position-commit.v1.schema.json": PositionCommitRequest,
+    }
+    schemas: dict[str, JsonSchema] = {}
+    for filename, model in models.items():
+        schema = (
+            model.json_schema(mode="validation")
+            if isinstance(model, TypeAdapter)
+            else model.model_json_schema(mode="validation")
+        )
+        schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
+        schema["$id"] = f"urn:hekate:contract:{filename.removesuffix('.v1.schema.json')}:v1"
+        schema["$comment"] = (
+            f"Parser enforces a {MAX_CONTRACT_BYTES}-byte UTF-8 JSON payload limit."
+        )
+        schemas[filename] = schema
+    return schemas

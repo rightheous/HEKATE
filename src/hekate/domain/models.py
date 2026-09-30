@@ -6,6 +6,7 @@ from typing import Annotated, Literal, Mapping, TypeAlias, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .contracts import MAX_CONTRACT_ITEMS
 from .types import (
     AttemptId, AttemptStatus, DomainId, EvidenceId, OperationId, ProviderAgentId,
     PrincipalId, ProviderCallId, RegistryId, ReservationId, Revision, ScopeId,
@@ -130,40 +131,91 @@ class InputChange(ContractModel):
     constraints: Mapping[str, object] = Field(default_factory=dict)
 
 
+class Confidence(ContractModel):
+    level: str
+    basis: tuple[str, ...] = Field(max_length=MAX_CONTRACT_ITEMS)
+    missing_evidence: tuple[str, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+
+
+class Assessment(ContractModel):
+    statement: str
+    confidence: Confidence
+
+
+class Objection(ContractModel):
+    id: str
+    severity: str
+    claim: str
+    condition: str
+    suggested_validation: str
+
+
+class RecommendedNextStep(ContractModel):
+    type: str
+
+
+class PositionRecommendation(ContractModel):
+    action: str
+    summary: str
+
+
+class ConclusionCapsule(ContractModel):
+    schema_version: Literal["1"]
+    task_id: TaskId
+    attempt_id: AttemptId
+    agent_id: RegistryId
+    status: str
+    input_revision: Revision | None = None
+    assessment: Assessment
+    evidence_used: tuple[EvidenceId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    objections: tuple[Objection, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    assumptions: tuple[str, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    unresolved: tuple[str, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    recommended_next_step: RecommendedNextStep
+    position_recommendation: PositionRecommendation
+
+
+class Premise(ContractModel):
+    id: str
+    text: str
+    kind: str
+
+
+class TargetPosition(ContractModel):
+    topic_id: TopicId
+    version: int
+    summary: str
+
+
+class ExpectedOutput(ContractModel):
+    schema_id: str = Field(alias="schema")
+
+
+class RuntimeLimitsCapsule(ContractModel):
+    max_output_tokens: int | None = None
+    max_tool_calls: int | None = None
+    deadline_at: str | None = None
+
+
 class TaskCapsule(ContractModel):
-    schema_version: Literal["1"] = "1"
+    schema_version: Literal["1"]
     task_id: TaskId
     attempt_id: AttemptId
     input_revision: Revision
     objective: str
-    role: str
+    reasoning_role: str
     mode: str
-    premises: tuple[Mapping[str, object], ...] = ()
-    evidence_refs: tuple[EvidenceId, ...] = ()
-    target_position: Mapping[str, object] | None = None
-    constraints: Mapping[str, object] = Field(default_factory=dict)
-    expected_output: str
-    limits: Mapping[str, int] = Field(default_factory=dict)
-    profile: Mapping[str, object] = Field(default_factory=dict)
-
-
-class ConclusionCapsule(ContractModel):
-    schema_version: Literal["1"] = "1"
-    task_id: TaskId
-    attempt_id: AttemptId
-    input_revision: Revision
-    assessment: str
-    confidence: float
-    evidence_used: tuple[EvidenceId, ...] = ()
-    objections: tuple[Mapping[str, object], ...] = ()
-    assumptions: tuple[str, ...] = ()
-    unresolved: tuple[str, ...] = ()
-    next_step: str | None = None
-    position_recommendation: Mapping[str, object] | None = None
+    premises: tuple[Premise, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    evidence_refs: tuple[EvidenceId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    target_position: TargetPosition | None = None
+    constraints: tuple[str, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    expected_output: ExpectedOutput
+    runtime_limits: RuntimeLimitsCapsule = Field(default_factory=RuntimeLimitsCapsule)
+    capability_profile: str
 
 
 class HekateProposalModel(ContractModel):
-    schema_version: Literal["1"] = "1"
+    schema_version: Literal["1"]
 
 
 class AnswerProposal(HekateProposalModel):
@@ -200,7 +252,7 @@ class CommitProposal(HekateProposalModel):
     topic_id: TopicId
     base_version: int
     input_revision: Revision
-    proposed_position: Mapping[str, object]
+    proposed_position: PositionBody
     reason_for_change: str
 
 
@@ -212,17 +264,18 @@ Capsule: TypeAlias = TaskCapsule | ConclusionCapsule
 
 
 class PositionBody(ContractModel):
+    """Wire body: applicability is content; authorization scope is supplied separately."""
     statement: str
-    scope: str
-    confidence: float
-    evidence_refs: tuple[EvidenceId, ...] = ()
-    assumptions: tuple[str, ...] = ()
-    dissent_refs: tuple[DomainId, ...] = ()
+    applicability: tuple[str, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    confidence: Confidence
+    evidence_refs: tuple[EvidenceId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    assumptions: tuple[str, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    dissent_refs: tuple[DomainId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
     uncertainty: str | None = None
-    provenance: Mapping[str, object] = Field(default_factory=dict)
 
 
 class PositionCommitRequest(ContractModel):
+    schema_version: Literal["1"] = "1"
     operation_id: OperationId
     task_id: TaskId
     topic_id: TopicId
@@ -276,6 +329,7 @@ class BudgetReservation(ContractModel):
 
 
 class PositionVersionRecord(ContractModel):
+    scope: ScopeId
     topic_id: TopicId
     version: int
     base_version: int
@@ -285,16 +339,56 @@ class PositionVersionRecord(ContractModel):
     input_revision: Revision
 
 
-class EvidenceRecord(ContractModel):
+class EvidenceInput(ContractModel):
+    schema_version: Literal["1"] = "1"
     id: EvidenceId
-    scope: ScopeId
     kind: str
+    source_uri: str
+    locator: str | None = None
+    retrieved_at: datetime
+    observed_at: datetime | None = None
     content_hash: str
+    derived_from: tuple[EvidenceId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    access_scope: str
+    retention_class: str
+    content_version: str | None = None
+    availability: str | None = None
+    access_epoch: int | None = None
+    root_source_ids: tuple[EvidenceId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    expiry_at: datetime | None = None
+
+
+class EvidenceRecord(EvidenceInput):
+    scope: ScopeId
     content_version: str
     availability: str
     access_epoch: int
-    root_source_ids: tuple[EvidenceId, ...] = ()
-    expiry_at: datetime | None = None
+
+    @classmethod
+    def from_input(
+        cls,
+        source: EvidenceInput,
+        scope_by_access_scope: Mapping[str, ScopeId],
+        *,
+        content_version: str,
+        availability: str,
+        access_epoch: int,
+    ) -> EvidenceRecord:
+        """Map the wire access-scope label to the store's trusted scope ID."""
+        try:
+            scope = scope_by_access_scope[source.access_scope]
+        except KeyError as error:
+            raise ValueError(f"unmapped access_scope: {source.access_scope}") from error
+        values = source.model_dump()
+        for field, value in (
+            ("content_version", content_version),
+            ("availability", availability),
+            ("access_epoch", access_epoch),
+        ):
+            if values[field] is not None and values[field] != value:
+                raise ValueError(f"conflicting evidence {field}")
+            values[field] = value
+        return cls(scope=scope, **values)
 
 
 class StoredConclusion(ContractModel):
@@ -359,7 +453,6 @@ UsageCompleteness: TypeAlias = Mapping[str, object]
 UsageReceipt: TypeAlias = Mapping[str, object]
 SettlementReceipt: TypeAlias = Mapping[str, object]
 ReadLimits: TypeAlias = Mapping[str, object]
-EvidenceInput: TypeAlias = Mapping[str, object]
 EvidenceView: TypeAlias = Mapping[str, object]
 ReferenceValidation: TypeAlias = Mapping[str, object]
 RetentionReport: TypeAlias = Mapping[str, object]

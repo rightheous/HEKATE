@@ -1,0 +1,217 @@
+{
+  "$comment": "Parser enforces a 1048576-byte UTF-8 JSON payload limit.",
+  "$defs": {
+    "Assessment": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "confidence"
+      ],
+      "title": "Assessment",
+      "type": "object"
+    },
+    "Confidence": {
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Basis",
+          "type": "array"
+        },
+        "level": {
+          "title": "Level",
+          "type": "string"
+        },
+        "missing_evidence": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Missing Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "level",
+        "basis"
+      ],
+      "title": "Confidence",
+      "type": "object"
+    },
+    "Objection": {
+      "additionalProperties": false,
+      "properties": {
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "condition": {
+          "title": "Condition",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "severity": {
+          "title": "Severity",
+          "type": "string"
+        },
+        "suggested_validation": {
+          "title": "Suggested Validation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "severity",
+        "claim",
+        "condition",
+        "suggested_validation"
+      ],
+      "title": "Objection",
+      "type": "object"
+    },
+    "PositionRecommendation": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "summary"
+      ],
+      "title": "PositionRecommendation",
+      "type": "object"
+    },
+    "RecommendedNextStep": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "RecommendedNextStep",
+      "type": "object"
+    }
+  },
+  "$id": "urn:hekate:contract:conclusion-capsule:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "agent_id": {
+      "title": "Agent Id",
+      "type": "string"
+    },
+    "assessment": {
+      "$ref": "#/$defs/Assessment"
+    },
+    "assumptions": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 1000,
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "attempt_id": {
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "evidence_used": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 1000,
+      "title": "Evidence Used",
+      "type": "array"
+    },
+    "input_revision": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Input Revision"
+    },
+    "objections": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Objection"
+      },
+      "maxItems": 1000,
+      "title": "Objections",
+      "type": "array"
+    },
+    "position_recommendation": {
+      "$ref": "#/$defs/PositionRecommendation"
+    },
+    "recommended_next_step": {
+      "$ref": "#/$defs/RecommendedNextStep"
+    },
+    "schema_version": {
+      "const": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "title": "Status",
+      "type": "string"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "unresolved": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 1000,
+      "title": "Unresolved",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "attempt_id",
+    "agent_id",
+    "status",
+    "assessment",
+    "recommended_next_step",
+    "position_recommendation"
+  ],
+  "title": "ConclusionCapsule",
+  "type": "object"
+}
