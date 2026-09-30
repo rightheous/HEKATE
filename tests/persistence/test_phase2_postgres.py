@@ -285,6 +285,12 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await self._scalar("SELECT count(*) FROM attempts WHERE id=:id", id=str(request.binding.attempt_id)), 0)
         self.assertEqual(await self._scalar("SELECT count(*) FROM budget_reservations WHERE id=:id", id=str(request.reservation.id)), 0)
         self.assertEqual(await self._scalar("SELECT count(*) FROM outbox"), 0)
+        self.assertEqual(await self._scalar("SELECT count(*) FROM budget_ledger"), 0)
+        task_state = await self._scalar(
+            "SELECT status || ':' || critic_agents || ':' || review_rounds || ':' || schema_repairs || ':' || transient_retries || ':' || tool_calls || ':' || provider_calls FROM tasks WHERE id=:id",
+            id=str(context["task_id"]),
+        )
+        self.assertEqual(task_state, "QUEUED:0:0:0:0:0:0")
         self.assertEqual(await self._scalar("SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"]), Decimal(0))
 
     async def test_t2_operation_replay_and_request_conflict(self):
@@ -305,6 +311,9 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_task_revision_is_immutable_and_stale_revision_is_rejected(self):
         context = await self._seed("revision-task")
+        request, _ = await self._admit(context)
+        call = self._call(request, "revision-slot")
+        permit = await authorize_provider_call(self.factory, call)
         actor = ActorContext(
             principal_id=context["principal"],
             scope=context["scope"],
@@ -327,6 +336,10 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await self._scalar(
             "SELECT count(*) FROM task_inputs WHERE task_id=:id AND revision IN (1,2)", id=str(context["task_id"]),
         ), 2)
+        with self.assertRaises(StaleInput):
+            await consume_call_permit(
+                self.factory, request.binding, request.lease_owner, permit.permit_id, permit.accounting_call_id,
+            )
         with self.assertRaises(StaleInput):
             await revise(
                 self.factory,

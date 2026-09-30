@@ -19,7 +19,7 @@
     "passed": 12,
     "failed": 0,
     "scenarios": {
-      "rollback_atomicity": "pass",
+      "rollback_atomicity": "pass; no operation, attempt, reservation, outbox, ledger, hold, task status, or counter effects remain",
       "operation_replay_and_conflict": "pass",
       "outbox_fence_and_inbox_payload_conflict": "pass",
       "concurrent_system_reservation": "one admitted; one denied; no partial hold",
@@ -27,7 +27,7 @@
       "separate_final_response_reservation": "pass",
       "unknown_execution_after_engine_reconnect": "hold retained; new operation blocked",
       "usage_completion_duplicate_conflict_overrun_adjustment": "pass",
-      "task_input_revision_history_and_stale_revision": "pass",
+      "task_input_revision_history_and_stale_revision": "pass; old revision cannot consume an already-issued permit",
       "database_unavailable_permit_fail_closed": "pass"
     }
   },
