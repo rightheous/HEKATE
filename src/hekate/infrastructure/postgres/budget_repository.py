@@ -172,8 +172,19 @@ class PostgresBudgetRepository:
         reservation = await self.get_reservation(reservation_id, lock=True)
         if reservation is None or reservation["operation_id"] != intent.operation_id:
             raise StaleInput("operation reservation is unavailable")
-        if reservation["status"] != "RESERVED":
+        if reservation["status"] not in {"RESERVED", "PENDING_SETTLEMENT"}:
             raise BudgetDenied("operation reservation is no longer open")
+        unresolved_usage_issue = (await self.connection.execute(select(
+            tables.provider_calls.c.accounting_call_id,
+        ).select_from(tables.provider_calls.join(
+            tables.usage_projections,
+            tables.usage_projections.c.accounting_call_id == tables.provider_calls.c.accounting_call_id,
+        )).where(
+            tables.provider_calls.c.reservation_id == reservation_id,
+            tables.usage_projections.c.has_conflict.is_(True) | tables.usage_projections.c.overrun.is_(True),
+        ).limit(1))).first() is not None
+        if unresolved_usage_issue:
+            raise BudgetDenied("usage conflict or overrun blocks new call allocation")
         if reservation["pricing_version"] != intent.price_table.version:
             raise PolicyDenied("pricing version changed")
         if intent.model not in envelope.model_allowlist:
@@ -248,6 +259,8 @@ class PostgresBudgetRepository:
         ))).scalar_one()
         if Decimal(allocated) + allocation > reservation["amount"]:
             raise BudgetDenied("operation reservation has insufficient unallocated amount")
+        if any(account["held_amount"] < allocation for account in accounts):
+            raise BudgetDenied("reservation hold cannot cover the new call allocation")
         if reservation["purpose"] == "final_response" and intent.call_kind != "final_response":
             raise PolicyDenied("final-response reservation is isolated to final-response calls")
         if reservation["purpose"] != "final_response" and intent.call_kind == "final_response":

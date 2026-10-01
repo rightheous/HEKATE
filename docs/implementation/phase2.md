@@ -15,6 +15,9 @@ The application lock order is operation, authorization scope, task, attempt, reg
 - Outbox generations are unique per operation and kind. Claims carry an expiry and increasing fence; stale workers cannot acknowledge or reschedule a reclaimed job. Inbox rows are keyed by provider scope, stable event key, and canonical payload hash, so contradictory payloads remain stored and are flagged.
 - Usage observations are append-only and tied to an existing accounting call. The projection fills partial fields without summing observations. Contradictions preserve both observations, mark the projection `CONFLICT`, and pause further automatic settlement.
 - `RUNNING` and `UNKNOWN` execution holds block another operation for that registry until a trusted quiescent observation closes the hold. Lease expiry or a new fence does not prove quiescence. Only unallocated reservation capacity is released at quiescence; consumed calls with unknown, incomplete, or conflicting usage keep their hold.
+- A reservation in `PENDING_SETTLEMENT` can still allocate another call while its operation and execution guards remain valid, capacity and held funds cover the allocation, and none of its usage projections conflict or show an overrun. This is a billing state; it does not clear an execution `UNKNOWN` hold or authorize a call after cancellation, expiry, overrun, or conflict.
+- `settle_call`, `settle`, and `reconcile_pending` strictly reconstruct the persisted `GuardBinding` before applying settlement. Malformed stored bindings fail the transaction. `settle` awaits each settlement in sequence and returns a tuple of receipts.
+- Idempotent admission replay returns the original `ADMITTED` receipt for an identical request even if the operation is now `COMPLETED` or `FAILED`; it does not change terminal state or repeat ledger/outbox effects. A changed request or missing/invalid original receipt conflicts. An execution in `UNKNOWN` remains blocked.
 
 ## Budget effects
 
@@ -23,6 +26,8 @@ Amounts use `Decimal` and PostgreSQL `NUMERIC`. Reserving holds the same amount 
 Usage conflict after settlement does not reverse prior spend. It returns the projection/reservation to pending for reconciliation, while the prior ledger effects remain. Corrections use a separate idempotent `ADJUSTMENT` effect; ledger rows are never updated or deleted.
 
 The detailed test settles a task/system reservation of 8 with two calls costing 5 and 2: task and system each finish at spent 7, held 0. A later conflicting observation leaves spend at 7 and sets the reservation pending. A task-only invoice adjustment of 0.25 changes task spend to 7.25 and is not applied twice.
+
+The 2026-10-01 correction verification also covers a reservation of 8 allocated as two 4-unit calls: after the first call costs 3, each account has spent 3 and held 4; the second call can use the remaining hold and cost 2, leaving spent 5 and held 0. It also checks billing-pending allocation while execution remains active, rejection after execution becomes `UNKNOWN`, usage-conflict and overrun rejection, malformed persisted bindings, and side-effect-free replay after both terminal outcomes. See `integration/persistence/artifacts/phase2-20261001T011324Z-correction.json` for the final run record.
 
 ## Running focused verification
 

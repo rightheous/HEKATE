@@ -1,0 +1,101 @@
+{
+  "schema_version": "1",
+  "executed_at": "2026-10-01T01:13:24Z",
+  "branch": "phase2-persistence-ledger",
+  "review_base_revision": "5de8bc6367506610695bd17bacaa98f5ebd11fe6",
+  "verification_revision": "5de8bc6367506610695bd17bacaa98f5ebd11fe6",
+  "verification_worktree_state": "correction changes were present and uncommitted during verification",
+  "postgres": {
+    "version": "16.15",
+    "database": "hekate_phase2_test",
+    "host_scope": "loopback disposable PostgreSQL container",
+    "migration_head": "0002_budget",
+    "database_preparation": "fresh disposable database initialized with existing migrations; migration files and metadata unchanged",
+    "migration_or_metadata_changes": 0
+  },
+  "implementation_changes": {
+    "settlement_binding": "settle_call, settle, and reconcile_pending share strict restoration of the persisted GuardBinding; settle awaits each repository settlement sequentially and returns a tuple of SettlementReceipt values",
+    "pending_call_allocation": "PENDING_SETTLEMENT permits a new allocation only after existing operation/execution guards pass and reservation capacity, hold, slot, and account checks pass; usage conflict and overrun projections deny allocation",
+    "terminal_replay": "identical requests with a valid original ADMITTED receipt replay after COMPLETED or FAILED without changing terminal state or repeating effects; changed requests and missing receipts fail; UNKNOWN stays blocked"
+  },
+  "changed_files": [
+    "src/hekate/application/budgets.py",
+    "src/hekate/application/operations.py",
+    "src/hekate/infrastructure/postgres/budget_repository.py",
+    "tests/persistence/test_phase2_postgres.py",
+    "docs/implementation/phase2.md",
+    "integration/persistence/artifacts/phase2-20261001T005403Z-correction.json",
+    "integration/persistence/artifacts/phase2-20261001T011324Z-correction.json"
+  ],
+  "focused_tests": {
+    "command": "uv run --locked python -m unittest tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_ta_public_settlement_entrypoints_keep_complete_and_pending_distinct tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_ta_malformed_persisted_binding_fails_all_settlement_entrypoints tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_tb_new_call_after_first_call_settlement_uses_remaining_hold tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_tb_billing_pending_allows_next_call_but_execution_unknown_blocks tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_tb_usage_conflict_keeps_hold_and_blocks_new_allocation tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_tb_overrun_blocks_new_call_allocation tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_t_terminal_admission_replay_is_side_effect_free -v",
+    "result": "pass",
+    "passed": 7,
+    "failed": 0,
+    "settlement_entrypoints_called_against_postgresql": [
+      "settle_call",
+      "settle",
+      "reconcile_pending"
+    ],
+    "malformed_binding": "missing and unexpected fields rejected by all three entrypoints with no SETTLE ledger or spend effects"
+  },
+  "final_test_after_side_effect_snapshot_extension": {
+    "command": "uv run --locked python -m unittest tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_t_terminal_admission_replay_is_side_effect_free -v",
+    "result": "pass",
+    "passed": 1,
+    "failed": 0
+  },
+  "sequential_call_usd": {
+    "reservation": "8.00",
+    "call_a_allocation": "4.00",
+    "call_a_cost": "3.00",
+    "after_a_task_spent": "3.00",
+    "after_a_system_spent": "3.00",
+    "after_a_task_held": "4.00",
+    "after_a_system_held": "4.00",
+    "call_b_allocation": "4.00",
+    "call_b_cost": "2.00",
+    "after_b_task_spent": "5.00",
+    "after_b_system_spent": "5.00",
+    "after_b_task_held": "0.00",
+    "after_b_system_held": "0.00",
+    "settle_ledger_rows": "two per call, one per account; repeated settlement adds no rows",
+    "billing_pending_then_execution_unknown": "partial A allows B; an issued-before-UNKNOWN permit cannot be consumed afterward and a new C permit is denied with allocation, hold, ledger, call, and permit counts unchanged",
+    "usage_conflict": "blocks another allocation while preserving pending hold and observations",
+    "overrun": "actual cost 5.00 on allocation 4.00 is retained and marks overrun; a later call allocation is denied without side effects"
+  },
+  "terminal_replay": {
+    "success": "COMPLETED replay returns the original ADMITTED receipt with replayed=true",
+    "failure": "FAILED replay returns the original ADMITTED receipt with replayed=true",
+    "side_effect_snapshot": "operation/receipt, task counters, attempt and reservation states/counts, registry and lease owner/fence/expiry, execution hold state/count, held/spent amounts, outbox, ledger, provider calls, and permits remain unchanged",
+    "conflicts": "changed payload, binding/fence, scope, or envelope conflict after terminal state; missing original receipt conflicts",
+    "unknown_execution": "same admission request remains rejected while execution is UNKNOWN"
+  },
+  "persistence_suite": {
+    "command": "uv run --locked python -m unittest tests.persistence.test_phase2_postgres -v",
+    "result": "pass",
+    "passed": 19,
+    "failed": 0
+  },
+  "other_checks": {
+    "python_compileall": "pass",
+    "git_diff_check": "pass",
+    "source_design_documents_changed": 0
+  },
+  "real_provider_calls": 0,
+  "phase3_started": false,
+  "not_run": [
+    "Letta/TypeScript bridge build, integration, and Phase 1 runtime probes",
+    "production provider calls or production database/failure tests",
+    "migration downgrade/re-upgrade and alembic check"
+  ],
+  "remaining_gates": [
+    "Production bridge is not connected to PostgreSQL permit issuance or consumption.",
+    "G7 same-execution resume and G8 exact input-token bounding remain unresolved.",
+    "No production model, tokenizer, or verified pricing profile is enabled."
+  ],
+  "prior_artifacts_preserved": [
+    "phase2-20260930.json",
+    "phase2-20261001T005403Z-correction.json"
+  ]
+}

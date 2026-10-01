@@ -84,15 +84,22 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
             _binding(request),
             _envelope(request),
         )
-        if claim.state == "ADMITTED":
-            if claim.receipt is None:
-                raise Conflict("admitted operation has no durable receipt")
+        if claim.state in {"ADMITTED", "COMPLETED", "FAILED"}:
+            receipt = claim.receipt
+            if (
+                receipt is None
+                or receipt.state != "ADMITTED"
+                or receipt.operation_id != envelope.operation_id
+                or receipt.attempt_id != binding.attempt_id
+                or receipt.reservation_id != request.reservation.id
+            ):
+                raise Conflict("operation has no valid admission receipt")
             await uow.commit()
             return AdmissionReceipt(
-                operation_id=claim.receipt.operation_id,
-                attempt_id=claim.receipt.attempt_id,
-                reservation_id=claim.receipt.reservation_id,
-                state=claim.receipt.state,
+                operation_id=receipt.operation_id,
+                attempt_id=receipt.attempt_id,
+                reservation_id=receipt.reservation_id,
+                state=receipt.state,
                 replayed=True,
             )
         if claim.state == "UNKNOWN":

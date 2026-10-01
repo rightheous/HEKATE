@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
-from dataclasses import replace
+from collections.abc import Mapping, Sequence
+from dataclasses import fields, replace
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Mapping, Sequence
 
 from hekate.domain.contracts import canonical_json, canonical_json_hash
 from hekate.domain.errors import Conflict, PolicyDenied, StaleInput, UnknownExecution
@@ -24,10 +24,16 @@ from hekate.domain.models import (
 )
 from hekate.domain.types import (
     AccountingCallId,
+    AttemptId,
     AttemptStatus,
     OperationId,
     PermitId,
+    PrincipalId,
+    ProviderAgentId,
+    RegistryId,
     ReservationId,
+    ScopeId,
+    TaskId,
     TaskStatus,
 )
 from hekate.ports.store import UowFactory
@@ -39,6 +45,42 @@ def _json_value(value: object) -> object:
 
 def _same_binding(stored: object, binding: GuardBinding) -> bool:
     return stored == _json_value(binding)
+
+
+_BINDING_KEYS = frozenset(field.name for field in fields(GuardBinding))
+
+
+def _restore_binding(operation: Mapping[str, object]) -> GuardBinding:
+    value = operation.get("binding")
+    if not isinstance(value, Mapping) or set(value) != _BINDING_KEYS:
+        raise Conflict("persisted operation binding is malformed")
+    string_fields = (
+        "task_id", "attempt_id", "agent_registry_id", "provider_agent_id",
+        "principal_id", "scope", "policy_version",
+    )
+    if any(type(value[name]) is not str or not value[name] for name in string_fields):
+        raise Conflict("persisted operation binding is malformed")
+    integer_fields = ("input_revision", "authz_epoch", "fence")
+    if any(type(value[name]) is not int for name in integer_fields):
+        raise Conflict("persisted operation binding is malformed")
+    if value["input_revision"] < 1 or value["authz_epoch"] < 0 or value["fence"] < 1:
+        raise Conflict("persisted operation binding is malformed")
+    conversation_id = value["conversation_id"]
+    if conversation_id is not None and (type(conversation_id) is not str or not conversation_id):
+        raise Conflict("persisted operation binding is malformed")
+    return GuardBinding(
+        task_id=TaskId(value["task_id"]),
+        attempt_id=AttemptId(value["attempt_id"]),
+        agent_registry_id=RegistryId(value["agent_registry_id"]),
+        provider_agent_id=ProviderAgentId(value["provider_agent_id"]),
+        principal_id=PrincipalId(value["principal_id"]),
+        scope=ScopeId(value["scope"]),
+        input_revision=value["input_revision"],
+        policy_version=value["policy_version"],
+        authz_epoch=value["authz_epoch"],
+        fence=value["fence"],
+        conversation_id=conversation_id,
+    )
 
 
 def _aware(value: datetime) -> bool:
@@ -417,7 +459,7 @@ async def settle_call(factory: UowFactory, accounting_call_id: AccountingCallId)
             raise StaleInput("provider call is unavailable")
         operation_id = OperationId(descriptor["operation_id"])
         operation = await uow.delivery.lock_operation(operation_id)
-        binding = GuardBinding.model_validate_json(canonical_json(operation["binding"]))
+        binding = _restore_binding(operation)
         await uow.tasks.lock_scope(binding.scope)
         await uow.tasks.lock_task(binding.task_id)
         await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
@@ -430,15 +472,17 @@ async def settle_call(factory: UowFactory, accounting_call_id: AccountingCallId)
 async def settle(factory: UowFactory, operation_id: OperationId) -> tuple[SettlementReceipt, ...]:
     async with factory() as uow:
         operation = await uow.delivery.lock_operation(operation_id)
-        binding = GuardBinding.model_validate_json(canonical_json(operation["binding"]))
+        binding = _restore_binding(operation)
         await uow.tasks.lock_scope(binding.scope)
         await uow.tasks.lock_task(binding.task_id)
         await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
         await uow.agents.lock_registry(binding.agent_registry_id)
         call_ids = await uow.budgets.call_ids_for_operation(operation_id)
-        receipts = tuple(await uow.budgets.settle_call(AccountingCallId(call_id)) for call_id in call_ids)
+        receipts: list[SettlementReceipt] = []
+        for call_id in call_ids:
+            receipts.append(await uow.budgets.settle_call(AccountingCallId(call_id)))
         await uow.commit()
-        return receipts
+        return tuple(receipts)
 
 
 async def reconcile_pending(factory: UowFactory, reservation_id: ReservationId) -> tuple[SettlementReceipt, ...]:
@@ -450,7 +494,7 @@ async def reconcile_pending(factory: UowFactory, reservation_id: ReservationId) 
             if descriptor is None:
                 continue
             operation = await uow.delivery.lock_operation(OperationId(descriptor["operation_id"]))
-            binding = GuardBinding.model_validate_json(canonical_json(operation["binding"]))
+            binding = _restore_binding(operation)
             await uow.tasks.lock_scope(binding.scope)
             await uow.tasks.lock_task(binding.task_id)
             await uow.tasks.get_attempt(binding.attempt_id, for_update=True)

@@ -15,9 +15,12 @@ from hekate.application.budgets import (
     apply_adjustment,
     authorize_provider_call,
     consume_call_permit,
+    reconcile_pending,
     record_call_observation,
     record_usage,
     reserve,
+    settle,
+    settle_call,
 )
 from hekate.application.operations import admit_operation, record_execution_observation
 from hekate.application.tasks import cancel, revise
@@ -34,10 +37,13 @@ from hekate.domain.models import (
     ExecutionObservation,
     GuardBinding,
     InputChange,
+    NormalizedUsage,
     PriceTable,
     ReservationRequest,
     RuntimeLimits,
+    SettlementReceipt,
     Task,
+    UsageObservation,
     UsageRecord,
 )
 from hekate.domain.types import (
@@ -261,6 +267,244 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         request = self._request(context, **kwargs)
         receipt = await admit_operation(self.factory, request)
         return request, receipt
+
+    async def test_ta_public_settlement_entrypoints_keep_complete_and_pending_distinct(self):
+        context = await self._seed("settlement-entrypoints")
+        request, _ = await self._admit(context)
+        call_a = self._call(request, "settlement-entry-a")
+        call_b = self._call(request, "settlement-entry-b")
+        for call in (call_a, call_b):
+            permit = await authorize_provider_call(self.factory, call)
+            await consume_call_permit(
+                self.factory, request.binding, request.lease_owner, permit.permit_id, permit.accounting_call_id,
+            )
+            await record_call_observation(self.factory, CallObservation(
+                accounting_call_id=call.accounting_call_id,
+                binding=request.binding,
+                state="QUIESCENT",
+                source="provider_response",
+                observed_at=datetime.now(UTC),
+                lease_owner=request.lease_owner,
+                observer_fence=context["lease"].fence,
+            ))
+
+        usage_a = UsageRecord(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            observation_identity="settlement-complete-a",
+            source="provider_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=1,
+            output_tokens=1,
+            total_tokens=2,
+            completeness="COMPLETE",
+            pricing_version="test-price-v1",
+            monetary_amount=Decimal("3"),
+        )
+        usage_b = UsageRecord(
+            accounting_call_id=call_b.accounting_call_id,
+            binding=request.binding,
+            observation_identity="settlement-partial-b",
+            source="runtime_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=1,
+            completeness="PARTIAL",
+            pricing_version="test-price-v1",
+        )
+        self.assertEqual((await record_usage(self.factory, usage_a)).settlement_state, "SETTLED")
+        pending_usage = await record_usage(self.factory, usage_b)
+        self.assertEqual(pending_usage.settlement_state, "PENDING")
+
+        direct = await settle_call(self.factory, call_a.accounting_call_id)
+        operation_receipts = await settle(self.factory, request.envelope.operation_id)
+        reservation_receipts = await reconcile_pending(self.factory, request.reservation.id)
+        self.assertIsInstance(direct, SettlementReceipt)
+        self.assertTrue(direct.settled)
+        self.assertEqual(direct.actual_cost, Decimal("3"))
+        for receipts in (operation_receipts, reservation_receipts):
+            self.assertEqual(len(receipts), 2)
+            self.assertTrue(all(isinstance(item, SettlementReceipt) for item in receipts))
+            by_id = {receipt.accounting_call_id: receipt for receipt in receipts}
+            self.assertTrue(by_id[call_a.accounting_call_id].settled)
+            self.assertEqual(by_id[call_a.accounting_call_id].actual_cost, Decimal("3"))
+            self.assertFalse(by_id[call_b.accounting_call_id].settled)
+            self.assertIsNone(by_id[call_b.accounting_call_id].actual_cost)
+            self.assertIsNotNone(by_id[call_b.accounting_call_id].pending_reason)
+        self.assertEqual(await self._scalar("SELECT count(*) FROM budget_ledger WHERE effect_type='SETTLE'"), 2)
+        self.assertEqual(await self._scalar(
+            "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal("3"))
+        self.assertEqual(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal("4"))
+        self.assertEqual(await self._scalar(
+            "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["system_account_id"],
+        ), Decimal("3"))
+        self.assertEqual(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["system_account_id"],
+        ), Decimal("4"))
+
+        empty_context = await self._seed("settlement-empty", create_system=False)
+        empty_request, _ = await self._admit(empty_context)
+        self.assertEqual(await settle(self.factory, empty_request.envelope.operation_id), ())
+        self.assertEqual(await reconcile_pending(self.factory, empty_request.reservation.id), ())
+
+    async def test_ta_malformed_persisted_binding_fails_all_settlement_entrypoints(self):
+        for index, corruption in enumerate(("missing", "unexpected")):
+            context = await self._seed(f"settlement-binding-{index}", create_system=index == 0)
+            request, _ = await self._admit(context, amount=Decimal("4"), slots=1)
+            call = self._call(request, f"binding-call-{index}")
+            permit = await authorize_provider_call(self.factory, call)
+            await consume_call_permit(
+                self.factory, request.binding, request.lease_owner, permit.permit_id, permit.accounting_call_id,
+            )
+            await record_call_observation(self.factory, CallObservation(
+                accounting_call_id=call.accounting_call_id,
+                binding=request.binding,
+                state="QUIESCENT",
+                source="provider_response",
+                observed_at=datetime.now(UTC),
+                lease_owner=request.lease_owner,
+                observer_fence=context["lease"].fence,
+            ))
+            async with self.factory() as uow:
+                await uow.budgets.record_usage(UsageObservation(
+                    accounting_call_id=call.accounting_call_id,
+                    source="provider_reported",
+                    observation_identity=f"binding-usage-{index}",
+                    usage=NormalizedUsage(
+                        completeness="COMPLETE",
+                        input_tokens=1,
+                        output_tokens=1,
+                        total_tokens=2,
+                        reported_cost_usd=Decimal("3"),
+                    ),
+                    binding=request.binding,
+                    observed_at=datetime.now(UTC),
+                ))
+                await uow.commit()
+            async with self.engine.begin() as connection:
+                if corruption == "missing":
+                    await connection.execute(text(
+                        "UPDATE operations SET binding = binding - 'policy_version' WHERE id=:id"
+                    ), {"id": str(request.envelope.operation_id)})
+                else:
+                    await connection.execute(text(
+                        "UPDATE operations SET binding = binding || CAST(:extra AS jsonb) WHERE id=:id"
+                    ), {"id": str(request.envelope.operation_id), "extra": '{"unexpected":true}'})
+
+            for action in (
+                settle_call(self.factory, call.accounting_call_id),
+                settle(self.factory, request.envelope.operation_id),
+                reconcile_pending(self.factory, request.reservation.id),
+            ):
+                with self.assertRaises(Conflict):
+                    await action
+            self.assertEqual(await self._scalar(
+                "SELECT settlement_state FROM usage_projections WHERE accounting_call_id=:id",
+                id=str(call.accounting_call_id),
+            ), "PENDING")
+            self.assertEqual(await self._scalar("SELECT count(*) FROM budget_ledger WHERE effect_type='SETTLE'"), 0)
+            self.assertEqual(await self._scalar(
+                "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+            ), Decimal("0"))
+            self.assertEqual(await self._scalar(
+                "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+            ), Decimal("4"))
+
+    async def test_t_terminal_admission_replay_is_side_effect_free(self):
+        async def snapshot(context, request):
+            async with self.engine.connect() as connection:
+                row = (await connection.execute(text("""
+                    SELECT
+                      (SELECT state || ':' || dispatch_state || ':' || execution_state || ':' || receipt::text
+                         FROM operations WHERE id=:operation_id),
+                      (SELECT status || ':' || critic_agents || ':' || review_rounds || ':' || schema_repairs || ':' || transient_retries || ':' || tool_calls || ':' || provider_calls
+                         FROM tasks WHERE id=:task_id),
+                      (SELECT status FROM attempts WHERE id=:attempt_id),
+                      (SELECT count(*) FROM attempts WHERE task_id=:task_id),
+                      (SELECT intended_state || ':' || coalesce(active_attempt_id, '')
+                         FROM agent_registry WHERE id=:registry_id),
+                      (SELECT owner_worker || ':' || fence || ':' || expires_at::text
+                         FROM agent_leases WHERE registry_id=:registry_id),
+                      (SELECT state || ':' || coalesce(quiescent_at::text, '')
+                         FROM agent_execution_holds WHERE operation_id=:operation_id),
+                      (SELECT count(*) FROM agent_execution_holds WHERE operation_id=:operation_id),
+                      (SELECT status FROM budget_reservations WHERE id=:reservation_id),
+                      (SELECT count(*) FROM budget_reservations WHERE operation_id=:operation_id),
+                      (SELECT coalesce(sum(held_amount), 0) FROM reservation_accounts WHERE reservation_id=:reservation_id),
+                      (SELECT coalesce(sum(a.spent_amount), 0) FROM reservation_accounts ra JOIN budget_accounts a ON a.id=ra.account_id WHERE ra.reservation_id=:reservation_id),
+                      (SELECT coalesce(sum(a.held_amount), 0) FROM reservation_accounts ra JOIN budget_accounts a ON a.id=ra.account_id WHERE ra.reservation_id=:reservation_id),
+                      (SELECT count(*) FROM outbox WHERE operation_id=:operation_id),
+                      (SELECT count(*) FROM budget_ledger WHERE reservation_id=:reservation_id),
+                      (SELECT count(*) FROM provider_calls WHERE operation_id=:operation_id),
+                      (SELECT count(*) FROM call_permits p JOIN provider_calls c USING (accounting_call_id) WHERE c.operation_id=:operation_id)
+                """), {
+                    "operation_id": str(request.envelope.operation_id),
+                    "task_id": str(context["task_id"]),
+                    "attempt_id": str(request.binding.attempt_id),
+                    "registry_id": str(context["registry_id"]),
+                    "reservation_id": str(request.reservation.id),
+                })).one()
+            return tuple(row)
+
+        for index, outcome in enumerate(("SUCCEEDED", "FAILED")):
+            context = await self._seed(f"terminal-replay-{index}", create_system=index == 0)
+            request, initial = await self._admit(context)
+            self.assertFalse(initial.replayed)
+            await record_execution_observation(self.factory, ExecutionObservation(
+                operation_id=request.envelope.operation_id,
+                binding=request.binding,
+                lease_owner=request.lease_owner,
+                observer_fence=context["lease"].fence,
+                state="QUIESCENT",
+                source="bridge_terminal",
+                observed_at=datetime.now(UTC),
+                outcome=outcome,
+            ))
+            terminal_snapshot = await snapshot(context, request)
+            operation_state = await self._scalar(
+                "SELECT state FROM operations WHERE id=:id", id=str(request.envelope.operation_id),
+            )
+            self.assertEqual(operation_state, "COMPLETED" if outcome == "SUCCEEDED" else "FAILED")
+
+            replay = await admit_operation(self.factory, request)
+            self.assertTrue(replay.replayed)
+            self.assertEqual(replay.state, "ADMITTED")
+            self.assertEqual(replay.operation_id, initial.operation_id)
+            self.assertEqual(terminal_snapshot, await snapshot(context, request))
+            changed_scope = ScopeId(f"different-scope-{index}")
+            changed_requests = (
+                replace(request, payload={"prompt": "changed"}),
+                replace(
+                    request,
+                    binding=replace(request.binding, fence=request.binding.fence + 1),
+                    envelope=request.envelope.model_copy(update={"fence": request.envelope.fence + 1}),
+                ),
+                replace(
+                    request,
+                    binding=replace(request.binding, scope=changed_scope),
+                    envelope=request.envelope.model_copy(update={"scope": changed_scope}),
+                ),
+                replace(
+                    request,
+                    envelope=request.envelope.model_copy(update={"max_tool_calls": request.envelope.max_tool_calls + 1}),
+                ),
+            )
+            for changed_request in changed_requests:
+                with self.assertRaises(Conflict):
+                    await admit_operation(self.factory, changed_request)
+            self.assertEqual(terminal_snapshot, await snapshot(context, request))
+
+            if outcome == "SUCCEEDED":
+                async with self.engine.begin() as connection:
+                    await connection.execute(text(
+                        "UPDATE operations SET receipt=NULL WHERE id=:id"
+                    ), {"id": str(request.envelope.operation_id)})
+                missing_receipt_snapshot = await snapshot(context, request)
+                with self.assertRaises(Conflict):
+                    await admit_operation(self.factory, request)
+                self.assertEqual(missing_receipt_snapshot, await snapshot(context, request))
 
     async def test_t1_migration_uow_rollback_and_admission_atomicity(self):
         health = await check_database(self.engine)
@@ -534,6 +778,305 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await self._scalar("SELECT count(*) FROM budget_reservations WHERE operation_id=:id", id=str(request.envelope.operation_id)), 2)
         self.assertEqual(await self._scalar("SELECT reservation_id FROM provider_calls WHERE accounting_call_id=:id", id=str(permit.accounting_call_id)), str(final_reservation.id))
 
+    async def test_tb_new_call_after_first_call_settlement_uses_remaining_hold(self):
+        context = await self._seed("sequential-call-task")
+        request, _ = await self._admit(context, amount=Decimal("8"), slots=2)
+        call_a = self._call(request, "sequential-a", allocation=Decimal("4"))
+        permit_a = await authorize_provider_call(self.factory, call_a)
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner, permit_a.permit_id, permit_a.accounting_call_id,
+        )
+        await record_call_observation(self.factory, CallObservation(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            state="QUIESCENT",
+            source="provider_response",
+            observed_at=datetime.now(UTC),
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+        ))
+        receipt_a = await record_usage(self.factory, UsageRecord(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            observation_identity="sequential-usage-a",
+            source="provider_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=1,
+            output_tokens=1,
+            total_tokens=2,
+            completeness="COMPLETE",
+            pricing_version="test-price-v1",
+            monetary_amount=Decimal("3"),
+        ))
+        self.assertEqual(receipt_a.settlement_state, "SETTLED")
+        self.assertEqual(await self._scalar(
+            "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal("3"))
+        self.assertEqual(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal("4"))
+        self.assertEqual(await self._scalar(
+            "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["system_account_id"],
+        ), Decimal("3"))
+        self.assertEqual(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["system_account_id"],
+        ), Decimal("4"))
+        self.assertEqual(await self._scalar(
+            "SELECT status FROM budget_reservations WHERE id=:id", id=str(request.reservation.id),
+        ), "PENDING_SETTLEMENT")
+
+        call_b = self._call(request, "sequential-b", allocation=Decimal("4"))
+        permit_b = await authorize_provider_call(self.factory, call_b)
+        self.assertNotEqual(call_a.accounting_call_id, call_b.accounting_call_id)
+        self.assertNotEqual(permit_a.permit_id, permit_b.permit_id)
+        self.assertEqual(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal("4"))
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner, permit_b.permit_id, permit_b.accounting_call_id,
+        )
+        await record_call_observation(self.factory, CallObservation(
+            accounting_call_id=call_b.accounting_call_id,
+            binding=request.binding,
+            state="QUIESCENT",
+            source="provider_response",
+            observed_at=datetime.now(UTC),
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+        ))
+        receipt_b = await record_usage(self.factory, UsageRecord(
+            accounting_call_id=call_b.accounting_call_id,
+            binding=request.binding,
+            observation_identity="sequential-usage-b",
+            source="provider_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=1,
+            output_tokens=1,
+            total_tokens=2,
+            completeness="COMPLETE",
+            pricing_version="test-price-v1",
+            monetary_amount=Decimal("2"),
+        ))
+        self.assertEqual(receipt_b.settlement_state, "SETTLED")
+        await record_execution_observation(self.factory, ExecutionObservation(
+            operation_id=request.envelope.operation_id,
+            binding=request.binding,
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+            state="QUIESCENT",
+            source="bridge_terminal",
+            observed_at=datetime.now(UTC),
+            outcome="SUCCEEDED",
+        ))
+        for account_id in (context["task_account_id"], context["system_account_id"]):
+            self.assertEqual(await self._scalar(
+                "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=account_id,
+            ), Decimal("5"))
+            self.assertEqual(await self._scalar(
+                "SELECT held_amount FROM budget_accounts WHERE id=:id", id=account_id,
+            ), Decimal("0"))
+        self.assertEqual(await self._scalar("SELECT count(*) FROM budget_ledger WHERE effect_type='SETTLE'"), 4)
+        self.assertEqual(await self._scalar(
+            "SELECT count(*) FROM budget_ledger WHERE accounting_call_id=:id", id=str(call_a.accounting_call_id),
+        ), 2)
+        self.assertEqual(await self._scalar(
+            "SELECT count(*) FROM budget_ledger WHERE accounting_call_id=:id", id=str(call_b.accounting_call_id),
+        ), 2)
+
+    async def test_tb_billing_pending_allows_next_call_but_execution_unknown_blocks(self):
+        context = await self._seed("billing-pending-task")
+        request, _ = await self._admit(context, amount=Decimal("12"), slots=3)
+        call_a = self._call(request, "billing-pending-a", allocation=Decimal("4"))
+        permit_a = await authorize_provider_call(self.factory, call_a)
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner, permit_a.permit_id, permit_a.accounting_call_id,
+        )
+        await record_call_observation(self.factory, CallObservation(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            state="QUIESCENT",
+            source="provider_response",
+            observed_at=datetime.now(UTC),
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+        ))
+        pending = await record_usage(self.factory, UsageRecord(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            observation_identity="billing-pending-a-partial",
+            source="runtime_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=1,
+            completeness="PARTIAL",
+            pricing_version="test-price-v1",
+        ))
+        self.assertEqual(pending.settlement_state, "PENDING")
+        self.assertEqual(await self._scalar(
+            "SELECT status FROM budget_reservations WHERE id=:id", id=str(request.reservation.id),
+        ), "PENDING_SETTLEMENT")
+        self.assertEqual(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal("12"))
+
+        call_b = self._call(request, "billing-pending-b", allocation=Decimal("4"))
+        permit_b = await authorize_provider_call(self.factory, call_b)
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner, permit_b.permit_id, permit_b.accounting_call_id,
+        )
+        self.assertEqual(await self._scalar(
+            "SELECT sum(allocation_amount) FROM provider_calls WHERE reservation_id=:id",
+            id=str(request.reservation.id),
+        ), Decimal("8"))
+        self.assertEqual(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal("12"))
+
+        pending_call = self._call(request, "billing-pending-issued-before-unknown", allocation=Decimal("4"))
+        pending_permit = await authorize_provider_call(self.factory, pending_call)
+        self.assertEqual(await self._scalar(
+            "SELECT sum(allocation_amount) FROM provider_calls WHERE reservation_id=:id",
+            id=str(request.reservation.id),
+        ), Decimal("12"))
+        await record_execution_observation(self.factory, ExecutionObservation(
+            operation_id=request.envelope.operation_id,
+            binding=request.binding,
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+            state="UNKNOWN",
+            source="bridge_disconnect",
+            observed_at=datetime.now(UTC),
+            reason="transport_disconnect",
+        ))
+        before = (
+            await self._scalar("SELECT count(*) FROM provider_calls WHERE operation_id=:id", id=str(request.envelope.operation_id)),
+            await self._scalar("SELECT count(*) FROM call_permits"),
+            await self._scalar("SELECT count(*) FROM budget_ledger"),
+            await self._scalar("SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"]),
+            await self._scalar("SELECT sum(allocation_amount) FROM provider_calls WHERE operation_id=:id", id=str(request.envelope.operation_id)),
+        )
+        with self.assertRaises(UnknownExecution):
+            await consume_call_permit(
+                self.factory, request.binding, request.lease_owner,
+                pending_permit.permit_id, pending_permit.accounting_call_id,
+            )
+        with self.assertRaises(UnknownExecution):
+            await authorize_provider_call(self.factory, self._call(request, "billing-pending-c", allocation=Decimal("4")))
+        after = (
+            await self._scalar("SELECT count(*) FROM provider_calls WHERE operation_id=:id", id=str(request.envelope.operation_id)),
+            await self._scalar("SELECT count(*) FROM call_permits"),
+            await self._scalar("SELECT count(*) FROM budget_ledger"),
+            await self._scalar("SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"]),
+            await self._scalar("SELECT sum(allocation_amount) FROM provider_calls WHERE operation_id=:id", id=str(request.envelope.operation_id)),
+        )
+        self.assertEqual(after, before)
+
+    async def test_tb_usage_conflict_keeps_hold_and_blocks_new_allocation(self):
+        context = await self._seed("allocation-conflict-task")
+        request, _ = await self._admit(context, amount=Decimal("8"), slots=2)
+        call_a = self._call(request, "allocation-conflict-a", allocation=Decimal("4"))
+        permit_a = await authorize_provider_call(self.factory, call_a)
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner, permit_a.permit_id, permit_a.accounting_call_id,
+        )
+        await record_call_observation(self.factory, CallObservation(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            state="QUIESCENT",
+            source="provider_response",
+            observed_at=datetime.now(UTC),
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+        ))
+        first = UsageRecord(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            observation_identity="allocation-conflict-same-event",
+            source="runtime_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=1,
+            completeness="PARTIAL",
+        )
+        await record_usage(self.factory, first)
+        conflict = await record_usage(self.factory, first.model_copy(update={
+            "input_tokens": 2,
+            "observed_at": datetime.now(UTC) + timedelta(microseconds=1),
+        }))
+        self.assertTrue(conflict.conflict)
+        with self.assertRaises(BudgetDenied):
+            await authorize_provider_call(self.factory, self._call(request, "allocation-conflict-b", allocation=Decimal("4")))
+        self.assertEqual(await self._scalar(
+            "SELECT status FROM budget_reservations WHERE id=:id", id=str(request.reservation.id),
+        ), "PENDING_SETTLEMENT")
+        self.assertTrue(await self._scalar(
+            "SELECT has_conflict FROM usage_projections WHERE accounting_call_id=:id", id=str(call_a.accounting_call_id),
+        ))
+        self.assertEqual(await self._scalar("SELECT count(*) FROM provider_calls"), 1)
+        self.assertEqual(await self._scalar("SELECT count(*) FROM usage_observations"), 2)
+        self.assertEqual(await self._scalar("SELECT count(*) FROM budget_ledger WHERE effect_type='SETTLE'"), 0)
+        for account_id in (context["task_account_id"], context["system_account_id"]):
+            self.assertEqual(await self._scalar(
+                "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=account_id,
+            ), Decimal("0"))
+            self.assertEqual(await self._scalar(
+                "SELECT held_amount FROM budget_accounts WHERE id=:id", id=account_id,
+            ), Decimal("8"))
+
+    async def test_tb_overrun_blocks_new_call_allocation(self):
+        context = await self._seed("allocation-overrun-task")
+        request, _ = await self._admit(context, amount=Decimal("12"), slots=3)
+        call_a = self._call(request, "allocation-overrun-a", allocation=Decimal("4"))
+        permit_a = await authorize_provider_call(self.factory, call_a)
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner, permit_a.permit_id, permit_a.accounting_call_id,
+        )
+        await record_call_observation(self.factory, CallObservation(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            state="QUIESCENT",
+            source="provider_response",
+            observed_at=datetime.now(UTC),
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+        ))
+        settled = await record_usage(self.factory, UsageRecord(
+            accounting_call_id=call_a.accounting_call_id,
+            binding=request.binding,
+            observation_identity="allocation-overrun-a-usage",
+            source="provider_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=1,
+            output_tokens=1,
+            total_tokens=2,
+            completeness="COMPLETE",
+            pricing_version="test-price-v1",
+            monetary_amount=Decimal("5"),
+        ))
+        self.assertEqual(settled.settlement_state, "SETTLED")
+        self.assertTrue(await self._scalar(
+            "SELECT overrun FROM usage_projections WHERE accounting_call_id=:id",
+            id=str(call_a.accounting_call_id),
+        ))
+        self.assertEqual(await self._scalar(
+            "SELECT status FROM budget_reservations WHERE id=:id", id=str(request.reservation.id),
+        ), "PENDING_SETTLEMENT")
+        before = (
+            await self._scalar("SELECT count(*) FROM provider_calls WHERE operation_id=:id", id=str(request.envelope.operation_id)),
+            await self._scalar("SELECT count(*) FROM call_permits"),
+            await self._scalar("SELECT count(*) FROM budget_ledger"),
+            await self._scalar("SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"]),
+            await self._scalar("SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"]),
+        )
+        with self.assertRaises(BudgetDenied):
+            await authorize_provider_call(self.factory, self._call(request, "allocation-overrun-b", allocation=Decimal("4")))
+        after = (
+            await self._scalar("SELECT count(*) FROM provider_calls WHERE operation_id=:id", id=str(request.envelope.operation_id)),
+            await self._scalar("SELECT count(*) FROM call_permits"),
+            await self._scalar("SELECT count(*) FROM budget_ledger"),
+            await self._scalar("SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"]),
+            await self._scalar("SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"]),
+        )
+        self.assertEqual(after, before)
+
     async def test_t5_unknown_hold_survives_reconnect_and_new_fence(self):
         context = await self._seed("unknown-task")
         request, _ = await self._admit(context)
@@ -575,6 +1118,8 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(UnknownExecution):
             await admit_operation(self.factory, blocked)
+        with self.assertRaises(UnknownExecution):
+            await admit_operation(self.factory, request)
         self.assertEqual(await self._scalar("SELECT count(*) FROM attempts"), 1)
         self.assertEqual(await self._scalar("SELECT count(*) FROM budget_reservations"), 1)
         self.assertEqual(await self._scalar("SELECT count(*) FROM recovery_cases WHERE operation_id=:id", id=str(request.envelope.operation_id)), 1)
