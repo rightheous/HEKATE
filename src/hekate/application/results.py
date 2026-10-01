@@ -8,6 +8,7 @@ from uuid import NAMESPACE_URL, uuid5
 from pydantic import Field
 
 from hekate.application.budgets import _restore_binding
+from hekate.application.tasks import complete as complete_task
 from hekate.domain.bridge_contracts import BridgeBusinessResult, BridgeEvent
 from hekate.domain.capsules import parse_hekate_turn_output, validate_capsule_binding
 from hekate.domain.contracts import canonical_json, canonical_json_hash
@@ -15,7 +16,7 @@ from hekate.domain.errors import Conflict
 from hekate.domain.models import ContractModel, GuardBinding, HekateProposal, HekateTurnOutput, StoredConclusion
 from hekate.domain.proposals import parse_hekate_proposal, validate_proposal_shape
 from hekate.domain.types import (
-    AttemptStatus, DomainId, OperationId, RegistryId, StopReason, TaskId, TaskStatus,
+    ActorContext, AttemptStatus, DomainId, OperationId, RegistryId, StopReason, TaskId, TaskStatus,
 )
 from hekate.application.runtime_inbox import InboxBinding
 from hekate.ports.store import UowFactory
@@ -321,8 +322,16 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
             "proposal": proposal, "response_text": response_text,
             "outcome": outcome, "stop_reason": stop_reason,
         }
-        adopted = await uow.tasks.finalize_task_response(
-            binding.task_id, binding.input_revision, response, successful=successful,
+        actor = ActorContext(
+            principal_id=binding.principal_id, scope=binding.scope,
+            authenticated_agent_registry_id=None, task_id=binding.task_id,
+            attempt_id=binding.attempt_id, input_revision=binding.input_revision,
+            policy_version=binding.policy_version, authz_epoch=binding.authz_epoch,
+            fence=binding.fence,
+        )
+        adopted = await complete_task(
+            uow, actor, binding.task_id, binding.input_revision, response,
+            successful=successful,
         )
         if not adopted:
             await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason="task_changed_before_adoption")

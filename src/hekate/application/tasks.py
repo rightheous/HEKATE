@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 import unicodedata
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 from hekate.domain.contracts import canonical_json_hash
 from hekate.domain.errors import PolicyDenied, StaleInput
 from hekate.domain.models import (
-    AccountSnapshot, CancellationReceipt, InputChange, ResponseRef, RevisionReceipt, Task,
+    AccountSnapshot, CancellationReceipt, InputChange, RevisionReceipt, Task,
     TaskExecutionConfig, TaskCounters,
     TaskReceipt, TaskView, UserMessage,
 )
 from hekate.domain.types import ActorContext, Revision, ScopeId, StopReason, TaskId, TaskStatus
-from hekate.ports.store import UowFactory
+from hekate.ports.store import UnitOfWork, UowFactory
 
 
 MAX_QUESTION_BYTES = 65_536
@@ -212,6 +213,27 @@ async def cancel(
 
 
 async def complete(
-    task_id: TaskId, outcome: str, reason: StopReason, response: ResponseRef
-) -> TaskView:
-    raise NotImplementedError
+    uow: UnitOfWork,
+    actor: ActorContext,
+    task_id: TaskId,
+    expected_revision: Revision,
+    response: Mapping[str, object],
+    *,
+    successful: bool,
+) -> bool:
+    """Persist a scoped response and terminal Task state in the caller's UoW."""
+    authorization = await uow.tasks.lock_scope(actor.scope)
+    if (authorization.principal_id, authorization.policy_version, authorization.authz_epoch) != (
+        actor.principal_id, actor.policy_version, actor.authz_epoch,
+    ):
+        raise PolicyDenied("authorization snapshot changed")
+    task = await uow.tasks.lock_task(task_id)
+    if task.scope != actor.scope or (actor.task_id is not None and actor.task_id != task_id):
+        raise PolicyDenied("task is outside the actor scope")
+    if actor.input_revision is not None and actor.input_revision != expected_revision:
+        raise StaleInput("actor input revision is stale")
+    if task.input_revision != expected_revision:
+        return False
+    return await uow.tasks.finalize_task_response(
+        task_id, expected_revision, response, successful=successful,
+    )

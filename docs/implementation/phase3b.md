@@ -86,6 +86,6 @@ export HEKATE_NODE_ARCHIVE=/absolute/path/to/node-v22.19.0-linux-x64.tar.xz
 uv run --locked python scripts/phase3_verify.py
 ```
 
-`scripts/phase3b_single_hekate_probe.py` can be run alone with `HEKATE_TEST_DATABASE_URL` and `HEKATE_NODE_BIN` set. Its JSON artifact records runtime pins, the migration head, scenario results, database identity links, synthetic provider request counts, and cost/hold totals. When run through `phase3_verify.py`, the artifact also records the verifier's commands and results. Synthetic costs are ledger test data, not provider charges.
+`scripts/phase3b_single_hekate_probe.py` can be run alone with `HEKATE_TEST_DATABASE_URL`, `HEKATE_NODE_BIN`, and `HEKATE_NODE_ARCHIVE` set. Its JSON artifact records runtime pins, the migration head, scenario results, database identity links, synthetic provider request counts, and cost/hold totals. When run through `phase3_verify.py`, the artifact also records the verifier's commands and results. Synthetic costs are ledger test data, not provider charges.
 
-The final run is [`p3b-20261001T073404Z-58d4681b.json`](../../integration/runtime/artifacts/p3b-20261001T073404Z-58d4681b.json), linked to its Phase 3A artifact and command log.
+The final run is [`p3b-20261001T075010Z-74f05f86.json`](../../integration/runtime/artifacts/p3b-20261001T075010Z-74f05f86.json), linked to its Phase 3A artifact and full verification command log.
