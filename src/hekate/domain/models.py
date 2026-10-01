@@ -125,6 +125,18 @@ class ExecutionEnvelope(ContractModel):
     reservation_id: ReservationId
 
 
+class ProviderCallPlan(ContractModel):
+    """Immutable admission plan for physical provider requests."""
+    profile_id: str = Field(min_length=1, max_length=128)
+    model: str = Field(min_length=1, max_length=256)
+    pricing_version: str = Field(min_length=1, max_length=128)
+    max_input_tokens: int = Field(ge=0)
+    max_output_tokens: int = Field(ge=1)
+    main_turn_calls: int = Field(ge=0)
+    compaction_calls: int = Field(ge=0)
+    retry_calls: Literal[0] = 0
+
+
 class UserMessage(ContractModel):
     text: str
 
@@ -723,6 +735,7 @@ ArtifactRef: TypeAlias = str
 DeletionReceipt: TypeAlias = Mapping[str, object]
 AuditEvent: TypeAlias = Mapping[str, object]
 RuntimeCapabilities: TypeAlias = Mapping[str, object]
+CapabilityReport: TypeAlias = Mapping[str, object]
 AgentSpec: TypeAlias = Mapping[str, object]
 ProviderAgent: TypeAlias = Mapping[str, object]
 DispatchObservation: TypeAlias = Mapping[str, object]

@@ -137,19 +137,21 @@ class PostgresDeliveryRepository:
             tables.agent_execution_holds.c.quiescent_at.is_(None),
             tables.agent_execution_holds.c.state == "PENDING",
         ))
-        rows = (await self.connection.execute(select(tables.outbox).join(
-            tables.operations,
-            tables.operations.c.id == tables.outbox.c.operation_id,
-        ).join(
-            tables.tasks,
-            tables.tasks.c.id == tables.operations.c.task_id,
+        eligible_operation = exists(select(1).select_from(
+            tables.operations.join(tables.tasks, tables.tasks.c.id == tables.operations.c.task_id)
         ).where(
+            tables.operations.c.id == tables.outbox.c.operation_id,
+            tables.operations.c.state == "ADMITTED",
+            tables.operations.c.dispatch_state == "INTENT_RECORDED",
+            tables.operations.c.execution_state == "PENDING",
+            tables.tasks.c.status.in_(["QUEUED", "RUNNING", "WAITING"]),
+        ))
+        rows = (await self.connection.execute(select(tables.outbox).where(
             (tables.outbox.c.status == "PENDING") |
             ((tables.outbox.c.status == "CLAIMED") & (tables.outbox.c.claim_expires_at <= now)),
             tables.outbox.c.available_at <= now,
-            tables.operations.c.state == "ADMITTED",
-            tables.operations.c.execution_state == "PENDING",
-            tables.tasks.c.status.in_(["QUEUED", "RUNNING", "WAITING"]),
+            tables.outbox.c.send_intent_at.is_(None),
+            eligible_operation,
             valid_dispatch,
         ).order_by(tables.outbox.c.available_at, tables.outbox.c.id).limit(limit).with_for_update(skip_locked=True))).mappings().all()
         jobs = []
@@ -174,6 +176,57 @@ class PostgresDeliveryRepository:
             ))
         return jobs
 
+    async def get_dispatch_payload(self, operation_id: OperationId):
+        return (await self.connection.execute(select(tables.outbox.c.payload).where(
+            tables.outbox.c.operation_id == operation_id,
+            tables.outbox.c.kind == "dispatch",
+        ).order_by(tables.outbox.c.generation).limit(1))).scalar_one_or_none()
+
+    async def record_send_intent(self, job: OutboxJob, worker: str, fence: int) -> None:
+        now = aware_now()
+        result = await self.connection.execute(update(tables.outbox).where(
+            tables.outbox.c.id == job.id,
+            tables.outbox.c.status == "CLAIMED",
+            tables.outbox.c.claim_owner == worker,
+            tables.outbox.c.claim_fence == fence,
+            tables.outbox.c.claim_expires_at > now,
+            tables.outbox.c.send_intent_at.is_(None),
+        ).values(send_intent_at=now, send_intent_owner=worker, send_intent_fence=fence))
+        if result.rowcount != 1:
+            raise StaleInput("outbox claim cannot create send intent")
+        changed = await self.connection.execute(update(tables.operations).where(
+            tables.operations.c.id == job.operation_id,
+            tables.operations.c.dispatch_state == "INTENT_RECORDED",
+            tables.operations.c.execution_state == "PENDING",
+        ).values(dispatch_state="SEND_INTENT", updated_at=now))
+        if changed.rowcount != 1:
+            raise StaleInput("operation is no longer dispatchable")
+
+    async def mark_dispatch_accepted(self, job: OutboxJob, worker: str, fence: int) -> None:
+        now = aware_now()
+        result = await self.connection.execute(update(tables.outbox).where(
+            tables.outbox.c.id == job.id,
+            tables.outbox.c.status == "CLAIMED",
+            tables.outbox.c.claim_owner == worker,
+            tables.outbox.c.claim_fence == fence,
+            tables.outbox.c.claim_expires_at > now,
+            tables.outbox.c.send_intent_owner == worker,
+            tables.outbox.c.send_intent_fence == fence,
+        ).values(status="ACKED", acked_at=now))
+        if result.rowcount != 1:
+            raise StaleInput("outbox claim is stale")
+        changed = await self.connection.execute(update(tables.operations).where(
+            tables.operations.c.id == job.operation_id,
+            tables.operations.c.dispatch_state == "SEND_INTENT",
+            tables.operations.c.execution_state == "PENDING",
+        ).values(dispatch_state="DISPATCHED", updated_at=now))
+        if changed.rowcount != 1:
+            state = (await self.connection.execute(select(tables.operations.c.dispatch_state).where(
+                tables.operations.c.id == job.operation_id,
+            ))).scalar_one_or_none()
+            if state not in {"DISPATCHED", "UNKNOWN", "QUIESCENT"}:
+                raise StaleInput("operation dispatch state changed")
+
     async def ack_job(self, job: OutboxJob, worker: str, fence: int) -> None:
         result = await self.connection.execute(update(tables.outbox).where(
             tables.outbox.c.id == job.id,
@@ -181,6 +234,7 @@ class PostgresDeliveryRepository:
             tables.outbox.c.claim_owner == worker,
             tables.outbox.c.claim_fence == fence,
             tables.outbox.c.claim_expires_at > aware_now(),
+            tables.outbox.c.send_intent_at.is_(None),
         ).values(status="ACKED", acked_at=aware_now()))
         if result.rowcount != 1:
             raise StaleInput("outbox claim is stale")
@@ -215,7 +269,11 @@ class PostgresDeliveryRepository:
         payload: Mapping[str, object],
         payload_hash: str,
     ) -> InboxReceipt:
-        allowed = {"accounting_call_id", "provider_call_id", "source", "observation_identity", "event_type", "binding", "usage"}
+        allowed = {
+            "accounting_call_id", "operation_id", "provider_call_id", "source", "observation_identity",
+            "event_type", "binding", "usage", "state", "outcome", "reason",
+            "lease_owner", "observer_fence", "observed_at",
+        }
         if set(payload) - allowed:
             raise ValueError("inbox payload contains fields outside the accounting allowlist")
         if canonical_json_hash(payload) != payload_hash:
@@ -229,7 +287,7 @@ class PostgresDeliveryRepository:
         usage = payload.get("usage")
         if usage is not None and (
             not isinstance(usage, Mapping)
-            or set(usage) - {"completeness", "input_tokens", "output_tokens", "cache_tokens", "reasoning_tokens", "total_tokens", "reported_cost_usd", "cost_usd"}
+            or set(usage) - {"completeness", "input_tokens", "output_tokens", "cache_tokens", "reasoning_tokens", "total_tokens", "reported_cost_usd", "cost_usd", "source"}
         ):
             raise ValueError("inbox usage contains fields outside the accounting allowlist")
         await self.connection.execute(text(
@@ -272,6 +330,31 @@ class PostgresDeliveryRepository:
         ).limit(1))).first() is not None
         return InboxReceipt(id=existing, duplicate=True, conflict=different)
 
+    async def lock_inbox(self, inbox_id: str):
+        return (await self.connection.execute(select(tables.inbox).where(
+            tables.inbox.c.id == inbox_id,
+        ).with_for_update())).mappings().one_or_none()
+
+    async def mark_inbox_processed(self, inbox_id: str) -> None:
+        result = await self.connection.execute(update(tables.inbox).where(
+            tables.inbox.c.id == inbox_id,
+            tables.inbox.c.processed_at.is_(None),
+        ).values(processed_at=aware_now()))
+        if result.rowcount not in {0, 1}:
+            raise Conflict("inbox processing state is invalid")
+
+    async def pending_inbox(self, limit: int = 100):
+        if not 1 <= limit <= 1_000:
+            raise ValueError("inbox limit must be between 1 and 1000")
+        return (await self.connection.execute(select(
+            tables.inbox.c.id,
+            tables.inbox.c.provider_scope,
+            tables.inbox.c.stable_event_key,
+            tables.inbox.c.payload,
+        ).where(tables.inbox.c.processed_at.is_(None)).order_by(
+            tables.inbox.c.received_at, tables.inbox.c.id,
+        ).limit(limit))).mappings().all()
+
     async def append_audit(self, event: Mapping[str, object]) -> None:
         await self.connection.execute(insert(tables.audit_events).values(
             id=new_key(),
@@ -303,8 +386,8 @@ class PostgresDeliveryRepository:
         if hold["quiescent_at"] is not None:
             if observation.state == "QUIESCENT" and row["execution_state"] == "QUIESCENT":
                 prior = row["observation"] or {}
-                if prior.get("outcome") != observation.outcome:
-                    raise Conflict("terminal execution outcome changed")
+                if prior.get("outcome") != observation.outcome or prior.get("source") != observation.source:
+                    raise Conflict("terminal execution observation changed")
                 return
             raise Conflict("quiescent execution cannot be reopened")
         if observation.state == "QUIESCENT":

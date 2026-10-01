@@ -92,7 +92,7 @@ operations = Table(
     Column("created_at", instant, nullable=False, server_default=text("now()")),
     Column("updated_at", instant, nullable=False, server_default=text("now()")),
     CheckConstraint("state IN ('CLAIMED','ADMITTED','COMPLETED','FAILED','UNKNOWN')", name="ck_operations_state"),
-    CheckConstraint("dispatch_state IN ('NOT_STARTED','INTENT_RECORDED','DISPATCHED','UNKNOWN','QUIESCENT')", name="ck_operations_dispatch_state"),
+    CheckConstraint("dispatch_state IN ('NOT_STARTED','INTENT_RECORDED','SEND_INTENT','DISPATCHED','UNKNOWN','QUIESCENT')", name="ck_operations_dispatch_state"),
     CheckConstraint("execution_state IN ('PENDING','RUNNING','UNKNOWN','QUIESCENT')", name="ck_operations_execution_state"),
 )
 
@@ -190,6 +190,9 @@ outbox = Table(
     Column("claim_owner", Text),
     Column("claim_fence", Integer),
     Column("claim_expires_at", instant),
+    Column("send_intent_at", instant),
+    Column("send_intent_owner", Text),
+    Column("send_intent_fence", Integer),
     Column("created_at", instant, nullable=False, server_default=text("now()")),
     Column("acked_at", instant),
     UniqueConstraint("operation_id", "kind", "generation", name="uq_outbox_generation"),

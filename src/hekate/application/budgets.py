@@ -16,6 +16,7 @@ from hekate.domain.models import (
     ExecutionEnvelope,
     GuardBinding,
     NormalizedUsage,
+    ProviderCallPlan,
     ReservationRequest,
     SettlementReceipt,
     UsageObservation,
@@ -168,6 +169,28 @@ async def authorize_provider_call(factory: UowFactory, call: BillableCallIntent)
         reservation = await uow.budgets.get_reservation(reservation_id)
         if reservation is None or reservation["operation_id"] != call.operation_id:
             raise StaleInput("call reservation is unavailable")
+        dispatch = await uow.delivery.get_dispatch_payload(call.operation_id)
+        dispatch_input = dispatch.get("payload") if isinstance(dispatch, Mapping) else None
+        raw_plan = dispatch_input.get("call_plan") if isinstance(dispatch_input, Mapping) else None
+        if raw_plan is None:
+            if not call.test_only:
+                raise PolicyDenied("provider call has no admission-bound call plan")
+        else:
+            plan = ProviderCallPlan.model_validate(raw_plan, strict=True)
+            role_limit = {
+                "turn": plan.main_turn_calls + plan.retry_calls,
+                "compaction": plan.compaction_calls,
+            }.get(call.call_kind)
+            if role_limit is None or call.model != plan.model or call.price_table.version != plan.pricing_version:
+                raise PolicyDenied("provider call differs from its admission-bound call plan")
+            if (
+                call.limits.max_input_tokens > plan.max_input_tokens
+                or call.limits.max_output_tokens > plan.max_output_tokens
+            ):
+                raise PolicyDenied("provider call exceeds its admission-bound token plan")
+            existing_call = await uow.budgets.get_call_descriptor(call.accounting_call_id)
+            if existing_call is None and await uow.budgets.count_calls_by_kind(call.operation_id, call.call_kind) >= role_limit:
+                raise PolicyDenied("provider call role limit reached")
         envelope = ExecutionEnvelope.model_validate_json(canonical_json(operation["envelope"]))
         permit = await uow.budgets.allocate_call(
             call,

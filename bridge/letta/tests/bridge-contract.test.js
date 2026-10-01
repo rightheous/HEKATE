@@ -51,6 +51,20 @@ test("bridge.v1 rejects a binding that differs from the prepared runtime", () =>
   assert.throws(() => assertBinding(command, binding), /binding mismatch: attempt_id/);
 });
 
+test("events.collect supports bounded long-poll waits", () => {
+  const command = {
+    schema_version: "1",
+    request_id: "r-collect",
+    operation_id: "o-collect",
+    command: "events.collect",
+    binding: { ...binding, conversation_id: "conv-1" },
+    wait_ms: 500,
+  };
+  assert.equal(decodeCommand(frame(command)).wait_ms, 500);
+  assert.throws(() => decodeCommand(frame({ ...command, wait_ms: 5_001 })));
+  assert.throws(() => decodeCommand(frame({ ...command, wait_ms: 500, fallback: true })));
+});
+
 test("bridge transport caps an individual frame at one MiB", () => {
   assert.throws(() => decodeCommand(new Uint8Array(1_048_577)), /exceeds/);
 });

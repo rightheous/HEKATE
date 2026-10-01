@@ -70,6 +70,7 @@ class SessionTurnCommand(BridgeCommandBase):
 class EventsCollectCommand(BridgeCommandBase):
     command: Literal["events.collect"]
     binding: BridgeSessionBinding
+    wait_ms: int = Field(default=0, ge=0, le=5_000)
 
 
 BridgeCommand: TypeAlias = Annotated[

@@ -392,6 +392,12 @@ class PostgresBudgetRepository:
             query = query.with_for_update()
         return (await self.connection.execute(query)).mappings().one_or_none()
 
+    async def count_calls_by_kind(self, operation_id: OperationId, call_kind: str) -> int:
+        return int((await self.connection.execute(select(func.count()).where(
+            tables.provider_calls.c.operation_id == operation_id,
+            tables.provider_calls.c.call_kind == call_kind,
+        ))).scalar_one())
+
     async def record_call_observation(self, observation: CallObservation) -> None:
         await self.lock_call_accounts(observation.accounting_call_id)
         call = await self.get_call(observation.accounting_call_id, lock=True)
@@ -586,21 +592,6 @@ class PostgresBudgetRepository:
             completeness=completeness,
             settlement_state=settlement_state,
         )
-
-    async def mark_operation_calls_quiescent(self, operation_id: OperationId) -> None:
-        call_ids = select(tables.provider_calls.c.accounting_call_id).where(
-            tables.provider_calls.c.operation_id == operation_id,
-            tables.provider_calls.c.status.in_(["CONSUMED", "DISPATCHED", "RUNNING", "UNKNOWN"]),
-        )
-        account_ids = (await self.connection.execute(select(tables.call_allocations.c.account_id).where(
-            tables.call_allocations.c.accounting_call_id.in_(call_ids),
-        ).order_by(tables.call_allocations.c.account_id))).scalars().all()
-        if account_ids:
-            await self.lock_accounts(account_ids)
-        await self.connection.execute(update(tables.provider_calls).where(
-            tables.provider_calls.c.operation_id == operation_id,
-            tables.provider_calls.c.status.in_(["CONSUMED", "DISPATCHED", "RUNNING", "UNKNOWN"]),
-        ).values(status="QUIESCENT"))
 
     async def lock_call_accounts(self, accounting_call_id: AccountingCallId) -> Sequence[Account]:
         account_ids = (await self.connection.execute(select(tables.call_allocations.c.account_id).where(

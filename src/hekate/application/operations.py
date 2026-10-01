@@ -4,11 +4,13 @@ import json
 from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, uuid5
 
+from hekate.application.budgets import _restore_binding
 from hekate.domain.errors import Conflict, PolicyDenied, StaleInput, UnknownExecution
-from hekate.domain.models import AdmissionReceipt, AdmissionRequest, Attempt, ExecutionObservation, OutboxJob
-from hekate.domain.types import AttemptEvent, AttemptId, AttemptStatus, TaskStatus
+from hekate.domain.models import AdmissionReceipt, AdmissionRequest, Attempt, ExecutionObservation, OutboxJob, ProviderCallPlan, RuntimeBinding
+from hekate.domain.types import AccountingCallId, AttemptEvent, AttemptId, AttemptStatus, TaskStatus
 from hekate.domain.contracts import canonical_json, canonical_json_hash
 from hekate.ports.store import UowFactory
+from hekate.ports.runtime import AgentRuntime
 
 
 def _json_value(value: object) -> object:
@@ -65,8 +67,49 @@ def _validate_request(request: AdmissionRequest) -> None:
         raise ValueError("reservation amount must be finite and nonnegative")
     if envelope.max_input_tokens < 0 or envelope.max_output_tokens < 0 or envelope.billable_call_slots < 0:
         raise ValueError("execution limits must be nonnegative")
+    if "call_plan" in request.payload:
+        plan = ProviderCallPlan.model_validate(request.payload["call_plan"], strict=True)
+        if (
+            plan.model not in envelope.model_allowlist
+            or plan.pricing_version != envelope.pricing_version
+            or plan.max_input_tokens > envelope.max_input_tokens
+            or plan.max_output_tokens > envelope.max_output_tokens
+            or plan.main_turn_calls + plan.compaction_calls + plan.retry_calls > envelope.billable_call_slots
+        ):
+            raise Conflict("provider call plan exceeds the persisted envelope")
     if envelope.deadline.tzinfo is None or envelope.deadline.utcoffset() is None:
         raise ValueError("execution deadline must be timezone-aware")
+
+
+async def prepare_runtime_session(
+    factory: UowFactory,
+    runtime: AgentRuntime,
+    binding: RuntimeBinding,
+    lease_owner: str,
+) -> tuple[RuntimeBinding, dict[str, object]]:
+    async with factory() as uow:
+        agent = await uow.agents.lock_registry(binding.agent_registry_id)
+        if agent.provider_id != binding.provider_agent_id:
+            raise Conflict("session binding differs from registered provider agent")
+        await uow.agents.assert_current_lease(binding.agent_registry_id, lease_owner, binding.fence)
+        if await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True) is not None:
+            raise UnknownExecution("unresolved execution blocks session preparation")
+        if agent.intended_state != "READY":
+            raise PolicyDenied("agent is not ready for session preparation")
+        await uow.commit()
+
+    prepared, session = await runtime.prepare_session(binding)
+    if (
+        prepared.task_id != binding.task_id
+        or prepared.attempt_id != binding.attempt_id
+        or prepared.agent_registry_id != binding.agent_registry_id
+        or prepared.provider_agent_id != binding.provider_agent_id
+        or prepared.input_revision != binding.input_revision
+        or prepared.fence != binding.fence
+        or not prepared.conversation_id
+    ):
+        raise Conflict("prepared session changed its trusted runtime binding")
+    return prepared, dict(session)
 
 
 async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> AdmissionReceipt:
@@ -191,39 +234,117 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
         return receipt
 
 
-async def record_execution_observation(factory: UowFactory, observation: ExecutionObservation) -> None:
-    binding = observation.binding
+async def record_dispatch_send_intent(factory: UowFactory, job: OutboxJob, worker: str) -> None:
+    if job.kind != "dispatch" or job.claim_fence is None or job.claim_expires_at is None:
+        raise Conflict("outbox dispatch claim is incomplete")
+    binding = _restore_binding({"binding": job.payload.get("binding")})
     async with factory() as uow:
-        operation = await uow.delivery.lock_operation(observation.operation_id)
+        operation = await uow.delivery.lock_operation(job.operation_id)
+        if operation["binding"] != _json_value(binding) or operation["request_hash"] != job.payload.get("request_hash"):
+            raise Conflict("outbox payload differs from admitted operation")
+        if operation["state"] != "ADMITTED" or operation["dispatch_state"] != "INTENT_RECORDED" or operation["execution_state"] != "PENDING":
+            raise StaleInput("operation is no longer dispatchable")
+        await uow.tasks.lock_scope(binding.scope)
+        task = await uow.tasks.lock_task(binding.task_id)
+        if task.scope != binding.scope or task.input_revision != binding.input_revision or task.status != TaskStatus.RUNNING:
+            raise StaleInput("task binding or state changed before dispatch")
+        if task.deadline <= datetime.now(UTC):
+            raise StaleInput("task deadline expired before dispatch")
+        attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
+        if attempt.operation_id != job.operation_id or attempt.status != AttemptStatus.PENDING:
+            raise StaleInput("attempt is no longer pending")
+        agent = await uow.agents.lock_registry(binding.agent_registry_id)
+        if agent.owner_scope != binding.scope or agent.provider_id != binding.provider_agent_id or agent.intended_state != "BUSY":
+            raise StaleInput("registry binding changed before dispatch")
+        await uow.agents.assert_current_lease(binding.agent_registry_id, worker, binding.fence)
+        hold = await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True)
+        if hold is None or hold["operation_id"] != job.operation_id or hold["state"] != "PENDING":
+            raise UnknownExecution("execution hold is unavailable before dispatch")
+        await uow.delivery.record_send_intent(job, worker, job.claim_fence)
+        await uow.delivery.append_audit({
+            "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+            "attempt_id": str(binding.attempt_id), "operation_id": str(job.operation_id),
+            "registry_id": str(binding.agent_registry_id), "event_kind": "outbox.send_intent",
+            "safe_payload": {"claim_fence": job.claim_fence},
+        })
+        await uow.commit()
+
+
+async def record_dispatch_accepted(factory: UowFactory, job: OutboxJob, worker: str) -> None:
+    if job.claim_fence is None:
+        raise Conflict("outbox dispatch claim has no fence")
+    binding = _restore_binding({"binding": job.payload.get("binding")})
+    async with factory() as uow:
+        operation = await uow.delivery.lock_operation(job.operation_id)
         if operation["binding"] != _json_value(binding):
-            raise Conflict("execution observation binding mismatch")
+            raise Conflict("outbox acceptance binding changed")
         await uow.tasks.lock_scope(binding.scope)
         await uow.tasks.lock_task(binding.task_id)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
-        agent = await uow.agents.lock_registry(binding.agent_registry_id)
-        if agent.provider_id != binding.provider_agent_id or agent.owner_scope != binding.scope:
-            raise Conflict("execution observation registry mismatch")
-        await uow.agents.assert_current_lease(binding.agent_registry_id, observation.lease_owner, observation.observer_fence)
-        active = await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True)
-        if active is None or active["operation_id"] != observation.operation_id:
-            raise StaleInput("execution hold is unavailable")
-        if observation.state == "RUNNING" and active["state"] == "UNKNOWN":
-            raise UnknownExecution("unknown execution cannot be reset to running")
-        await uow.delivery.record_execution(observation)
-        if observation.state == "RUNNING":
+        await uow.agents.lock_registry(binding.agent_registry_id)
+        await uow.agents.assert_current_lease(binding.agent_registry_id, worker, binding.fence)
+        if attempt.status == AttemptStatus.PENDING:
+            await uow.tasks.observe_attempt(binding.attempt_id, AttemptEvent.DISPATCH)
+        elif attempt.status not in {AttemptStatus.DISPATCHED, AttemptStatus.RUNNING, AttemptStatus.SUCCEEDED, AttemptStatus.FAILED, AttemptStatus.TIMED_OUT, AttemptStatus.CANCELLED}:
+            raise StaleInput("attempt state changed after bridge acceptance")
+        await uow.delivery.mark_dispatch_accepted(job, worker, job.claim_fence)
+        await uow.delivery.append_audit({
+            "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+            "attempt_id": str(binding.attempt_id), "operation_id": str(job.operation_id),
+            "registry_id": str(binding.agent_registry_id), "event_kind": "outbox.sdk_accepted",
+            "safe_payload": {"claim_fence": job.claim_fence, "attempt_was": attempt.status.value},
+        })
+        await uow.commit()
+
+
+async def apply_execution_observation(uow, observation: ExecutionObservation) -> None:
+    binding = observation.binding
+    operation = await uow.delivery.lock_operation(observation.operation_id)
+    if operation["binding"] != _json_value(binding):
+        raise Conflict("execution observation binding mismatch")
+    await uow.tasks.lock_scope(binding.scope)
+    await uow.tasks.lock_task(binding.task_id)
+    attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
+    agent = await uow.agents.lock_registry(binding.agent_registry_id)
+    if agent.provider_id != binding.provider_agent_id or agent.owner_scope != binding.scope:
+        raise Conflict("execution observation registry mismatch")
+    await uow.agents.assert_current_lease(binding.agent_registry_id, observation.lease_owner, observation.observer_fence)
+    active = await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True)
+    if active is None:
+        if observation.state == "QUIESCENT":
+            await uow.delivery.record_execution(observation)
+            return
+        raise StaleInput("execution hold is unavailable")
+    if active["operation_id"] != observation.operation_id:
+        raise StaleInput("execution hold belongs to another operation")
+    if observation.state == "RUNNING" and active["state"] == "UNKNOWN":
+        raise UnknownExecution("unknown execution cannot be reset to running")
+    if observation.state == "QUIESCENT":
+        call_ids = await uow.budgets.call_ids_for_operation(observation.operation_id)
+        for call_id in call_ids:
+            call = await uow.budgets.get_call(AccountingCallId(call_id))
+            if call and call["status"] in {"CONSUMED", "DISPATCHED", "RUNNING", "UNKNOWN"}:
+                raise UnknownExecution("provider call lacks individual termination evidence")
+    await uow.delivery.record_execution(observation)
+    if observation.state == "RUNNING":
+        if attempt.status == AttemptStatus.DISPATCHED:
             await uow.tasks.observe_attempt(binding.attempt_id, AttemptEvent.START)
-        elif observation.state == "QUIESCENT":
-            if attempt.status not in {AttemptStatus.SUCCEEDED, AttemptStatus.FAILED, AttemptStatus.TIMED_OUT, AttemptStatus.CANCELLED}:
-                event = {
-                    "SUCCEEDED": AttemptEvent.SUCCEED,
-                    "FAILED": AttemptEvent.FAIL,
-                    "TIMED_OUT": AttemptEvent.TIMEOUT,
-                    "CANCELLED": AttemptEvent.CANCEL,
-                }[observation.outcome]
-                await uow.tasks.observe_attempt(binding.attempt_id, event)
-            await uow.agents.set_registry_ready(binding.agent_registry_id)
-            if observation.outcome == "CANCELLED":
-                await uow.tasks.confirm_cancelled(binding.task_id)
-            await uow.budgets.mark_operation_calls_quiescent(observation.operation_id)
-            await uow.budgets.release_unallocated_after_quiescence(observation.operation_id)
+    elif observation.state == "QUIESCENT":
+        if attempt.status not in {AttemptStatus.SUCCEEDED, AttemptStatus.FAILED, AttemptStatus.TIMED_OUT, AttemptStatus.CANCELLED}:
+            event = {
+                "SUCCEEDED": AttemptEvent.SUCCEED,
+                "FAILED": AttemptEvent.FAIL,
+                "TIMED_OUT": AttemptEvent.TIMEOUT,
+                "CANCELLED": AttemptEvent.CANCEL,
+            }[observation.outcome]
+            await uow.tasks.observe_attempt(binding.attempt_id, event)
+        await uow.agents.set_registry_ready(binding.agent_registry_id)
+        if observation.outcome == "CANCELLED":
+            await uow.tasks.confirm_cancelled(binding.task_id)
+        await uow.budgets.release_unallocated_after_quiescence(observation.operation_id)
+
+
+async def record_execution_observation(factory: UowFactory, observation: ExecutionObservation) -> None:
+    async with factory() as uow:
+        await apply_execution_observation(uow, observation)
         await uow.commit()

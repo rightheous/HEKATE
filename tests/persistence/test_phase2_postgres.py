@@ -510,7 +510,7 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         health = await check_database(self.engine)
         self.assertTrue(health.available)
         self.assertTrue((health.postgres_version or "").startswith("PostgreSQL 16"))
-        self.assertEqual(health.migration_head, "0002_budget")
+        self.assertEqual(health.migration_head, "0003_runtime_dispatch")
 
         async with self.factory() as uow:
             await uow.tasks.insert_scope(AuthorizationSnapshot(ScopeId("rolled-back"), PrincipalId("p"), "policy", 1))
@@ -1280,7 +1280,7 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         context = await self._seed("storage-task")
         request, _ = await self._admit(context)
         call = self._call(request, "storage-call")
-        broken_url = self.database_url.replace(":55439/", ":1/")
+        broken_url = make_url(self.database_url).set(port=1).render_as_string(hide_password=False)
         broken_engine = create_engine(broken_url)
         try:
             with self.assertRaises(StorageUnavailable):

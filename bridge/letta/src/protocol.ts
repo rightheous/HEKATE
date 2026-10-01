@@ -45,7 +45,7 @@ export type Command =
       binding: SessionBinding;
       message: string;
     })
-  | (CommandBase & { command: "events.collect"; binding: SessionBinding });
+  | (CommandBase & { command: "events.collect"; binding: SessionBinding; wait_ms?: number });
 
 export interface BridgeEvent {
   schema_version: "1";

@@ -816,6 +816,13 @@
           "const": "1",
           "title": "Schema Version",
           "type": "string"
+        },
+        "wait_ms": {
+          "default": 0,
+          "maximum": 5000,
+          "minimum": 0,
+          "title": "Wait Ms",
+          "type": "integer"
         }
       },
       "required": [

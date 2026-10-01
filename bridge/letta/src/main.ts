@@ -212,14 +212,14 @@ async function runTurn(
   }
 }
 
-async function waitForTurn(entry: SessionEntry): Promise<void> {
+async function waitForTurn(entry: SessionEntry, waitMs: number): Promise<void> {
   if (!entry.turnTask) return;
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     await Promise.race([
       entry.turnTask,
       new Promise<void>((resolve) => {
-        timer = setTimeout(resolve, 120_000);
+        timer = setTimeout(resolve, waitMs);
       }),
     ]);
   } finally {
@@ -456,7 +456,7 @@ export async function routeCommand(
       if (entry.turnOperationId !== command.operation_id) {
         return reply(command, "REJECTED", undefined, "operation_id does not match active turn");
       }
-      await waitForTurn(entry);
+      await waitForTurn(entry, command.wait_ms ?? 0);
       const state = entry.turnState === "RUNNING" ? "RUNNING"
         : entry.turnState === "COMPLETE" ? "COMPLETE"
           : entry.turnState === "FAILED" ? "FAILED"
