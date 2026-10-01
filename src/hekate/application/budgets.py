@@ -189,8 +189,9 @@ async def authorize_provider_call(factory: UowFactory, call: BillableCallIntent)
             ):
                 raise PolicyDenied("provider call exceeds its admission-bound token plan")
             existing_call = await uow.budgets.get_call_descriptor(call.accounting_call_id)
-            if existing_call is None and await uow.budgets.count_calls_by_kind(call.operation_id, call.call_kind) >= role_limit:
-                raise PolicyDenied("provider call role limit reached")
+            call_count = await uow.budgets.count_calls_by_kind(call.operation_id, call.call_kind) if existing_call is None else 0
+            if existing_call is None and call_count >= role_limit:
+                raise PolicyDenied(f"provider call role limit reached ({call_count}/{role_limit})")
         envelope = ExecutionEnvelope.model_validate_json(canonical_json(operation["envelope"]))
         permit = await uow.budgets.allocate_call(
             call,

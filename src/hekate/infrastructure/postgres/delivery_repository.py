@@ -26,6 +26,30 @@ class PostgresDeliveryRepository:
     def __init__(self, connection: AsyncSession) -> None:
         self.connection = connection
 
+    async def claim_lifecycle_operation(self, operation_id: OperationId, owner_scope: ScopeId, kind: str, request_hash: str):
+        now = aware_now()
+        await self.connection.execute(pg_insert(tables.operations).values(
+            id=operation_id,
+            owner_scope=owner_scope,
+            task_id=None,
+            kind=kind,
+            request_hash=request_hash,
+            state="CLAIMED",
+            dispatch_state="NOT_STARTED",
+            execution_state="PENDING",
+            binding={},
+            envelope={},
+            observation={},
+            created_at=now,
+            updated_at=now,
+        ).on_conflict_do_nothing(index_elements=[tables.operations.c.id]))
+        row = (await self.connection.execute(select(tables.operations).where(
+            tables.operations.c.id == operation_id,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None or row["owner_scope"] != owner_scope or row["kind"] != kind or row["request_hash"] != request_hash:
+            raise Conflict("lifecycle operation identity changed")
+        return row
+
     async def claim_operation(
         self,
         operation_id: OperationId,
@@ -272,7 +296,7 @@ class PostgresDeliveryRepository:
         allowed = {
             "accounting_call_id", "operation_id", "provider_call_id", "source", "observation_identity",
             "event_type", "binding", "usage", "state", "outcome", "reason",
-            "lease_owner", "observer_fence", "observed_at",
+            "lease_owner", "observer_fence", "observed_at", "business_result",
         }
         if set(payload) - allowed:
             raise ValueError("inbox payload contains fields outside the accounting allowlist")
@@ -290,6 +314,13 @@ class PostgresDeliveryRepository:
             or set(usage) - {"completeness", "input_tokens", "output_tokens", "cache_tokens", "reasoning_tokens", "total_tokens", "reported_cost_usd", "cost_usd", "source"}
         ):
             raise ValueError("inbox usage contains fields outside the accounting allowlist")
+        business_result = payload.get("business_result")
+        if business_result is not None and (
+            payload.get("event_type") != "business_result"
+            or not isinstance(business_result, Mapping)
+            or set(business_result) - {"state", "raw_output", "output_sha256", "output_truncated", "structured_output", "failure_code"}
+        ):
+            raise ValueError("inbox business result contains fields outside its contract")
         await self.connection.execute(text(
             "SELECT pg_advisory_xact_lock(hashtextextended(:identity, 0))"
         ), {"identity": canonical_json((provider_scope, stable_event_key))})
@@ -339,9 +370,25 @@ class PostgresDeliveryRepository:
         result = await self.connection.execute(update(tables.inbox).where(
             tables.inbox.c.id == inbox_id,
             tables.inbox.c.processed_at.is_(None),
-        ).values(processed_at=aware_now()))
+        ).values(processed_at=aware_now(), pending_reason=None, rejection_reason=None))
         if result.rowcount not in {0, 1}:
             raise Conflict("inbox processing state is invalid")
+
+    async def defer_inbox(self, inbox_id: str, reason: str, delay: float = 1.0) -> None:
+        if reason not in {"call_termination_unconfirmed", "processor_lease_unavailable"}:
+            raise ValueError("unsupported inbox defer reason")
+        await self.connection.execute(update(tables.inbox).where(
+            tables.inbox.c.id == inbox_id,
+            tables.inbox.c.processed_at.is_(None),
+        ).values(next_attempt_at=aware_now() + timedelta(seconds=delay), pending_reason=reason))
+
+    async def reject_inbox(self, inbox_id: str, reason: str) -> None:
+        if reason not in {"terminal_payload_conflict", "terminal_observation_rejected", "business_result_conflict", "business_result_rejected"}:
+            raise ValueError("unsupported inbox rejection reason")
+        await self.connection.execute(update(tables.inbox).where(
+            tables.inbox.c.id == inbox_id,
+            tables.inbox.c.processed_at.is_(None),
+        ).values(processed_at=aware_now(), pending_reason=None, rejection_reason=reason))
 
     async def pending_inbox(self, limit: int = 100):
         if not 1 <= limit <= 1_000:
@@ -351,9 +398,22 @@ class PostgresDeliveryRepository:
             tables.inbox.c.provider_scope,
             tables.inbox.c.stable_event_key,
             tables.inbox.c.payload,
-        ).where(tables.inbox.c.processed_at.is_(None)).order_by(
-            tables.inbox.c.received_at, tables.inbox.c.id,
+        ).where(
+            tables.inbox.c.processed_at.is_(None),
+            tables.inbox.c.next_attempt_at <= aware_now(),
+        ).order_by(
+            tables.inbox.c.next_attempt_at, tables.inbox.c.received_at, tables.inbox.c.id,
         ).limit(limit))).mappings().all()
+
+    async def pending_terminal_inbox(self, operation_id: OperationId):
+        return (await self.connection.execute(select(
+            tables.inbox.c.id,
+        ).where(
+            tables.inbox.c.processed_at.is_(None),
+            tables.inbox.c.payload["event_type"].astext == "execution",
+            tables.inbox.c.payload["state"].astext == "QUIESCENT",
+            tables.inbox.c.payload["operation_id"].astext == str(operation_id),
+        ).order_by(tables.inbox.c.received_at, tables.inbox.c.id))).scalars().all()
 
     async def append_audit(self, event: Mapping[str, object]) -> None:
         await self.connection.execute(insert(tables.audit_events).values(

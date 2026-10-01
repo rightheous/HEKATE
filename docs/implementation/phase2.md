@@ -2,7 +2,7 @@
 
 ## Implemented
 
-Alembic head is `0002_budget`. It creates authorization scopes, tasks and immutable input revisions, attempts, agent registry and leases, unresolved execution holds, operation journal, outbox/inbox, audit and recovery records, budget accounts/reservations, provider calls and permits, immutable usage observations/projections, and an append-only budget ledger. The unimplemented knowledge placeholder is outside the migration chain. The cyclic provider-call/permit foreign key is deferred until transaction commit.
+The Phase 2 migration is `0002_budget`. It creates authorization scopes, tasks and immutable input revisions, attempts, agent registry and leases, unresolved execution holds, operation journal, outbox/inbox, audit and recovery records, budget accounts/reservations, provider calls and permits, immutable usage observations/projections, and an append-only budget ledger. Later Phase 3 migrations extend that schema through `0005_phase3b` with terminal-observation, task-submission, Conclusion, and response persistence. The Phase 2 knowledge placeholder was outside its migration endpoint. The cyclic provider-call/permit foreign key is deferred until transaction commit.
 
 `create_uow_factory(engine)` creates a fresh async session and repositories per unit of work. Application entry points are `tasks.revise`/`tasks.cancel`, `operations.admit_operation`/`record_execution_observation`, and the budget functions `reserve`, `authorize_provider_call`, `consume_call_permit`, `record_call_observation`, `record_usage`, `settle_call`/`settle`, `reconcile_pending`, `list_pending`, and `apply_adjustment`. Operation admission writes the attempt, both account holds and ledger effects, execution hold, outbox dispatch intent, and receipt in one transaction.
 
@@ -31,7 +31,7 @@ The 2026-10-01 correction verification also covers a reservation of 8 allocated 
 
 ## Running focused verification
 
-Use a disposable local PostgreSQL 16 database named `hekate_phase2_test`, bound to loopback. The test refuses any other database name or non-local host. Set `HEKATE_PHASE2_TEST_DSN` to that database's local `postgresql+psycopg` URL; keep credentials in the shell environment.
+Use a disposable local PostgreSQL 16 database named `hekate_phase2_test`, bound to loopback. The test refuses any other database name or non-local host. Upgrade it to the current Alembic head before running the suite. Set `HEKATE_PHASE2_TEST_DSN` to that database's local `postgresql+psycopg` URL; keep credentials in the shell environment.
 
 ```sh
 HEKATE_DATABASE_URL="$HEKATE_PHASE2_TEST_DSN" uv run --locked alembic upgrade head
@@ -45,6 +45,6 @@ The PostgreSQL tests reset tables in that dedicated database. They cover rollbac
 
 Phase 3 connects the PostgreSQL guard and repositories to the pinned private JSONL bridge, Letta App Server, and DB-backed provider gateway. The T1–T7 fake-provider evidence, runtime pins, and remaining limits are recorded in [`phase3.md`](phase3.md) and [`runtime-guard-contract.md`](../../integration/letta/runtime-guard-contract.md). The synthetic test-only profile still cannot authorize production execution. A verified real model and route, exact full-request tokenizer, and verified pricing remain prerequisites. Same-execution resume after process loss (G7) and exact input-token bounding (G8) remain unresolved.
 
-HTTP ingress and `tasks.submit` are intentionally still out of scope with the product API. No task deadline or task/system budget defaults are defined in the current policy, so this phase does not invent them. Task persistence is exercised through the repository and durable operation admission; `tasks.revise` and `tasks.cancel` are the implemented task services. The existing submit/complete and public API placeholders are not part of the Phase 2 completed path.
+HTTP ingress remains out of scope. Phase 2 did not define task deadline or task/system budget defaults, and Phase 3B still requires explicit trusted configuration instead of inventing production values. Phase 3B adds local CLI task submission and the one-turn answer path; `tasks.complete()` and the public API remain unsupported.
 
 The four source design documents in `docs/design/` were restored from the supplied reference and their manifest hashes were checked. Phase 2 adjusts the detailed design by keeping the unimplemented knowledge migration out of the active head, storing inbox conflicts as separate payload-hash rows, and retaining execution holds until explicit quiescence.

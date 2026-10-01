@@ -59,6 +59,7 @@ class AgentDeleteCommand(BridgeCommandBase):
 class SessionPrepareCommand(BridgeCommandBase):
     command: Literal["session.prepare"]
     binding: BridgeBinding
+    output_contract: Literal["hekate_turn_output_v1", "position_commit_v1"] | None = None
 
 
 class SessionTurnCommand(BridgeCommandBase):
@@ -151,6 +152,15 @@ SdkErrorCode: TypeAlias = Literal[
 ]
 
 
+class BridgeBusinessResult(ContractModel):
+    state: Literal["VALID", "INVALID", "MISSING"]
+    raw_output: str | None = Field(default=None, max_length=65_536)
+    output_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    output_truncated: bool = False
+    structured_output: dict[str, object] | None = None
+    failure_code: SdkErrorCode | None = None
+
+
 class BridgeEvent(ContractModel):
     schema_version: Literal["1"]
     event_id: str = Field(min_length=1)
@@ -160,6 +170,7 @@ class BridgeEvent(ContractModel):
     usage: BridgeUsage
     error_code: SdkErrorCode | None = None
     success: bool | None = None
+    business_result: BridgeBusinessResult | None = None
 
 
 class EventsResult(ContractModel):

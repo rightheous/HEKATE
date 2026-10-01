@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from hekate.domain.errors import Conflict, PolicyDenied, StaleInput
 from hekate.domain.models import (
@@ -45,6 +46,31 @@ class PostgresTaskRepository:
             authz_epoch=snapshot.authz_epoch,
         ))
 
+    async def claim_submission(self, scope: ScopeId, request_key: str, request_hash: str):
+        await self.connection.execute(pg_insert(tables.task_submissions).values(
+            owner_scope=scope,
+            request_key=request_key,
+            request_hash=request_hash,
+        ).on_conflict_do_nothing(index_elements=[tables.task_submissions.c.owner_scope, tables.task_submissions.c.request_key]))
+        row = (await self.connection.execute(select(tables.task_submissions).where(
+            tables.task_submissions.c.owner_scope == scope,
+            tables.task_submissions.c.request_key == request_key,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None:
+            raise Conflict("task submission receipt could not be acquired")
+        if row["request_hash"] != request_hash:
+            raise Conflict("request key is already bound to a different question")
+        return row
+
+    async def complete_submission(self, scope: ScopeId, request_key: str, task_id: TaskId, receipt: Mapping[str, object]) -> None:
+        result = await self.connection.execute(update(tables.task_submissions).where(
+            tables.task_submissions.c.owner_scope == scope,
+            tables.task_submissions.c.request_key == request_key,
+            tables.task_submissions.c.task_id.is_(None),
+        ).values(task_id=task_id, receipt=json_value(receipt)))
+        if result.rowcount not in {0, 1}:
+            raise Conflict("task submission receipt changed")
+
     async def lock_scope(self, scope: ScopeId) -> AuthorizationSnapshot:
         row = (await self.connection.execute(
             select(tables.authorization_scopes).where(tables.authorization_scopes.c.id == scope).with_for_update()
@@ -70,6 +96,7 @@ class PostgresTaskRepository:
             topic_id=task.topic_id,
             base_position_version=task.base_position_version,
             deadline=task.deadline,
+            **({"created_at": task.created_at} if task.created_at is not None else {}),
             critic_agents=counters.critic_agents,
             review_rounds=counters.review_rounds,
             schema_repairs=counters.schema_repairs,
@@ -95,6 +122,182 @@ class PostgresTaskRepository:
             raise StaleInput("task is unavailable")
         return self._task(row)
 
+    async def list_queued(self, limit: int = 20):
+        if not 1 <= limit <= 100:
+            raise ValueError("queued task batch must be between 1 and 100")
+        rows = (await self.connection.execute(select(tables.tasks).where(
+            tables.tasks.c.status == TaskStatus.QUEUED.value,
+        ).order_by(tables.tasks.c.created_at, tables.tasks.c.id).with_for_update(skip_locked=True).limit(limit))).mappings().all()
+        return tuple(self._task(row) for row in rows)
+
+    async def claim_task_preparation(
+        self, task_id: TaskId, revision: int, operation_id: str, attempt_id: str,
+        reservation_id: str, owner: str, ttl_seconds: int,
+    ):
+        if ttl_seconds < 1:
+            raise ValueError("task preparation claim TTL must be positive")
+        now = datetime.now(timezone.utc)
+        await self.connection.execute(pg_insert(tables.task_preparations).values(
+            task_id=task_id, input_revision=revision, operation_id=operation_id,
+            attempt_id=attempt_id, reservation_id=reservation_id,
+            claim_owner=owner, claim_expires_at=now + timedelta(seconds=ttl_seconds),
+        ).on_conflict_do_nothing(index_elements=[tables.task_preparations.c.task_id, tables.task_preparations.c.input_revision]))
+        row = (await self.connection.execute(select(tables.task_preparations).where(
+            tables.task_preparations.c.task_id == task_id,
+            tables.task_preparations.c.input_revision == revision,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None or (row["operation_id"], row["attempt_id"], row["reservation_id"]) != (
+            operation_id, attempt_id, reservation_id,
+        ):
+            raise Conflict("task preparation identity changed")
+        now = datetime.now(timezone.utc)
+        if row["state"] == "ADMITTED":
+            return row
+        if row["claim_expires_at"] is not None and row["claim_expires_at"] > now and row["claim_owner"] != owner:
+            return row
+        await self.connection.execute(update(tables.task_preparations).where(
+            tables.task_preparations.c.task_id == task_id,
+            tables.task_preparations.c.input_revision == revision,
+        ).values(claim_owner=owner, claim_expires_at=now + timedelta(seconds=ttl_seconds)))
+        return (await self.connection.execute(select(tables.task_preparations).where(
+            tables.task_preparations.c.task_id == task_id,
+            tables.task_preparations.c.input_revision == revision,
+        ))).mappings().one()
+
+    async def mark_task_preparation_admitted(
+        self, task_id: TaskId, revision: int, owner: str, conversation_id: str, fence: int,
+    ) -> None:
+        result = await self.connection.execute(update(tables.task_preparations).where(
+            tables.task_preparations.c.task_id == task_id,
+            tables.task_preparations.c.input_revision == revision,
+            tables.task_preparations.c.claim_owner == owner,
+            tables.task_preparations.c.state == "PREPARING",
+        ).values(
+            state="ADMITTED", conversation_id=conversation_id, fence=fence,
+            claim_owner=None, claim_expires_at=None,
+        ))
+        if result.rowcount != 1:
+            raise Conflict("task preparation claim changed before admission")
+
+    async def release_task_preparation(self, task_id: TaskId, revision: int, owner: str) -> None:
+        await self.connection.execute(update(tables.task_preparations).where(
+            tables.task_preparations.c.task_id == task_id,
+            tables.task_preparations.c.input_revision == revision,
+            tables.task_preparations.c.claim_owner == owner,
+            tables.task_preparations.c.state == "PREPARING",
+        ).values(claim_owner=None, claim_expires_at=None))
+
+    async def get_task_input(self, task_id: TaskId, revision: int):
+        return (await self.connection.execute(select(tables.task_inputs).where(
+            tables.task_inputs.c.task_id == task_id,
+            tables.task_inputs.c.revision == revision,
+        ))).mappings().one_or_none()
+
+    async def fail_expired_queued(self, now: datetime) -> int:
+        result = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.status == TaskStatus.QUEUED.value,
+            tables.tasks.c.deadline <= now,
+        ).values(status=TaskStatus.FAILED.value, outcome="FAILED", stop_reason=StopReason.DEADLINE.value))
+        return int(result.rowcount or 0)
+
+    async def fail_queued_task(self, task_id: TaskId, reason: StopReason) -> bool:
+        result = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.status == TaskStatus.QUEUED.value,
+        ).values(
+            status=TaskStatus.FAILED.value,
+            outcome="FAILED",
+            stop_reason=reason.value,
+        ))
+        return result.rowcount == 1
+
+    async def get_task_response(self, task_id: TaskId):
+        return (await self.connection.execute(select(tables.task_responses).where(
+            tables.task_responses.c.task_id == task_id,
+        ))).mappings().one_or_none()
+
+    async def get_task_cost_status(self, task_id: TaskId):
+        rows = (await self.connection.execute(select(
+            tables.operations.c.id.label("operation_id"),
+            tables.budget_reservations.c.status.label("reservation_state"),
+            tables.provider_calls.c.status.label("call_state"),
+            tables.usage_projections.c.settlement_state,
+        ).select_from(
+            tables.operations.outerjoin(
+                tables.attempts, tables.attempts.c.operation_id == tables.operations.c.id,
+            ).outerjoin(
+                tables.budget_reservations,
+                tables.budget_reservations.c.id == tables.attempts.c.reservation_id,
+            ).outerjoin(
+                tables.provider_calls, tables.provider_calls.c.operation_id == tables.operations.c.id,
+            ).outerjoin(
+                tables.usage_projections,
+                tables.usage_projections.c.accounting_call_id == tables.provider_calls.c.accounting_call_id,
+            )
+        ).where(tables.operations.c.task_id == task_id))).mappings().all()
+        operations = {row["operation_id"]: row["reservation_state"] for row in rows}
+        billable = [row for row in rows if row["call_state"] not in {None, "EXPIRED", "REVOKED"}]
+        pending_calls = sum(
+            row["call_state"] != "QUIESCENT" or row["settlement_state"] != "SETTLED"
+            for row in billable
+        )
+        pending_reservations = sum(
+            state in {"RESERVED", "PENDING_SETTLEMENT"} for state in operations.values()
+        )
+        pending = pending_calls > 0 or pending_reservations > 0
+        return {
+            "cost_status": "PENDING_SETTLEMENT" if pending else "SETTLED" if billable or operations else "NOT_DISPATCHED",
+            "pending_provider_calls": pending_calls,
+            "pending_reservations": pending_reservations,
+        }
+
+    async def finalize_task_response(
+        self, task_id: TaskId, revision: int, response: Mapping[str, object], *, successful: bool,
+    ) -> bool:
+        task = await self.lock_task(task_id)
+        existing = await self.get_task_response(task_id)
+        if existing is not None:
+            return existing["source_inbox_id"] == response["source_inbox_id"]
+        if task.input_revision != revision or task.status != TaskStatus.RUNNING:
+            return False
+        values = {
+            "status": TaskStatus.COMPLETED.value if successful else TaskStatus.FAILED.value,
+            "outcome": response["outcome"],
+            "stop_reason": response["stop_reason"],
+        }
+        query = update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == TaskStatus.RUNNING.value,
+            tables.tasks.c.cancel_requested_at.is_(None),
+        )
+        if successful:
+            query = query.where(tables.tasks.c.deadline > datetime.now(timezone.utc))
+        changed = await self.connection.execute(query.values(**values))
+        if changed.rowcount != 1:
+            return False
+        await self.connection.execute(insert(tables.task_responses).values(
+            task_id=task_id,
+            input_revision=revision,
+            operation_id=response["operation_id"],
+            attempt_id=response["attempt_id"],
+            registry_id=response["registry_id"],
+            source_inbox_id=response["source_inbox_id"],
+            proposal=json_value(response["proposal"]),
+            response_text=response["response_text"],
+            outcome=response["outcome"],
+            stop_reason=response["stop_reason"],
+        ))
+        return True
+
+    async def list_pending_turn_results(self, limit: int = 100):
+        if not 1 <= limit <= 1_000:
+            raise ValueError("result batch must be between 1 and 1000")
+        return (await self.connection.execute(select(tables.turn_results.c.inbox_id).where(
+            tables.turn_results.c.processing_state.in_(["WAITING_EXECUTION", "VALIDATED"]),
+            tables.turn_results.c.next_attempt_at <= datetime.now(timezone.utc),
+        ).order_by(tables.turn_results.c.created_at, tables.turn_results.c.inbox_id).limit(limit))).scalars().all()
+
     @staticmethod
     def _task(row) -> Task:
         return Task(
@@ -107,6 +310,7 @@ class PostgresTaskRepository:
             topic_id=TopicId(row["topic_id"]) if row["topic_id"] else None,
             base_position_version=row["base_position_version"],
             deadline=row["deadline"],
+            created_at=row["created_at"],
             counters=TaskCounters(
                 critic_agents=row["critic_agents"],
                 review_rounds=row["review_rounds"],

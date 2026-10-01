@@ -18,6 +18,7 @@ from hekate.domain.types import (
 )
 
 from . import tables
+from .common import aware_now
 from .common import aware_now, new_key
 
 
@@ -34,6 +35,17 @@ class PostgresAgentRepository:
             tables.agent_registry.c.role == "hekate",
             tables.agent_registry.c.persistence == "persistent",
         ))).mappings().one_or_none()
+        return self._record(row) if row else None
+
+    async def get_persistent_scope(self, owner_scope: ScopeId, *, lock: bool = False) -> AgentRecord | None:
+        query = select(tables.agent_registry).where(
+            tables.agent_registry.c.owner_scope == owner_scope,
+            tables.agent_registry.c.role == "hekate",
+            tables.agent_registry.c.persistence == "persistent",
+        )
+        if lock:
+            query = query.with_for_update()
+        row = (await self.connection.execute(query)).mappings().one_or_none()
         return self._record(row) if row else None
 
     async def insert_intent(self, record: AgentRecord) -> None:
@@ -99,7 +111,12 @@ class PostgresAgentRepository:
             raise Conflict("registry is already bound to a provider agent")
         await self.connection.execute(update(tables.agent_registry).where(
             tables.agent_registry.c.id == registry_id,
-        ).values(provider_agent_id=provider_id))
+        ).values(
+            provider_agent_id=provider_id,
+            intended_state=AgentState.READY.value,
+            observed_state="PRESENT",
+            observed_at=aware_now(),
+        ))
 
     async def update_observation(self, registry_id: RegistryId, observation: object) -> None:
         await self.lock_registry(registry_id)

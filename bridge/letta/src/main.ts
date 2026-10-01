@@ -3,7 +3,10 @@ import {
   type LettaCodeSession,
   type SDKMessage,
 } from "@letta-ai/letta-agent-sdk";
+import { Ajv2020 } from "ajv/dist/2020.js";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import {
@@ -30,11 +33,13 @@ interface SessionEntry {
   turnState: "IDLE" | "RUNNING" | "COMPLETE" | "FAILED" | "UNKNOWN";
   events: BridgeEvent[];
   toolStats: { executorCalls: number; blockedAttempts: number };
+  outputContract?: "hekate_turn_output_v1" | "position_commit_v1" | null;
   turnTask?: Promise<void>;
 }
 
 const MAX_FRAME_BYTES = 1_048_576;
 const structuredOutputProbe = process.env.HEKATE_STRUCTURED_OUTPUT_PROBE === "1";
+const MAX_BUSINESS_OUTPUT_BYTES = 65_536;
 const sessions = new Map<string, SessionEntry>();
 const appServerUrl = process.env.HEKATE_LETTA_URL;
 if (!appServerUrl) throw new Error("HEKATE_LETTA_URL is required");
@@ -48,9 +53,24 @@ const client = new LettaAgentClient({
   requestTimeoutMs: 30_000,
 });
 
-const positionCommitSchema = structuredOutputProbe
-  ? JSON.parse(readFileSync("/workspace/contracts/generated/position-commit.v1.schema.json", "utf8"))
-  : undefined;
+const positionCommitSchema = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, "../../../contracts/generated/position-commit.v1.schema.json"), "utf8"),
+);
+const hekateTurnOutputSchema = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, "../../../contracts/generated/hekate-turn-output.v1.schema.json"), "utf8"),
+);
+const validateHekateTurnOutput = new Ajv2020({ allErrors: true, strict: false }).compile(hekateTurnOutputSchema);
+
+function parseHekateTurnOutput(raw: string): Record<string, unknown> | undefined {
+  try {
+    const value: unknown = JSON.parse(raw);
+    return value && typeof value === "object" && !Array.isArray(value) && validateHekateTurnOutput(value)
+      ? value as Record<string, unknown>
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 function matchesTag(tags: unknown, tag: string): boolean {
   return Array.isArray(tags) && tags.some((candidate) => candidate === tag);
@@ -132,6 +152,30 @@ async function runTurn(
   entry.events = [];
   let resultSeen = false;
   let dispatchAccepted = false;
+  let finalAssistantOutput = "";
+  let outputBytes = 0;
+  let outputTruncated = false;
+  let outputHash = createHash("sha256");
+
+  const resetOutput = (): void => {
+    finalAssistantOutput = "";
+    outputBytes = 0;
+    outputTruncated = false;
+    outputHash = createHash("sha256");
+  };
+
+  const captureOutput = (text: string): void => {
+    const bytes = Buffer.from(text, "utf8");
+    outputHash.update(bytes);
+    const remaining = MAX_BUSINESS_OUTPUT_BYTES - outputBytes;
+    if (remaining > 0) {
+      const kept = bytes.subarray(0, remaining);
+      finalAssistantOutput += kept.toString("utf8");
+      outputBytes += kept.byteLength;
+    }
+    if (bytes.byteLength > remaining) outputTruncated = true;
+  };
+
   const consume = async (): Promise<void> => {
     let index = 0;
     for await (const message of entry.session.stream()) {
@@ -140,39 +184,75 @@ async function runTurn(
         conversation_id: entry.conversationId,
       };
       const event = summarizeSdkMessage(message, command.operation_id, binding, index++);
+      if (message.type === "assistant") captureOutput(message.content);
+      if (message.type === "tool_call") resetOutput();
       const callId = event.usage.accounting_call_id;
-      let recorded = event;
       if (callId) {
-        const prior = entry.events.filter((candidate) => candidate.usage.accounting_call_id === callId);
+        const previousIndex = entry.events.findIndex((candidate) =>
+          candidate.usage.accounting_call_id === callId && candidate.event_type !== "usage_conflict",
+        );
+        const previous = previousIndex < 0 ? undefined : entry.events[previousIndex];
+        const priorConflict = entry.events.some((candidate) =>
+          candidate.usage.accounting_call_id === callId && candidate.event_type === "usage_conflict",
+        );
         let projection: BridgeEvent["usage"] | undefined;
-        let conflict = prior.some((candidate) => candidate.event_type === "usage_conflict");
-        for (const candidate of prior) {
-          try {
-            projection = projection
-              ? mergeUsageUpdate(projection, candidate.usage)
-              : candidate.usage;
-          } catch (error) {
-            if (!(error instanceof UsageConflictError)) throw error;
-            conflict = true;
-            break;
-          }
-        }
+        let conflict = priorConflict;
+        if (previous) projection = previous.usage;
         if (!conflict && projection) {
           try {
-            mergeUsageUpdate(projection, event.usage);
+            projection = mergeUsageUpdate(projection, event.usage);
           } catch (error) {
             if (!(error instanceof UsageConflictError)) throw error;
             conflict = true;
           }
         }
-        if (conflict) recorded = { ...event, event_type: "usage_conflict" };
+        if (conflict) {
+          if (!priorConflict) entry.events.push({
+            ...event,
+            event_id: event.event_id,
+            event_type: "usage_conflict",
+          });
+        } else if (previousIndex < 0) {
+          entry.events.push(event);
+        } else {
+          entry.events[previousIndex] = { ...event, event_id: entry.events[previousIndex].event_id, usage: projection ?? event.usage };
+        }
       }
-      encodeEvent(recorded);
-      entry.events.push(recorded);
       if (message.type === "result") {
         // SDK 0.8.25 emits trailing usage before result, or after its 100 ms
         // grace timeout when the App Server never sends usage.
         resultSeen = true;
+        if (entry.outputContract === "hekate_turn_output_v1") {
+          const outputDigest = outputHash.digest("hex");
+          const structured = entry.outputContract === "hekate_turn_output_v1"
+            ? parseHekateTurnOutput(finalAssistantOutput)
+            : message.structuredOutput;
+          const structuredObject = structured && typeof structured === "object" && !Array.isArray(structured)
+            ? structured as Record<string, unknown>
+            : undefined;
+          const structuredTooLarge = structuredObject !== undefined &&
+            Buffer.byteLength(JSON.stringify(structuredObject), "utf8") > MAX_BUSINESS_OUTPUT_BYTES;
+          const valid = message.success && structuredObject !== undefined && !outputTruncated && !structuredTooLarge;
+          const event: BridgeEvent = {
+            schema_version: "1",
+            event_id: `${command.operation_id}:business-result`,
+            operation_id: command.operation_id,
+            binding,
+            event_type: "business_result",
+            usage: { completeness: "UNKNOWN" },
+            ...(message.errorCode ? { error_code: message.errorCode } : {}),
+            business_result: {
+              state: valid ? "VALID" : finalAssistantOutput ? "INVALID" : "MISSING",
+              raw_output: finalAssistantOutput,
+              output_sha256: outputDigest,
+              output_truncated: outputTruncated || structuredTooLarge,
+              ...(valid ? { structured_output: structuredObject } : {}),
+              ...(message.errorCode ? { failure_code: message.errorCode } : {}),
+            },
+          };
+          encodeEvent(event);
+          entry.events.push(event);
+        }
         entry.turnState = message.errorCode === "stream_closed" || entry.turnState === "UNKNOWN"
           ? "UNKNOWN"
           : message.success ? "COMPLETE" : "FAILED";
@@ -263,8 +343,8 @@ export async function routeCommand(
         `hekate-role:${command.role}`,
       ];
       const providerAgentId = await client.createAgent({
-        name: `hekate-probe-${command.creation_tag}`,
-        description: "Ephemeral HEKATE Phase 1 integration probe agent",
+        name: `hekate-${command.creation_tag}`,
+        description: command.role === "hekate" ? "Persistent HEKATE reasoning agent" : "HEKATE Critic agent",
         tags,
         baseTools: [],
         ...(command.model ? { model: command.model } : {}),
@@ -374,15 +454,18 @@ export async function routeCommand(
       }
       previous?.session.close();
       const toolStats = { executorCalls: 0, blockedAttempts: 0 };
+      const selectedOutputSchema = command.output_contract === "position_commit_v1" || (structuredOutputProbe && !command.output_contract)
+          ? positionCommitSchema
+          : undefined;
       const session = client.createSession(command.binding.provider_agent_id, {
         allowedTools: [],
         toolset: { base: "none" as const },
         tools: [],
-        ...(positionCommitSchema
+        ...(selectedOutputSchema
           ? {
               outputFormat: {
                 type: "json_schema" as const,
-                schema: positionCommitSchema,
+                schema: selectedOutputSchema,
                 maxRetries: 0,
               },
             }
@@ -404,6 +487,7 @@ export async function routeCommand(
         turnState: "IDLE",
         events: [],
         toolStats,
+        outputContract: command.output_contract ?? (structuredOutputProbe ? "position_commit_v1" : undefined),
       };
       sessions.set(command.binding.provider_agent_id, entry);
       return reply(command, compatibility.compatible ? "CONFIRMED" : "REJECTED", {

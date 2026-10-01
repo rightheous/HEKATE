@@ -6,6 +6,7 @@ limits:
   transient_retries: 1
   task_budget_usd: null # Required before dispatch.
   system_daily_budget_usd: null # Required before dispatch.
+  task_deadline_seconds: null # Required before dispatch; no production default.
 tool_grants: []
 allowed_actions: []
 retention: {}

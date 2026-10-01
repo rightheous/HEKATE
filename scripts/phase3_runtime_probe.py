@@ -19,7 +19,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -79,6 +79,7 @@ from hekate.infrastructure.letta.provider_gateway import (
     create_provider_gateway,
 )
 from hekate.infrastructure.letta import provider_gateway as gateway_implementation
+from hekate.worker import service as worker_implementation
 from hekate.infrastructure.postgres import tables
 from hekate.infrastructure.postgres.database import create_engine, create_uow_factory
 from hekate.settings import Settings, validate_settings
@@ -100,6 +101,7 @@ class FakeProvider:
         self.lock = threading.Lock()
         self.behaviors: deque[str] = deque()
         self.requests: list[dict[str, object]] = []
+        self.response_factory: Callable[[dict[str, object]], str] | None = None
         self.request_seen = threading.Event()
         self.release_block = threading.Event()
         owner = self
@@ -145,6 +147,7 @@ class FakeProvider:
                         "max_completion_tokens": request_body.get("max_completion_tokens"),
                         "behavior": behavior,
                     })
+                    response_factory = owner.response_factory
                 owner.request_seen.set()
                 if behavior == "block":
                     owner.release_block.wait(20)
@@ -153,10 +156,15 @@ class FakeProvider:
                     return
                 response_id = f"fake-response-{sequence}"
                 usage = {"prompt_tokens": 37, "completion_tokens": 4, "total_tokens": 41}
+                try:
+                    assistant_content = response_factory(request_body) if response_factory is not None else "Phase 3 fake response."
+                except Exception:
+                    self._reply(500, b'{"error":{"message":"isolated fake fixture rejected the request"}}')
+                    return
                 if request_body.get("stream") is True:
                     chunks = [
                         {"id": response_id, "object": "chat.completion.chunk", "created": 1,
-                         "model": request_body.get("model"), "choices": [{"index": 0, "delta": {"role": "assistant", "content": "Phase 3 fake response."}, "finish_reason": None}]},
+                         "model": request_body.get("model"), "choices": [{"index": 0, "delta": {"role": "assistant", "content": assistant_content}, "finish_reason": None}]},
                         {"id": response_id, "object": "chat.completion.chunk", "created": 1,
                          "model": request_body.get("model"), "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]},
                         {"id": response_id, "object": "chat.completion.chunk", "created": 1,
@@ -170,7 +178,7 @@ class FakeProvider:
                         "id": response_id,
                         "object": "chat.completion",
                         "model": request_body.get("model"),
-                        "choices": [{"index": 0, "message": {"role": "assistant", "content": "Phase 3 fake response."}, "finish_reason": "stop"}],
+                        "choices": [{"index": 0, "message": {"role": "assistant", "content": assistant_content}, "finish_reason": "stop"}],
                         "usage": usage,
                     }, separators=(",", ":")).encode()
                     self._reply(200, body)
@@ -192,6 +200,10 @@ class FakeProvider:
         if behavior == "block":
             self.request_seen.clear()
             self.release_block.clear()
+
+    def set_response_factory(self, factory: Callable[[dict[str, object]], str] | None) -> None:
+        with self.lock:
+            self.response_factory = factory
 
     def count(self) -> int:
         with self.lock:
@@ -793,11 +805,11 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         "probe": "phase3-runtime-dispatch",
         "run_id": run_id,
         "executed_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
-        "base_commit": "f9e427664b40d98f621c20666da514a4767d5311",
+        "base_commit": "6eb11d128cd697d93ef746b0e69d9e3d1dbfce22",
         "checked_out_head": git_head,
         "working_tree_dirty_at_probe": bool(git_status),
         "working_tree_change_count_at_probe": len(git_status),
-        "branch": "phase3-runtime-dispatch",
+        "branch": p1.run(["git", "branch", "--show-current"]),
         "real_provider_calls": 0,
         "runtime": {},
         "results": {},
@@ -839,7 +851,7 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         async with engine.connect() as connection:
             migration_head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres_version = await connection.scalar(text("SHOW server_version"))
-        if migration_head != "0003_runtime_dispatch":
+        if migration_head != "0005_phase3b":
             raise ValueError("Phase 3 migration is not current")
         report["database"] = {"postgres_version": postgres_version, "migration_head": migration_head}
 
@@ -909,10 +921,83 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         if t1_job is None:
             raise RuntimeError("T1 admitted operation had no claimable outbox job")
         before_t1 = fake.count()
-        await dispatch_job(container, t1_job, WORKER_ID)
+        provider_quiescent_waiting = asyncio.Event()
+        release_provider_quiescent = asyncio.Event()
+        provider_quiescent_applied = asyncio.Event()
+        terminal_received = asyncio.Event()
+        original_gateway_processor = gateway_implementation.process_runtime_observation
+        original_execution_recorder = worker_implementation._record_execution
+        t1_operation_id = str(context_t1["request"].envelope.operation_id)
+
+        async def delayed_provider_quiescent(factory_value, scope_value, key_value, payload_value, **kwargs):
+            if (
+                isinstance(payload_value, RuntimeInboxPayload)
+                and payload_value.operation_id == t1_operation_id
+                and payload_value.event_type == "provider_call"
+                and payload_value.state == "QUIESCENT"
+            ):
+                provider_quiescent_waiting.set()
+                await release_provider_quiescent.wait()
+            result_value = await original_gateway_processor(
+                factory_value, scope_value, key_value, payload_value, **kwargs,
+            )
+            if (
+                isinstance(payload_value, RuntimeInboxPayload)
+                and payload_value.operation_id == t1_operation_id
+                and payload_value.event_type == "provider_call"
+                and payload_value.state == "QUIESCENT"
+            ):
+                provider_quiescent_applied.set()
+            return result_value
+
+        async def observe_terminal(container_value, binding_value, operation_value, worker_value, state_value, source_value, *, outcome=None, reason=None):
+            result_value = await original_execution_recorder(
+                container_value, binding_value, operation_value, worker_value, state_value, source_value,
+                outcome=outcome, reason=reason,
+            )
+            if str(operation_value) == t1_operation_id and state_value == "QUIESCENT":
+                terminal_received.set()
+            return result_value
+
+        gateway_implementation.process_runtime_observation = delayed_provider_quiescent
+        worker_implementation._record_execution = observe_terminal
+        try:
+            dispatch_task = asyncio.create_task(dispatch_job(container, t1_job, WORKER_ID))
+            await asyncio.wait_for(provider_quiescent_waiting.wait(), timeout=30)
+            await asyncio.wait_for(terminal_received.wait(), timeout=30)
+            async with engine.connect() as connection:
+                terminal_state = await connection.execute(text("""
+                    SELECT processed_at, next_attempt_at, pending_reason
+                    FROM inbox
+                    WHERE payload->>'operation_id'=:operation_id
+                      AND payload->>'event_type'='execution'
+                      AND payload->>'state'='QUIESCENT'
+                """), {"operation_id": t1_operation_id})
+                terminal_row = terminal_state.mappings().one()
+                pre_release_call_state = await connection.scalar(text(
+                    "SELECT status FROM provider_calls WHERE operation_id=:operation_id"
+                ), {"operation_id": t1_operation_id})
+                pre_release_execution_state = await connection.scalar(text(
+                    "SELECT execution_state FROM operations WHERE id=:operation_id"
+                ), {"operation_id": t1_operation_id})
+            terminal_waited_for_call = (
+                terminal_row["processed_at"] is None
+                and terminal_row["pending_reason"] == "call_termination_unconfirmed"
+                and pre_release_call_state == "RUNNING"
+                and pre_release_execution_state != "QUIESCENT"
+            )
+            release_provider_quiescent.set()
+            await asyncio.wait_for(provider_quiescent_applied.wait(), timeout=30)
+            await dispatch_task
+        finally:
+            release_provider_quiescent.set()
+            gateway_implementation.process_runtime_observation = original_gateway_processor
+            worker_implementation._record_execution = original_execution_recorder
         t1 = await _db_summary(engine, str(context_t1["request"].envelope.operation_id))
         t1["call_plan"] = plan_t1.model_dump(mode="json")
         t1["fake_provider_requests"] = fake.count() - before_t1
+        t1["terminal_waited_for_individual_call_evidence"] = terminal_waited_for_call
+        t1["terminal_applied_after_gateway_commit"] = t1["operation"].get("execution_state") == "QUIESCENT"
         t1["agent_tools"] = context_t1["session"].get("agent_tools", [])
         t1["tool_executor_calls"] = context_t1["session"].get("tool_executor_calls", 0)
         t1["blocked_tool_attempts"] = context_t1["session"].get("blocked_tool_attempts", 0)
@@ -939,6 +1024,8 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
             and t1["operation"].get("settlement_state") == "SETTLED"
             and t1["consumed_permit_count"] == 1
             and t1["fake_provider_requests"] == 1
+            and t1["terminal_waited_for_individual_call_evidence"]
+            and t1["terminal_applied_after_gateway_commit"]
             and t1["repeated_collect_no_resend_or_duplicate_settlement"]
             and t1["disabled_toolset_confirmed"]
         )
@@ -1317,12 +1404,15 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
             observer_fence=context_t4["runtime_binding"].fence,
         )
         try:
-            await process_runtime_observation(
+            terminal_result = await process_runtime_observation(
                 factory, "letta-bridge", terminal_only.observation_identity, terminal_only,
             )
-            t4_summary["sdk_terminal_without_provider_quiescence_blocked"] = False
+            t4_summary["sdk_terminal_without_provider_quiescence_blocked"] = (
+                terminal_result.get("processed") is False
+                and terminal_result.get("pending_reason") == "call_termination_unconfirmed"
+            )
         except UnknownExecution:
-            t4_summary["sdk_terminal_without_provider_quiescence_blocked"] = True
+            t4_summary["sdk_terminal_without_provider_quiescence_blocked"] = False
         t4_terminal_state = await _db_summary(engine, t4_operation_id)
         t4_summary["state_after_sdk_terminal_only"] = t4_terminal_state["operation"].get("execution_state")
         restarted_engine = create_engine(database_url)

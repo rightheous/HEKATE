@@ -6,13 +6,16 @@ from datetime import UTC, datetime, timedelta
 from typing import Mapping
 
 from hekate.application.operations import record_dispatch_accepted, record_dispatch_send_intent
+from hekate.application.results import process_business_result_inbox, process_pending_results, receive_business_result, receive_missing_business_result
 from hekate.application.runtime_inbox import InboxBinding, RuntimeInboxPayload, process_runtime_observation
-from hekate.domain.errors import UnknownExecution
+from hekate.application.turns import prepare_queued_tasks
+from hekate.domain.bridge_contracts import BridgeEvent
 from hekate.domain.contracts import canonical_json
 from hekate.domain.models import ExecutionEnvelope, Lease, OutboxJob, RuntimeBinding
 from hekate.domain.types import AttemptId, OperationId, ProviderAgentId, RegistryId, TaskId
 from hekate.infrastructure.letta.adapter import LettaRuntimeAdapter
 from hekate.ports.store import UowFactory
+from hekate.settings import configured_local_actor, configured_task_execution
 from hekate.bootstrap import Container
 
 _LOG = logging.getLogger(__name__)
@@ -59,11 +62,15 @@ async def _record_execution(
         lease_owner=worker,
         observer_fence=binding.fence,
     )
-    await process_runtime_observation(container.uow_factory, "letta-bridge", payload.observation_identity, payload)
+    await process_runtime_observation(
+        container.uow_factory, "letta-bridge", payload.observation_identity, payload,
+        processor_owner=worker,
+    )
 
 
 async def _collect_turn(container: Container, binding: RuntimeBinding, operation_id: OperationId, worker: str, deadline: datetime) -> None:
     runtime: LettaRuntimeAdapter = container.runtime
+    saw_business_result = False
     while datetime.now(UTC) < deadline:
         result = await runtime.collect(binding, operation_id, wait_ms=500)
         for value in result["events"]:
@@ -81,6 +88,12 @@ async def _collect_turn(container: Container, binding: RuntimeBinding, operation
             }
             if event_binding != expected_binding:
                 raise ValueError("bridge event binding differs from admitted runtime")
+            if value.get("event_type") == "business_result":
+                event = BridgeEvent.model_validate(value, strict=True)
+                if event.operation_id != str(operation_id):
+                    raise ValueError("business result operation differs from admitted runtime")
+                await receive_business_result(container.uow_factory, event)
+                saw_business_result = True
             usage = value.get("usage")
             if isinstance(usage, dict) and usage.get("accounting_call_id"):
                 cost = usage.get("cost_usd")
@@ -114,15 +127,21 @@ async def _collect_turn(container: Container, binding: RuntimeBinding, operation
             await _record_execution(container, binding, operation_id, worker, "RUNNING", "bridge_running")
             continue
         if state in {"COMPLETE", "FAILED"}:
-            try:
-                await _record_execution(
-                    container, binding, operation_id, worker, "QUIESCENT", "bridge_terminal",
-                    outcome="SUCCEEDED" if state == "COMPLETE" else "FAILED",
-                )
-            except UnknownExecution:
-                await _record_execution(
-                    container, binding, operation_id, worker, "UNKNOWN", "bridge_terminal",
-                    reason="provider_call_termination_unconfirmed",
+            await _record_execution(
+                container, binding, operation_id, worker, "QUIESCENT", "bridge_terminal",
+                outcome="SUCCEEDED" if state == "COMPLETE" else "FAILED",
+            )
+            if not saw_business_result:
+                await receive_missing_business_result(
+                    container.uow_factory, operation_id,
+                    {
+                        "task_id": str(binding.task_id), "attempt_id": str(binding.attempt_id),
+                        "agent_registry_id": str(binding.agent_registry_id),
+                        "provider_agent_id": str(binding.provider_agent_id),
+                        "conversation_id": binding.conversation_id,
+                        "input_revision": binding.input_revision, "fence": binding.fence,
+                    },
+                    "structured_output_error" if state == "COMPLETE" else "error",
                 )
             return
         await _record_execution(
@@ -199,15 +218,34 @@ async def heartbeat_leases(factory: UowFactory, worker: str, active: dict[str, L
             active[registry_id] = renewed
 
 
-async def process_pending_inbox(factory: UowFactory, limit: int = 100) -> int:
+async def process_pending_inbox(factory: UowFactory, limit: int = 100, processor_owner: str | None = None) -> int:
     async with factory() as uow:
         rows = await uow.delivery.pending_inbox(limit)
         await uow.commit()
     processed = 0
     for row in rows:
-        result = await process_runtime_observation(
-            factory, row["provider_scope"], row["stable_event_key"], row["payload"],
-        )
+        payload = row["payload"]
+        if payload.get("event_type") == "business_result":
+            result = await process_business_result_inbox(factory, row["id"])
+        elif processor_owner and payload.get("event_type") == "execution" and payload.get("state") == "QUIESCENT":
+            binding = payload["binding"]
+            async with factory() as uow:
+                lease = await uow.agents.acquire_lease(
+                    RegistryId(binding["agent_registry_id"]), processor_owner, REGISTRY_LEASE_SECONDS,
+                )
+                if lease is None:
+                    await uow.delivery.defer_inbox(row["id"], "processor_lease_unavailable")
+                    await uow.commit()
+                    continue
+                await uow.commit()
+            from hekate.application.runtime_inbox import _apply_terminal_inbox
+
+            result = await _apply_terminal_inbox(factory, row["id"], processor_owner)
+        else:
+            result = await process_runtime_observation(
+                factory, row["provider_scope"], row["stable_event_key"], payload,
+                processor_owner=processor_owner,
+            )
         if result["processed"]:
             processed += 1
     return processed
@@ -215,15 +253,39 @@ async def process_pending_inbox(factory: UowFactory, limit: int = 100) -> int:
 
 async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
     await container.runtime.verify_compatibility()
-    await process_pending_inbox(container.uow_factory)
     worker = container.settings.worker_id
+    try:
+        actor = configured_local_actor(container.settings)
+        execution_config = configured_task_execution(container.settings)
+    except ValueError as error:
+        actor = None
+        execution_config = None
+        _LOG.warning("queued Task preparation is disabled: %s", str(error)[:240])
+    await process_pending_inbox(container.uow_factory, processor_owner=worker)
     active: dict[str, Lease] = {}
     heartbeat_stop = asyncio.Event()
     heartbeat = asyncio.create_task(heartbeat_leases(container.uow_factory, worker, active, heartbeat_stop))
     heartbeat.add_done_callback(lambda task: stop_event.set() if not task.cancelled() and task.exception() else None)
     dispatches: set[asyncio.Task[None]] = set()
+    next_maintenance = 0.0
     try:
         while not stop_event.is_set():
+            now = asyncio.get_running_loop().time()
+            if now >= next_maintenance:
+                try:
+                    await process_pending_inbox(container.uow_factory, processor_owner=worker)
+                    await process_pending_results(container.uow_factory)
+                except Exception as error:
+                    _LOG.error("pending result processing failed: %s: %s", type(error).__name__, str(error)[:240])
+                if actor is not None and execution_config is not None:
+                    try:
+                        prepared_leases = await prepare_queued_tasks(
+                            container.uow_factory, container.runtime, actor, execution_config, worker,
+                        )
+                        active.update({str(lease.registry_id): lease for lease in prepared_leases})
+                    except Exception as error:
+                        _LOG.error("queued Task preparation failed: %s: %s", type(error).__name__, str(error)[:240])
+                next_maintenance = now + 1.0
             dispatches = {task for task in dispatches if not task.done()}
             if len(dispatches) < CLAIM_BATCH:
                 async with container.uow_factory() as uow:
@@ -236,8 +298,7 @@ async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
                         lease = await _read_lease(container.uow_factory, RegistryId(registry_id))
                         if lease is not None and lease.owner == worker and lease.fence == int(value["fence"]):
                             active[registry_id] = lease
-                    task = asyncio.create_task(dispatch_job(container, job, worker))
-                    task.add_done_callback(lambda _task, key=registry_id if isinstance(value, dict) else "": active.pop(key, None))
+                    task = asyncio.create_task(_dispatch_and_release(container, job, worker, active))
                     dispatches.add(task)
             try:
                 await asyncio.wait_for(stop_event.wait(), 0.25)
@@ -250,6 +311,23 @@ async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
         heartbeat.cancel()
         await asyncio.gather(heartbeat, return_exceptions=True)
         active.clear()
+
+
+async def _dispatch_and_release(container: Container, job: OutboxJob, worker: str, active: dict[str, Lease]) -> None:
+    value = job.payload.get("binding")
+    registry_key = str(value["agent_registry_id"]) if isinstance(value, dict) else ""
+    try:
+        await dispatch_job(container, job, worker)
+    finally:
+        lease = active.get(registry_key)
+        if lease is not None and lease.owner == worker:
+            try:
+                async with container.uow_factory() as uow:
+                    await uow.agents.release_lease(lease)
+                    await uow.commit()
+            except Exception as error:
+                _LOG.error("registry lease release failed for %s: %s", registry_key, type(error).__name__)
+            active.pop(registry_key, None)
 
 
 async def _read_lease(factory: UowFactory, registry_id: RegistryId) -> Lease | None:

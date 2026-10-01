@@ -49,6 +49,24 @@ class PostgresBudgetRepository:
             held_amount=account.held_amount,
         ))
 
+    async def ensure_account(self, account: AccountSnapshot) -> None:
+        for amount in (account.limit_amount, account.spent_amount, account.held_amount):
+            require_money(amount)
+        await self.connection.execute(pg_insert(tables.budget_accounts).values(
+            id=account.id,
+            scope_kind=account.scope_kind,
+            scope_ref=account.scope_ref,
+            period_id=account.period_id,
+            limit_amount=account.limit_amount,
+            spent_amount=account.spent_amount,
+            held_amount=account.held_amount,
+        ).on_conflict_do_nothing(index_elements=[tables.budget_accounts.c.id]))
+        row = (await self.connection.execute(select(tables.budget_accounts).where(
+            tables.budget_accounts.c.id == account.id,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None or any(row[key] != getattr(account, key) for key in ("scope_kind", "scope_ref", "period_id", "limit_amount")):
+            raise Conflict("existing budget account differs from trusted configuration")
+
     async def lock_accounts(self, account_ids: Sequence[str]) -> Sequence[Account]:
         ids = sorted(set(account_ids))
         if not ids:

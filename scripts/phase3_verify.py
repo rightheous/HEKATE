@@ -87,6 +87,12 @@ def main() -> int:
         [python, "-m", "unittest", "discover", "-s", "tests/contract", "-p", "test_phase3_bridge_and_gateway.py", "-v"],
     )
     run(
+        "phase2_migration_upgrade",
+        "HEKATE_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m alembic upgrade head",
+        [python, "-m", "alembic", "upgrade", "head"],
+        {"HEKATE_DATABASE_URL": phase2_database},
+    )
+    run(
         "phase2_postgres_tests",
         "HEKATE_TEST_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m unittest discover -s tests/persistence -v",
         [python, "-m", "unittest", "discover", "-s", "tests/persistence", "-v"],
@@ -109,6 +115,9 @@ with TemporaryDirectory() as temp:
     migration_env = {"HEKATE_DATABASE_URL": phase3_database}
     run("migration_upgrade", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head", [python, "-m", "alembic", "upgrade", "head"], migration_env)
     run("migration_check", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check", [python, "-m", "alembic", "check"], migration_env)
+    run("migration_downgrade", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic downgrade 0004_terminal_inbox", [python, "-m", "alembic", "downgrade", "0004_terminal_inbox"], migration_env)
+    run("migration_reupgrade", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head", [python, "-m", "alembic", "upgrade", "head"], migration_env)
+    run("migration_check_after_reupgrade", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check", [python, "-m", "alembic", "check"], migration_env)
     run("diff_check", "git diff --check", ["git", "diff", "--check"])
 
     probe_env = {
@@ -142,29 +151,69 @@ with TemporaryDirectory() as temp:
         }, sort_keys=True))
         return 1
 
+    probe3b_record, probe3b_result = run(
+        "pinned_runtime_single_hekate_probe",
+        "python scripts/phase3b_single_hekate_probe.py (dedicated loopback DB, pinned Node runtime)",
+        [python, "scripts/phase3b_single_hekate_probe.py"],
+        probe_env,
+    )
+    artifact3b_path = None
+    for line in probe3b_result.stdout.splitlines():
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict) and isinstance(value.get("artifact"), str):
+            artifact3b_path = ROOT / value["artifact"]
+    if artifact3b_path is None or not artifact3b_path.is_file():
+        def redact(value: str) -> str:
+            return value.replace(phase3_database, "<phase3-database-url>").replace(phase2_database, "<phase2-database-url>")[-2000:]
+        print(json.dumps({
+            "error": "Phase 3B probe did not produce a readable artifact",
+            "failed_commands": [record for record in records if record["status"] == "failed"],
+            "probe_exit_code": probe3b_record["exit_code"],
+            "probe_stdout_tail": redact(probe3b_result.stdout),
+            "probe_stderr_tail": redact(probe3b_result.stderr),
+        }, sort_keys=True))
+        return 1
+
     artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
     runtime_verification = artifact.get("verification", {})
+    artifact3b = json.loads(artifact3b_path.read_text(encoding="utf-8"))
+    runtime3b_results = artifact3b.get("results", {})
     command_passed = sum(record["status"] == "passed" for record in records)
     command_failed = len(records) - command_passed
     runtime_passed = artifact.get("overall_status") == "pass"
     artifact["verification"] = {
         "command": "uv run python scripts/phase3_verify.py",
         "status": "passed" if command_failed == 0 and runtime_passed else "failed",
+        "phase3b_artifact": artifact3b_path.relative_to(ROOT).as_posix(),
         "commands_run": len(records),
         "commands_passed": command_passed,
         "commands_failed": command_failed,
         "commands": records,
         "runtime_scenarios": runtime_verification,
+        "phase3b_runtime_scenarios": {
+            "scenario_count": len(runtime3b_results),
+            "passed_count": sum(value.get("passed") is True for value in runtime3b_results.values() if isinstance(value, dict)),
+            "failed_count": sum(value.get("passed") is not True for value in runtime3b_results.values() if isinstance(value, dict)),
+        },
     }
     artifact_path.write_text(json.dumps(artifact, ensure_ascii=False, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
+    artifact3b["verification"] = artifact["verification"]
+    artifact3b["verification"]["phase3a_artifact"] = artifact_path.relative_to(ROOT).as_posix()
+    artifact3b_path.write_text(json.dumps(artifact3b, ensure_ascii=False, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
     print(json.dumps({
         "artifact": artifact_path.relative_to(ROOT).as_posix(),
+        "phase3b_artifact": artifact3b_path.relative_to(ROOT).as_posix(),
         "verification_status": artifact["verification"]["status"],
         "commands_run": len(records),
         "commands_passed": command_passed,
         "commands_failed": command_failed,
         "phase3_scenarios_passed": runtime_verification.get("passed_count", 0),
         "phase3_scenarios_failed": runtime_verification.get("failed_count", 0),
+        "phase3b_scenarios_passed": artifact["verification"]["phase3b_runtime_scenarios"]["passed_count"],
+        "phase3b_scenarios_failed": artifact["verification"]["phase3b_runtime_scenarios"]["failed_count"],
         "probe_exit_code": probe_record["exit_code"],
     }, sort_keys=True))
     return 0 if artifact["verification"]["status"] == "passed" else 1

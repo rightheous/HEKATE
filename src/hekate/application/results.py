@@ -1,27 +1,353 @@
 from __future__ import annotations
 
-from hekate.domain.models import (
-    AuditRef, IngestReceipt, RejectionReason, ResultDisposition, RuntimeEvent,
-    ValidationReport,
+import hashlib
+import json
+from typing import Literal
+from uuid import NAMESPACE_URL, uuid5
+
+from pydantic import Field
+
+from hekate.application.budgets import _restore_binding
+from hekate.domain.bridge_contracts import BridgeBusinessResult, BridgeEvent
+from hekate.domain.capsules import parse_hekate_turn_output, validate_capsule_binding
+from hekate.domain.contracts import canonical_json, canonical_json_hash
+from hekate.domain.errors import Conflict
+from hekate.domain.models import ContractModel, GuardBinding, HekateProposal, HekateTurnOutput, StoredConclusion
+from hekate.domain.proposals import parse_hekate_proposal, validate_proposal_shape
+from hekate.domain.types import (
+    AttemptStatus, DomainId, OperationId, RegistryId, StopReason, TaskId, TaskStatus,
 )
-from hekate.domain.types import InboxId
+from hekate.application.runtime_inbox import InboxBinding
+from hekate.ports.store import UowFactory
 
 
-async def ingest(event: RuntimeEvent) -> IngestReceipt:
-    raise NotImplementedError
+class BusinessResultPayload(ContractModel):
+    event_type: Literal["business_result"]
+    operation_id: str
+    observation_identity: str = Field(min_length=1, max_length=256)
+    binding: InboxBinding
+    business_result: BridgeBusinessResult
 
 
-async def validate_result(inbox_id: InboxId) -> ValidationReport:
-    raise NotImplementedError
+def _reason(error: Exception) -> str:
+    message = str(error)
+    known = {
+        "output_hash_mismatch", "output_truncated", "output_missing", "output_not_valid",
+        "structured_output_mismatch", "conclusion_binding_mismatch", "conclusion_not_done",
+        "evidence_not_supported", "unsupported_action", "empty_answer", "empty_reason",
+    }
+    return message if message in known else "invalid_structured_output"
 
 
-async def accept_result(
-    inbox_id: InboxId, report: ValidationReport
-) -> ResultDisposition:
-    raise NotImplementedError
+def validate_turn_output(output: HekateTurnOutput, binding: GuardBinding) -> None:
+    try:
+        validate_capsule_binding(output.conclusion, binding)
+    except ValueError as error:
+        raise ValueError("conclusion_binding_mismatch") from error
+    if output.conclusion.status != "done":
+        raise ValueError("conclusion_not_done")
+    if output.conclusion.evidence_used:
+        raise ValueError("evidence_not_supported")
+    validate_proposal_shape(output.proposal)
+    if output.proposal.action not in {"answer", "request_information", "abstain"}:
+        raise ValueError("unsupported_action")
 
 
-async def record_late_result(
-    inbox_id: InboxId, reason: RejectionReason
-) -> AuditRef:
-    raise NotImplementedError
+def supported_proposal_response(proposal: HekateProposal) -> tuple[str, str, StopReason]:
+    validate_proposal_shape(proposal)
+    if proposal.action == "answer":
+        return proposal.answer, "PROVISIONAL_ANSWER", StopReason.COMPLETED
+    if proposal.action == "request_information":
+        return f"Additional information needed: {proposal.reason}", "NEEDS_USER_INPUT", StopReason.NEEDS_USER_INPUT
+    if proposal.action == "abstain":
+        return proposal.reason or "", "ABSTAINED", StopReason.POLICY
+    raise ValueError("unsupported_action")
+
+
+async def receive_business_result(factory: UowFactory, event: BridgeEvent) -> dict[str, object]:
+    if event.event_type != "business_result" or event.business_result is None:
+        raise ValueError("bridge event is not a business result")
+    payload = {
+        "event_type": "business_result",
+        "operation_id": event.operation_id,
+        "observation_identity": event.event_id,
+        "binding": event.binding.model_dump(mode="json"),
+        "business_result": event.business_result.model_dump(mode="json", exclude_none=True),
+    }
+    encoded = canonical_json(payload).encode("utf-8")
+    if len(encoded) > 131_072:
+        raise ValueError("business result inbox payload exceeds 128 KiB")
+    async with factory() as uow:
+        operation = await uow.delivery.lock_operation(OperationId(event.operation_id))
+        binding = _restore_binding(operation)
+        if payload["binding"] != {
+            "task_id": str(binding.task_id), "attempt_id": str(binding.attempt_id),
+            "agent_registry_id": str(binding.agent_registry_id), "provider_agent_id": str(binding.provider_agent_id),
+            "conversation_id": binding.conversation_id, "input_revision": binding.input_revision,
+            "fence": binding.fence,
+        }:
+            raise Conflict("business result binding differs from admitted runtime")
+        receipt = await uow.delivery.insert_inbox_once(
+            "letta-bridge", event.event_id, payload, canonical_json_hash(payload),
+        )
+        if receipt.conflict:
+            await uow.delivery.reject_inbox(receipt.id, "business_result_conflict")
+        await uow.commit()
+    if receipt.conflict:
+        await _store_rejected_conflict(factory, receipt.id, payload)
+        return {"inbox_id": receipt.id, "conflict": True, "processed": True}
+    return await process_business_result_inbox(factory, receipt.id)
+
+
+async def receive_missing_business_result(
+    factory: UowFactory, operation_id: OperationId, binding_value: dict[str, object], failure_code: str | None,
+) -> dict[str, object]:
+    event = BridgeEvent.model_validate({
+        "schema_version": "1",
+        "event_id": f"{operation_id}:business-result-missing",
+        "operation_id": str(operation_id),
+        "binding": binding_value,
+        "event_type": "business_result",
+        "usage": {"completeness": "UNKNOWN"},
+        "business_result": {"state": "MISSING", "output_truncated": False, **({"failure_code": failure_code} if failure_code else {})},
+    }, strict=True)
+    return await receive_business_result(factory, event)
+
+
+async def _store_rejected_conflict(factory: UowFactory, inbox_id: str, payload: dict[str, object]) -> None:
+    async with factory() as uow:
+        inbox = await uow.delivery.lock_inbox(inbox_id)
+        if inbox is None:
+            raise RuntimeError("conflicting business result disappeared")
+        operation_id = inbox["payload"]["operation_id"]
+        operation = await uow.delivery.lock_operation(OperationId(operation_id))
+        trusted = _restore_binding(operation)
+        binding = inbox["payload"]["binding"]
+        result = inbox["payload"]["business_result"]
+        await uow.knowledge.save_turn_result({
+            "inbox_id": inbox_id, "task_id": binding["task_id"], "attempt_id": binding["attempt_id"],
+            "operation_id": inbox["payload"]["operation_id"], "registry_id": binding["agent_registry_id"],
+            "input_revision": binding["input_revision"],
+            "output_hash": result.get("output_sha256") or canonical_json_hash(payload),
+            "raw_output": result.get("raw_output"), "structured_output": result.get("structured_output"),
+            "processing_state": "REJECTED", "rejection_reason": "business_result_conflict",
+        })
+        await uow.delivery.append_audit({
+            "owner_scope": str(trusted.scope),
+            "task_id": str(binding["task_id"]), "attempt_id": str(binding["attempt_id"]),
+            "operation_id": str(operation_id), "registry_id": str(binding["agent_registry_id"]),
+            "event_kind": "business_result.conflict", "safe_payload": {"output_hash": result.get("output_sha256")},
+        })
+        await uow.commit()
+
+
+async def process_business_result_inbox(factory: UowFactory, inbox_id: str) -> dict[str, object]:
+    async with factory() as uow:
+        inbox = await uow.delivery.lock_inbox(inbox_id)
+        if inbox is None:
+            raise ValueError("business result inbox is unavailable")
+        if inbox["processed_at"] is not None:
+            result = await uow.knowledge.lock_turn_result(inbox_id)
+            await uow.commit()
+            return {
+                "inbox_id": inbox_id, "duplicate": True,
+                "processed": True,
+                "pending": bool(result and result["processing_state"] == "WAITING_EXECUTION"),
+            }
+        payload = BusinessResultPayload.model_validate_json(canonical_json(inbox["payload"]), strict=True)
+        operation = await uow.delivery.lock_operation(OperationId(payload.operation_id))
+        binding = _restore_binding(operation)
+        stored_binding = payload.binding
+        expected = {
+            "task_id": str(binding.task_id), "attempt_id": str(binding.attempt_id),
+            "agent_registry_id": str(binding.agent_registry_id), "provider_agent_id": str(binding.provider_agent_id),
+            "conversation_id": binding.conversation_id, "input_revision": binding.input_revision,
+            "fence": binding.fence,
+        }
+        if stored_binding.model_dump(mode="json") != expected:
+            raise Conflict("persisted business result binding differs from operation")
+        business = payload.business_result
+        raw = business.raw_output
+        raw_bytes = raw.encode("utf-8") if raw is not None else b""
+        digest = business.output_sha256 or hashlib.sha256(raw_bytes).hexdigest()
+        result_values = {
+            "inbox_id": inbox_id, "task_id": str(binding.task_id), "attempt_id": str(binding.attempt_id),
+            "operation_id": payload.operation_id, "registry_id": str(binding.agent_registry_id),
+            "input_revision": binding.input_revision, "output_hash": digest,
+            "raw_output": raw, "structured_output": business.structured_output,
+            "processing_state": "REJECTED", "rejection_reason": None,
+        }
+        await uow.knowledge.save_turn_result(result_values)
+        if business.state != "VALID":
+            reason = "output_truncated" if business.output_truncated else "output_missing" if business.state == "MISSING" else "output_not_valid"
+            await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", rejection_reason=reason, delay_seconds=1)
+            await uow.delivery.mark_inbox_processed(inbox_id)
+            await uow.delivery.append_audit({
+                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+                "attempt_id": str(binding.attempt_id), "operation_id": payload.operation_id,
+                "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.rejected",
+                "safe_payload": {"reason": reason, "output_hash": digest},
+            })
+            await uow.commit()
+            return await apply_turn_result(factory, inbox_id)
+        if raw is None or business.output_truncated:
+            reason = "output_truncated" if business.output_truncated else "output_missing"
+            await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", rejection_reason=reason, delay_seconds=1)
+            await uow.delivery.mark_inbox_processed(inbox_id)
+            await uow.commit()
+            return await apply_turn_result(factory, inbox_id)
+        if hashlib.sha256(raw_bytes).hexdigest() != business.output_sha256:
+            reason = "output_hash_mismatch"
+            await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", rejection_reason=reason, delay_seconds=1)
+            await uow.delivery.mark_inbox_processed(inbox_id)
+            await uow.commit()
+            return await apply_turn_result(factory, inbox_id)
+        try:
+            output = parse_hekate_turn_output(raw_bytes)
+        except Exception as error:
+            reason = "invalid_structured_output"
+            await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", rejection_reason=reason, delay_seconds=1)
+            await uow.delivery.mark_inbox_processed(inbox_id)
+            await uow.commit()
+            return await apply_turn_result(factory, inbox_id)
+        if canonical_json(json.loads(raw)) != canonical_json(business.structured_output):
+            reason = "structured_output_mismatch"
+        else:
+            try:
+                validate_turn_output(output, binding)
+            except Exception as error:
+                reason = _reason(error)
+            else:
+                reason = None
+
+        proposal = output.proposal.model_dump(mode="json")
+        conclusion_id = str(uuid5(NAMESPACE_URL, f"hekate:conclusion:{inbox_id}"))
+        capsule = output.conclusion
+        capsule_matches = (
+            capsule.task_id == binding.task_id and capsule.attempt_id == binding.attempt_id
+            and capsule.agent_id == binding.agent_registry_id
+        )
+        if capsule_matches:
+            await uow.knowledge.insert_conclusion(StoredConclusion(
+                id=DomainId(conclusion_id), attempt_id=binding.attempt_id,
+                payload_hash=canonical_json_hash(capsule), capsule=capsule,
+                validation_status="VALIDATED" if reason is None else "REJECTED",
+                eligible=False,
+                provider_provenance={
+                    "operation_id": payload.operation_id, "input_revision": binding.input_revision,
+                    "inbox_id": inbox_id, "event_id": payload.observation_identity,
+                    "output_hash": digest, "provider_agent_id": str(binding.provider_agent_id),
+                    "fence": binding.fence,
+                },
+                rejection_reason=reason,
+            ))
+        await uow.knowledge.update_turn_result(
+            inbox_id, state="WAITING_EXECUTION",
+            proposal=proposal, conclusion_id=conclusion_id if capsule_matches else None,
+            rejection_reason=reason, delay_seconds=1,
+        )
+        await uow.delivery.mark_inbox_processed(inbox_id)
+        await uow.commit()
+    return await apply_turn_result(factory, inbox_id)
+
+
+async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, object]:
+    async with factory() as uow:
+        result = await uow.knowledge.lock_turn_result(inbox_id)
+        if result is None:
+            return {"inbox_id": inbox_id, "processed": False, "reason": "result_not_stored"}
+        if result["processing_state"] in {"REJECTED", "LATE", "ACCEPTED"}:
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": True, "state": result["processing_state"]}
+        operation = await uow.delivery.lock_operation(OperationId(result["operation_id"]))
+        binding = _restore_binding(operation)
+        current_scope = await uow.tasks.lock_scope(binding.scope)
+        task = await uow.tasks.lock_task(binding.task_id)
+        attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
+        if operation["execution_state"] != "QUIESCENT":
+            await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", delay_seconds=1)
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": False, "pending": True}
+
+        reason = result["rejection_reason"]
+        operation_outcome = (operation.get("observation") or {}).get("outcome")
+        successful = operation["state"] == "COMPLETED" and operation_outcome == "SUCCEEDED" and attempt.status == AttemptStatus.SUCCEEDED
+        proposal = result["proposal"]
+        response_text: str
+        outcome: str
+        stop_reason: str
+        if successful and reason is None and not isinstance(proposal, dict):
+            successful = False
+            reason = "proposal_missing"
+        if successful and reason is None and isinstance(proposal, dict):
+            try:
+                response_text, outcome, stop_reason_value = supported_proposal_response(
+                    parse_hekate_proposal(canonical_json(proposal).encode("utf-8")),
+                )
+                stop_reason = stop_reason_value.value
+            except (ValueError, KeyError, TypeError) as error:
+                successful = False
+                reason = _reason(error)
+        if not successful or reason is not None:
+            safe_reason = reason or "execution_failed"
+            response_text = f"HEKATE could not complete this request ({safe_reason})."
+            outcome, stop_reason, successful = "FAILED", StopReason.ERROR.value, False
+
+        stale = (
+            task.scope != binding.scope or task.input_revision != binding.input_revision
+            or current_scope.principal_id != binding.principal_id
+            or current_scope.policy_version != binding.policy_version
+            or current_scope.authz_epoch != binding.authz_epoch
+            or attempt.operation_id != result["operation_id"]
+            or attempt.input_revision != binding.input_revision
+            or attempt.agent_registry_id != binding.agent_registry_id
+            or task.status != TaskStatus.RUNNING
+        )
+        if stale:
+            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason="task_or_binding_changed")
+            if result["conclusion_id"]:
+                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, "task_or_binding_changed")
+            await uow.delivery.append_audit({
+                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+                "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
+                "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
+                "safe_payload": {"output_hash": result["output_hash"]},
+            })
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
+        response = {
+            "operation_id": result["operation_id"], "attempt_id": result["attempt_id"],
+            "registry_id": result["registry_id"], "source_inbox_id": inbox_id,
+            "proposal": proposal, "response_text": response_text,
+            "outcome": outcome, "stop_reason": stop_reason,
+        }
+        adopted = await uow.tasks.finalize_task_response(
+            binding.task_id, binding.input_revision, response, successful=successful,
+        )
+        if not adopted:
+            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason="task_changed_before_adoption")
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
+        await uow.knowledge.update_turn_result(inbox_id, state="ACCEPTED" if successful else "REJECTED", rejection_reason=None if successful else reason or "execution_failed")
+        if result["conclusion_id"]:
+            await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], successful and reason is None, None if successful and reason is None else reason or "execution_failed")
+        await uow.delivery.append_audit({
+            "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+            "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
+            "registry_id": str(binding.agent_registry_id),
+            "event_kind": "task.result_accepted" if successful else "task.result_failed",
+            "safe_payload": {"output_hash": result["output_hash"], "outcome": outcome, "stop_reason": stop_reason},
+        })
+        await uow.commit()
+        return {"inbox_id": inbox_id, "processed": True, "state": "ACCEPTED" if successful else "REJECTED"}
+
+
+async def process_pending_results(factory: UowFactory, limit: int = 100) -> int:
+    async with factory() as uow:
+        inbox_ids = await uow.tasks.list_pending_turn_results(limit)
+        await uow.commit()
+    processed = 0
+    for inbox_id in inbox_ids:
+        result = await apply_turn_result(factory, inbox_id)
+        processed += int(result.get("processed", False))
+    return processed

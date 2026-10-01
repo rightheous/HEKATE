@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import model_validator
 
+from hekate.domain.errors import Conflict, PolicyDenied, StaleInput, UnknownExecution
 from hekate.domain.contracts import canonical_json, canonical_json_hash
 from hekate.domain.models import (
     CallObservation,
@@ -87,10 +88,35 @@ async def process_runtime_observation(
     provider_scope: str,
     stable_event_key: str,
     payload: RuntimeInboxPayload | dict[str, object],
+    *,
+    processor_owner: str | None = None,
 ) -> dict[str, object]:
     event = payload if isinstance(payload, RuntimeInboxPayload) else RuntimeInboxPayload.model_validate_json(canonical_json(payload), strict=True)
     values = event.model_dump(mode="json", exclude_none=True)
+    if len(canonical_json(values).encode("utf-8")) > 16_384:
+        raise ValueError("runtime inbox payload exceeds 16 KiB")
     payload_hash = canonical_json_hash(values)
+    if event.event_type == "execution" and event.state == "QUIESCENT":
+        async with factory() as uow:
+            operation = await uow.delivery.lock_operation(OperationId(event.operation_id))
+            binding = _restore_binding(operation)
+            if not event.binding.matches(binding):
+                raise ValueError("runtime inbox binding differs from the admitted operation")
+            # Authenticate the observation's original runtime fence before persisting it.
+            await uow.agents.assert_current_lease(binding.agent_registry_id, event.lease_owner, event.observer_fence)
+            if processor_owner is not None:
+                lease = await uow.agents.get_lease(binding.agent_registry_id)
+                if lease is None or lease.owner != processor_owner:
+                    raise UnknownExecution("terminal observer does not hold the registry lease")
+                await uow.agents.assert_current_lease(binding.agent_registry_id, lease.owner, lease.fence)
+            receipt = await uow.delivery.insert_inbox_once(provider_scope, stable_event_key, values, payload_hash)
+            await uow.commit()
+        if receipt.conflict:
+            async with factory() as uow:
+                await uow.delivery.reject_inbox(receipt.id, "terminal_payload_conflict")
+                await uow.commit()
+            return {"inbox_id": receipt.id, "duplicate": receipt.duplicate, "conflict": True, "processed": True}
+        return await _apply_terminal_inbox(factory, receipt.id, processor_owner)
     async with factory() as uow:
         operation = await uow.delivery.lock_operation(OperationId(event.operation_id))
         binding = _restore_binding(operation)
@@ -188,4 +214,55 @@ async def process_runtime_observation(
             await uow.budgets.settle_call(accounting_call_id)
         await uow.delivery.mark_inbox_processed(receipt.id)
         await uow.commit()
-        return {"inbox_id": receipt.id, "duplicate": receipt.duplicate, "conflict": False, "processed": True}
+        result = {"inbox_id": receipt.id, "duplicate": receipt.duplicate, "conflict": False, "processed": True}
+    if stored.event_type == "provider_call" and stored.state == "QUIESCENT":
+        async with factory() as uow:
+            pending_ids = await uow.delivery.pending_terminal_inbox(OperationId(stored.operation_id))
+            await uow.commit()
+        for pending_id in pending_ids:
+            await _apply_terminal_inbox(factory, pending_id, stored.lease_owner)
+    return result
+
+
+async def _apply_terminal_inbox(factory: UowFactory, inbox_id: str, processor_owner: str | None) -> dict[str, object]:
+    try:
+        async with factory() as uow:
+            row = await uow.delivery.lock_inbox(inbox_id)
+            if row is None:
+                raise RuntimeError("terminal inbox row disappeared")
+            if row["processed_at"] is not None:
+                await uow.commit()
+                return {"inbox_id": inbox_id, "duplicate": True, "conflict": False, "processed": True}
+            stored = RuntimeInboxPayload.model_validate_json(canonical_json(row["payload"]), strict=True)
+            operation = await uow.delivery.lock_operation(OperationId(stored.operation_id))
+            binding = _restore_binding(operation)
+            if not stored.binding.matches(binding):
+                raise Conflict("terminal observation binding differs from admitted operation")
+            from hekate.application.operations import apply_execution_observation
+
+            await apply_execution_observation(uow, ExecutionObservation(
+                operation_id=OperationId(stored.operation_id),
+                binding=binding,
+                lease_owner=stored.lease_owner,
+                observer_fence=stored.observer_fence,
+                state="QUIESCENT",
+                source=stored.source,
+                observed_at=row["received_at"],
+                outcome=stored.outcome,
+                reason=stored.reason,
+                processor_owner=processor_owner,
+            ))
+            await uow.delivery.mark_inbox_processed(inbox_id)
+            await uow.commit()
+            return {"inbox_id": inbox_id, "duplicate": False, "conflict": False, "processed": True}
+    except UnknownExecution as error:
+        reason = "processor_lease_unavailable" if "processor" in str(error) else "call_termination_unconfirmed"
+        async with factory() as uow:
+            await uow.delivery.defer_inbox(inbox_id, reason)
+            await uow.commit()
+        return {"inbox_id": inbox_id, "duplicate": False, "conflict": False, "processed": False, "pending_reason": reason}
+    except (Conflict, PolicyDenied, StaleInput, ValueError):
+        async with factory() as uow:
+            await uow.delivery.reject_inbox(inbox_id, "terminal_observation_rejected")
+            await uow.commit()
+        return {"inbox_id": inbox_id, "duplicate": False, "conflict": True, "processed": True, "rejected": True}

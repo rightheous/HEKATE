@@ -7,20 +7,47 @@ from pydantic import TypeAdapter
 from .contracts import MAX_CONTRACT_BYTES, check_json_payload
 from .models import (
     Attempt, ConclusionCapsule, EvidenceInput, EvidenceView,
-    HekateProposal, JsonSchema, PositionCommitRequest, RuntimeBinding, TaskCapsule,
+    ExpectedOutput, HekateProposal, HekateTurnOutput, JsonSchema, PositionCommitRequest, RuntimeBinding, TaskCapsule,
+    RuntimeLimitsCapsule,
     TaskSnapshot,
 )
 from .types import Revision
 
 
 def build_task_capsule(
-    snapshot: TaskSnapshot, attempt: Attempt, evidence: Sequence[EvidenceView]
+    snapshot: TaskSnapshot, attempt: Attempt, evidence: Sequence[EvidenceView], *, max_output_tokens: int | None = None,
 ) -> TaskCapsule:
-    raise NotImplementedError
+    if attempt.task_id != snapshot.task.id or attempt.input_revision != snapshot.task.input_revision:
+        raise ValueError("Task Capsule snapshot and attempt do not match")
+    if evidence:
+        raise ValueError("Phase 3B does not retrieve or attach Evidence")
+    return TaskCapsule(
+        schema_version="1",
+        task_id=snapshot.task.id,
+        attempt_id=attempt.id,
+        input_revision=attempt.input_revision,
+        objective=snapshot.task.question,
+        reasoning_role="hekate",
+        mode="independent_exploration",
+        premises=(),
+        evidence_refs=(),
+        target_position=None,
+        constraints=(),
+        expected_output=ExpectedOutput(schema="hekate_turn_output_v1"),
+        runtime_limits=RuntimeLimitsCapsule(
+            max_output_tokens=max_output_tokens,
+            deadline_at=snapshot.task.deadline.isoformat(),
+        ),
+        capability_profile="reasoning-readonly",
+    )
 
 
 def parse_conclusion(payload: bytes) -> ConclusionCapsule:
     return ConclusionCapsule.model_validate_json(check_json_payload(payload), strict=True)
+
+
+def parse_hekate_turn_output(payload: bytes) -> HekateTurnOutput:
+    return HekateTurnOutput.model_validate_json(check_json_payload(payload), strict=True)
 
 
 def parse_task_capsule(payload: bytes) -> TaskCapsule:
@@ -63,6 +90,7 @@ def export_schemas() -> Mapping[str, JsonSchema]:
         "conclusion-capsule.v1.schema.json": ConclusionCapsule,
         "hekate-proposal.v1.schema.json": TypeAdapter(HekateProposal),
         "position-commit.v1.schema.json": PositionCommitRequest,
+        "hekate-turn-output.v1.schema.json": HekateTurnOutput,
     }
     schemas: dict[str, JsonSchema] = {}
     for filename, model in models.items():

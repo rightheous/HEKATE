@@ -38,6 +38,7 @@ class Task(ContractModel):
     topic_id: TopicId | None = None
     base_position_version: int = 0
     deadline: datetime
+    created_at: datetime | None = None
     counters: TaskCounters = Field(default_factory=TaskCounters)
     outcome: str | None = None
     stop_reason: str | None = None
@@ -51,8 +52,32 @@ class TaskSnapshot(ContractModel):
     constraints_hash: str
 
 
-def snapshot_task(task: Task) -> TaskSnapshot:
-    raise NotImplementedError
+@dataclass(frozen=True, slots=True)
+class TaskExecutionConfig:
+    task_budget_usd: Decimal
+    system_daily_budget_usd: Decimal
+    deadline_seconds: int
+    profile_id: str
+    letta_model: str
+    model: str
+    pricing_version: str
+    input_usd_per_million: Decimal
+    output_usd_per_million: Decimal
+    max_input_tokens: int
+    max_output_tokens: int
+    max_compaction_calls: int
+
+
+def snapshot_task(
+    task: Task, *, policy_version: str, model_version: str, schema_version: str = "1",
+) -> TaskSnapshot:
+    return TaskSnapshot(
+        task=task,
+        policy_version=policy_version,
+        model_version=model_version,
+        schema_version=schema_version,
+        constraints_hash=task.constraints_hash,
+    )
 
 
 class Attempt(ContractModel):
@@ -279,6 +304,12 @@ HekateProposal: TypeAlias = Annotated[
 Capsule: TypeAlias = TaskCapsule | ConclusionCapsule
 
 
+class HekateTurnOutput(ContractModel):
+    schema_version: Literal["1"]
+    proposal: HekateProposal
+    conclusion: ConclusionCapsule
+
+
 class PositionBody(ContractModel):
     """Wire body: applicability is content; authorization scope is supplied separately."""
     statement: str
@@ -427,6 +458,7 @@ class AdmissionRequest:
     operation_kind: str
     payload: Mapping[str, object]
     lease_owner: str
+    task_preparation_owner: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -584,6 +616,8 @@ class ExecutionObservation:
     observed_at: datetime
     outcome: str | None = None
     reason: str | None = None
+    processor_owner: str | None = None
+    processor_fence: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

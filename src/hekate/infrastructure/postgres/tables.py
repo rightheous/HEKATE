@@ -210,9 +210,98 @@ inbox = Table(
     Column("payload", JSONB, nullable=False),
     Column("received_at", instant, nullable=False, server_default=text("now()")),
     Column("processed_at", instant),
+    Column("next_attempt_at", instant, nullable=False, server_default=text("now()")),
+    Column("pending_reason", Text),
+    Column("rejection_reason", Text),
     UniqueConstraint("provider_scope", "stable_event_key", "payload_hash", name="uq_inbox_same_observation"),
 )
 Index("ix_inbox_event_identity", inbox.c.provider_scope, inbox.c.stable_event_key)
+Index("ix_inbox_pending", inbox.c.next_attempt_at, inbox.c.received_at, postgresql_where=inbox.c.processed_at.is_(None))
+
+task_submissions = Table(
+    "task_submissions", _metadata,
+    Column("owner_scope", Text, ForeignKey("authorization_scopes.id"), primary_key=True),
+    Column("request_key", String(128), primary_key=True),
+    Column("request_hash", String(64), nullable=False),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), unique=True),
+    Column("receipt", JSONB),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+)
+
+task_preparations = Table(
+    "task_preparations", _metadata,
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), primary_key=True),
+    Column("input_revision", Integer, primary_key=True),
+    Column("operation_id", Text, nullable=False, unique=True),
+    Column("attempt_id", Text, nullable=False, unique=True),
+    Column("reservation_id", Text, nullable=False, unique=True),
+    Column("claim_owner", Text),
+    Column("claim_expires_at", instant),
+    Column("conversation_id", Text),
+    Column("fence", Integer),
+    Column("state", String(16), nullable=False, server_default="PREPARING"),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1 AND (fence IS NULL OR fence >= 1)", name="ck_task_preparations_identity"),
+    CheckConstraint("state IN ('PREPARING','ADMITTED')", name="ck_task_preparations_state"),
+)
+Index("ix_task_preparations_claim", task_preparations.c.state, task_preparations.c.claim_expires_at)
+
+conclusions = Table(
+    "conclusions", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT"), nullable=False),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("payload_hash", String(64), nullable=False),
+    Column("capsule", JSONB, nullable=False),
+    Column("validation_status", String(24), nullable=False),
+    Column("eligible", Boolean, nullable=False),
+    Column("provider_provenance", JSONB, nullable=False, server_default=json_default),
+    Column("rejection_reason", Text),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("attempt_id", "payload_hash", name="uq_conclusions_attempt_payload"),
+    CheckConstraint("input_revision >= 1", name="ck_conclusions_revision"),
+)
+
+turn_results = Table(
+    "turn_results", _metadata,
+    Column("inbox_id", Text, ForeignKey("inbox.id", ondelete="RESTRICT"), primary_key=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT"), nullable=False),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("output_hash", String(64), nullable=False),
+    Column("raw_output", Text),
+    Column("structured_output", JSONB),
+    Column("proposal", JSONB),
+    Column("conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT")),
+    Column("processing_state", String(24), nullable=False),
+    Column("next_attempt_at", instant, nullable=False, server_default=text("now()")),
+    Column("rejection_reason", Text),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1", name="ck_turn_results_revision"),
+    CheckConstraint("processing_state IN ('WAITING_EXECUTION','VALIDATED','REJECTED','ACCEPTED','LATE')", name="ck_turn_results_state"),
+)
+Index("ix_turn_results_pending", turn_results.c.processing_state, turn_results.c.next_attempt_at)
+
+task_responses = Table(
+    "task_responses", _metadata,
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), primary_key=True),
+    Column("input_revision", Integer, nullable=False),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("source_inbox_id", Text, ForeignKey("inbox.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("proposal", JSONB, nullable=False),
+    Column("response_text", Text, nullable=False),
+    Column("outcome", String(32), nullable=False),
+    Column("stop_reason", String(32), nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1", name="ck_task_responses_revision"),
+)
 
 audit_events = Table(
     "audit_events", _metadata,

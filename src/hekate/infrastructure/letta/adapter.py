@@ -79,7 +79,9 @@ class LettaRuntimeAdapter(AgentRuntime):
         state = ObservationState.PRESENT if reply.result.present else ObservationState.ABSENT
         return ProviderObservation(state=state, evidence="agent.get", observed_at=datetime.now(UTC))
 
-    async def prepare_session(self, binding: RuntimeBinding) -> tuple[RuntimeBinding, Mapping[str, object]]:
+    async def prepare_session(
+        self, binding: RuntimeBinding, output_contract: str | None = None,
+    ) -> tuple[RuntimeBinding, Mapping[str, object]]:
         reply = await self._request(
             f"session-prepare:{binding.attempt_id}", "session.prepare",
             binding={
@@ -88,6 +90,7 @@ class LettaRuntimeAdapter(AgentRuntime):
                 "provider_agent_id": str(binding.provider_agent_id),
                 "input_revision": binding.input_revision, "fence": binding.fence,
             },
+            **({"output_contract": output_contract} if output_contract else {}),
         )
         if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "session":
             raise RuntimeError("Letta session preparation was not confirmed")

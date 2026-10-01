@@ -120,7 +120,6 @@ EVIDENCE = {
     "retention_class": "project",
 }
 
-
 def wire(value: object) -> bytes:
     return json.dumps(value, ensure_ascii=False).encode("utf-8")
 
@@ -238,6 +237,8 @@ def test_duplicate_keys_and_oversized_json_are_rejected() -> None:
 
     with pytest.raises(ValueError, match="exceeds"):
         parse_conclusion(b" " * (MAX_CONTRACT_BYTES + 1))
+
+
 
     too_many = {**TASK_CAPSULE, "constraints": ["x"] * (MAX_CONTRACT_ITEMS + 1)}
     with pytest.raises(ValueError):

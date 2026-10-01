@@ -30,15 +30,17 @@ export HEKATE_NODE_ARCHIVE=/path/to/node-v22.19.0-linux-x64.tar.xz
 uv run python scripts/phase3_verify.py
 ```
 
-The runner records each executed command and its result in the integration artifact. It runs Python compilation, the focused Phase 3 boundary tests, the Phase 2 PostgreSQL suite, bridge build/tests, byte-for-byte schema regeneration, migration upgrade/check, `git diff --check`, and the pinned runtime probe. Python dependency resolution uses the checked-in `uv.lock`.
+The runner records each executed command and its result in the integration artifacts. It upgrades both disposable databases, runs Python compilation, the focused Phase 3 boundary tests, the Phase 2 PostgreSQL suite, bridge build/tests, byte-for-byte schema regeneration, migration upgrade/check/downgrade/re-upgrade, `git diff --check`, and both pinned Phase 3A and Phase 3B runtime probes. Python dependency resolution uses the checked-in `uv.lock`.
 
-The application entry points available in this phase are `build_container()`/`close_container()` in `bootstrap.py`, `run_worker()`/`dispatch_job()`/`process_pending_inbox()` in `worker/service.py`, `BridgeClient`, and `create_provider_gateway()`. The integration probe assembles the isolated gateway, fake provider, and pinned App Server. There is no production provider profile or routing configuration, so production settings fail at startup. Runtime abort/recover/memory projection remain explicitly unsupported; `serve`, `reconcile`, and `doctor`, `tasks.submit/complete`, and the product API/business loop remain placeholders or out of scope.
+The application entry points available for Phase 3A are `build_container()`/`close_container()` in `bootstrap.py`, `run_worker()`/`dispatch_job()`/`process_pending_inbox()` in `worker/service.py`, `BridgeClient`, and `create_provider_gateway()`. Phase 3B adds the local `ask`, `task`, `cancel`, and `worker` CLI path, documented in [`phase3b.md`](phase3b.md). There is still no production provider profile or public API configuration, so production settings fail closed. Runtime abort/recover/memory projection and `tasks.complete()` remain unsupported.
 
 Application transactions follow the Phase 2 lock order: operation, authorization scope, task, attempt, registry/lease, then budget accounts sorted by ID. Each bridge, gateway, worker event, and repository application uses its own UoW; subprocess, SDK, and HTTP I/O happen after the database transaction closes. Worker shutdown stops new claims, drains for at most five seconds, marks uncertain active work UNKNOWN where the DB is available, and closes the bridge. Startup scans pending inbox rows. Existing send-intent work is never automatically resent.
 
 ## Integration evidence
 
 The T1–T7 run and verification command log are recorded in [`p3-20261001T033633Z-63d438e4.json`](../../integration/runtime/artifacts/p3-20261001T033633Z-63d438e4.json). It used PostgreSQL 16.15 at migration `0003_runtime_dispatch`, the pinned runtime above, an isolated fake provider, and made **zero real provider calls**. All 9 verification commands and all 9 runtime scenarios passed; the command log includes 3 Phase 3 tests, 19 Phase 2 PostgreSQL tests, 15 bridge tests, and 5 generated-schema comparisons.
+
+The final Phase 3A/3B verification is recorded in [`p3-20261001T073347Z-916d84bd.json`](../../integration/runtime/artifacts/p3-20261001T073347Z-916d84bd.json) and [`p3b-20261001T073404Z-58d4681b.json`](../../integration/runtime/artifacts/p3b-20261001T073404Z-58d4681b.json). All 14 verification commands, 9 Phase 3A scenarios, and 7 Phase 3B scenarios passed with zero real provider calls.
 
 | Check | Result |
 |---|---|
@@ -58,4 +60,4 @@ Synthetic ledger totals were 18 HOLD, 4 RELEASE, and 10 SETTLE entries. The synt
 
 G7 (resuming the same execution after transport loss) and G8 (validated exact tokenization of the full effective request) remain blocked. The pinned runtime patch supplies per-call identity for this test path; stock SDK capability flags remain false. No real provider profile or production readiness is claimed.
 
-User HTTP ingress, product task submission/completion, the HEKATE answer loop, Critic lifecycle, Position/Evidence persistence, memory projection, automatic retry/resume, and operator recovery remain outside Phase 3. Those product features require a later phase after the G7/G8 runtime gates are addressed.
+User HTTP ingress, Critic lifecycle, Position/Evidence persistence, memory projection, automatic retry/resume, and operator recovery remain outside Phase 3. The local single-HEKATE answer loop is implemented in Phase 3B, while G7/G8 remain prerequisites for production dispatch.

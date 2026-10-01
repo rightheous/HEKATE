@@ -86,6 +86,7 @@ async def prepare_runtime_session(
     runtime: AgentRuntime,
     binding: RuntimeBinding,
     lease_owner: str,
+    output_contract: str | None = None,
 ) -> tuple[RuntimeBinding, dict[str, object]]:
     async with factory() as uow:
         agent = await uow.agents.lock_registry(binding.agent_registry_id)
@@ -98,7 +99,11 @@ async def prepare_runtime_session(
             raise PolicyDenied("agent is not ready for session preparation")
         await uow.commit()
 
-    prepared, session = await runtime.prepare_session(binding)
+    prepared, session = (
+        await runtime.prepare_session(binding, output_contract=output_contract)
+        if output_contract is not None
+        else await runtime.prepare_session(binding)
+    )
     if (
         prepared.task_id != binding.task_id
         or prepared.attempt_id != binding.attempt_id
@@ -230,6 +235,11 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
             "event_kind": "operation.admitted",
             "safe_payload": {"request_hash": request_hash, "reservation_id": str(request.reservation.id)},
         })
+        if request.task_preparation_owner is not None:
+            await uow.tasks.mark_task_preparation_admitted(
+                binding.task_id, binding.input_revision, request.task_preparation_owner,
+                binding.conversation_id or "", binding.fence,
+            )
         await uow.commit()
         return receipt
 
@@ -308,7 +318,16 @@ async def apply_execution_observation(uow, observation: ExecutionObservation) ->
     agent = await uow.agents.lock_registry(binding.agent_registry_id)
     if agent.provider_id != binding.provider_agent_id or agent.owner_scope != binding.scope:
         raise Conflict("execution observation registry mismatch")
-    await uow.agents.assert_current_lease(binding.agent_registry_id, observation.lease_owner, observation.observer_fence)
+    if observation.processor_owner is not None:
+        lease = await uow.agents.get_lease(binding.agent_registry_id)
+        if lease is None or lease.owner != observation.processor_owner:
+            raise UnknownExecution("inbox processor does not hold the registry lease")
+        try:
+            await uow.agents.assert_current_lease(binding.agent_registry_id, lease.owner, lease.fence)
+        except StaleInput as error:
+            raise UnknownExecution("inbox processor lease expired") from error
+    else:
+        await uow.agents.assert_current_lease(binding.agent_registry_id, observation.lease_owner, observation.observer_fence)
     active = await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True)
     if active is None:
         if observation.state == "QUIESCENT":

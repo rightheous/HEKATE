@@ -14,6 +14,7 @@ from uuid import NAMESPACE_URL, uuid5
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import ValidationError
+from starlette.background import BackgroundTask
 
 from hekate.application.budgets import authorize_provider_call, consume_call_permit
 from hekate.application.budgets import _restore_binding
@@ -305,9 +306,10 @@ def create_provider_gateway(
         is_sse = "text/event-stream" in content_type.lower()
         if is_sse:
             await _record_call(factory, profile, claims, binding, lease_owner, "RUNNING", None, None, app.state.metrics)
+            completed = False
 
             async def stream_body():
-                nonlocal provider_call_id, latest_usage
+                nonlocal provider_call_id, latest_usage, completed
                 finished = False
                 pending = b""
                 try:
@@ -336,7 +338,6 @@ def create_provider_gateway(
                                     provider_call_id = candidate
                                 latest_usage = _usage_from(record, "provider_reported") or latest_usage
                     completed = finished
-                    await _record_call(factory, profile, claims, binding, lease_owner, "QUIESCENT" if completed else "UNKNOWN", provider_call_id, latest_usage, app.state.metrics)
                 except asyncio.CancelledError:
                     await _record_call(factory, profile, claims, binding, lease_owner, "UNKNOWN", provider_call_id, latest_usage, app.state.metrics)
                     raise
@@ -346,11 +347,18 @@ def create_provider_gateway(
                 finally:
                     await asyncio.to_thread(upstream.close)
 
+            async def record_stream_completion():
+                await _record_call(
+                    factory, profile, claims, binding, lease_owner,
+                    "QUIESCENT" if completed else "UNKNOWN", provider_call_id, latest_usage, app.state.metrics,
+                )
+
             return StreamingResponse(
                 stream_body(),
                 status_code=upstream.status,
                 media_type="text/event-stream",
                 headers={key: upstream.headers[key] for key in ("Cache-Control", "X-Accel-Buffering") if key in upstream.headers},
+                background=BackgroundTask(record_stream_completion),
             )
 
         try:

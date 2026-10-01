@@ -1,0 +1,459 @@
+{
+  "artifact": "integration/runtime/artifacts/p3b-20261001T073404Z-58d4681b.json",
+  "base_commit": "6eb11d128cd697d93ef746b0e69d9e3d1dbfce22",
+  "branch": "phase3b-single-hekate",
+  "budget_summary": {
+    "ledger_effect_counts": [
+      {
+        "count": 12,
+        "effect_type": "HOLD"
+      },
+      {
+        "count": 10,
+        "effect_type": "RELEASE"
+      },
+      {
+        "count": 10,
+        "effect_type": "SETTLE"
+      }
+    ],
+    "note": "TASK and SYSTEM accounts are separate ledger scopes; their totals are not additive.",
+    "synthetic": true,
+    "totals_by_account_kind": [
+      {
+        "accounts": 1,
+        "held_amount": "0.073728",
+        "limit_amount": "10.00",
+        "scope_kind": "SYSTEM",
+        "spent_amount": "0.000225"
+      },
+      {
+        "accounts": 9,
+        "held_amount": "0.073728",
+        "limit_amount": "8.000001",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000225"
+      }
+    ]
+  },
+  "database": {
+    "migration_head": "0005_phase3b",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "database_counts_after_run": {
+    "agents": 1,
+    "conclusions": 5,
+    "consumed_permits": 5,
+    "pending_inbox": 0,
+    "provider_calls": 5,
+    "responses": 3,
+    "tasks": 9,
+    "unknown_holds": 1
+  },
+  "executed_at": "2026-10-01T07:34:04.705852Z",
+  "executed_at_finished": "2026-10-01T07:34:29.933699Z",
+  "limitations": [
+    "The provider route is an isolated synthetic loopback fake; no production provider was configured.",
+    "Production dispatch remains closed because no verified real model, full-request tokenizer, pricing, or production route was configured.",
+    "G7 same-execution resume and G8 exact full-request tokenization remain unresolved.",
+    "Successful contract validation is not a claim of factual correctness; answers are provisional."
+  ],
+  "overall_status": "pass",
+  "probe": "phase3b-single-hekate",
+  "provider": {
+    "forwarded_requests": 5,
+    "mode": "isolated_loopback_fake_only",
+    "real_provider_calls": 0,
+    "request_metadata": [
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "response_id": "fake-response-1",
+        "sequence": 1,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "response_id": "fake-response-2",
+        "sequence": 2,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "response_id": "fake-response-3",
+        "sequence": 3,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "response_id": "fake-response-4",
+        "sequence": 4,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "response_id": "fake-response-5",
+        "sequence": 5,
+        "stream": true
+      }
+    ]
+  },
+  "real_provider_calls": 0,
+  "results": {
+    "R2_single_persistent_hekate": {
+      "accepted_responses_read_from_cli_and_db": true,
+      "accepted_result_chain": [
+        {
+          "accounting_call_id": "9fdb36b5-8323-4bae-bf77-89d2bf695d5f",
+          "attempt_id": "5bcae7b3-1a76-58ed-8d94-83ef4af6578e",
+          "call_state": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "conclusion_hash": "e8b7296ad5525930ef06929830dbe6cffa8a7d45cad8d0b207e028c5dea5a1e6",
+          "conclusion_id": "a83bdd2e-fc8c-56a3-b2c5-334617d2674e",
+          "eligible": true,
+          "evaluated_cost_usd": "0.000045",
+          "input_revision": 1,
+          "operation_id": "bf45602d-6595-5cc0-b064-bdae623f517c",
+          "outcome": "PROVISIONAL_ANSWER",
+          "output_hash": "f3f041f84f59229766698b13c1c182d6821a044332c6caf2ea3362f78a12d6cd",
+          "permit_id": "75cc7877-294c-5eaf-bc7c-6ad9d87be0be",
+          "permit_state": "CONSUMED",
+          "processing_state": "ACCEPTED",
+          "provider_agent_id": "agent-local-26abc6c3-c42c-483e-a5d4-04fb69c269df",
+          "registry_id": "89a878c5-2dba-59c1-af98-8dee80333224",
+          "response_ref": "4f9de039-a5e5-4817-af78-e4a5dc3a7ca5",
+          "settlement_state": "SETTLED",
+          "stop_reason": "COMPLETED",
+          "task_id": "343c3b8c-18dc-40e2-8cc7-cef11306ecf5",
+          "validation_status": "VALIDATED"
+        },
+        {
+          "accounting_call_id": "0b492b2a-1af0-4d9f-9f15-082364da9451",
+          "attempt_id": "b18b19cf-ef67-5b70-8650-302f4b6dbc31",
+          "call_state": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "conclusion_hash": "8cd9ab8064096b69f725366216a872667c5ba1a9a11759c956c86f5a97bad300",
+          "conclusion_id": "954e2e1d-1912-59e2-bbd2-88fa17cfa0ae",
+          "eligible": true,
+          "evaluated_cost_usd": "0.000045",
+          "input_revision": 1,
+          "operation_id": "3cc2240d-1b0e-5f7e-a747-958027952ec0",
+          "outcome": "PROVISIONAL_ANSWER",
+          "output_hash": "db223baa32cc8356142bcc5ef7da84bc085b3c244ce5440468be5377f09e5f5d",
+          "permit_id": "ad5bc5ed-5fab-5450-a785-92e6f99e1542",
+          "permit_state": "CONSUMED",
+          "processing_state": "ACCEPTED",
+          "provider_agent_id": "agent-local-26abc6c3-c42c-483e-a5d4-04fb69c269df",
+          "registry_id": "89a878c5-2dba-59c1-af98-8dee80333224",
+          "response_ref": "e12afb9a-42b7-40d7-b336-3d3f0b4eb616",
+          "settlement_state": "SETTLED",
+          "stop_reason": "COMPLETED",
+          "task_id": "5f5aa918-4806-4ba2-950e-a3c1aa6bcfd2",
+          "validation_status": "VALIDATED"
+        }
+      ],
+      "database_counts": {
+        "accepted_results": 2,
+        "compaction_provider_calls": 0,
+        "consumed_permits": 2,
+        "eligible_conclusions": 2,
+        "main_provider_calls": 2,
+        "provider_calls": 2,
+        "submissions": 2,
+        "tasks": 2
+      },
+      "first_task_state": "COMPLETED",
+      "one_main_call_each": true,
+      "passed": true,
+      "registry_provider_counts": {
+        "attempts": 2,
+        "operations": 2,
+        "providers": 1,
+        "registries": 1,
+        "responses": 2
+      },
+      "request_key_hashes": [
+        "faf92a5b20d30325eb3719e59e7257a1282ad52f227ccf9bd396b8d00ae7c236",
+        "c24bfc88e7ac552323e289406a800be9656a90c4476290a30e109ea72ab3998a"
+      ],
+      "second_task_state": "COMPLETED",
+      "submission_hashes": [
+        {
+          "request_hash": "17bdc2fd9d66313951651cbaf1aeba03dddb5e6e9ab0ecd8fe24b89c340964a9",
+          "task_id": "343c3b8c-18dc-40e2-8cc7-cef11306ecf5"
+        },
+        {
+          "request_hash": "0a0b9ecf03fdfed3da7cee6d6c5026210207b4d607c40fdef90e5bbc048e1a1b",
+          "task_id": "5f5aa918-4806-4ba2-950e-a3c1aa6bcfd2"
+        }
+      ],
+      "task_cost_statuses": [
+        "SETTLED",
+        "SETTLED"
+      ],
+      "task_ids": [
+        "5f5aa918-4806-4ba2-950e-a3c1aa6bcfd2",
+        "343c3b8c-18dc-40e2-8cc7-cef11306ecf5"
+      ]
+    },
+    "R3_submission_idempotency_and_scope": {
+      "completed_replay_provider_call_count_unchanged": true,
+      "completed_replay_same_task": true,
+      "concurrent_same_key_same_task": true,
+      "other_scope_lookup_denied": true,
+      "passed": true,
+      "same_key_different_question_conflict": true,
+      "task_submission_count_for_scope": 2
+    },
+    "R5_cancel_and_revision_gate": {
+      "cancel": {
+        "application_result": {
+          "inbox_id": "dd3cce4a-0bf8-4381-91a7-89bff50564ee",
+          "processed": true,
+          "state": "LATE"
+        },
+        "input_revision": 1,
+        "passed": true,
+        "provider_calls_unchanged": true,
+        "response_count": 0,
+        "result_state_after_mutation": "LATE",
+        "saved_state_before_mutation": "WAITING_EXECUTION",
+        "task_id": "8859deb8-a779-4c30-830f-d35b890fb066",
+        "task_state": "STOPPING"
+      },
+      "passed": true,
+      "revision": {
+        "application_result": {
+          "inbox_id": "b345b2d5-5814-4188-bf62-09380012a30a",
+          "processed": true,
+          "state": "LATE"
+        },
+        "input_revision": 2,
+        "passed": true,
+        "provider_calls_unchanged": true,
+        "response_count": 0,
+        "result_state_after_mutation": "LATE",
+        "saved_state_before_mutation": "WAITING_EXECUTION",
+        "task_id": "85f9f942-56dc-415f-ac01-5b56bf54750e",
+        "task_state": "RUNNING"
+      }
+    },
+    "R6_saved_result_restart": {
+      "execution_state_before_restart": "QUIESCENT",
+      "passed": true,
+      "provider_calls_after_dispatch": 5,
+      "provider_calls_after_reprocess": 5,
+      "stored_state_before_restart": "WAITING_EXECUTION",
+      "task_id": "0863dd34-f34b-4b66-b5d3-ea93e6a6647f",
+      "task_state_after_restart": "COMPLETED"
+    },
+    "R7_budget_pre_dispatch": {
+      "passed": true,
+      "prepared_leases": 0,
+      "provider_calls_after": 5,
+      "provider_calls_before": 5,
+      "stop_reason": "BUDGET",
+      "task_id": "5436ba79-d874-4843-a077-f6ed3e81635d",
+      "task_state": "FAILED"
+    },
+    "R7_deadline_pre_dispatch": {
+      "passed": true,
+      "prepared_leases": 0,
+      "provider_calls_after": 5,
+      "provider_calls_before": 5,
+      "session_prepares_after": 6,
+      "session_prepares_before": 6,
+      "stop_reason": "DEADLINE",
+      "task_id": "1f3a9b4b-e9c8-49cf-b6f8-a3668fa94117",
+      "task_state": "FAILED"
+    },
+    "R7_unknown_hold_admission": {
+      "blocked_task_attempts_and_operations": {
+        "attempts": 0,
+        "operations": 0
+      },
+      "blocked_task_id": "40a39cab-62a1-41ba-9bd2-910539a1c84f",
+      "blocked_task_state": "QUEUED",
+      "passed": true,
+      "provider_calls_after": 5,
+      "provider_calls_before": 5,
+      "session_prepares_after": 7,
+      "session_prepares_before": 7,
+      "source_pending_reservations": 1,
+      "source_task_cost_status": "PENDING_SETTLEMENT",
+      "source_task_id": "06739326-c087-4874-b4cf-100973348405",
+      "unknown_hold_state": "UNKNOWN"
+    }
+  },
+  "run_id": "p3b-20261001T073404Z-58d4681b",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "turn_result_states": [
+    {
+      "count": 3,
+      "processing_state": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "count": 2,
+      "processing_state": "LATE",
+      "rejection_reason": "task_or_binding_changed"
+    }
+  ],
+  "unresolved_provider_calls": [],
+  "verification": {
+    "command": "uv run python scripts/phase3_verify.py",
+    "commands": [
+      {
+        "command": "python -m compileall -q src scripts tests",
+        "exit_code": 0,
+        "name": "python_compile",
+        "status": "passed"
+      },
+      {
+        "command": "python -m unittest discover -s tests/contract -p test_phase3_bridge_and_gateway.py -v",
+        "exit_code": 0,
+        "name": "phase3_contract_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 5,
+        "tests_run": 5
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "phase2_migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_TEST_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m unittest discover -s tests/persistence -v",
+        "exit_code": 0,
+        "name": "phase2_postgres_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 19,
+        "tests_run": 19
+      },
+      {
+        "command": "npm test (pinned Node.js 22.19.0)",
+        "exit_code": 0,
+        "name": "bridge_tests_and_build",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 15,
+        "tests_run": 15
+      },
+      {
+        "checks_failed": 0,
+        "checks_passed": 6,
+        "checks_run": 6,
+        "command": "python -c <generated schema byte comparison>",
+        "exit_code": 0,
+        "name": "schema_reproducibility",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic downgrade 0004_terminal_inbox",
+        "exit_code": 0,
+        "name": "migration_downgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_reupgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check_after_reupgrade",
+        "status": "passed"
+      },
+      {
+        "command": "git diff --check",
+        "exit_code": 0,
+        "name": "diff_check",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3_runtime_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_probe",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3b_single_hekate_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_single_hekate_probe",
+        "status": "passed"
+      }
+    ],
+    "commands_failed": 0,
+    "commands_passed": 14,
+    "commands_run": 14,
+    "phase3a_artifact": "integration/runtime/artifacts/p3-20261001T073347Z-916d84bd.json",
+    "phase3b_artifact": "integration/runtime/artifacts/p3b-20261001T073404Z-58d4681b.json",
+    "phase3b_runtime_scenarios": {
+      "failed_count": 0,
+      "passed_count": 7,
+      "scenario_count": 7
+    },
+    "runtime_scenarios": {
+      "command": "uv run python scripts/phase3_runtime_probe.py",
+      "failed_count": 0,
+      "passed_count": 9,
+      "scenario_count": 9,
+      "scenario_results": {
+        "T1_actual_db_runtime_gateway_fake_provider": true,
+        "T1_same_accounting_id_replay": true,
+        "T2_actual_runtime_compaction": true,
+        "T2_roles_retry_and_compaction_plan": true,
+        "T3_outbox_claim_fence_and_send_marker": true,
+        "T4_bridge_loss_keeps_unknown_hold": true,
+        "T5_db_and_permit_failures_do_not_forward": true,
+        "T6_inbox_replay_and_conflict": true,
+        "T7_private_gateway_fail_closed": true
+      },
+      "scope": "PostgreSQL + pinned Letta App Server + Python bridge + DB gateway + isolated fake provider"
+    },
+    "status": "passed"
+  },
+  "working_tree_dirty_at_probe": true
+}

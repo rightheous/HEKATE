@@ -373,6 +373,92 @@
       "title": "BridgeBinding",
       "type": "object"
     },
+    "BridgeBusinessResult": {
+      "additionalProperties": false,
+      "properties": {
+        "failure_code": {
+          "anyOf": [
+            {
+              "enum": [
+                "approval_conflict",
+                "approval_conflict_terminal",
+                "protocol_error",
+                "error",
+                "llm_api_error",
+                "max_steps",
+                "interrupted",
+                "stream_closed",
+                "structured_output_error"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Failure Code"
+        },
+        "output_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Sha256"
+        },
+        "output_truncated": {
+          "default": false,
+          "title": "Output Truncated",
+          "type": "boolean"
+        },
+        "raw_output": {
+          "anyOf": [
+            {
+              "maxLength": 65536,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Raw Output"
+        },
+        "state": {
+          "enum": [
+            "VALID",
+            "INVALID",
+            "MISSING"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "structured_output": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Structured Output"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "BridgeBusinessResult",
+      "type": "object"
+    },
     "BridgeCommand": {
       "discriminator": {
         "mapping": {
@@ -419,6 +505,17 @@
       "properties": {
         "binding": {
           "$ref": "#/$defs/BridgeSessionBinding"
+        },
+        "business_result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BridgeBusinessResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "error_code": {
           "anyOf": [
@@ -934,6 +1031,22 @@
           "minLength": 1,
           "title": "Operation Id",
           "type": "string"
+        },
+        "output_contract": {
+          "anyOf": [
+            {
+              "enum": [
+                "hekate_turn_output_v1",
+                "position_commit_v1"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Contract"
         },
         "request_id": {
           "maxLength": 128,

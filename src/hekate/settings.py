@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Mapping
 from urllib.parse import urlsplit
 
 import yaml
+
+from hekate.domain.models import TaskExecutionConfig
+from hekate.domain.types import ActorContext, PrincipalId, ScopeId
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +27,7 @@ class Settings:
     policy: Mapping[str, object]
     models: Mapping[str, object]
     pricing: Mapping[str, object]
+    local: Mapping[str, object] = field(default_factory=dict)
 
 
 def _yaml(path: Path) -> Mapping[str, object]:
@@ -46,6 +51,85 @@ def load_settings(env: Mapping[str, str], config_dir: Path) -> Settings:
         policy=_yaml(config_dir / "policy.yaml"),
         models=_yaml(config_dir / "models.yaml"),
         pricing=_yaml(config_dir / "pricing.yaml"),
+        local=_yaml(config_dir / "local.yaml") if (config_dir / "local.yaml").is_file() else {},
+    )
+
+
+def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
+    limits = settings.policy.get("limits")
+    profile = settings.models.get("hekate")
+    if not isinstance(limits, dict) or not isinstance(profile, dict):
+        raise ValueError("explicit task limits and HEKATE model profile are required")
+    letta_model = profile.get("model")
+    model = profile.get("provider_model")
+    profile_id = profile.get("profile_id")
+    pricing_version = settings.pricing.get("version")
+    prices = settings.pricing.get("prices")
+    price = prices.get(model) if isinstance(prices, dict) and isinstance(model, str) else None
+    if not isinstance(price, dict):
+        raise ValueError("explicit HEKATE pricing is required")
+
+    def decimal_value(value: object, name: str, *, allow_zero: bool = False) -> Decimal:
+        if not isinstance(value, (str, int, Decimal)) or isinstance(value, bool):
+            raise ValueError(f"{name} must be configured as a decimal string")
+        try:
+            parsed = Decimal(str(value))
+        except InvalidOperation as error:
+            raise ValueError(f"{name} is not a valid Decimal") from error
+        if not parsed.is_finite() or parsed < 0 or (not allow_zero and parsed == 0):
+            raise ValueError(f"{name} must be finite and {'nonnegative' if allow_zero else 'positive'}")
+        return parsed
+
+    def integer_value(value: object, name: str) -> int:
+        if type(value) is not int or value < 1:
+            raise ValueError(f"{name} must be an explicitly configured positive integer")
+        return value
+
+    def nonnegative_integer(value: object, name: str) -> int:
+        if type(value) is not int or value < 0:
+            raise ValueError(f"{name} must be an explicitly configured nonnegative integer")
+        return value
+
+    if not all(isinstance(value, str) and value for value in (letta_model, model, profile_id, pricing_version)):
+        raise ValueError("fixed Letta model, provider model, profile_id, and pricing version are required")
+    return TaskExecutionConfig(
+        task_budget_usd=decimal_value(limits.get("task_budget_usd"), "task_budget_usd"),
+        system_daily_budget_usd=decimal_value(limits.get("system_daily_budget_usd"), "system_daily_budget_usd"),
+        deadline_seconds=integer_value(limits.get("task_deadline_seconds"), "task_deadline_seconds"),
+        profile_id=profile_id,
+        letta_model=letta_model,
+        model=model,
+        pricing_version=pricing_version,
+        input_usd_per_million=decimal_value(price.get("input_usd_per_million"), "input_usd_per_million", allow_zero=True),
+        output_usd_per_million=decimal_value(price.get("output_usd_per_million"), "output_usd_per_million", allow_zero=True),
+        max_input_tokens=integer_value(profile.get("max_input_tokens"), "max_input_tokens"),
+        max_output_tokens=integer_value(profile.get("max_output_tokens"), "max_output_tokens"),
+        max_compaction_calls=nonnegative_integer(profile.get("max_compaction_calls"), "max_compaction_calls"),
+    )
+
+
+def configured_local_actor(settings: Settings) -> ActorContext:
+    identity = settings.local.get("identity")
+    if not isinstance(identity, dict):
+        raise ValueError("config/local.yaml must define a trusted identity")
+    principal = identity.get("principal_id")
+    scope = identity.get("scope_id")
+    policy_version = identity.get("policy_version")
+    authz_epoch = identity.get("authz_epoch")
+    if not all(isinstance(value, str) and value for value in (principal, scope, policy_version)):
+        raise ValueError("local identity requires principal_id, scope_id, and policy_version")
+    if type(authz_epoch) is not int or authz_epoch < 0:
+        raise ValueError("local identity requires a nonnegative authz_epoch")
+    return ActorContext(
+        principal_id=PrincipalId(principal),
+        scope=ScopeId(scope),
+        authenticated_agent_registry_id=None,
+        task_id=None,
+        attempt_id=None,
+        input_revision=None,
+        policy_version=policy_version,
+        authz_epoch=authz_epoch,
+        fence=0,
     )
 
 

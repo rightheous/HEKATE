@@ -39,7 +39,11 @@ export type Command =
       creation_tag?: string | null;
     })
   | (CommandBase & { command: "agent.delete"; provider_agent_id: string })
-  | (CommandBase & { command: "session.prepare"; binding: RuntimeBinding })
+  | (CommandBase & {
+      command: "session.prepare";
+      binding: RuntimeBinding;
+      output_contract?: "hekate_turn_output_v1" | "position_commit_v1" | null;
+    })
   | (CommandBase & {
       command: "session.turn";
       binding: SessionBinding;
@@ -75,6 +79,14 @@ export interface BridgeEvent {
     | "structured_output_error"
     | null;
   success?: boolean | null;
+  business_result?: {
+    state: "VALID" | "INVALID" | "MISSING";
+    raw_output?: string | null;
+    output_sha256?: string | null;
+    output_truncated?: boolean;
+    structured_output?: Record<string, unknown> | null;
+    failure_code?: BridgeEvent["error_code"];
+  } | null;
 }
 
 export type DomainEvent = BridgeEvent;
@@ -140,7 +152,11 @@ export function encodeReply(reply: Reply): Uint8Array {
 
 export function encodeEvent(event: BridgeEvent): Uint8Array {
   assertValid(validateEvent, event, "event");
-  return new TextEncoder().encode(JSON.stringify(event));
+  const encoded = new TextEncoder().encode(JSON.stringify(event));
+  if (encoded.byteLength > MAX_FRAME_BYTES) {
+    throw new Error(`bridge frame exceeds ${MAX_FRAME_BYTES} bytes`);
+  }
+  return encoded;
 }
 
 export function assertBinding(command: Command, active: RuntimeBinding): void {
