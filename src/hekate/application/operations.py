@@ -358,9 +358,10 @@ async def apply_execution_observation(uow, observation: ExecutionObservation) ->
             }[observation.outcome]
             await uow.tasks.observe_attempt(binding.attempt_id, event)
         await uow.agents.set_registry_ready(binding.agent_registry_id)
-        if observation.outcome == "CANCELLED":
-            await uow.tasks.confirm_cancelled(binding.task_id)
         await uow.budgets.release_unallocated_after_quiescence(observation.operation_id)
+        from hekate.application.tasks import converge_task_execution
+
+        await converge_task_execution(uow, binding.task_id, binding.input_revision)
 
 
 async def record_execution_observation(factory: UowFactory, observation: ExecutionObservation) -> None:

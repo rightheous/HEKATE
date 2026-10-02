@@ -1,0 +1,890 @@
+{
+  "artifact": "integration/runtime/artifacts/p3b-20261002T051902Z-9b037265.json",
+  "base_commit": "9259495c3ac20b44830c027a571ac7a919aa78b8",
+  "branch": "phase3b-single-hekate",
+  "budget_summary": {
+    "ledger_effect_counts": [
+      {
+        "count": 14,
+        "effect_type": "HOLD"
+      },
+      {
+        "count": 12,
+        "effect_type": "RELEASE"
+      },
+      {
+        "count": 12,
+        "effect_type": "SETTLE"
+      }
+    ],
+    "note": "TASK and SYSTEM accounts are separate ledger scopes; their totals are not additive.",
+    "synthetic": true,
+    "totals_by_account_kind": [
+      {
+        "accounts": 1,
+        "held_amount": "0.073728",
+        "limit_amount": "10.00",
+        "scope_kind": "SYSTEM",
+        "spent_amount": "0.000270"
+      },
+      {
+        "accounts": 11,
+        "held_amount": "0.073728",
+        "limit_amount": "10.000001",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000270"
+      }
+    ]
+  },
+  "database": {
+    "migration_head": "0005_phase3b",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "database_counts_after_run": {
+    "agents": 1,
+    "conclusions": 6,
+    "consumed_permits": 6,
+    "pending_inbox": 0,
+    "provider_calls": 6,
+    "responses": 2,
+    "tasks": 11,
+    "unknown_holds": 1
+  },
+  "executed_at": "2026-10-02T05:19:02.526658Z",
+  "executed_at_finished": "2026-10-02T05:19:29.087517Z",
+  "limitations": [
+    "The provider route is an isolated synthetic loopback fake; no production provider was configured.",
+    "Production dispatch remains closed because no verified real model, full-request tokenizer, pricing, or production route was configured.",
+    "G7 same-execution resume and G8 exact full-request tokenization remain unresolved.",
+    "Successful contract validation is not a claim of factual correctness; answers are provisional.",
+    "HekateTurnOutput schema and policy are carried in the forwarded turn message; SDK-native structured output is not used or claimed."
+  ],
+  "overall_status": "pass",
+  "probe": "phase3b-single-hekate",
+  "provider": {
+    "forwarded_requests": 6,
+    "mode": "isolated_loopback_fake_only",
+    "real_provider_calls": 0,
+    "request_metadata": [
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "3a1f5d8cdafcf31e41c8b92324501c868bbe17f9de39fbc39657a867f690252a",
+        "response_id": "fake-response-1",
+        "sequence": 1,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "e956c848390c5fc08a0a8fcd3dc4c31de65cacc5b256b56336a6eb57ff289bb4",
+        "response_id": "fake-response-2",
+        "sequence": 2,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "40da570930489ff9e4bd46038cdc0eccf289532b06e7075116982b061e2744d9",
+        "response_id": "fake-response-3",
+        "sequence": 3,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "60779ec2135cfbf32f84f51f53304394099ce50f21848ff45b1d649f59b87f46",
+        "response_id": "fake-response-4",
+        "sequence": 4,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "a8bd023712e3fd4fc7173e905ecc2e33e3a4b18a98dd983eb00820c083c9a0c6",
+        "response_id": "fake-response-5",
+        "sequence": 5,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "a4b3e2fa1863322a1548827bf04738a8220e91c0abb1864a7aca9f4747afea41",
+        "response_id": "fake-response-6",
+        "sequence": 6,
+        "stream": true
+      }
+    ],
+    "turn_contract_observations": [
+      {
+        "agent_registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+        "attempt_id": "a09fa598-697f-5689-933f-efa14e0f48e1",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "3cd9fc019f32b625418b65ce21ef2d1b374990e4eb283b86b74207bc70095b6f",
+        "request_hash": "3a1f5d8cdafcf31e41c8b92324501c868bbe17f9de39fbc39657a867f690252a",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "server_policy_present": true,
+        "task_id": "4457f2f8-24fb-405d-8a7e-a594c26e5c75",
+        "unicode_prompt_bytes": 9049
+      },
+      {
+        "agent_registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+        "attempt_id": "1175ff34-3834-57d6-861c-916a7d03d565",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "998e2d11c52d8a4a1eaf1e0e61abaad3a6f22a8e97c68b80d9eaf1126982fce7",
+        "request_hash": "e956c848390c5fc08a0a8fcd3dc4c31de65cacc5b256b56336a6eb57ff289bb4",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "server_policy_present": true,
+        "task_id": "03632396-0cd8-444c-8ae2-9a91eecab49e",
+        "unicode_prompt_bytes": 9050
+      },
+      {
+        "agent_registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+        "attempt_id": "e0236e83-d6fc-5958-9378-245c1f997de6",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "2ae3b22dab97f59e0641c7d050ed5fedc13bef875214f68e68c978ba4dad981f",
+        "request_hash": "40da570930489ff9e4bd46038cdc0eccf289532b06e7075116982b061e2744d9",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "server_policy_present": true,
+        "task_id": "215fd8f2-8d85-49be-ad84-2aa8e12be897",
+        "unicode_prompt_bytes": 9044
+      },
+      {
+        "agent_registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+        "attempt_id": "ba370fdf-bd91-5ca6-9270-7ab43877ba99",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "bb21fb569385a08e513392b99233e2f286370dfe29853bbd6c581e6cbbcb29ab",
+        "request_hash": "60779ec2135cfbf32f84f51f53304394099ce50f21848ff45b1d649f59b87f46",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "server_policy_present": true,
+        "task_id": "ca377017-4cc1-4c51-b347-6d110e4caf01",
+        "unicode_prompt_bytes": 9060
+      },
+      {
+        "agent_registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+        "attempt_id": "19194399-263b-55e2-b72e-c79707a603d4",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "d2599e45ef8a1283a0a491952c70f427944c897565f1742fa320ba885af395d2",
+        "request_hash": "a8bd023712e3fd4fc7173e905ecc2e33e3a4b18a98dd983eb00820c083c9a0c6",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "server_policy_present": true,
+        "task_id": "a3ec9ef5-fd91-4f75-95b4-121f0c6bb62c",
+        "unicode_prompt_bytes": 9044
+      },
+      {
+        "agent_registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+        "attempt_id": "8c11d5c0-e89c-597a-a35b-f2fb296d6adf",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "b48e003af53bf437c78bb319a2325ef877a772382076ff9756e82683a6521a80",
+        "request_hash": "a4b3e2fa1863322a1548827bf04738a8220e91c0abb1864a7aca9f4747afea41",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "server_policy_present": true,
+        "task_id": "f70c5334-f770-4025-8442-1c0832ad068d",
+        "unicode_prompt_bytes": 9074
+      }
+    ]
+  },
+  "real_provider_calls": 0,
+  "results": {
+    "C1_oversized_turn_rejected_before_admission": {
+      "message_character_cap_rejected": true,
+      "operations_provider_calls_and_permits": {
+        "operations": 0,
+        "permits": 0,
+        "provider_calls": 0
+      },
+      "passed": true,
+      "prepared_leases": 0,
+      "provider_calls_after": 2,
+      "provider_calls_before": 2,
+      "question_utf8_bytes": 65536,
+      "stop_reason": "ERROR",
+      "task_id": "bd7ba3cf-2644-4f3e-8925-79a04ee9e0b2",
+      "task_state": "FAILED"
+    },
+    "C3_deadline_after_execution_restart": {
+      "accounting_after_restart": {
+        "consumed_permits": 1,
+        "ledger_entries": 6,
+        "permits": 1,
+        "provider_calls": 1
+      },
+      "accounting_before_restart": {
+        "consumed_permits": 1,
+        "ledger_entries": 6,
+        "permits": 1,
+        "provider_calls": 1
+      },
+      "conclusion_eligible": false,
+      "execution_state_before_restart": "QUIESCENT",
+      "passed": true,
+      "provider_calls_after_dispatch": 6,
+      "provider_calls_after_reprocess": 6,
+      "response_count": 0,
+      "result_rejection_reason": "deadline_elapsed",
+      "result_state": "LATE",
+      "stored_state_before_restart": "WAITING_EXECUTION",
+      "task_id": "f70c5334-f770-4025-8442-1c0832ad068d",
+      "task_outcome": "FAILED",
+      "task_state_after_restart": "FAILED",
+      "task_stop_reason": "DEADLINE"
+    },
+    "R2_single_persistent_hekate": {
+      "accepted_responses_read_from_cli_and_db": true,
+      "accepted_result_chain": [
+        {
+          "accounting_call_id": "a6d5fcef-7dbb-41da-82dc-f9a29ff449c9",
+          "attempt_id": "1175ff34-3834-57d6-861c-916a7d03d565",
+          "call_state": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "conclusion_hash": "cac38f73f26409e89297803b8228ba7cda4ec432d18955310d994017dc725714",
+          "conclusion_id": "5c16cb3c-55c4-5592-ab16-24314e83b76a",
+          "eligible": true,
+          "evaluated_cost_usd": "0.000045",
+          "input_revision": 1,
+          "operation_id": "1e9ead4d-00f8-5a04-acb6-bcceb1d8445a",
+          "outcome": "PROVISIONAL_ANSWER",
+          "output_hash": "9245fad5e48a5a74a6bf97c7c3427f62264c80efd7830abf9809c7b18ef9a647",
+          "permit_id": "a4712a38-1484-5140-8c59-ab7e99206244",
+          "permit_state": "CONSUMED",
+          "processing_state": "ACCEPTED",
+          "provider_agent_id": "agent-local-726baa64-b49d-4f3e-9bef-9d469b3c2084",
+          "registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+          "response_ref": "f9d54be4-b4ea-463a-84e4-9e864f73473b",
+          "settlement_state": "SETTLED",
+          "stop_reason": "COMPLETED",
+          "task_id": "03632396-0cd8-444c-8ae2-9a91eecab49e",
+          "validation_status": "VALIDATED"
+        },
+        {
+          "accounting_call_id": "fe4c5c37-c436-4bb9-abc3-6c2b7cc8d054",
+          "attempt_id": "a09fa598-697f-5689-933f-efa14e0f48e1",
+          "call_state": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "conclusion_hash": "45566101bc2487cc03c24724344d0a116d765f19acc984616e313dac796baff9",
+          "conclusion_id": "17847a1e-3efe-5b2e-859c-48b704cbf358",
+          "eligible": true,
+          "evaluated_cost_usd": "0.000045",
+          "input_revision": 1,
+          "operation_id": "6de04737-23be-5618-86b7-1db45c30dc05",
+          "outcome": "PROVISIONAL_ANSWER",
+          "output_hash": "d8635ea8a35693f77e394fb67b4cfa9583959f5cfdf519e9fae0c53a0299086d",
+          "permit_id": "636a35c0-4404-5a90-802b-5fe4c018ffb7",
+          "permit_state": "CONSUMED",
+          "processing_state": "ACCEPTED",
+          "provider_agent_id": "agent-local-726baa64-b49d-4f3e-9bef-9d469b3c2084",
+          "registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+          "response_ref": "b2ac603c-59d4-4988-acb7-cfcc7c3957f8",
+          "settlement_state": "SETTLED",
+          "stop_reason": "COMPLETED",
+          "task_id": "4457f2f8-24fb-405d-8a7e-a594c26e5c75",
+          "validation_status": "VALIDATED"
+        }
+      ],
+      "database_counts": {
+        "accepted_results": 2,
+        "compaction_provider_calls": 0,
+        "consumed_permits": 2,
+        "eligible_conclusions": 2,
+        "main_provider_calls": 2,
+        "provider_calls": 2,
+        "submissions": 2,
+        "tasks": 2
+      },
+      "first_task_state": "COMPLETED",
+      "input_output_token_caps": {
+        "compaction_call_cap": 1,
+        "max_input_tokens": 32768,
+        "max_output_tokens": 2048
+      },
+      "one_main_call_each": true,
+      "output_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+      "passed": true,
+      "provider_request_contracts": {
+        "03632396-0cd8-444c-8ae2-9a91eecab49e": {
+          "agent_registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+          "attempt_id": "1175ff34-3834-57d6-861c-916a7d03d565",
+          "definition_count": 12,
+          "input_revision": 1,
+          "prompt_hash": "998e2d11c52d8a4a1eaf1e0e61abaad3a6f22a8e97c68b80d9eaf1126982fce7",
+          "request_hash": "e956c848390c5fc08a0a8fcd3dc4c31de65cacc5b256b56336a6eb57ff289bb4",
+          "required_outer_fields": [
+            "conclusion",
+            "proposal",
+            "schema_version"
+          ],
+          "resolved_local_refs": [
+            "#/$defs/AnswerProposal",
+            "#/$defs/Assessment",
+            "#/$defs/CommitProposal",
+            "#/$defs/ConclusionCapsule",
+            "#/$defs/Confidence",
+            "#/$defs/ContinuationProposal",
+            "#/$defs/Objection",
+            "#/$defs/PositionBody",
+            "#/$defs/PositionRecommendation",
+            "#/$defs/RecommendedNextStep",
+            "#/$defs/SimpleProposal",
+            "#/$defs/SpawnProposal"
+          ],
+          "schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+          "server_policy_present": true,
+          "task_id": "03632396-0cd8-444c-8ae2-9a91eecab49e",
+          "unicode_prompt_bytes": 9050
+        },
+        "4457f2f8-24fb-405d-8a7e-a594c26e5c75": {
+          "agent_registry_id": "d0fe7876-0fcf-585d-baca-2c3af89118e9",
+          "attempt_id": "a09fa598-697f-5689-933f-efa14e0f48e1",
+          "definition_count": 12,
+          "input_revision": 1,
+          "prompt_hash": "3cd9fc019f32b625418b65ce21ef2d1b374990e4eb283b86b74207bc70095b6f",
+          "request_hash": "3a1f5d8cdafcf31e41c8b92324501c868bbe17f9de39fbc39657a867f690252a",
+          "required_outer_fields": [
+            "conclusion",
+            "proposal",
+            "schema_version"
+          ],
+          "resolved_local_refs": [
+            "#/$defs/AnswerProposal",
+            "#/$defs/Assessment",
+            "#/$defs/CommitProposal",
+            "#/$defs/ConclusionCapsule",
+            "#/$defs/Confidence",
+            "#/$defs/ContinuationProposal",
+            "#/$defs/Objection",
+            "#/$defs/PositionBody",
+            "#/$defs/PositionRecommendation",
+            "#/$defs/RecommendedNextStep",
+            "#/$defs/SimpleProposal",
+            "#/$defs/SpawnProposal"
+          ],
+          "schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+          "server_policy_present": true,
+          "task_id": "4457f2f8-24fb-405d-8a7e-a594c26e5c75",
+          "unicode_prompt_bytes": 9049
+        }
+      },
+      "registry_provider_counts": {
+        "attempts": 2,
+        "operations": 2,
+        "providers": 1,
+        "registries": 1,
+        "responses": 2
+      },
+      "request_key_hashes": [
+        "ef592e067ebddd1b789859ea9d5009706aa9f354a778e3c6fc3dd0ee0aa39275",
+        "c0e662956bacf538a79efbb3e1111b05e4a4b42566126eced28289f512451ef8"
+      ],
+      "second_task_state": "COMPLETED",
+      "submission_hashes": [
+        {
+          "request_hash": "17bdc2fd9d66313951651cbaf1aeba03dddb5e6e9ab0ecd8fe24b89c340964a9",
+          "task_id": "03632396-0cd8-444c-8ae2-9a91eecab49e"
+        },
+        {
+          "request_hash": "0a0b9ecf03fdfed3da7cee6d6c5026210207b4d607c40fdef90e5bbc048e1a1b",
+          "task_id": "4457f2f8-24fb-405d-8a7e-a594c26e5c75"
+        }
+      ],
+      "task_cost_statuses": [
+        "SETTLED",
+        "SETTLED"
+      ],
+      "task_ids": [
+        "4457f2f8-24fb-405d-8a7e-a594c26e5c75",
+        "03632396-0cd8-444c-8ae2-9a91eecab49e"
+      ],
+      "two_task_requests_included_generated_schema_and_policy": true
+    },
+    "R3_submission_idempotency_and_scope": {
+      "completed_replay_provider_call_count_unchanged": true,
+      "completed_replay_same_task": true,
+      "concurrent_same_key_same_task": true,
+      "other_scope_lookup_denied": true,
+      "passed": true,
+      "same_key_different_question_conflict": true,
+      "task_submission_count_for_scope": 2
+    },
+    "R5_cancel_and_revision_gate": {
+      "cancel": {
+        "accounting_after_result_replay": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_acceptance": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "application_result": {
+          "inbox_id": "68d106e0-d06e-4618-9c18-9378bdd48a36",
+          "processed": true,
+          "state": "LATE"
+        },
+        "conclusion_eligible": false,
+        "execution_state_before_cancel": "QUIESCENT",
+        "input_revision": 1,
+        "late_audit_has_output_hash": true,
+        "passed": true,
+        "provider_calls_unchanged": true,
+        "response_count": 0,
+        "result_rejection_reason": "task_cancelled",
+        "result_replay": {
+          "inbox_id": "68d106e0-d06e-4618-9c18-9378bdd48a36",
+          "processed": true,
+          "state": "LATE"
+        },
+        "result_state_after_mutation": "LATE",
+        "saved_state_before_mutation": "WAITING_EXECUTION",
+        "task_id": "215fd8f2-8d85-49be-ad84-2aa8e12be897",
+        "task_outcome": "CANCELLED",
+        "task_state": "CANCELLED",
+        "task_state_immediately_after_cancel": null,
+        "task_stop_reason": "USER_CANCELLED",
+        "terminal_and_late_audit_count_after_replay": 2,
+        "terminal_audits": 1
+      },
+      "cancel_before_terminal": {
+        "accounting_after_result_replay": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_acceptance": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 4,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "application_result": {
+          "inbox_id": "0b78282c-1d93-4ffa-bb1c-bdc5ecc66942",
+          "processed": true,
+          "state": "LATE"
+        },
+        "conclusion_eligible": false,
+        "execution_state_before_cancel": "RUNNING",
+        "input_revision": 1,
+        "late_audit_has_output_hash": true,
+        "passed": true,
+        "provider_calls_unchanged": true,
+        "response_count": 0,
+        "result_rejection_reason": "task_cancelled",
+        "result_replay": {
+          "inbox_id": "0b78282c-1d93-4ffa-bb1c-bdc5ecc66942",
+          "processed": true,
+          "state": "LATE"
+        },
+        "result_state_after_mutation": "LATE",
+        "saved_state_before_mutation": "WAITING_EXECUTION",
+        "task_id": "ca377017-4cc1-4c51-b347-6d110e4caf01",
+        "task_outcome": "CANCELLED",
+        "task_state": "CANCELLED",
+        "task_state_immediately_after_cancel": "STOPPING",
+        "task_stop_reason": "USER_CANCELLED",
+        "terminal_and_late_audit_count_after_replay": 2,
+        "terminal_audits": 1
+      },
+      "passed": true,
+      "revision": {
+        "accounting_after_result_replay": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_acceptance": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "application_result": {
+          "inbox_id": "98e2d3a2-71d6-4771-bf29-95d329f30891",
+          "processed": true,
+          "state": "LATE"
+        },
+        "conclusion_eligible": false,
+        "execution_state_before_cancel": "QUIESCENT",
+        "input_revision": 2,
+        "late_audit_has_output_hash": true,
+        "passed": true,
+        "provider_calls_unchanged": true,
+        "response_count": 0,
+        "result_rejection_reason": "task_or_binding_changed",
+        "result_replay": {
+          "inbox_id": "98e2d3a2-71d6-4771-bf29-95d329f30891",
+          "processed": true,
+          "state": "LATE"
+        },
+        "result_state_after_mutation": "LATE",
+        "saved_state_before_mutation": "WAITING_EXECUTION",
+        "task_id": "a3ec9ef5-fd91-4f75-95b4-121f0c6bb62c",
+        "task_outcome": null,
+        "task_state": "RUNNING",
+        "task_state_immediately_after_cancel": null,
+        "task_stop_reason": null,
+        "terminal_and_late_audit_count_after_replay": 1,
+        "terminal_audits": 0
+      }
+    },
+    "R7_budget_pre_dispatch": {
+      "passed": true,
+      "prepared_leases": 0,
+      "provider_calls_after": 6,
+      "provider_calls_before": 6,
+      "stop_reason": "BUDGET",
+      "task_id": "8683d84b-f37a-48fc-9b09-3378394711c3",
+      "task_state": "FAILED"
+    },
+    "R7_deadline_pre_dispatch": {
+      "passed": true,
+      "prepared_leases": 0,
+      "provider_calls_after": 6,
+      "provider_calls_before": 6,
+      "session_prepares_after": 8,
+      "session_prepares_before": 8,
+      "stop_reason": "DEADLINE",
+      "task_id": "905d6100-0d53-4427-a34c-a7ffc583d1e8",
+      "task_state": "FAILED"
+    },
+    "R7_unknown_hold_admission": {
+      "blocked_task_attempts_and_operations": {
+        "attempts": 0,
+        "operations": 0
+      },
+      "blocked_task_id": "1cb81124-0931-4e77-b40e-7ebdcf51d382",
+      "blocked_task_state": "QUEUED",
+      "passed": true,
+      "provider_calls_after": 6,
+      "provider_calls_before": 6,
+      "session_prepares_after": 9,
+      "session_prepares_before": 9,
+      "source_pending_reservations": 1,
+      "source_task_cost_status": "PENDING_SETTLEMENT",
+      "source_task_id": "ef26cfba-9c44-4139-a2a6-594a3662a177",
+      "unknown_hold_state": "UNKNOWN"
+    }
+  },
+  "run_id": "p3b-20261002T051902Z-9b037265",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "start_commit_sha": "9259495c3ac20b44830c027a571ac7a919aa78b8",
+  "turn_result_states": [
+    {
+      "count": 2,
+      "processing_state": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "count": 1,
+      "processing_state": "LATE",
+      "rejection_reason": "deadline_elapsed"
+    },
+    {
+      "count": 2,
+      "processing_state": "LATE",
+      "rejection_reason": "task_cancelled"
+    },
+    {
+      "count": 1,
+      "processing_state": "LATE",
+      "rejection_reason": "task_or_binding_changed"
+    }
+  ],
+  "unresolved_provider_calls": [],
+  "verification": {
+    "command": "uv run python scripts/phase3_verify.py",
+    "commands": [
+      {
+        "command": "python -m compileall -q src scripts tests",
+        "exit_code": 0,
+        "name": "python_compile",
+        "status": "passed"
+      },
+      {
+        "command": "python -m unittest discover -s tests/contract -p test_phase3_bridge_and_gateway.py -v",
+        "exit_code": 0,
+        "name": "phase3_contract_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 6,
+        "tests_run": 6
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "phase2_migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_TEST_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m unittest discover -s tests/persistence -v",
+        "exit_code": 0,
+        "name": "phase2_postgres_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 19,
+        "tests_run": 19
+      },
+      {
+        "command": "npm test (pinned Node.js 22.19.0)",
+        "exit_code": 0,
+        "name": "bridge_tests_and_build",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 15,
+        "tests_run": 15
+      },
+      {
+        "checks_failed": 0,
+        "checks_passed": 6,
+        "checks_run": 6,
+        "command": "python -c <generated schema byte comparison>",
+        "exit_code": 0,
+        "name": "schema_reproducibility",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic downgrade 0004_terminal_inbox",
+        "exit_code": 0,
+        "name": "migration_downgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_reupgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check_after_reupgrade",
+        "status": "passed"
+      },
+      {
+        "command": "git diff --check",
+        "exit_code": 0,
+        "name": "diff_check",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3_runtime_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_probe",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3b_single_hekate_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_single_hekate_probe",
+        "status": "passed"
+      }
+    ],
+    "commands_failed": 0,
+    "commands_passed": 14,
+    "commands_run": 14,
+    "phase3a_artifact": "integration/runtime/artifacts/p3-20261002T051845Z-035de352.json",
+    "phase3b_artifact": "integration/runtime/artifacts/p3b-20261002T051902Z-9b037265.json",
+    "phase3b_runtime_scenarios": {
+      "failed_count": 0,
+      "passed_count": 8,
+      "scenario_count": 8
+    },
+    "runtime_scenarios": {
+      "command": "uv run python scripts/phase3_runtime_probe.py",
+      "failed_count": 0,
+      "passed_count": 9,
+      "scenario_count": 9,
+      "scenario_results": {
+        "T1_actual_db_runtime_gateway_fake_provider": true,
+        "T1_same_accounting_id_replay": true,
+        "T2_actual_runtime_compaction": true,
+        "T2_roles_retry_and_compaction_plan": true,
+        "T3_outbox_claim_fence_and_send_marker": true,
+        "T4_bridge_loss_keeps_unknown_hold": true,
+        "T5_db_and_permit_failures_do_not_forward": true,
+        "T6_inbox_replay_and_conflict": true,
+        "T7_private_gateway_fail_closed": true
+      },
+      "scope": "PostgreSQL + pinned Letta App Server + Python bridge + DB gateway + isolated fake provider"
+    },
+    "status": "passed"
+  },
+  "working_tree_dirty_at_probe": true
+}

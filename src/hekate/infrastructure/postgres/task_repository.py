@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import insert, select, update
+from sqlalchemy import exists, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
@@ -211,6 +211,19 @@ class PostgresTaskRepository:
         ))
         return result.rowcount == 1
 
+    async def list_execution_terminal_candidates(self, limit: int = 100):
+        if not 1 <= limit <= 1_000:
+            raise ValueError("terminal candidate batch must be between 1 and 1000")
+        now = aware_now()
+        rows = (await self.connection.execute(select(
+            tables.tasks.c.id, tables.tasks.c.owner_scope, tables.tasks.c.input_revision,
+        ).where(
+            tables.tasks.c.status.in_([TaskStatus.RUNNING.value, TaskStatus.WAITING.value, TaskStatus.STOPPING.value]),
+            or_(tables.tasks.c.cancel_requested_at.is_not(None), tables.tasks.c.deadline <= now),
+            exists(select(1).where(tables.operations.c.task_id == tables.tasks.c.id)),
+        ).order_by(tables.tasks.c.deadline, tables.tasks.c.id).limit(limit))).mappings().all()
+        return tuple(rows)
+
     async def get_task_response(self, task_id: TaskId):
         return (await self.connection.execute(select(tables.task_responses).where(
             tables.task_responses.c.task_id == task_id,
@@ -270,9 +283,8 @@ class PostgresTaskRepository:
             tables.tasks.c.input_revision == revision,
             tables.tasks.c.status == TaskStatus.RUNNING.value,
             tables.tasks.c.cancel_requested_at.is_(None),
+            tables.tasks.c.deadline > datetime.now(timezone.utc),
         )
-        if successful:
-            query = query.where(tables.tasks.c.deadline > datetime.now(timezone.utc))
         changed = await self.connection.execute(query.values(**values))
         if changed.rowcount != 1:
             return False
@@ -289,6 +301,31 @@ class PostgresTaskRepository:
             stop_reason=response["stop_reason"],
         ))
         return True
+
+    async def resolve_task_after_execution(self, task_id: TaskId, revision: int) -> Task | None:
+        task = await self.lock_task(task_id)
+        if task.input_revision != revision or task.status not in {
+            TaskStatus.RUNNING, TaskStatus.WAITING, TaskStatus.STOPPING,
+        } or await self.get_task_response(task_id) is not None:
+            return None
+        if task.cancel_requested_at is not None:
+            if task.status != TaskStatus.STOPPING:
+                return None
+            status, outcome = transition_task(task.status, TaskEvent.CANCEL), "CANCELLED"
+            stop_reason = task.stop_reason or StopReason.USER_CANCELLED.value
+        elif task.deadline <= aware_now():
+            status, outcome = transition_task(task.status, TaskEvent.FAIL), "FAILED"
+            stop_reason = StopReason.DEADLINE.value
+        else:
+            return None
+        changed = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == task.status.value,
+        ).values(status=status.value, outcome=outcome, stop_reason=stop_reason))
+        if changed.rowcount != 1:
+            return None
+        return task.model_copy(update={"status": status, "outcome": outcome, "stop_reason": stop_reason})
 
     async def list_pending_turn_results(self, limit: int = 100):
         if not 1 <= limit <= 1_000:
@@ -311,6 +348,7 @@ class PostgresTaskRepository:
             base_position_version=row["base_position_version"],
             deadline=row["deadline"],
             created_at=row["created_at"],
+            cancel_requested_at=row["cancel_requested_at"],
             counters=TaskCounters(
                 critic_agents=row["critic_agents"],
                 review_rounds=row["review_rounds"],
@@ -457,21 +495,14 @@ class PostgresTaskRepository:
         await self.connection.execute(update(tables.tasks).where(tables.tasks.c.id == task_id).values(
             status=next_status.value,
             cancel_requested_at=now,
+            **({"outcome": "CANCELLED"} if next_status == TaskStatus.CANCELLED else {}),
             stop_reason=reason.value,
         ))
-        return task.model_copy(update={"status": next_status, "stop_reason": reason.value})
-
-    async def confirm_cancelled(self, task_id: TaskId) -> Task:
-        task = await self.lock_task(task_id)
-        if task.status == TaskStatus.CANCELLED:
-            return task
-        if task.status != TaskStatus.STOPPING:
-            raise PolicyDenied("task is not stopping")
-        status = transition_task(task.status, TaskEvent.CANCEL)
-        await self.connection.execute(update(tables.tasks).where(
-            tables.tasks.c.id == task_id,
-        ).values(status=status.value))
-        return task.model_copy(update={"status": status})
+        return task.model_copy(update={
+            "status": next_status, "cancel_requested_at": now,
+            "outcome": "CANCELLED" if next_status == TaskStatus.CANCELLED else task.outcome,
+            "stop_reason": reason.value,
+        })
 
     async def increment_counter_if_below(self, task_id: TaskId, counter: str, cap: int) -> bool:
         allowed = {"critic_agents", "review_rounds", "schema_repairs", "transient_retries", "tool_calls", "provider_calls"}

@@ -8,9 +8,12 @@ from uuid import uuid4
 
 from pydantic import ValidationError
 
-from hekate.domain.bridge_contracts import BRIDGE_REPLY_ADAPTER, BridgeCommand, BridgeReply
+from hekate.domain.bridge_contracts import (
+    BRIDGE_REPLY_ADAPTER, MAX_BRIDGE_FRAME_BYTES, BridgeCommand, BridgeReply,
+    encode_bridge_command_frame,
+)
 
-MAX_FRAME_BYTES = 1_048_576
+MAX_FRAME_BYTES = MAX_BRIDGE_FRAME_BYTES
 
 
 def _pairs_no_duplicates(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -23,10 +26,7 @@ def _pairs_no_duplicates(pairs: list[tuple[str, object]]) -> dict[str, object]:
 
 
 def encode_command(command: BridgeCommand) -> bytes:
-    frame = command.model_dump_json(by_alias=True).encode("utf-8")
-    if len(frame) > MAX_FRAME_BYTES:
-        raise ValueError("bridge frame exceeds 1 MiB")
-    return frame + b"\n"
+    return encode_bridge_command_frame(command)
 
 
 def decode_frame(frame: bytes) -> BridgeReply:

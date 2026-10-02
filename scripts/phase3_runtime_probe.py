@@ -145,6 +145,9 @@ class FakeProvider:
                         "stream": request_body.get("stream"),
                         "max_tokens": request_body.get("max_tokens"),
                         "max_completion_tokens": request_body.get("max_completion_tokens"),
+                        "request_hash": hashlib.sha256(json.dumps(
+                            request_body, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        ).encode("utf-8")).hexdigest(),
                         "behavior": behavior,
                     })
                     response_factory = owner.response_factory

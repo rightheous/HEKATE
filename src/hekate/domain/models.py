@@ -39,6 +39,7 @@ class Task(ContractModel):
     base_position_version: int = 0
     deadline: datetime
     created_at: datetime | None = None
+    cancel_requested_at: datetime | None = None
     counters: TaskCounters = Field(default_factory=TaskCounters)
     outcome: str | None = None
     stop_reason: str | None = None

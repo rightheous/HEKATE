@@ -9,6 +9,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from hekate.domain.bridge_contracts import BridgeSessionBinding, SessionTurnCommand, encode_bridge_command_frame
 from hekate.infrastructure.letta.bridge_protocol import decode_frame
 from hekate.infrastructure.letta.provider_gateway import ProviderGatewayProfile
 from hekate.application.results import supported_proposal_response, validate_turn_output
@@ -21,6 +22,21 @@ from hekate.settings import Settings, validate_settings
 
 
 class Phase3BoundaryTests(unittest.TestCase):
+    def test_session_turn_frame_counts_utf8_bytes_and_newline(self):
+        command = SessionTurnCommand(
+            schema_version="1", request_id="r1", operation_id="o1", command="session.turn",
+            binding=BridgeSessionBinding(
+                task_id="t1", attempt_id="a1", agent_registry_id="ha_0042",
+                provider_agent_id="agent-0001", conversation_id="conversation-1",
+                input_revision=1, fence=1,
+            ),
+            message="한글🙂",
+        )
+        frame = encode_bridge_command_frame(command)
+        encoded_json = command.model_dump_json(by_alias=True).encode("utf-8")
+        self.assertEqual(frame, encoded_json + b"\n")
+        self.assertGreater(len(frame), len(command.message))
+
     def test_bridge_replies_reject_duplicate_keys_unknown_fields_and_oversized_frames(self):
         valid = b'{"schema_version":"1","request_id":"r1","operation_id":"o1","command":"hello","status":"CONFIRMED"}'
         self.assertEqual(decode_frame(valid).status, "CONFIRMED")

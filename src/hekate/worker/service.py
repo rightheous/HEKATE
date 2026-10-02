@@ -8,6 +8,7 @@ from typing import Mapping
 from hekate.application.operations import record_dispatch_accepted, record_dispatch_send_intent
 from hekate.application.results import process_business_result_inbox, process_pending_results, receive_business_result, receive_missing_business_result
 from hekate.application.runtime_inbox import InboxBinding, RuntimeInboxPayload, process_runtime_observation
+from hekate.application.tasks import process_pending_execution_tasks
 from hekate.application.turns import prepare_queued_tasks
 from hekate.domain.bridge_contracts import BridgeEvent
 from hekate.domain.contracts import canonical_json
@@ -262,6 +263,7 @@ async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
         execution_config = None
         _LOG.warning("queued Task preparation is disabled: %s", str(error)[:240])
     await process_pending_inbox(container.uow_factory, processor_owner=worker)
+    await process_pending_execution_tasks(container.uow_factory)
     active: dict[str, Lease] = {}
     heartbeat_stop = asyncio.Event()
     heartbeat = asyncio.create_task(heartbeat_leases(container.uow_factory, worker, active, heartbeat_stop))
@@ -275,6 +277,7 @@ async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
                 try:
                     await process_pending_inbox(container.uow_factory, processor_owner=worker)
                     await process_pending_results(container.uow_factory)
+                    await process_pending_execution_tasks(container.uow_factory)
                 except Exception as error:
                     _LOG.error("pending result processing failed: %s: %s", type(error).__name__, str(error)[:240])
                 if actor is not None and execution_config is not None:

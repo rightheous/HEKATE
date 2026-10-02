@@ -307,6 +307,7 @@ def test_checked_in_schemas_match_the_generator(tmp_path) -> None:
         "task-capsule.v1.schema.json",
         "conclusion-capsule.v1.schema.json",
         "hekate-proposal.v1.schema.json",
+        "hekate-turn-output.v1.schema.json",
         "position-commit.v1.schema.json",
     }
     assert set(schemas) == expected_files
@@ -314,21 +315,22 @@ def test_checked_in_schemas_match_the_generator(tmp_path) -> None:
     assert {path.name for path in checked_in.glob("*.json")} == expected_files
     assert (tmp_path / "bridge.v1.schema.json").exists()
 
-    def assert_closed_objects(value: object) -> None:
+    def assert_closed_objects(value: object, *, opaque_json: bool = False) -> None:
         if isinstance(value, dict):
+            opaque_json = opaque_json or value.get("title") == "Structured Output"
             if value.get("type") == "object":
                 open_maps = {
                     "Model Settings": True,
                     "Capabilities": {"type": "boolean"},
                     "App Server Info": True,
                 }
-                expected = open_maps.get(value.get("title"), False)
+                expected = open_maps.get(value.get("title"), True if opaque_json else False)
                 assert value.get("additionalProperties") == expected
             for child in value.values():
-                assert_closed_objects(child)
+                assert_closed_objects(child, opaque_json=opaque_json)
         elif isinstance(value, list):
             for child in value:
-                assert_closed_objects(child)
+                assert_closed_objects(child, opaque_json=opaque_json)
 
     for filename in report.schemas:
         assert (checked_in / filename).read_bytes() == (tmp_path / filename).read_bytes()

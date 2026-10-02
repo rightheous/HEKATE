@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import timedelta
 
-from sqlalchemy import exists, insert, select, text, update
+from sqlalchemy import exists, func, insert, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -141,6 +141,20 @@ class PostgresDeliveryRepository:
         return (await self.connection.execute(select(tables.operations).where(
             tables.operations.c.task_id == task_id,
         ).order_by(tables.operations.c.id).with_for_update())).mappings().all()
+
+    async def task_execution_states(self, task_id: TaskId):
+        return (await self.connection.execute(select(
+            tables.operations.c.execution_state,
+            func.count(tables.provider_calls.c.accounting_call_id).filter(
+                tables.provider_calls.c.status.not_in(["QUIESCENT", "EXPIRED", "REVOKED"]),
+            ).label("unconfirmed_calls"),
+        ).select_from(tables.operations.outerjoin(
+            tables.provider_calls, tables.provider_calls.c.operation_id == tables.operations.c.id,
+        )).where(
+            tables.operations.c.task_id == task_id,
+        ).group_by(
+            tables.operations.c.id, tables.operations.c.execution_state,
+        ).order_by(tables.operations.c.id))).mappings().all()
 
     async def append_outbox(self, job: OutboxJob) -> None:
         await self.connection.execute(insert(tables.outbox).values(

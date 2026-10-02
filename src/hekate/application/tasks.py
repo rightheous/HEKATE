@@ -197,6 +197,7 @@ async def cancel(
         if actor.input_revision is not None and actor.input_revision != task.input_revision:
             raise StaleInput("actor input revision is stale")
         cancelled = await uow.tasks.request_cancel(task_id, reason)
+        resolved = await converge_task_execution(uow, task_id, task.input_revision)
         if task.status not in {TaskStatus.STOPPING, TaskStatus.CANCELLED, TaskStatus.COMPLETED, TaskStatus.FAILED}:
             await uow.delivery.append_audit({
                 "owner_scope": str(actor.scope),
@@ -207,9 +208,43 @@ async def cancel(
         await uow.commit()
         return {
             "task_id": str(task_id),
-            "state": cancelled.status.value,
-            "stop_reason": cancelled.stop_reason,
+            "state": resolved.status.value if resolved is not None else cancelled.status.value,
+            "stop_reason": resolved.stop_reason if resolved is not None else cancelled.stop_reason,
         }
+
+
+async def converge_task_execution(uow: UnitOfWork, task_id: TaskId, revision: Revision) -> Task | None:
+    operations = await uow.delivery.task_execution_states(task_id)
+    if not operations or any(
+        operation["execution_state"] != "QUIESCENT" or operation["unconfirmed_calls"]
+        for operation in operations
+    ):
+        return None
+    resolved = await uow.tasks.resolve_task_after_execution(task_id, revision)
+    if resolved is not None:
+        await uow.delivery.append_audit({
+            "owner_scope": str(resolved.scope), "task_id": str(task_id),
+            "event_kind": "task.execution_cancelled" if resolved.status == TaskStatus.CANCELLED else "task.execution_deadline_failed",
+            "safe_payload": {"reason": resolved.stop_reason, "input_revision": resolved.input_revision},
+        })
+    return resolved
+
+
+async def process_pending_execution_tasks(factory: UowFactory, limit: int = 100) -> int:
+    async with factory() as uow:
+        candidates = await uow.tasks.list_execution_terminal_candidates(limit)
+        await uow.commit()
+    processed = 0
+    for candidate in candidates:
+        task_id = TaskId(candidate["id"])
+        scope = ScopeId(candidate["owner_scope"])
+        async with factory() as uow:
+            await uow.tasks.lock_scope(scope)
+            resolved = await converge_task_execution(uow, task_id, candidate["input_revision"])
+            if resolved is not None:
+                processed += 1
+            await uow.commit()
+    return processed
 
 
 async def complete(

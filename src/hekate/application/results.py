@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import UTC, datetime
 from typing import Literal
 from uuid import NAMESPACE_URL, uuid5
 
 from pydantic import Field
 
 from hekate.application.budgets import _restore_binding
-from hekate.application.tasks import complete as complete_task
+from hekate.application.tasks import complete as complete_task, converge_task_execution
 from hekate.domain.bridge_contracts import BridgeBusinessResult, BridgeEvent
 from hekate.domain.capsules import parse_hekate_turn_output, validate_capsule_binding
 from hekate.domain.contracts import canonical_json, canonical_json_hash
@@ -302,17 +303,42 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
             or attempt.operation_id != result["operation_id"]
             or attempt.input_revision != binding.input_revision
             or attempt.agent_registry_id != binding.agent_registry_id
-            or task.status != TaskStatus.RUNNING
         )
         if stale:
-            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason="task_or_binding_changed")
+            reason = "task_or_binding_changed"
+            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
             if result["conclusion_id"]:
-                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, "task_or_binding_changed")
+                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
             await uow.delivery.append_audit({
                 "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
                 "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
                 "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
-                "safe_payload": {"output_hash": result["output_hash"]},
+                "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
+            })
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
+        terminal_reason = None
+        if task.cancel_requested_at is not None:
+            terminal_reason = "task_cancelled"
+        elif task.status == TaskStatus.FAILED and task.stop_reason == StopReason.DEADLINE.value:
+            terminal_reason = "deadline_elapsed"
+        elif task.status in {TaskStatus.COMPLETED, TaskStatus.CANCELLED, TaskStatus.FAILED}:
+            terminal_reason = "task_already_terminal"
+        elif task.deadline <= datetime.now(UTC):
+            terminal_reason = "deadline_elapsed"
+        elif task.status != TaskStatus.RUNNING:
+            terminal_reason = "task_not_running"
+        if terminal_reason is not None:
+            await converge_task_execution(uow, binding.task_id, binding.input_revision)
+            reason = terminal_reason
+            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
+            if result["conclusion_id"]:
+                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
+            await uow.delivery.append_audit({
+                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+                "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
+                "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
+                "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
             })
             await uow.commit()
             return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
@@ -334,7 +360,31 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
             successful=successful,
         )
         if not adopted:
-            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason="task_changed_before_adoption")
+            current = await uow.tasks.lock_task(binding.task_id)
+            existing_response = await uow.tasks.get_task_response(binding.task_id)
+            if existing_response is not None:
+                reason = "task_response_already_accepted"
+            elif current.input_revision != binding.input_revision:
+                reason = "task_or_binding_changed"
+            elif current.cancel_requested_at is not None or current.status == TaskStatus.CANCELLED:
+                await converge_task_execution(uow, binding.task_id, binding.input_revision)
+                reason = "task_cancelled"
+            elif current.stop_reason == StopReason.DEADLINE.value or current.deadline <= datetime.now(UTC):
+                await converge_task_execution(uow, binding.task_id, binding.input_revision)
+                reason = "deadline_elapsed"
+            elif current.status in {TaskStatus.COMPLETED, TaskStatus.FAILED}:
+                reason = "task_already_terminal"
+            else:
+                reason = "task_changed_before_adoption"
+            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
+            if result["conclusion_id"]:
+                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
+            await uow.delivery.append_audit({
+                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+                "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
+                "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
+                "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
+            })
             await uow.commit()
             return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
         await uow.knowledge.update_turn_result(inbox_id, state="ACCEPTED" if successful else "REJECTED", rejection_reason=None if successful else reason or "execution_failed")

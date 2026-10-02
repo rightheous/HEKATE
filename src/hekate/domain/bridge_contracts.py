@@ -87,6 +87,16 @@ BridgeCommand: TypeAlias = Annotated[
 ]
 
 
+MAX_BRIDGE_FRAME_BYTES = 1_048_576
+
+
+def encode_bridge_command_frame(command: BridgeCommand) -> bytes:
+    frame = command.model_dump_json(by_alias=True).encode("utf-8") + b"\n"
+    if len(frame) > MAX_BRIDGE_FRAME_BYTES:
+        raise ValueError("bridge frame exceeds 1 MiB")
+    return frame
+
+
 class CapabilitiesResult(ContractModel):
     kind: Literal["capabilities"]
     sdk_version: str
@@ -157,7 +167,7 @@ class BridgeBusinessResult(ContractModel):
     raw_output: str | None = Field(default=None, max_length=65_536)
     output_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     output_truncated: bool = False
-    structured_output: dict[str, object] | None = None
+    structured_output: dict[str, object] | None = Field(default=None, title="Structured Output")
     failure_code: SdkErrorCode | None = None
 
 
