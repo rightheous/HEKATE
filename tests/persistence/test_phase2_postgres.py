@@ -510,7 +510,7 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         health = await check_database(self.engine)
         self.assertTrue(health.available)
         self.assertTrue((health.postgres_version or "").startswith("PostgreSQL 16"))
-        self.assertEqual(health.migration_head, "0005_phase3b")
+        self.assertEqual(health.migration_head, "0006_phase4_knowledge")
 
         async with self.factory() as uow:
             await uow.tasks.insert_scope(AuthorizationSnapshot(ScopeId("rolled-back"), PrincipalId("p"), "policy", 1))

@@ -12,6 +12,7 @@ from hekate.application.tasks import process_pending_execution_tasks
 from hekate.application.turns import prepare_queued_tasks
 from hekate.domain.bridge_contracts import BridgeEvent
 from hekate.domain.contracts import canonical_json
+from hekate.domain.errors import PolicyDenied
 from hekate.domain.models import ExecutionEnvelope, Lease, OutboxJob, RuntimeBinding
 from hekate.domain.types import AttemptId, OperationId, ProviderAgentId, RegistryId, TaskId
 from hekate.infrastructure.letta.adapter import LettaRuntimeAdapter
@@ -161,6 +162,19 @@ async def dispatch_job(container: Container, job: OutboxJob, worker: str) -> Non
     operation_id = job.operation_id
     try:
         await record_dispatch_send_intent(container.uow_factory, job, worker)
+    except PolicyDenied as error:
+        if str(error) in {"evidence_reference_unavailable", "authorization_snapshot_changed", "context_manifest_missing"}:
+            await _record_execution(
+                container, binding, operation_id, worker, "QUIESCENT", "pre_dispatch_policy",
+                outcome="FAILED", reason="evidence_reference_unavailable",
+            )
+            if job.claim_fence is not None:
+                async with container.uow_factory() as uow:
+                    await uow.delivery.ack_job(job, worker, job.claim_fence)
+                    await uow.commit()
+            return
+        _LOG.error("dispatch policy denied for operation %s: %s", operation_id, str(error)[:240])
+        return
     except Exception as error:
         _LOG.error("send intent was not confirmed for operation %s: %s: %s", operation_id, type(error).__name__, str(error)[:240])
         return
@@ -284,6 +298,7 @@ async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
                     try:
                         prepared_leases = await prepare_queued_tasks(
                             container.uow_factory, container.runtime, actor, execution_config, worker,
+                            archive_root=container.settings.archive_dir,
                         )
                         active.update({str(lease.registry_id): lease for lease in prepared_leases})
                     except Exception as error:

@@ -106,7 +106,7 @@ def _output_from_request(
         raise ValueError("provider request is missing generated output schema or Task Capsule") from error
     if TURN_OUTPUT_POLICY not in prompt:
         raise ValueError("provider request is missing server output policy")
-    supported_actions = ["answer", "request_information", "abstain"]
+    supported_actions = ["answer", "request_information", "abstain", "commit"]
     if any(action not in TURN_OUTPUT_POLICY for action in supported_actions):
         raise ValueError("provider request policy omits a supported proposal action")
     match = re.search(
@@ -295,7 +295,7 @@ async def _run(database_url: str, node: str, image: str, archive: Path, artifact
         async with engine.connect() as connection:
             migration_head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres_version = await connection.scalar(text("SHOW server_version"))
-        if migration_head != "0005_phase3b":
+        if migration_head != "0006_phase4_knowledge":
             raise ValueError("Phase 3B migration head is not current")
         report["database"] = {"postgres_version": postgres_version, "migration_head": migration_head}
 
@@ -500,7 +500,7 @@ async def _run(database_url: str, node: str, image: str, archive: Path, artifact
                 and item["server_schema_hash"] == server_output_schema_hash
                 and item["schema_hash_matches_server"]
                 and item["server_policy_hash"] == server_policy_hash
-                and item["supported_actions"] == ["answer", "request_information", "abstain"]
+                and item["supported_actions"] == ["answer", "request_information", "abstain", "commit"]
                 and item["server_policy_present"]
                 and {"schema_version", "proposal", "conclusion"} <= set(item["required_outer_fields"])
                 and bool(item["resolved_local_refs"])

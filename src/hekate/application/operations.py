@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, uuid5
 
 from hekate.application.budgets import _restore_binding
+from hekate.application.evidence import manifest_references_current
 from hekate.domain.errors import Conflict, PolicyDenied, StaleInput, UnknownExecution
 from hekate.domain.models import AdmissionReceipt, AdmissionRequest, Attempt, ExecutionObservation, OutboxJob, ProviderCallPlan, RuntimeBinding
 from hekate.domain.types import AccountingCallId, AttemptEvent, AttemptId, AttemptStatus, TaskStatus
@@ -36,6 +37,7 @@ def _request_hash(request: AdmissionRequest) -> str:
         "attempt_kind": request.attempt_kind,
         "parent_attempt_id": request.parent_attempt_id,
         "payload": request.payload,
+        "context_manifest": request.context_manifest,
     })
 
 
@@ -166,6 +168,8 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
         now = datetime.now(UTC)
         if task.scope != binding.scope or task.input_revision != binding.input_revision:
             raise StaleInput("task scope or input revision changed")
+        if request.context_manifest is None and (task.topic_id is not None or task.evidence_refs or task.base_position_version):
+            raise PolicyDenied("context_manifest_missing")
         if task.status in {TaskStatus.STOPPING, TaskStatus.CANCELLED, TaskStatus.COMPLETED, TaskStatus.FAILED}:
             raise PolicyDenied("task cancellation or terminal state blocks dispatch")
         if task.deadline <= now or envelope.deadline > task.deadline or envelope.deadline <= now:
@@ -177,6 +181,13 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
             raise Conflict("registry and provider-agent binding mismatch")
         if agent.policy_version != binding.policy_version:
             raise PolicyDenied("agent policy changed")
+        if request.context_manifest is not None:
+            if request.context_manifest.get("task_id") != str(binding.task_id) or request.context_manifest.get("input_revision") != binding.input_revision:
+                raise Conflict("context manifest differs from the trusted Task binding")
+            if not await manifest_references_current(
+                uow, binding.scope, binding.authz_epoch, request.context_manifest,
+            ):
+                raise PolicyDenied("evidence_reference_unavailable")
         await uow.agents.assert_current_lease(binding.agent_registry_id, request.lease_owner, binding.fence)
         active = await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True)
         if active is not None:
@@ -240,6 +251,11 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
                 binding.task_id, binding.input_revision, request.task_preparation_owner,
                 binding.conversation_id or "", binding.fence,
             )
+        if request.context_manifest is not None:
+            await uow.knowledge.save_context_manifest(
+                envelope.operation_id, binding.task_id, binding.input_revision,
+                request.context_manifest,
+            )
         await uow.commit()
         return receipt
 
@@ -254,7 +270,11 @@ async def record_dispatch_send_intent(factory: UowFactory, job: OutboxJob, worke
             raise Conflict("outbox payload differs from admitted operation")
         if operation["state"] != "ADMITTED" or operation["dispatch_state"] != "INTENT_RECORDED" or operation["execution_state"] != "PENDING":
             raise StaleInput("operation is no longer dispatchable")
-        await uow.tasks.lock_scope(binding.scope)
+        scope = await uow.tasks.lock_scope(binding.scope)
+        if (scope.principal_id, scope.policy_version, scope.authz_epoch) != (
+            binding.principal_id, binding.policy_version, binding.authz_epoch,
+        ):
+            raise PolicyDenied("authorization_snapshot_changed")
         task = await uow.tasks.lock_task(binding.task_id)
         if task.scope != binding.scope or task.input_revision != binding.input_revision or task.status != TaskStatus.RUNNING:
             raise StaleInput("task binding or state changed before dispatch")
@@ -266,6 +286,14 @@ async def record_dispatch_send_intent(factory: UowFactory, job: OutboxJob, worke
         agent = await uow.agents.lock_registry(binding.agent_registry_id)
         if agent.owner_scope != binding.scope or agent.provider_id != binding.provider_agent_id or agent.intended_state != "BUSY":
             raise StaleInput("registry binding changed before dispatch")
+        manifest_row = await uow.knowledge.get_context_manifest(job.operation_id)
+        if manifest_row is None:
+            if task.topic_id is not None or task.evidence_refs or task.base_position_version:
+                raise PolicyDenied("context_manifest_missing")
+        elif not await manifest_references_current(
+            uow, binding.scope, binding.authz_epoch, manifest_row["manifest"],
+        ):
+            raise PolicyDenied("evidence_reference_unavailable")
         await uow.agents.assert_current_lease(binding.agent_registry_id, worker, binding.fence)
         hold = await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True)
         if hold is None or hold["operation_id"] != job.operation_id or hold["state"] != "PENDING":
@@ -362,6 +390,15 @@ async def apply_execution_observation(uow, observation: ExecutionObservation) ->
         from hekate.application.tasks import converge_task_execution
 
         await converge_task_execution(uow, binding.task_id, binding.input_revision)
+        if observation.source == "pre_dispatch_policy":
+            if not await uow.tasks.fail_policy_task(binding.task_id, binding.input_revision):
+                raise StaleInput("Task changed before policy rejection was finalized")
+            await uow.delivery.append_audit({
+                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+                "attempt_id": str(binding.attempt_id), "operation_id": str(observation.operation_id),
+                "registry_id": str(binding.agent_registry_id), "event_kind": "task.policy_rejected",
+                "safe_payload": {"reason": observation.reason},
+            })
 
 
 async def record_execution_observation(factory: UowFactory, observation: ExecutionObservation) -> None:

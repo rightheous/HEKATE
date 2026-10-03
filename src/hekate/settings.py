@@ -28,6 +28,7 @@ class Settings:
     models: Mapping[str, object]
     pricing: Mapping[str, object]
     local: Mapping[str, object] = field(default_factory=dict)
+    archive_dir: Path = Path(".hekate-archive")
 
 
 def _yaml(path: Path) -> Mapping[str, object]:
@@ -39,6 +40,7 @@ def _yaml(path: Path) -> Mapping[str, object]:
 
 def load_settings(env: Mapping[str, str], config_dir: Path) -> Settings:
     root = config_dir.parent
+    local = _yaml(config_dir / "local.yaml") if (config_dir / "local.yaml").is_file() else {}
     return Settings(
         database_url=env.get("HEKATE_DATABASE_URL", ""),
         node_bin=env.get("HEKATE_NODE_BIN", "node"),
@@ -51,7 +53,8 @@ def load_settings(env: Mapping[str, str], config_dir: Path) -> Settings:
         policy=_yaml(config_dir / "policy.yaml"),
         models=_yaml(config_dir / "models.yaml"),
         pricing=_yaml(config_dir / "pricing.yaml"),
-        local=_yaml(config_dir / "local.yaml") if (config_dir / "local.yaml").is_file() else {},
+        local=local,
+        archive_dir=Path(env.get("HEKATE_ARCHIVE_DIR", root / ".hekate-archive")),
     )
 
 

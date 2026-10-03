@@ -185,6 +185,7 @@ class PostgresDeliveryRepository:
             tables.tasks.c.status.in_(["QUEUED", "RUNNING", "WAITING"]),
         ))
         rows = (await self.connection.execute(select(tables.outbox).where(
+            tables.outbox.c.kind == "dispatch",
             (tables.outbox.c.status == "PENDING") |
             ((tables.outbox.c.status == "CLAIMED") & (tables.outbox.c.claim_expires_at <= now)),
             tables.outbox.c.available_at <= now,
@@ -456,6 +457,7 @@ class PostgresDeliveryRepository:
         safe_reason = observation.reason if observation.reason in {
             "transport_disconnect", "provider_timeout", "provider_failed", "user_cancelled",
             "lease_lost", "bridge_terminal", "provider_stopped", "not_dispatched",
+            "evidence_reference_unavailable", "authorization_snapshot_changed", "context_manifest_missing",
         } else None
         if hold["quiescent_at"] is not None:
             if observation.state == "QUIESCENT" and row["execution_state"] == "QUIESCENT":
@@ -465,7 +467,7 @@ class PostgresDeliveryRepository:
                 return
             raise Conflict("quiescent execution cannot be reopened")
         if observation.state == "QUIESCENT":
-            if observation.source not in {"bridge_terminal", "provider_stopped", "pre_dispatch_cancel"}:
+            if observation.source not in {"bridge_terminal", "provider_stopped", "pre_dispatch_cancel", "pre_dispatch_policy"}:
                 raise Conflict("untrusted quiescence source")
             if observation.outcome not in {"SUCCEEDED", "FAILED", "TIMED_OUT", "CANCELLED"}:
                 raise ValueError("quiescent execution requires a terminal outcome")

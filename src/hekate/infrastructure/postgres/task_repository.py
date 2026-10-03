@@ -19,6 +19,7 @@ from hekate.domain.types import (
     AttemptId,
     AttemptStatus,
     AttemptEvent,
+    EvidenceId,
     PrincipalId,
     RegistryId,
     ScopeId,
@@ -94,6 +95,7 @@ class PostgresTaskRepository:
             constraints_hash=task.constraints_hash,
             status=task.status.value,
             topic_id=task.topic_id,
+            evidence_refs=json_value(task.evidence_refs),
             base_position_version=task.base_position_version,
             deadline=task.deadline,
             **({"created_at": task.created_at} if task.created_at is not None else {}),
@@ -112,6 +114,8 @@ class PostgresTaskRepository:
             question=task.question,
             constraints=json_value(constraints or {}),
             constraints_hash=task.constraints_hash,
+            topic_id=task.topic_id,
+            evidence_refs=json_value(task.evidence_refs),
         ))
 
     async def lock_task(self, task_id: TaskId) -> Task:
@@ -345,6 +349,7 @@ class PostgresTaskRepository:
             constraints_hash=row["constraints_hash"],
             status=TaskStatus(row["status"]),
             topic_id=TopicId(row["topic_id"]) if row["topic_id"] else None,
+            evidence_refs=tuple(EvidenceId(value) for value in row["evidence_refs"]),
             base_position_version=row["base_position_version"],
             deadline=row["deadline"],
             created_at=row["created_at"],
@@ -477,14 +482,36 @@ class PostgresTaskRepository:
             question=change.text,
             constraints=json_value(change.constraints),
             constraints_hash=constraints_hash,
+            topic_id=task.topic_id,
+            evidence_refs=json_value(task.evidence_refs),
             accepted_at=accepted_at or aware_now(),
         ))
         await self.connection.execute(update(tables.tasks).where(tables.tasks.c.id == task_id).values(
             question=change.text,
             input_revision=next_revision,
             constraints_hash=constraints_hash,
+            topic_id=task.topic_id,
+            evidence_refs=json_value(task.evidence_refs),
         ))
         return task.model_copy(update={"question": change.text, "input_revision": next_revision, "constraints_hash": constraints_hash})
+
+    async def set_base_position_version(self, task_id: TaskId, revision: int, version: int) -> bool:
+        result = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == TaskStatus.QUEUED.value,
+        ).values(base_position_version=version))
+        return result.rowcount == 1
+
+    async def fail_policy_task(self, task_id: TaskId, revision: int) -> bool:
+        result = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == TaskStatus.RUNNING.value,
+            tables.tasks.c.cancel_requested_at.is_(None),
+            tables.tasks.c.deadline > aware_now(),
+        ).values(status=TaskStatus.FAILED.value, outcome="FAILED", stop_reason=StopReason.POLICY.value))
+        return result.rowcount == 1
 
     async def request_cancel(self, task_id: TaskId, reason: StopReason) -> Task:
         task = await self.lock_task(task_id)

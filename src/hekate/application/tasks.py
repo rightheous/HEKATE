@@ -56,7 +56,12 @@ async def submit(
     _validate_submission_config(config)
     if not isinstance(request_key, str) or not request_key or len(request_key) > 128 or any(not char.isprintable() or char.isspace() for char in request_key):
         raise ValueError("request key must be 1–128 printable non-space characters")
-    request_hash = canonical_json_hash({"question": question})
+    evidence_refs = tuple(sorted(set(message.evidence_refs)))
+    request_hash = canonical_json_hash({
+        "question": question,
+        "topic_id": str(message.topic_id) if message.topic_id is not None else None,
+        "evidence_refs": [str(ref) for ref in evidence_refs],
+    })
     now = datetime.now(UTC)
     period_id = now.strftime("%Y-%m-%d")
     async with factory() as uow:
@@ -78,6 +83,8 @@ async def submit(
             input_revision=1,
             constraints_hash=canonical_json_hash({}),
             status=TaskStatus.QUEUED,
+            topic_id=message.topic_id,
+            evidence_refs=evidence_refs,
             deadline=now + timedelta(seconds=config.deadline_seconds),
             created_at=now,
             counters=TaskCounters(),

@@ -16,7 +16,7 @@ from hekate.application.results import supported_proposal_response, validate_tur
 from hekate.domain.capsules import parse_hekate_turn_output
 from hekate.domain.models import GuardBinding, PriceTable
 from hekate.domain.types import (
-    AttemptId, PrincipalId, ProviderAgentId, RegistryId, ScopeId, StopReason, TaskId,
+    AttemptId, OperationId, PrincipalId, ProviderAgentId, RegistryId, ScopeId, StopReason, TaskId,
 )
 from hekate.settings import Settings, validate_settings
 
@@ -113,7 +113,7 @@ class Phase3BResultContractTests(unittest.TestCase):
         cases = [
             ("registry", lambda value: value["conclusion"].update(agent_id="registry-other"), "conclusion_binding_mismatch"),
             ("revision", lambda value: value["conclusion"].update(input_revision=2), "conclusion_binding_mismatch"),
-            ("evidence", lambda value: value["conclusion"].update(evidence_used=["evidence-unverified"]), "evidence_not_supported"),
+            ("evidence", lambda value: value["conclusion"].update(evidence_used=["evidence-unverified"]), "evidence_not_provided"),
             ("unsupported action", lambda value: value.update(proposal={
                 "schema_version": "1", "action": "continue", "unresolved_issue": "x",
                 "next_action": "y", "expected_information_gain": "z", "decision_impact": "w",
@@ -125,7 +125,7 @@ class Phase3BResultContractTests(unittest.TestCase):
                 mutate(value)
                 parsed = parse_hekate_turn_output(json.dumps(value).encode())
                 with self.assertRaisesRegex(ValueError, reason):
-                    validate_turn_output(parsed, self.binding)
+                    validate_turn_output(parsed, self.binding, OperationId("operation-1"), {"evidence": [], "topic_id": None})
 
         with self.assertRaises(ValueError):
             parse_hekate_turn_output(b"{not-json")

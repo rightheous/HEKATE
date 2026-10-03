@@ -854,7 +854,7 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         async with engine.connect() as connection:
             migration_head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres_version = await connection.scalar(text("SHOW server_version"))
-        if migration_head != "0005_phase3b":
+        if migration_head != "0006_phase4_knowledge":
             raise ValueError("Phase 3 migration is not current")
         report["database"] = {"postgres_version": postgres_version, "migration_head": migration_head}
 

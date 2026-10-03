@@ -10,14 +10,19 @@ from pydantic import Field
 
 from hekate.application.budgets import _restore_binding
 from hekate.application.tasks import complete as complete_task, converge_task_execution
+from hekate.application.evidence import manifest_references_current
+from hekate.application.positions import _propose_commit_in_uow
 from hekate.domain.bridge_contracts import BridgeBusinessResult, BridgeEvent
 from hekate.domain.capsules import parse_hekate_turn_output, validate_capsule_binding
 from hekate.domain.contracts import canonical_json, canonical_json_hash
-from hekate.domain.errors import Conflict
-from hekate.domain.models import ContractModel, GuardBinding, HekateProposal, HekateTurnOutput, StoredConclusion
+from hekate.domain.errors import Conflict, PolicyDenied
+from hekate.domain.models import (
+    CommitProposal, ConclusionCapsule, ContractModel, GuardBinding, HekateProposal, HekateTurnOutput,
+    PositionCommitRequest, StoredConclusion,
+)
 from hekate.domain.proposals import parse_hekate_proposal, validate_proposal_shape
 from hekate.domain.types import (
-    ActorContext, AttemptStatus, DomainId, OperationId, RegistryId, StopReason, TaskId, TaskStatus,
+    ActorContext, AttemptStatus, DomainId, EvidenceId, OperationId, RegistryId, StopReason, TaskId, TaskStatus,
 )
 from hekate.application.runtime_inbox import InboxBinding
 from hekate.ports.store import UowFactory
@@ -36,23 +41,46 @@ def _reason(error: Exception) -> str:
     known = {
         "output_hash_mismatch", "output_truncated", "output_missing", "output_not_valid",
         "structured_output_mismatch", "conclusion_binding_mismatch", "conclusion_not_done",
-        "evidence_not_supported", "unsupported_action", "empty_answer", "empty_reason",
+        "evidence_not_provided", "dissent_not_provided", "commit_without_topic",
+        "commit_operation_id_mismatch", "commit_proposal_binding_mismatch", "unsupported_action",
+        "empty_answer", "empty_reason",
     }
     return message if message in known else "invalid_structured_output"
 
 
-def validate_turn_output(output: HekateTurnOutput, binding: GuardBinding) -> None:
+def validate_turn_output(
+    output: HekateTurnOutput, binding: GuardBinding, runtime_operation_id: OperationId,
+    manifest: Mapping[str, object],
+) -> None:
     try:
         validate_capsule_binding(output.conclusion, binding)
     except ValueError as error:
         raise ValueError("conclusion_binding_mismatch") from error
     if output.conclusion.status != "done":
         raise ValueError("conclusion_not_done")
-    if output.conclusion.evidence_used:
-        raise ValueError("evidence_not_supported")
     validate_proposal_shape(output.proposal)
-    if output.proposal.action not in {"answer", "request_information", "abstain"}:
+    if output.proposal.action not in {"answer", "request_information", "abstain", "commit"}:
         raise ValueError("unsupported_action")
+    allowed_evidence = {item.get("id") for item in manifest.get("evidence", []) if isinstance(item, dict)}
+    if any(str(value) not in allowed_evidence for value in output.conclusion.evidence_used):
+        raise ValueError("evidence_not_provided")
+    if isinstance(output.proposal, CommitProposal):
+        if manifest.get("topic_id") is None:
+            raise ValueError("commit_without_topic")
+        if output.proposal.operation_id != OperationId(f"{runtime_operation_id}:position.commit"):
+            raise ValueError("commit_operation_id_mismatch")
+        if (
+            output.proposal.task_id != binding.task_id
+            or output.proposal.input_revision != binding.input_revision
+            or str(output.proposal.topic_id) != manifest.get("topic_id")
+            or output.proposal.base_version != manifest.get("base_position_version")
+        ):
+            raise ValueError("commit_proposal_binding_mismatch")
+        if any(str(value) not in allowed_evidence for value in output.proposal.proposed_position.evidence_refs):
+            raise ValueError("evidence_not_provided")
+        allowed_dissent = set(manifest.get("dissent_refs", []))
+        if any(str(value) not in allowed_dissent for value in output.proposal.proposed_position.dissent_refs):
+            raise ValueError("dissent_not_provided")
 
 
 def supported_proposal_response(proposal: HekateProposal) -> tuple[str, str, StopReason]:
@@ -216,7 +244,10 @@ async def process_business_result_inbox(factory: UowFactory, inbox_id: str) -> d
             reason = "structured_output_mismatch"
         else:
             try:
-                validate_turn_output(output, binding)
+                manifest_row = await uow.knowledge.get_context_manifest(OperationId(payload.operation_id))
+                if manifest_row is None:
+                    raise ValueError("context_manifest_missing")
+                validate_turn_output(output, binding, OperationId(payload.operation_id), manifest_row["manifest"])
             except Exception as error:
                 reason = _reason(error)
             else:
@@ -243,6 +274,8 @@ async def process_business_result_inbox(factory: UowFactory, inbox_id: str) -> d
                 },
                 rejection_reason=reason,
             ))
+            if reason is None:
+                await uow.knowledge.ensure_dissent(binding.scope, DomainId(conclusion_id), capsule.objections)
         await uow.knowledge.update_turn_result(
             inbox_id, state="WAITING_EXECUTION",
             proposal=proposal, conclusion_id=conclusion_id if capsule_matches else None,
@@ -266,6 +299,7 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
         current_scope = await uow.tasks.lock_scope(binding.scope)
         task = await uow.tasks.lock_task(binding.task_id)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
+        registry = await uow.agents.lock_registry(binding.agent_registry_id)
         if operation["execution_state"] != "QUIESCENT":
             await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", delay_seconds=1)
             await uow.commit()
@@ -278,22 +312,73 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
         response_text: str
         outcome: str
         stop_reason: str
+        proposal_model: HekateProposal | None = None
+        manifest_row = await uow.knowledge.get_context_manifest(OperationId(result["operation_id"]))
+        manifest = manifest_row["manifest"] if manifest_row is not None else {}
         if successful and reason is None and not isinstance(proposal, dict):
             successful = False
             reason = "proposal_missing"
         if successful and reason is None and isinstance(proposal, dict):
             try:
-                response_text, outcome, stop_reason_value = supported_proposal_response(
-                    parse_hekate_proposal(canonical_json(proposal).encode("utf-8")),
-                )
-                stop_reason = stop_reason_value.value
+                proposal_model = parse_hekate_proposal(canonical_json(proposal).encode("utf-8"))
             except (ValueError, KeyError, TypeError) as error:
                 successful = False
                 reason = _reason(error)
+        if successful and reason is None:
+            conclusion_row = await uow.knowledge.get_conclusion(result["conclusion_id"]) if result["conclusion_id"] else None
+            if manifest_row is None or conclusion_row is None:
+                successful, reason = False, "context_manifest_missing"
+            else:
+                conclusion_capsule = ConclusionCapsule.model_validate_json(canonical_json(conclusion_row["capsule"]), strict=True)
+                if not isinstance(proposal_model, CommitProposal) and not await manifest_references_current(
+                    uow, binding.scope, binding.authz_epoch, manifest, conclusion_capsule.evidence_used,
+                ):
+                    successful, reason = False, "evidence_reference_unavailable"
+        if successful and reason is None and proposal_model is not None:
+            if isinstance(proposal_model, CommitProposal):
+                actor = ActorContext(
+                    principal_id=binding.principal_id, scope=binding.scope,
+                    authenticated_agent_registry_id=binding.agent_registry_id,
+                    task_id=binding.task_id, attempt_id=binding.attempt_id,
+                    input_revision=binding.input_revision, policy_version=binding.policy_version,
+                    authz_epoch=binding.authz_epoch, fence=binding.fence,
+                )
+                commit_request = PositionCommitRequest(
+                    operation_id=proposal_model.operation_id, task_id=proposal_model.task_id,
+                    topic_id=proposal_model.topic_id, base_version=proposal_model.base_version,
+                    input_revision=proposal_model.input_revision,
+                    proposed_position=proposal_model.proposed_position,
+                    reason_for_change=proposal_model.reason_for_change,
+                )
+                try:
+                    receipt = await _propose_commit_in_uow(
+                        uow, actor, commit_request, runtime_operation_id=OperationId(result["operation_id"]),
+                        operation=operation, binding=binding, attempt=attempt,
+                        conclusion_id=DomainId(result["conclusion_id"]),
+                        conclusion_evidence_used=conclusion_capsule.evidence_used,
+                        manifest=manifest,
+                    )
+                except (PolicyDenied, Conflict) as error:
+                    successful, reason = False, str(error) or "commit_policy_rejected"
+                else:
+                    response_text = receipt.response_text
+                    outcome = "NEEDS_USER_INPUT" if receipt.conflict else "POSITION_COMMITTED"
+                    stop_reason = StopReason.NEEDS_USER_INPUT.value if receipt.conflict else StopReason.COMPLETED.value
+            else:
+                response_text, outcome, stop_reason_value = supported_proposal_response(proposal_model)
+                stop_reason = stop_reason_value.value
         if not successful or reason is not None:
             safe_reason = reason or "execution_failed"
             response_text = f"HEKATE could not complete this request ({safe_reason})."
-            outcome, stop_reason, successful = "FAILED", StopReason.ERROR.value, False
+            policy_rejection = safe_reason.startswith(("evidence_", "dissent_", "commit_", "authorization_")) or safe_reason in {
+                "invalid_structured_output", "output_hash_mismatch", "output_truncated", "output_missing",
+                "output_not_valid", "structured_output_mismatch", "conclusion_binding_mismatch",
+                "conclusion_not_done", "unsupported_action", "empty_answer", "empty_reason",
+                "context_manifest_missing",
+            }
+            outcome = "FAILED"
+            stop_reason = StopReason.POLICY.value if policy_rejection else StopReason.ERROR.value
+            successful = False
 
         stale = (
             task.scope != binding.scope or task.input_revision != binding.input_revision
@@ -350,7 +435,7 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
         }
         actor = ActorContext(
             principal_id=binding.principal_id, scope=binding.scope,
-            authenticated_agent_registry_id=None, task_id=binding.task_id,
+            authenticated_agent_registry_id=binding.agent_registry_id, task_id=binding.task_id,
             attempt_id=binding.attempt_id, input_revision=binding.input_revision,
             policy_version=binding.policy_version, authz_epoch=binding.authz_epoch,
             fence=binding.fence,
@@ -360,32 +445,19 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
             successful=successful,
         )
         if not adopted:
-            current = await uow.tasks.lock_task(binding.task_id)
-            existing_response = await uow.tasks.get_task_response(binding.task_id)
-            if existing_response is not None:
-                reason = "task_response_already_accepted"
-            elif current.input_revision != binding.input_revision:
-                reason = "task_or_binding_changed"
-            elif current.cancel_requested_at is not None or current.status == TaskStatus.CANCELLED:
-                await converge_task_execution(uow, binding.task_id, binding.input_revision)
-                reason = "task_cancelled"
-            elif current.stop_reason == StopReason.DEADLINE.value or current.deadline <= datetime.now(UTC):
-                await converge_task_execution(uow, binding.task_id, binding.input_revision)
-                reason = "deadline_elapsed"
-            elif current.status in {TaskStatus.COMPLETED, TaskStatus.FAILED}:
-                reason = "task_already_terminal"
-            else:
-                reason = "task_changed_before_adoption"
-            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
-            if result["conclusion_id"]:
-                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
-            await uow.delivery.append_audit({
-                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
-                "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
-                "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
-                "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
-            })
-            await uow.commit()
+            await uow.rollback()
+            reason = "task_changed_before_adoption"
+            async with factory() as late_uow:
+                await late_uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
+                if result["conclusion_id"]:
+                    await late_uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
+                await late_uow.delivery.append_audit({
+                    "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+                    "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
+                    "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
+                    "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
+                })
+                await late_uow.commit()
             return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
         await uow.knowledge.update_turn_result(inbox_id, state="ACCEPTED" if successful else "REJECTED", rejection_reason=None if successful else reason or "execution_failed")
         if result["conclusion_id"]:

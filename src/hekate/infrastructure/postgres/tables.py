@@ -44,6 +44,7 @@ tasks = Table(
     Column("constraints_hash", String(64), nullable=False),
     Column("status", String(16), nullable=False),
     Column("topic_id", Text),
+    Column("evidence_refs", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
     Column("base_position_version", Integer, nullable=False, server_default="0"),
     Column("deadline", instant, nullable=False),
     Column("outcome", Text),
@@ -69,6 +70,8 @@ task_inputs = Table(
     Column("question", Text, nullable=False),
     Column("constraints", JSONB, nullable=False, server_default=json_default),
     Column("constraints_hash", String(64), nullable=False),
+    Column("topic_id", Text),
+    Column("evidence_refs", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
     Column("accepted_at", instant, nullable=False, server_default=text("now()")),
     PrimaryKeyConstraint("task_id", "revision", name="pk_task_inputs"),
     CheckConstraint("revision >= 1", name="ck_task_inputs_revision"),
@@ -496,6 +499,152 @@ budget_ledger = Table(
     UniqueConstraint("account_id", "effect_key", name="uq_budget_ledger_effect"),
     CheckConstraint("effect_type IN ('HOLD','SETTLE','RELEASE','ADJUSTMENT')", name="ck_budget_ledger_effect_type"),
     CheckConstraint("amount > '-Infinity'::numeric AND amount < 'Infinity'::numeric AND held_delta > '-Infinity'::numeric AND held_delta < 'Infinity'::numeric AND spent_delta > '-Infinity'::numeric AND spent_delta < 'Infinity'::numeric", name="ck_budget_ledger_finite"),
+)
+
+evidence = Table(
+    "evidence", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("source_uri", Text, nullable=False),
+    Column("locator", Text),
+    Column("retrieved_at", instant, nullable=False),
+    Column("observed_at", instant),
+    Column("content_hash", String(64), nullable=False),
+    Column("derived_from", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("root_source_ids", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("access_scope", Text, nullable=False),
+    Column("retention_class", Text, nullable=False),
+    Column("content_version", Text, nullable=False),
+    Column("availability", Text, nullable=False),
+    Column("access_epoch", Integer, nullable=False),
+    Column("expiry_at", instant),
+    Column("artifact_ref", Text, ForeignKey("artifacts.artifact_ref", ondelete="RESTRICT")),
+    Column("registered_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("access_epoch >= 0", name="ck_evidence_access_epoch"),
+    CheckConstraint("availability IN ('STAGED','AVAILABLE','EXPIRED','REVOKED','UNAVAILABLE')", name="ck_evidence_availability"),
+)
+Index("ix_evidence_scope_expiry", evidence.c.scope, evidence.c.expiry_at)
+
+artifacts = Table(
+    "artifacts", _metadata,
+    Column("artifact_ref", Text, primary_key=True),
+    Column("content_hash", String(64), nullable=False),
+    Column("byte_size", Integer, nullable=False),
+    Column("retention_class", Text, nullable=False),
+    Column("storage_state", Text, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("deleted_at", instant),
+    CheckConstraint("byte_size >= 0", name="ck_artifacts_size"),
+    CheckConstraint("storage_state IN ('STAGED','AVAILABLE','DELETE_PENDING','DELETE_FAILED','DELETED')", name="ck_artifacts_state"),
+)
+
+evidence_imports = Table(
+    "evidence_imports", _metadata,
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), primary_key=True),
+    Column("request_key", String(128), primary_key=True),
+    Column("request_hash", String(64), nullable=False),
+    Column("evidence_id", Text, ForeignKey("evidence.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+)
+
+evidence_edges = Table(
+    "evidence_edges", _metadata,
+    Column("derived_id", Text, ForeignKey("evidence.id", ondelete="RESTRICT"), nullable=False),
+    Column("source_id", Text, ForeignKey("evidence.id", ondelete="RESTRICT"), nullable=False),
+    PrimaryKeyConstraint("derived_id", "source_id", name="pk_evidence_edges"),
+    CheckConstraint("derived_id <> source_id", name="ck_evidence_edge_not_self"),
+)
+
+position_topics = Table(
+    "position_topics", _metadata,
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("topic_id", Text, nullable=False),
+    Column("current_version", Integer, nullable=False, server_default="0"),
+    PrimaryKeyConstraint("scope", "topic_id", name="pk_position_topics"),
+    CheckConstraint("current_version >= 0", name="ck_position_topic_version"),
+)
+
+position_versions = Table(
+    "position_versions", _metadata,
+    Column("scope", Text, nullable=False),
+    Column("topic_id", Text, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("base_version", Integer, nullable=False),
+    Column("body", JSONB, nullable=False),
+    Column("operation_id", Text, nullable=False, unique=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT"), nullable=False),
+    Column("reason_for_change", Text, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    ForeignKeyConstraint(["scope", "topic_id"], ["position_topics.scope", "position_topics.topic_id"], ondelete="RESTRICT", name="fk_position_version_topic"),
+    PrimaryKeyConstraint("scope", "topic_id", "version", name="pk_position_versions"),
+    CheckConstraint("version > 0 AND base_version >= 0 AND version = base_version + 1 AND input_revision >= 1", name="ck_position_version_order"),
+)
+
+position_evidence = Table(
+    "position_evidence", _metadata,
+    Column("scope", Text, nullable=False), Column("topic_id", Text, nullable=False), Column("version", Integer, nullable=False),
+    Column("evidence_id", Text, ForeignKey("evidence.id", ondelete="RESTRICT"), nullable=False),
+    ForeignKeyConstraint(["scope", "topic_id", "version"], ["position_versions.scope", "position_versions.topic_id", "position_versions.version"], ondelete="RESTRICT", name="fk_position_evidence_version"),
+    PrimaryKeyConstraint("scope", "topic_id", "version", "evidence_id", name="pk_position_evidence"),
+)
+
+dissent = Table(
+    "dissent", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT"), nullable=False),
+    Column("local_objection_id", Text, nullable=False),
+    Column("body", JSONB, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("conclusion_id", "local_objection_id", name="uq_dissent_local_id"),
+)
+
+position_dissent = Table(
+    "position_dissent", _metadata,
+    Column("scope", Text, nullable=False), Column("topic_id", Text, nullable=False), Column("version", Integer, nullable=False),
+    Column("dissent_id", Text, ForeignKey("dissent.id", ondelete="RESTRICT"), nullable=False),
+    ForeignKeyConstraint(["scope", "topic_id", "version"], ["position_versions.scope", "position_versions.topic_id", "position_versions.version"], ondelete="RESTRICT", name="fk_position_dissent_version"),
+    PrimaryKeyConstraint("scope", "topic_id", "version", "dissent_id", name="pk_position_dissent"),
+)
+
+position_commit_receipts = Table(
+    "position_commit_receipts", _metadata,
+    Column("operation_id", Text, primary_key=True),
+    Column("request_hash", String(64), nullable=False),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("receipt", JSONB, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+)
+
+memory_projections = Table(
+    "memory_projections", _metadata,
+    Column("scope", Text, nullable=False), Column("topic_id", Text, nullable=False),
+    Column("target_registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("desired_version", Integer, nullable=False),
+    Column("applied_version", Integer, nullable=False, server_default="0"),
+    Column("state", Text, nullable=False),
+    Column("pending_reason", Text),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    ForeignKeyConstraint(["scope", "topic_id"], ["position_topics.scope", "position_topics.topic_id"], ondelete="RESTRICT", name="fk_memory_projection_topic"),
+    PrimaryKeyConstraint("scope", "topic_id", "target_registry_id", name="pk_memory_projections"),
+    CheckConstraint("desired_version >= 0 AND applied_version >= 0 AND applied_version <= desired_version", name="ck_memory_projection_versions"),
+    CheckConstraint("state IN ('PENDING_UNSUPPORTED','APPLIED')", name="ck_memory_projection_state"),
+)
+
+context_manifests = Table(
+    "context_manifests", _metadata,
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), primary_key=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("manifest_hash", String(64), nullable=False),
+    Column("manifest", JSONB, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1", name="ck_context_manifest_revision"),
 )
 
 

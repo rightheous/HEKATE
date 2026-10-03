@@ -3,3 +3,4 @@ __pycache__/
 *.py[cod]
 /bridge/letta/node_modules/
 /bridge/letta/dist/
+/.hekate-archive/
