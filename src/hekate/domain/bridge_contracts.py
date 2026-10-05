@@ -35,6 +35,8 @@ class AgentCreateCommand(BridgeCommandBase):
     owner: str = Field(min_length=1, max_length=128)
     creation_tag: str = Field(min_length=1, max_length=128)
     role: Literal["hekate", "critic"] = "hekate"
+    persistence: Literal["persistent", "ephemeral"] | None = None
+    registry_id: str | None = Field(default=None, min_length=1, max_length=128)
     model: str | None = None
     max_input_tokens: int | None = Field(default=None, ge=1)
     max_output_tokens: int | None = Field(default=None, ge=1)
@@ -59,7 +61,7 @@ class AgentDeleteCommand(BridgeCommandBase):
 class SessionPrepareCommand(BridgeCommandBase):
     command: Literal["session.prepare"]
     binding: BridgeBinding
-    output_contract: Literal["hekate_turn_output_v1", "position_commit_v1"] | None = None
+    output_contract: Literal["hekate_turn_output_v1", "critic_turn_output_v1", "position_commit_v1"] | None = None
 
 
 class SessionTurnCommand(BridgeCommandBase):
@@ -74,6 +76,34 @@ class EventsCollectCommand(BridgeCommandBase):
     wait_ms: int = Field(default=0, ge=0, le=5_000)
 
 
+class MemoryIdentity(ContractModel):
+    owner: str = Field(min_length=1, max_length=128)
+    creation_tag: str = Field(min_length=1, max_length=128)
+    registry_id: str = Field(min_length=1, max_length=128)
+    provider_agent_id: str = Field(min_length=1, max_length=256)
+    authz_epoch: int = Field(ge=0)
+    policy_version: str = Field(min_length=1, max_length=128)
+    principal_id: str = Field(min_length=1, max_length=128)
+    namespace: Literal["hekate.position.v1"]
+    fence: int = Field(ge=1)
+
+
+class MemoryReadCommand(BridgeCommandBase):
+    command: Literal["memory.read"]
+    identity: MemoryIdentity
+    topic_id: str = Field(min_length=1, max_length=256)
+
+
+class MemoryProjectCommand(BridgeCommandBase):
+    command: Literal["memory.project"]
+    identity: MemoryIdentity
+    topic_id: str = Field(min_length=1, max_length=256)
+    source_version: int = Field(ge=1)
+    format_version: Literal[1] = 1
+    payload: str = Field(min_length=1, max_length=16_384)
+    payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 BridgeCommand: TypeAlias = Annotated[
     HelloCommand
     | AgentCreateCommand
@@ -82,7 +112,9 @@ BridgeCommand: TypeAlias = Annotated[
     | AgentDeleteCommand
     | SessionPrepareCommand
     | SessionTurnCommand
-    | EventsCollectCommand,
+    | EventsCollectCommand
+    | MemoryReadCommand
+    | MemoryProjectCommand,
     Field(discriminator="command"),
 ]
 
@@ -112,14 +144,23 @@ class AgentResult(ContractModel):
     present: bool
     owner: str | None = None
     creation_tag: str | None = None
+    role: str | None = None
     tools: tuple[str, ...] = ()
     model: str | None = None
     model_settings: dict[str, object] = Field(default_factory=dict)
 
 
+class AgentListItem(ContractModel):
+    provider_agent_id: str
+    owner: str
+    creation_tag: str | None = None
+    role: str | None = None
+
+
 class AgentListResult(ContractModel):
     kind: Literal["agents"]
-    provider_agent_ids: tuple[str, ...]
+    agents: tuple[AgentListItem, ...] = ()
+    provider_agent_ids: tuple[str, ...] = ()
 
 
 class SessionResult(ContractModel):
@@ -191,8 +232,21 @@ class EventsResult(ContractModel):
     blocked_tool_attempts: int = Field(default=0, ge=0)
 
 
+class MemoryResult(ContractModel):
+    kind: Literal["memory"]
+    present: bool
+    topic_id: str
+    source_version: int = Field(ge=0)
+    format_version: int | None = None
+    payload_digest: str | None = None
+    payload: str | None = Field(default=None, max_length=16_384)
+    fence: int = Field(default=0, ge=0)
+    memory_revision: str | None = None
+    verified: bool
+
+
 BridgeResult: TypeAlias = Annotated[
-    CapabilitiesResult | AgentResult | AgentListResult | SessionResult | TurnResult | EventsResult,
+    CapabilitiesResult | AgentResult | AgentListResult | SessionResult | TurnResult | EventsResult | MemoryResult,
     Field(discriminator="kind"),
 ]
 

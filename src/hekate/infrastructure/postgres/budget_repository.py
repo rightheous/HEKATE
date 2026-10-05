@@ -830,12 +830,12 @@ class PostgresBudgetRepository:
                 tables.provider_calls.c.reservation_id == reservation["id"],
                 tables.provider_calls.c.status.not_in(["EXPIRED", "REVOKED"]),
             ))).scalar_one()
-            await self.connection.execute(update(tables.budget_reservations).where(
-                tables.budget_reservations.c.id == reservation["id"],
-            ).values(
-                status="PENDING_SETTLEMENT" if pending or outstanding_hold > 0 else "SETTLED" if completed_calls else "RELEASED",
-                settled_at=None if pending or outstanding_hold > 0 else aware_now(),
-            ))
+            status = "PENDING_SETTLEMENT" if pending or outstanding_hold > 0 else "SETTLED" if completed_calls else "RELEASED"
+            settled_at = None if pending or outstanding_hold > 0 else reservation["settled_at"] or aware_now()
+            if reservation["status"] != status or reservation["settled_at"] != settled_at:
+                await self.connection.execute(update(tables.budget_reservations).where(
+                    tables.budget_reservations.c.id == reservation["id"],
+                ).values(status=status, settled_at=settled_at))
 
     async def apply_adjustment(
         self,

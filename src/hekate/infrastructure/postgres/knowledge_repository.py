@@ -8,6 +8,7 @@ from uuid import NAMESPACE_URL, uuid5
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from hekate.domain.errors import Conflict
 from hekate.domain.models import (
     ConclusionCapsule, DissentExcerpt, EvidenceRecord, Objection, PositionBody, PositionTopicView, PositionView,
     PositionVersionRecord, StoredConclusion,
@@ -172,6 +173,11 @@ class PostgresKnowledgeRepository:
             projection_applied_version=projection["applied_version"] if projection else 0,
             projection_state=projection["state"] if projection else "NONE",
             projection_pending_reason=projection["pending_reason"] if projection else None,
+            projection_observed_version=projection["observed_memory_version"] if projection else None,
+            projection_observed_digest=projection["observed_payload_digest"] if projection else None,
+            projection_payload_digest=projection["payload_digest"] if projection else None,
+            projection_operation_id=OperationId(projection["operation_id"]) if projection and projection["operation_id"] else None,
+            projection_next_retry_at=projection["next_retry_at"] if projection else None,
         )
 
     async def ensure_dissent(self, scope: ScopeId, conclusion_id: DomainId, objections) -> tuple[DomainId, ...]:
@@ -217,7 +223,13 @@ class PostgresKnowledgeRepository:
             pending_reason="memory_projection_not_implemented",
         ).on_conflict_do_update(
             index_elements=[tables.memory_projections.c.scope, tables.memory_projections.c.topic_id, tables.memory_projections.c.target_registry_id],
-            set_={"desired_version": version, "state": "PENDING_UNSUPPORTED", "pending_reason": "memory_projection_not_implemented", "updated_at": aware_now()},
+            set_={
+                "desired_version": version,
+                "state": "PENDING_UNSUPPORTED",
+                "pending_reason": "memory_projection_not_implemented",
+                "next_retry_at": None,
+                "updated_at": aware_now(),
+            },
         ))
 
     @staticmethod
@@ -295,6 +307,20 @@ class PostgresKnowledgeRepository:
         return (await self.connection.execute(select(tables.artifacts).where(
             tables.artifacts.c.storage_state.in_(["DELETE_PENDING", "DELETE_FAILED"]),
         ).order_by(tables.artifacts.c.created_at, tables.artifacts.c.artifact_ref).limit(limit))).mappings().all()
+
+    async def archive_delete_is_pending(self, ref: str) -> bool:
+        artifact = (await self.connection.execute(select(tables.artifacts).where(
+            tables.artifacts.c.artifact_ref == ref,
+            tables.artifacts.c.storage_state.in_(["DELETE_PENDING", "DELETE_FAILED"]),
+        ).with_for_update())).mappings().one_or_none()
+        if artifact is None:
+            return False
+        active = await self.connection.scalar(select(func.count()).select_from(tables.evidence).where(
+            tables.evidence.c.artifact_ref == ref,
+            tables.evidence.c.availability.in_(["AVAILABLE", "STAGED"]),
+            (tables.evidence.c.expiry_at.is_(None)) | (tables.evidence.c.expiry_at > aware_now()),
+        ))
+        return not active
 
     async def expire_evidence(self, now: datetime, limit: int) -> tuple[str, ...]:
         rows = (await self.connection.execute(select(tables.evidence).where(
@@ -440,6 +466,20 @@ class PostgresKnowledgeRepository:
             tables.conclusions.c.id == conclusion_id,
         ))).mappings().one_or_none()
 
+    async def accepted_turn_result_for_conclusion(self, conclusion_id: str):
+        return (await self.connection.execute(select(
+            tables.turn_results.c.inbox_id,
+            tables.turn_results.c.task_id,
+            tables.turn_results.c.attempt_id,
+            tables.turn_results.c.operation_id,
+            tables.turn_results.c.registry_id,
+            tables.turn_results.c.input_revision,
+            tables.turn_results.c.processing_state,
+        ).where(
+            tables.turn_results.c.conclusion_id == conclusion_id,
+            tables.turn_results.c.processing_state == "ACCEPTED",
+        ).order_by(tables.turn_results.c.created_at, tables.turn_results.c.inbox_id).limit(1))).mappings().one_or_none()
+
     async def set_conclusion_eligible(self, conclusion_id: str, eligible: bool, reason: str | None) -> None:
         await self.connection.execute(update(tables.conclusions).where(
             tables.conclusions.c.id == conclusion_id,
@@ -461,4 +501,3 @@ class PostgresKnowledgeRepository:
             provider_provenance=row["provider_provenance"],
             rejection_reason=row["rejection_reason"],
         ) for row in rows)
-    async def set_projection_watermark(self, target: object, version: int) -> None: raise NotImplementedError

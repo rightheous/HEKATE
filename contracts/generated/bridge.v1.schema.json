@@ -65,6 +65,36 @@
           "title": "Owner",
           "type": "string"
         },
+        "persistence": {
+          "anyOf": [
+            {
+              "enum": [
+                "persistent",
+                "ephemeral"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Persistence"
+        },
+        "registry_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registry Id"
+        },
         "request_id": {
           "maxLength": 128,
           "minLength": 1,
@@ -235,15 +265,67 @@
       "title": "AgentListCommand",
       "type": "object"
     },
+    "AgentListItem": {
+      "additionalProperties": false,
+      "properties": {
+        "creation_tag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Creation Tag"
+        },
+        "owner": {
+          "title": "Owner",
+          "type": "string"
+        },
+        "provider_agent_id": {
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        }
+      },
+      "required": [
+        "provider_agent_id",
+        "owner"
+      ],
+      "title": "AgentListItem",
+      "type": "object"
+    },
     "AgentListResult": {
       "additionalProperties": false,
       "properties": {
+        "agents": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AgentListItem"
+          },
+          "title": "Agents",
+          "type": "array"
+        },
         "kind": {
           "const": "agents",
           "title": "Kind",
           "type": "string"
         },
         "provider_agent_ids": {
+          "default": [],
           "items": {
             "type": "string"
           },
@@ -252,8 +334,7 @@
         }
       },
       "required": [
-        "kind",
-        "provider_agent_ids"
+        "kind"
       ],
       "title": "AgentListResult",
       "type": "object"
@@ -314,6 +395,18 @@
         "provider_agent_id": {
           "title": "Provider Agent Id",
           "type": "string"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
         },
         "tools": {
           "default": [],
@@ -468,6 +561,8 @@
           "agent.list": "#/$defs/AgentListCommand",
           "events.collect": "#/$defs/EventsCollectCommand",
           "hello": "#/$defs/HelloCommand",
+          "memory.project": "#/$defs/MemoryProjectCommand",
+          "memory.read": "#/$defs/MemoryReadCommand",
           "session.prepare": "#/$defs/SessionPrepareCommand",
           "session.turn": "#/$defs/SessionTurnCommand"
         },
@@ -497,6 +592,12 @@
         },
         {
           "$ref": "#/$defs/EventsCollectCommand"
+        },
+        {
+          "$ref": "#/$defs/MemoryReadCommand"
+        },
+        {
+          "$ref": "#/$defs/MemoryProjectCommand"
         }
       ]
     },
@@ -627,6 +728,7 @@
                   "agents": "#/$defs/AgentListResult",
                   "capabilities": "#/$defs/CapabilitiesResult",
                   "events": "#/$defs/EventsResult",
+                  "memory": "#/$defs/MemoryResult",
                   "session": "#/$defs/SessionResult",
                   "turn": "#/$defs/TurnResult"
                 },
@@ -650,6 +752,9 @@
                 },
                 {
                   "$ref": "#/$defs/EventsResult"
+                },
+                {
+                  "$ref": "#/$defs/MemoryResult"
                 }
               ]
             },
@@ -1015,6 +1120,283 @@
       "title": "HelloCommand",
       "type": "object"
     },
+    "MemoryIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "authz_epoch": {
+          "minimum": 0,
+          "title": "Authz Epoch",
+          "type": "integer"
+        },
+        "creation_tag": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Creation Tag",
+          "type": "string"
+        },
+        "fence": {
+          "minimum": 1,
+          "title": "Fence",
+          "type": "integer"
+        },
+        "namespace": {
+          "const": "hekate.position.v1",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "owner": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Owner",
+          "type": "string"
+        },
+        "policy_version": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "principal_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Principal Id",
+          "type": "string"
+        },
+        "provider_agent_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "registry_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Registry Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "owner",
+        "creation_tag",
+        "registry_id",
+        "provider_agent_id",
+        "authz_epoch",
+        "policy_version",
+        "principal_id",
+        "namespace",
+        "fence"
+      ],
+      "title": "MemoryIdentity",
+      "type": "object"
+    },
+    "MemoryProjectCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "memory.project",
+          "title": "Command",
+          "type": "string"
+        },
+        "format_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Format Version",
+          "type": "integer"
+        },
+        "identity": {
+          "$ref": "#/$defs/MemoryIdentity"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "payload": {
+          "maxLength": 16384,
+          "minLength": 1,
+          "title": "Payload",
+          "type": "string"
+        },
+        "payload_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Payload Digest",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_version": {
+          "minimum": 1,
+          "title": "Source Version",
+          "type": "integer"
+        },
+        "topic_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Topic Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "identity",
+        "topic_id",
+        "source_version",
+        "payload",
+        "payload_digest"
+      ],
+      "title": "MemoryProjectCommand",
+      "type": "object"
+    },
+    "MemoryReadCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "memory.read",
+          "title": "Command",
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/$defs/MemoryIdentity"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "topic_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Topic Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "operation_id",
+        "command",
+        "identity",
+        "topic_id"
+      ],
+      "title": "MemoryReadCommand",
+      "type": "object"
+    },
+    "MemoryResult": {
+      "additionalProperties": false,
+      "properties": {
+        "fence": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Fence",
+          "type": "integer"
+        },
+        "format_version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Format Version"
+        },
+        "kind": {
+          "const": "memory",
+          "title": "Kind",
+          "type": "string"
+        },
+        "memory_revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Memory Revision"
+        },
+        "payload": {
+          "anyOf": [
+            {
+              "maxLength": 16384,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Payload"
+        },
+        "payload_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Payload Digest"
+        },
+        "present": {
+          "title": "Present",
+          "type": "boolean"
+        },
+        "source_version": {
+          "minimum": 0,
+          "title": "Source Version",
+          "type": "integer"
+        },
+        "topic_id": {
+          "title": "Topic Id",
+          "type": "string"
+        },
+        "verified": {
+          "title": "Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "present",
+        "topic_id",
+        "source_version",
+        "verified"
+      ],
+      "title": "MemoryResult",
+      "type": "object"
+    },
     "SessionPrepareCommand": {
       "additionalProperties": false,
       "properties": {
@@ -1037,6 +1419,7 @@
             {
               "enum": [
                 "hekate_turn_output_v1",
+                "critic_turn_output_v1",
                 "position_commit_v1"
               ],
               "type": "string"

@@ -1,0 +1,521 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "binary_diff_sha256": "38167ca25f1d0d74d84ffced58b9af232704f2c8c33064ff99573e58e38ca050",
+  "branch": "phase5b-bounded-deliberation",
+  "created_at": "2026-10-04T09:00:22.909028+00:00",
+  "files": [
+    {
+      "bytes": 26718,
+      "classification": "tracked_worktree_change",
+      "path": "bridge/letta/src/main.ts",
+      "sha256": "5155111ba5de683ee735db858c3425f698107768bcfe612231e03a1622f2ff33"
+    },
+    {
+      "bytes": 6632,
+      "classification": "tracked_worktree_change",
+      "path": "bridge/letta/src/protocol.ts",
+      "sha256": "f23b8d61336f173362b122b12a128993a85049345f25860c0222e994d0d42733"
+    },
+    {
+      "bytes": 486,
+      "classification": "tracked_worktree_change",
+      "path": "config/policy.yaml",
+      "sha256": "d41df578cf0068245510e94d76c2f546e0cf403f39cefed1466d5f422387ffa0"
+    },
+    {
+      "bytes": 29799,
+      "classification": "tracked_worktree_change",
+      "path": "contracts/generated/bridge.v1.schema.json",
+      "sha256": "a711f619ab2f2a43914a3088f58fcc40519061902ebc84092b0e6ea1417c2925"
+    },
+    {
+      "bytes": 5417,
+      "classification": "untracked_phase5a_file",
+      "path": "contracts/generated/critic-turn-output.v1.schema.json",
+      "sha256": "3a6fba3e269f1684d1c263aec30fdffbf33d413e66500bbafa16221ccdfd8076"
+    },
+    {
+      "bytes": 18085,
+      "classification": "tracked_worktree_change",
+      "path": "contracts/generated/task-capsule.v1.schema.json",
+      "sha256": "666794faf606f2fb44b25b612637850530e57e9b7ac516a8917f81e0983a858e"
+    },
+    {
+      "bytes": 12815,
+      "classification": "tracked_worktree_change",
+      "path": "docs/implementation/phase4-evidence-position.md",
+      "sha256": "cefd16cbfba3310b7878f8cc25998f2c66e91b2262224b8bd35bbe456af13eb0"
+    },
+    {
+      "bytes": 17802,
+      "classification": "untracked_phase5a_file",
+      "path": "docs/implementation/phase5a-critic-synthesis.md",
+      "sha256": "84118176074b07e10323011605ff7c46459b683640f7a3183173504fbb6e3db1"
+    },
+    {
+      "bytes": 35861,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p3-20261003T161148Z-d9fd187e.json",
+      "sha256": "28c25f5a4080f8213a8f64f35f170ba0acc88af26ce7da653d8c041bfaf17808"
+    },
+    {
+      "bytes": 35859,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p3-20261003T161551Z-96bd964d.json",
+      "sha256": "51f857441ee1e42ad9ac962b66b6873209209995ebb0841a19105850fea3e4e4"
+    },
+    {
+      "bytes": 35861,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p3-20261003T161910Z-e2616faa.json",
+      "sha256": "b8f0398570ac24f47fbc022a0c6d2d5034fc93e88ce350f819cf7f6c844b7faa"
+    },
+    {
+      "bytes": 45081,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p3b-20261003T161205Z-1c9fdef9.json",
+      "sha256": "9dfa0bc66e8ba27b6095fc98259b1476402815fa70ebb9c6826f1070c6f324a4"
+    },
+    {
+      "bytes": 45081,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p3b-20261003T161608Z-d9703ac2.json",
+      "sha256": "b9e82b0a35bd9e7a0e057dfcbc9136fa5640d560ce69696557f20203962657a9"
+    },
+    {
+      "bytes": 45081,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p3b-20261003T161927Z-6c23440d.json",
+      "sha256": "fc6de071c33d96105773f68ba07b66f20a0828c8020e188787ee4107fe08d39c"
+    },
+    {
+      "bytes": 14865,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p4-20261003T101358Z-22540d85.json",
+      "sha256": "1463aeefbabdc6e5be95ee12c5e198818474e8729b149bac977ae35ce382a9ec"
+    },
+    {
+      "bytes": 33130,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p4-20261003T101744Z-2fcd5b64.json",
+      "sha256": "34912a26cd2835a8462e68608b9cb7bbb43035bc725f76cb26658468f6f34a8b"
+    },
+    {
+      "bytes": 8792,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p4-20261003T122140Z-ccd94ecc-archive-cancel-focus.json",
+      "sha256": "db605c0b04113684b27156794c3fb8b6799268a293b17c63e9c17f69f2cd9f28"
+    },
+    {
+      "bytes": 16265,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p4-20261003T122239Z-aca9fce0-archive-cancel-focus.json",
+      "sha256": "e69051bf819cc5a8a9789f151f60d6e81ce73aa1dec98135f0a87fd58aaf1de5"
+    },
+    {
+      "bytes": 34526,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p4-20261003T122338Z-91d88833-archive-cancel-full.json",
+      "sha256": "6c3150fb8e4dfde2a9bfbfc26d7bb45219069a0ff386cadc636c34655f3cdc5e"
+    },
+    {
+      "bytes": 34489,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p4-20261003T160602Z-7930696d.json",
+      "sha256": "01874c27e69f3141b3c10b216897571956869bf78ae7635f1f24d4983acdc0ad"
+    },
+    {
+      "bytes": 34489,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p4-20261003T165018Z-b67da98c.json",
+      "sha256": "458bdbec2f356b415c336325b92c68aa98a0f5f5e9cc36b0119ac793293d4dc8"
+    },
+    {
+      "bytes": 3081,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T150621Z-c0b0d0ec.json",
+      "sha256": "11f60544d008203ab6578e33c7333a43536330693ea3833cf532e80e012b04e5"
+    },
+    {
+      "bytes": 2895,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T150734Z-404888c2.json",
+      "sha256": "a64685f2f718974fae34f9b5aa2ef52755a8df72eec8926c88ff6884f3f5e9f7"
+    },
+    {
+      "bytes": 3502,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T151242Z-644cd662.json",
+      "sha256": "2af7fcaa95b5dd54e9ad2bc892afca283ba4824eca05cdf2fb11d02486b5e432"
+    },
+    {
+      "bytes": 3502,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T151912Z-9377167c.json",
+      "sha256": "4e778c5458813ca4233de0fab0a400f5776505bd3989d740cb264d18d056425a"
+    },
+    {
+      "bytes": 3700,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T152123Z-76885e34.json",
+      "sha256": "ddb81ca5426a8e0c3ba63aa85b24ab0672fb24a4ed3689fd5b4530e106eb7ea7"
+    },
+    {
+      "bytes": 3892,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T152704Z-7bc4d68b.json",
+      "sha256": "5d5a4675d61d82a55f651414e9ec9ec418053edd58dd289493a5c1535eb552e4"
+    },
+    {
+      "bytes": 3892,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T154458Z-7dea9051.json",
+      "sha256": "f2dec623af2e90a76a0f69fc5f5b4c055248b75d6007691355e7a392a2355fe1"
+    },
+    {
+      "bytes": 8701,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T155130Z-28923d68.json",
+      "sha256": "a03790b2a5b5ab259e61e173f3df52969e86374210d9867bf5e3329eb79c617d"
+    },
+    {
+      "bytes": 8697,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T155219Z-34bf55ff.json",
+      "sha256": "487ed64f850b85217ebcc44b1cf147a51b6c9627319d2e575282c5994789f7e4"
+    },
+    {
+      "bytes": 3892,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T155345Z-0c8aa89b.json",
+      "sha256": "4e0c649e75ff2a9c338df1b3af5ae6200bd7e11f8bc73a14c2c79867826647d3"
+    },
+    {
+      "bytes": 4983,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T155610Z-6579c22f.json",
+      "sha256": "96e7c42c54aad28a052e69118004f73ae435be8a2bdcdfe9c2f63a4a1ca115f0"
+    },
+    {
+      "bytes": 5427,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T155805Z-bb2e1799.json",
+      "sha256": "842fdf689559ad254193f913ebaa992ce42face797bbea507afb810d6701f4ea"
+    },
+    {
+      "bytes": 10040,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T155949Z-6e2960c6.json",
+      "sha256": "e0070b10174456e158b685d4f7036130d87351aa03056cf5be04c69978b489ed"
+    },
+    {
+      "bytes": 16821,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T160121Z-df7d6520.json",
+      "sha256": "4cd5da389f8d66dfc6cb9625c5b5cbfba06ab507bae8aef2ace25af4872231a4"
+    },
+    {
+      "bytes": 14926,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T160308Z-f747b9a3.json",
+      "sha256": "c69970714c402e56e5702a66a79ff6649dfa8a395f69100d5c71cdf3c76a9238"
+    },
+    {
+      "bytes": 15563,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T163922Z-f5494c07.json",
+      "sha256": "c66ace782b1ca714a31a86654d6b5c5405650856e553fe2b895274422c777201"
+    },
+    {
+      "bytes": 15851,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T164922Z-18faf46f.json",
+      "sha256": "2deea05de262b0201ca0e88ef79e69a6b1596db44369a7ba076fce372b77d26e"
+    },
+    {
+      "bytes": 18881,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T165729Z-441017d4.json",
+      "sha256": "bea499e1d58f384c3c84fe95441ebd040fe7e1290c834df8b0d766d7bdb39c3b"
+    },
+    {
+      "bytes": 19286,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T170510Z-db1e3ca6.json",
+      "sha256": "5a58db5d198090256edd73b33fedfcace5e836e91c441258322eef50ead78a6b"
+    },
+    {
+      "bytes": 20051,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T170858Z-cdb6acc8.json",
+      "sha256": "bdb2930aef536b17085522ed0a52587cabd50c3de2706376c2466bbd39025021"
+    },
+    {
+      "bytes": 20906,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T172219Z-92380bc0.json",
+      "sha256": "bdb2ac2177ad9eb6ed4cecea956005c3cf17baeb4ce46a15e62a25cad0b98662"
+    },
+    {
+      "bytes": 20972,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T172744Z-9c99d9a1.json",
+      "sha256": "d504e958901ada2e23cb909beed9df2522b97702eab699205c06aea551539e45"
+    },
+    {
+      "bytes": 25920,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T191824Z-63e4672a.json",
+      "sha256": "8a30881531b6b119c2b41cd45f2e17ff4d2378fda0dfa1d4824f8cad733f2761"
+    },
+    {
+      "bytes": 41171,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T191948Z-b6dfb215.json",
+      "sha256": "0dcd8dddfed5c8f42fd7219c6121932650ae2bf1c55616bf314f177a01d31fee"
+    },
+    {
+      "bytes": 42506,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T192600Z-5c91e549.json",
+      "sha256": "e62f1cffd2737f15fb42097fab3cdcc86e76f88ba30e9b1142f694ea68ddf6fb"
+    },
+    {
+      "bytes": 56628,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T193034Z-3900ea03.json",
+      "sha256": "8380c73b664d81ef3c74561d9c4340eb445dd4a6955269c7f83c4f186a996cd2"
+    },
+    {
+      "bytes": 43317,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261003T193348Z-40e88886.json",
+      "sha256": "e0158df97a17ad74bcf0c978d1b9cd1b630d8adb38d327208e4f50080cc38c06"
+    },
+    {
+      "bytes": 19387,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261004T075818Z-c48b1e6d.json",
+      "sha256": "35ec02141f1ea27acdf6f1a46eebfc25303ce2a48c80c138f5e0f48e97745ff6"
+    },
+    {
+      "bytes": 18956,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261004T080004Z-005f806b.json",
+      "sha256": "9069b62369f291033181fe8ca731f29ac7a3c412b498c8787b7f9c04115bbb24"
+    },
+    {
+      "bytes": 22641,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261004T080101Z-5142d96a.json",
+      "sha256": "39f5cc41391c9b1d3ce261026469ba130100ffe4b213edcea036a60065f9aba0"
+    },
+    {
+      "bytes": 56395,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261004T080210Z-a8200bce.json",
+      "sha256": "9e13150e13cdbff4b2a59091d65fe64f72398e51c3f2bce7f071fa53e82f50d1"
+    },
+    {
+      "bytes": 59887,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261004T080720Z-9eef3546.json",
+      "sha256": "8c693ba3d9629e130a8ec7fafc3e3149a4cce22624d437fb65951720283c18e3"
+    },
+    {
+      "bytes": 59887,
+      "classification": "untracked_phase5a_file",
+      "path": "integration/runtime/artifacts/p5a-20261004T081107Z-719917a0.json",
+      "sha256": "a4b00e65f1cda057ae97283e1953853a01a30b4b127224692aa173e308319a6e"
+    },
+    {
+      "bytes": 3520,
+      "classification": "untracked_phase5a_file",
+      "path": "migrations/versions/0007_phase5a_critic_workflows.py",
+      "sha256": "6f988a5d89a288560a393faad2ae9cb12e4f1585defcfdfb4e0218e73d474caa"
+    },
+    {
+      "bytes": 90218,
+      "classification": "tracked_worktree_change",
+      "path": "scripts/phase3_runtime_probe.py",
+      "sha256": "0bf8e2852e7ee5a2e5eb5b9b6000852c4843490e58d1047569d14f5c264984f9"
+    },
+    {
+      "bytes": 76357,
+      "classification": "tracked_worktree_change",
+      "path": "scripts/phase3b_single_hekate_probe.py",
+      "sha256": "dcfc40eeb183638d32bdafab3ccee72e8a97ad5d7d4c34243752893909f8c09a"
+    },
+    {
+      "bytes": 114926,
+      "classification": "tracked_worktree_change",
+      "path": "scripts/phase4_evidence_position_probe.py",
+      "sha256": "95bcb28ec54b94d59ba37e22b908051c8ae4d144192355c89c3b773f0e67be8a"
+    },
+    {
+      "bytes": 124403,
+      "classification": "untracked_phase5a_file",
+      "path": "scripts/phase5a_critic_synthesis_probe.py",
+      "sha256": "d5b98444c9ce624084e0e11ab758f55eb7e37843aebb55e41a527b504a6e34d5"
+    },
+    {
+      "bytes": 28438,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/application/budgets.py",
+      "sha256": "fae63071af715e04059fe6c409bb8162b75425191721104c3e90979bcc0aa87c"
+    },
+    {
+      "bytes": 19275,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/application/evidence.py",
+      "sha256": "a174ad8dfd26be4663c3456f93f9b5f51b822dd0b81e2e0021e5a2ed969e34e9"
+    },
+    {
+      "bytes": 54176,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/application/lifecycle.py",
+      "sha256": "b0d82930b6692102da098ee00b2cbd65522be49b43567deb08bb75c5d0e3dbeb"
+    },
+    {
+      "bytes": 26816,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/application/operations.py",
+      "sha256": "12d51a8a2b1c121f0a02dbf63d6b3ad653018c73cc4e7cb839696a4c34919cc9"
+    },
+    {
+      "bytes": 12069,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/application/positions.py",
+      "sha256": "833c9b6a36510d77d94f8bcf3653034b2f9c16da2211258f2f68475b018eed1e"
+    },
+    {
+      "bytes": 43225,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/application/results.py",
+      "sha256": "435d584e2c92f6ad41e126a7ae7dbc8adc2d3438cc0c1cf898ce291266760cd8"
+    },
+    {
+      "bytes": 15599,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/application/tasks.py",
+      "sha256": "555719e1f8f31a095fad4f6fe572b89699f97b4320f1ee46aad11ae2816898e9"
+    },
+    {
+      "bytes": 45206,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/application/turns.py",
+      "sha256": "38b86b205ccb4b4b37787fc419b198976640ac72d072fc5d8c8a9ae280139b3f"
+    },
+    {
+      "bytes": 7355,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/domain/bridge_contracts.py",
+      "sha256": "4a6b7941618402a00c78e9a4c7096e0587f97a34984e5c5ed701d8fa2cb8f8e8"
+    },
+    {
+      "bytes": 6838,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/domain/capsules.py",
+      "sha256": "a2a5c25e259ae39aa94681b662150bbeab5b823ab623ac181b8c190056e0f37f"
+    },
+    {
+      "bytes": 1737,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/domain/errors.py",
+      "sha256": "fcdf8d67b504a656245a0d72187ca2f7018a51ca1a3f3a41bdf3e03537b2d146"
+    },
+    {
+      "bytes": 28743,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/domain/models.py",
+      "sha256": "a96995a0dbf135fc1e19f5d48458a4a64110c94c1310fd0b484e7a05ee36bc07"
+    },
+    {
+      "bytes": 6443,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/infrastructure/archive.py",
+      "sha256": "c2272e6d3c350f6ed4e1f4d835f60d6ef57cd9077ce3e9c83c2f3b3852bc1e94"
+    },
+    {
+      "bytes": 8886,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/infrastructure/letta/adapter.py",
+      "sha256": "e3dd30f517b5ea24fea54ff39ef135375d804a27666443851fd73aceb0b799ca"
+    },
+    {
+      "bytes": 12749,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/infrastructure/postgres/agent_repository.py",
+      "sha256": "7d280f2bc0955f2369fd2cbde2be82191a31c855d62a5faa0b54bcd5e1b8bfd2"
+    },
+    {
+      "bytes": 7365,
+      "classification": "untracked_phase5a_file",
+      "path": "src/hekate/infrastructure/postgres/critic_workflow_repository.py",
+      "sha256": "238d8c31fd8ba5705ff1000d2b4201b5039411244f6489ba69cbcbdcf19f5cc6"
+    },
+    {
+      "bytes": 4286,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/infrastructure/postgres/database.py",
+      "sha256": "18dc68a1205ddc35b1d43436676a7c8bf2078cddbcfa72521fd95ecd0d39db51"
+    },
+    {
+      "bytes": 38415,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/infrastructure/postgres/delivery_repository.py",
+      "sha256": "87f25fa78efe3fcccd9907dfb5442556a99fbce4297bf1b3f87336feb9636177"
+    },
+    {
+      "bytes": 29054,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/infrastructure/postgres/knowledge_repository.py",
+      "sha256": "1e0b756de55bfc8d515007b94665c51fad3b653cc35a84638aa44d7b84e441f4"
+    },
+    {
+      "bytes": 39009,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/infrastructure/postgres/tables.py",
+      "sha256": "dbf51325cd547e7b0019ad02f24a95b27a4ebe8fc0ad9e722edc828599c15e8f"
+    },
+    {
+      "bytes": 29763,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/infrastructure/postgres/task_repository.py",
+      "sha256": "694be24aac8b0ca5226cda1beb2c10973ddceb3a374c678311aaaf3c66737402"
+    },
+    {
+      "bytes": 16558,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/ports/store.py",
+      "sha256": "e946636b2b57399e86ef502e4a34e78227121720866441d2e8c08b9e8dbb7c0e"
+    },
+    {
+      "bytes": 12129,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/settings.py",
+      "sha256": "bb41ee6dbbf32097a41f37f25108f7026bdbc3a947a9f524c62491c4f8a35556"
+    },
+    {
+      "bytes": 23482,
+      "classification": "tracked_worktree_change",
+      "path": "src/hekate/worker/service.py",
+      "sha256": "3658e8c54cb9f2c1025073430fd6a2c1541b3934f87cda0972b008fe6bf2b637"
+    },
+    {
+      "bytes": 66471,
+      "classification": "tracked_worktree_change",
+      "path": "tests/persistence/test_phase2_postgres.py",
+      "sha256": "d9c08768bff56bc81b0c7cf767dd6d1c3d3b37ed5bf54de2636abdf69cf45e41"
+    }
+  ],
+  "method": "git diff --binary applied at same HEAD; non-ignored untracked source/schema/docs/migration/artifact files copied byte-for-byte; no commit/stash",
+  "not_copied_untracked_paths": [],
+  "safety": "No .git, secrets, .env, archive contents, virtualenvs, runtime temp files, node_modules, or cache directories copied. Main checkout .env.example/.gitignore and Phase 5A source worktree left untouched.",
+  "schema_version": "1",
+  "source_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "source_worktree": "/home/hekate/hekate-phase5a-critic-synthesis",
+  "target_worktree": "/home/hekate/hekate-phase5b-bounded-deliberation",
+  "transfer_id": "p5b-baseline-20261004T090022Z-38167ca2",
+  "transferred_file_count": 84
+}

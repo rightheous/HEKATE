@@ -22,8 +22,8 @@
   "patches": [
     {
       "file": "integration/letta/patches/provider-call-context-usage.patch",
-      "name": "provider-call-context-usage",
-      "sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+      "name": "provider-call-context-and-memory-projection",
+      "sha256": "7d16b269f6eed2db384703d2f35ac0cd3d75bf0dd68be362def12daaf3ae5f79",
       "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
     }
   ]

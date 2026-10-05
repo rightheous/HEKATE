@@ -7,7 +7,7 @@ from typing import Annotated, Literal, Mapping, TypeAlias, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .contracts import MAX_CONTRACT_ITEMS
+from .contracts import MAX_CONTRACT_ITEMS, canonical_json_hash
 from .types import (
     AccountingCallId, AttemptId, AttemptStatus, DomainId, EvidenceId, OperationId, PermitId, ProviderAgentId,
     PrincipalId, ProviderCallId, RegistryId, ReservationId, Revision, ScopeId,
@@ -22,6 +22,7 @@ class ContractModel(BaseModel):
 class TaskCounters(ContractModel):
     critic_agents: int = 0
     review_rounds: int = 0
+    hekate_continuations: int = 0
     schema_repairs: int = 0
     transient_retries: int = 0
     tool_calls: int = 0
@@ -220,6 +221,12 @@ class ConclusionCapsule(ContractModel):
     position_recommendation: PositionRecommendation
 
 
+class CriticTurnOutput(ContractModel):
+    """Critic's only output: a bound Conclusion Capsule, with no executable proposal."""
+    schema_version: Literal["1"]
+    conclusion: ConclusionCapsule
+
+
 class Premise(ContractModel):
     id: str
     text: str
@@ -272,6 +279,41 @@ class TaskData(ContractModel):
     )
 
 
+class CriticReviewSummary(ContractModel):
+    review_round: int = Field(ge=1, le=2)
+    conclusion_id: DomainId
+    conclusion: ConclusionCapsule
+    dissent: tuple[DissentExcerpt, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+
+
+class CriticReviewTarget(ContractModel):
+    purpose: str
+    target_uncertainty: str
+    expected_decision_impact: str
+    candidate_conclusion: ConclusionCapsule
+    prior_reviews: tuple[CriticReviewSummary, ...] = Field(default=(), max_length=2)
+
+
+class CriticSynthesisContext(ContractModel):
+    purpose: str
+    target_uncertainty: str
+    expected_decision_impact: str
+    candidate_conclusion: ConclusionCapsule
+    critic_conclusion: ConclusionCapsule
+    critic_conclusion_id: DomainId
+    dissent: tuple[DissentExcerpt, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+    review_history: tuple[CriticReviewSummary, ...] = Field(default=(), max_length=2)
+
+
+class DeliberationContext(ContractModel):
+    step_kind: Literal["hekate_reasoning", "critic_review", "synthesis"]
+    unresolved_issue: str
+    next_action: Literal["hekate_reasoning", "critic_review"]
+    expected_information_gain: str
+    decision_impact: str
+    review_history: tuple[CriticReviewSummary, ...] = Field(default=(), max_length=2)
+
+
 class ExpectedOutput(ContractModel):
     schema_id: str = Field(alias="schema")
 
@@ -295,6 +337,9 @@ class TaskCapsule(ContractModel):
     premises: tuple[Premise, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
     evidence_refs: tuple[EvidenceId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
     task_data: TaskData = Field(default_factory=TaskData)
+    review_target: CriticReviewTarget | None = None
+    synthesis_context: CriticSynthesisContext | None = None
+    deliberation_context: DeliberationContext | None = None
     target_position: TargetPosition | None = None
     constraints: tuple[str, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
     expected_output: ExpectedOutput
@@ -392,6 +437,10 @@ class ProviderObservation(ContractModel):
     state: ObservationState
     evidence: str | None = None
     observed_at: datetime
+    provider_agent_id: ProviderAgentId | None = None
+    owner: str | None = None
+    creation_tag: str | None = None
+    role: str | None = None
 
 
 class RuntimeEvent(ContractModel):
@@ -510,6 +559,8 @@ class AdmissionRequest:
     lease_owner: str
     task_preparation_owner: str | None = None
     context_manifest: Mapping[str, object] | None = None
+    workflow_stage: str | None = None
+    workflow_stage_hash: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -527,6 +578,44 @@ class OperationClaim:
     request_hash: str
     state: str
     receipt: AdmissionReceipt | None = None
+
+
+class CriticWorkflow(ContractModel):
+    task_id: TaskId
+    owner_scope: ScopeId
+    input_revision: Revision
+    stage: str
+    spawn_request_hash: str
+    proposal: SpawnProposal
+    critic_profile: Mapping[str, object]
+    hekate_profile: Mapping[str, object]
+    parent_attempt_id: AttemptId
+    planning_operation_id: OperationId
+    planning_conclusion_id: DomainId
+    critic_registry_id: RegistryId
+    create_operation_id: OperationId
+    review_attempt_id: AttemptId
+    review_operation_id: OperationId
+    review_reservation_id: ReservationId
+    synthesis_attempt_id: AttemptId
+    synthesis_operation_id: OperationId
+    synthesis_reservation_id: ReservationId
+    critic_conclusion_id: DomainId | None = None
+    delete_operation_id: OperationId | None = None
+    updated_at: datetime | None = None
+
+    def stage_hash(self, stage: str) -> str:
+        return canonical_json_hash({
+            "task_id": str(self.task_id), "owner_scope": str(self.owner_scope),
+            "input_revision": self.input_revision, "stage": stage,
+            "parent_attempt_id": str(self.parent_attempt_id),
+            "planning_operation_id": str(self.planning_operation_id),
+            "critic_registry_id": str(self.critic_registry_id),
+            "review_attempt_id": str(self.review_attempt_id),
+            "review_operation_id": str(self.review_operation_id),
+            "synthesis_attempt_id": str(self.synthesis_attempt_id),
+            "synthesis_operation_id": str(self.synthesis_operation_id),
+        })
 
 
 @dataclass(frozen=True, slots=True)
@@ -834,6 +923,11 @@ class PositionView(ContractModel):
     projection_applied_version: int
     projection_state: str
     projection_pending_reason: str | None = None
+    projection_observed_version: int | None = None
+    projection_observed_digest: str | None = None
+    projection_payload_digest: str | None = None
+    projection_operation_id: OperationId | None = None
+    projection_next_retry_at: datetime | None = None
 
 
 class PositionTopicView(ContractModel):
@@ -848,6 +942,85 @@ class HistoryPage(ContractModel):
     after_version: int
     limit: int
     next_after_version: int | None = None
+
+
+class ProjectionBinding(ContractModel):
+    """Server-restored persistent-agent identity for a non-inference projection."""
+    scope: ScopeId
+    registry_id: RegistryId
+    provider_agent_id: ProviderAgentId
+    creation_operation_id: OperationId
+    authz_epoch: int = Field(ge=0)
+    policy_version: str
+    principal_id: PrincipalId
+    fence: int = Field(ge=1)
+
+
+class MemoryProjection(ContractModel):
+    """One deterministic DB Position payload sent through the dedicated memory API."""
+    operation_id: OperationId
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    binding: ProjectionBinding
+    topic_id: TopicId
+    source_version: int = Field(ge=1)
+    base_applied_version: int = Field(ge=0)
+    format_version: Literal[1] = 1
+    payload: str = Field(min_length=1, max_length=16_384)
+    payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class MemoryProjectionObservation(ContractModel):
+    """Bounded read-back of the committed runtime memory entry for one topic."""
+    present: bool
+    topic_id: TopicId
+    source_version: int = Field(default=0, ge=0)
+    format_version: Literal[1] | None = None
+    payload_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    payload: str | None = Field(default=None, max_length=16_384)
+    fence: int = Field(default=0, ge=0)
+    memory_revision: str | None = None
+    verified: bool
+
+
+class ProjectionJob(ContractModel):
+    id: str
+    original_operation_id: OperationId
+    scope: ScopeId
+    topic_id: TopicId
+    target_registry_id: RegistryId
+    generation: int = Field(ge=1)
+    worker_id: str
+    fence: int = Field(ge=1)
+    claim_expires_at: datetime
+
+
+class ProjectionReceipt(ContractModel):
+    operation_id: OperationId
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    scope: ScopeId
+    topic_id: TopicId
+    registry_id: RegistryId
+    source_version: int = Field(ge=1)
+    payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    observed_version: int = Field(ge=0)
+    observed_digest: str | None = None
+    state: Literal["APPLIED", "SUPERSEDED", "PENDING", "UNKNOWN", "DRIFT"]
+    replayed: bool = False
+
+
+class ProjectionStatus(ContractModel):
+    scope: ScopeId
+    topic_id: TopicId
+    registry_id: RegistryId
+    desired_version: int = Field(ge=0)
+    applied_version: int = Field(ge=0)
+    observed_version: int | None = None
+    observed_digest: str | None = None
+    payload_digest: str | None = None
+    state: str
+    reason: str | None = None
+    operation_id: OperationId | None = None
+    next_retry_at: datetime | None = None
 PublicEvent: TypeAlias = Mapping[str, object]
 ResponseRef: TypeAlias = str
 TurnReceipt: TypeAlias = Mapping[str, object]
@@ -878,9 +1051,6 @@ OrphanReport: TypeAlias = Mapping[str, object]
 OperatorContext: TypeAlias = Mapping[str, object]
 Resolution: TypeAlias = Mapping[str, object]
 RecoveryReceipt: TypeAlias = Mapping[str, object]
-ProjectionJob: TypeAlias = Mapping[str, object]
-ProjectionReceipt: TypeAlias = Mapping[str, object]
-ProjectionStatus: TypeAlias = Mapping[str, object]
 Page: TypeAlias = Mapping[str, _T]
 @dataclass(frozen=True, slots=True)
 class VersionCursor:
@@ -892,12 +1062,13 @@ AuditEvent: TypeAlias = Mapping[str, object]
 RuntimeCapabilities: TypeAlias = Mapping[str, object]
 CapabilityReport: TypeAlias = Mapping[str, object]
 AgentSpec: TypeAlias = Mapping[str, object]
+
+
 ProviderAgent: TypeAlias = Mapping[str, object]
 DispatchObservation: TypeAlias = Mapping[str, object]
 CancelObservation: TypeAlias = Mapping[str, object]
 TurnInput: TypeAlias = Mapping[str, object]
 ProviderCursor: TypeAlias = str
-MemoryProjection: TypeAlias = Mapping[str, object]
 Reservation: TypeAlias = Mapping[str, object]
 Job: TypeAlias = Mapping[str, object]
 HealthReport: TypeAlias = Mapping[str, object]

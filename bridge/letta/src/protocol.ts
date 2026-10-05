@@ -28,6 +28,8 @@ export type Command =
       owner: string;
       creation_tag: string;
       role: "hekate" | "critic";
+      persistence?: "persistent" | "ephemeral" | null;
+      registry_id?: string | null;
       model?: string | null;
       max_input_tokens?: number | null;
       max_output_tokens?: number | null;
@@ -42,14 +44,36 @@ export type Command =
   | (CommandBase & {
       command: "session.prepare";
       binding: RuntimeBinding;
-      output_contract?: "hekate_turn_output_v1" | "position_commit_v1" | null;
+      output_contract?: "hekate_turn_output_v1" | "critic_turn_output_v1" | "position_commit_v1" | null;
     })
   | (CommandBase & {
       command: "session.turn";
       binding: SessionBinding;
       message: string;
     })
-  | (CommandBase & { command: "events.collect"; binding: SessionBinding; wait_ms?: number });
+  | (CommandBase & { command: "events.collect"; binding: SessionBinding; wait_ms?: number })
+  | (CommandBase & { command: "memory.read"; identity: MemoryIdentity; topic_id: string })
+  | (CommandBase & {
+      command: "memory.project";
+      identity: MemoryIdentity;
+      topic_id: string;
+      source_version: number;
+      format_version: 1;
+      payload: string;
+      payload_digest: string;
+    });
+
+export interface MemoryIdentity {
+  owner: string;
+  creation_tag: string;
+  registry_id: string;
+  provider_agent_id: string;
+  authz_epoch: number;
+  policy_version: string;
+  principal_id: string;
+  namespace: "hekate.position.v1";
+  fence: number;
+}
 
 export interface BridgeEvent {
   schema_version: "1";

@@ -9,7 +9,8 @@ from pydantic import TypeAdapter
 from hekate.domain.bridge_contracts import BridgeCommand, BridgeReply
 from hekate.domain.models import (
     AgentSpec, CancelObservation, CapabilityReport, CreateObservation, DeleteObservation,
-    DispatchObservation, ExecutionEnvelope, MemoryProjection, ProviderAgent,
+    DispatchObservation, ExecutionEnvelope, MemoryProjection, MemoryProjectionObservation,
+    ProjectionBinding, ProviderAgent,
     ProviderCursor, ProviderObservation, RuntimeBinding, RuntimeCapabilities,
     RuntimeEvent, TurnInput,
 )
@@ -53,6 +54,8 @@ class LettaRuntimeAdapter(AgentRuntime):
             owner=str(spec.get("owner", "")),
             creation_tag=str(spec.get("creation_tag", operation_id)),
             role=spec.get("role", "hekate"),
+            **({"registry_id": str(spec["registry_id"])} if spec.get("registry_id") else {}),
+            **({"persistence": str(spec["persistence"])} if spec.get("persistence") else {}),
             **({"model": spec["model"]} if "model" in spec else {}),
             **({"max_input_tokens": spec["max_input_tokens"]} if "max_input_tokens" in spec else {}),
             **({"max_output_tokens": spec["max_output_tokens"]} if "max_output_tokens" in spec else {}),
@@ -70,14 +73,19 @@ class LettaRuntimeAdapter(AgentRuntime):
         )
         if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "agents":
             raise RuntimeError("Letta agent list was not confirmed")
-        return tuple({"provider_agent_id": item} for item in reply.result.provider_agent_ids)
+        return tuple(item.model_dump(mode="json") for item in reply.result.agents)
 
     async def observe_agent(self, provider_id: ProviderAgentId) -> ProviderObservation:
         reply = await self._request(f"agent-get:{provider_id}", "agent.get", provider_agent_id=str(provider_id))
         if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "agent":
             raise RuntimeError("Letta agent observation was not confirmed")
         state = ObservationState.PRESENT if reply.result.present else ObservationState.ABSENT
-        return ProviderObservation(state=state, evidence="agent.get", observed_at=datetime.now(UTC))
+        return ProviderObservation(
+            state=state, evidence="agent.get", observed_at=datetime.now(UTC),
+            provider_agent_id=ProviderAgentId(reply.result.provider_agent_id),
+            owner=reply.result.owner, creation_tag=reply.result.creation_tag,
+            role=reply.result.role,
+        )
 
     async def prepare_session(
         self, binding: RuntimeBinding, output_contract: str | None = None,
@@ -93,7 +101,8 @@ class LettaRuntimeAdapter(AgentRuntime):
             **({"output_contract": output_contract} if output_contract else {}),
         )
         if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "session":
-            raise RuntimeError("Letta session preparation was not confirmed")
+            detail = reply.error or "missing session result"
+            raise RuntimeError(f"Letta session preparation was not confirmed ({reply.status}: {detail})")
         session = reply.result
         trusted = binding.model_copy(update={"conversation_id": session.conversation_id})
         return trusted, session.model_dump(mode="json")
@@ -153,5 +162,44 @@ class LettaRuntimeAdapter(AgentRuntime):
     async def recover_turn(self, binding: RuntimeBinding, otid: str) -> object:
         raise NotImplementedError("same-execution resume is unsupported")
 
-    async def project_memory(self, binding: RuntimeBinding, projection: MemoryProjection) -> object:
-        raise NotImplementedError("memory projection is outside Phase 3")
+    @staticmethod
+    def _projection_identity(binding: ProjectionBinding) -> dict[str, object]:
+        return {
+            "owner": str(binding.scope),
+            "creation_tag": str(binding.creation_operation_id),
+            "registry_id": str(binding.registry_id),
+            "provider_agent_id": str(binding.provider_agent_id),
+            "authz_epoch": binding.authz_epoch,
+            "policy_version": binding.policy_version,
+            "principal_id": str(binding.principal_id),
+            "namespace": "hekate.position.v1",
+            "fence": binding.fence,
+        }
+
+    async def read_projected_memory(
+        self, binding: ProjectionBinding, topic_id: object, operation_id: OperationId,
+    ) -> MemoryProjectionObservation:
+        reply = await self._request(
+            str(operation_id), "memory.read",
+            identity=self._projection_identity(binding), topic_id=str(topic_id),
+        )
+        if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "memory":
+            raise RuntimeError(f"Letta memory read was not confirmed ({reply.status}): {reply.error or 'unexpected result'}")
+        observation = reply.result.model_dump(mode="python")
+        observation.pop("kind", None)
+        return MemoryProjectionObservation.model_validate(observation, strict=True)
+
+    async def project_memory(self, projection: MemoryProjection) -> MemoryProjectionObservation:
+        binding = projection.binding
+        reply = await self._request(
+            str(projection.operation_id), "memory.project",
+            identity=self._projection_identity(binding),
+            topic_id=str(projection.topic_id), source_version=projection.source_version,
+            format_version=projection.format_version, payload=projection.payload,
+            payload_digest=projection.payload_digest,
+        )
+        if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "memory":
+            raise RuntimeError(f"Letta memory projection was not confirmed ({reply.status}): {reply.error or 'unexpected result'}")
+        observation = reply.result.model_dump(mode="python")
+        observation.pop("kind", None)
+        return MemoryProjectionObservation.model_validate(observation, strict=True)

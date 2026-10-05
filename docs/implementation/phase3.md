@@ -30,7 +30,7 @@ export HEKATE_NODE_ARCHIVE=/path/to/node-v22.19.0-linux-x64.tar.xz
 uv run python scripts/phase3_verify.py
 ```
 
-The runner records each executed command and its result in the integration artifacts. It upgrades both disposable databases, runs Python compilation, the focused Phase 3 boundary tests, the Phase 2 PostgreSQL suite, bridge build/tests, byte-for-byte schema regeneration, migration upgrade/check/downgrade/re-upgrade, `git diff --check`, and both pinned Phase 3A and Phase 3B runtime probes. Python dependency resolution uses the checked-in `uv.lock`.
+The runner records each executed command and its result in the integration artifacts. It upgrades both disposable databases, runs Python compilation, the focused Phase 3 boundary tests, the Phase 2 PostgreSQL suite, bridge build/tests, byte-for-byte schema regeneration, migration upgrade/check, `git diff --check`, and both pinned Phase 3A and Phase 3B runtime probes. It leaves destructive downgrade/re-upgrade to an isolated empty database; the current Phase 5B probe verifies that round-trip and the populated-downgrade guard. Python dependency resolution uses the checked-in `uv.lock`.
 
 The application entry points available for Phase 3A are `build_container()`/`close_container()` in `bootstrap.py`, `run_worker()`/`dispatch_job()`/`process_pending_inbox()` in `worker/service.py`, `BridgeClient`, and `create_provider_gateway()`. Phase 3B adds the local `ask`, `task`, `cancel`, and `worker` CLI path, documented in [`phase3b.md`](phase3b.md), embeds the generated strict `HekateTurnOutput` schema in the forwarded prompt, and converges cancellation/deadline outcomes only after execution and provider-call termination are confirmed. There is still no production provider profile or public API configuration, so production settings fail closed. Runtime abort/recover and memory projection remain unsupported.
 
@@ -38,11 +38,7 @@ Application transactions follow the Phase 2 lock order: operation, authorization
 
 ## Integration evidence
 
-The T1–T7 run and verification command log are recorded in [`p3-20261001T033633Z-63d438e4.json`](../../integration/runtime/artifacts/p3-20261001T033633Z-63d438e4.json). It used PostgreSQL 16.15 at migration `0003_runtime_dispatch`, the pinned runtime above, an isolated fake provider, and made **zero real provider calls**. All 9 verification commands and all 9 runtime scenarios passed; the command log includes 3 Phase 3 tests, 19 Phase 2 PostgreSQL tests, 15 bridge tests, and 5 generated-schema comparisons.
-
-The final Phase 3A/3B verification is recorded in [`p3-20261001T074952Z-11c58ae0.json`](../../integration/runtime/artifacts/p3-20261001T074952Z-11c58ae0.json) and [`p3b-20261001T075010Z-74f05f86.json`](../../integration/runtime/artifacts/p3b-20261001T075010Z-74f05f86.json). All 14 verification commands, 9 Phase 3A scenarios, and 7 Phase 3B scenarios passed with zero real provider calls.
-
-The latest cancellation/deadline corrective run is recorded in [`p3-20261002T053719Z-9e6c468f.json`](../../integration/runtime/artifacts/p3-20261002T053719Z-9e6c468f.json) and [`p3b-20261002T053735Z-85ecad6a.json`](../../integration/runtime/artifacts/p3b-20261002T053735Z-85ecad6a.json). All 14 verifier commands, 9 Phase 3A scenarios, and 8 Phase 3B scenarios passed with zero real provider calls. The Phase 3B run confirms generated schema delivery, oversized-message rejection before admission, cancellation convergence after terminal evidence, late-result replay, and deadline convergence after restart.
+The latest current-head runtime evidence is [`p3-20261004T180726Z-b5af8b70.json`](../../integration/runtime/artifacts/p3-20261004T180726Z-b5af8b70.json) and [`p3b-20261004T180742Z-cd3ec2a4.json`](../../integration/runtime/artifacts/p3b-20261004T180742Z-cd3ec2a4.json). Both used PostgreSQL 16.15 at `0010_p5b_delib_maint` and the pinned fake-provider runtime; all 9 Phase 3A and 8 Phase 3B scenarios passed, with zero real provider calls. The updated verifier passed all 11 commands, including the Phase 2 PostgreSQL suite, bridge tests/build, schema regeneration comparison, Alembic upgrade/check, and both runtime probes. It no longer downgrades the populated runtime database; the Phase 5B artifact records the empty migration round-trip and populated downgrade guard.
 
 | Check | Result |
 |---|---|
