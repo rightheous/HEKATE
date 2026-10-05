@@ -57,8 +57,9 @@ export type Command =
       command: "memory.project";
       identity: MemoryIdentity;
       topic_id: string;
+      request_hash: string;
       source_version: number;
-      format_version: 1;
+      format_version: 2;
       payload: string;
       payload_digest: string;
     });
@@ -72,7 +73,10 @@ export interface MemoryIdentity {
   policy_version: string;
   principal_id: string;
   namespace: "hekate.position.v1";
-  fence: number;
+  lease_owner: string;
+  lease_fence: number;
+  claim_owner: string | null;
+  claim_fence: number | null;
 }
 
 export interface BridgeEvent {

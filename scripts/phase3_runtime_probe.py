@@ -269,6 +269,7 @@ class Phase3Sandbox(p1.DockerSandbox):
             "docker", "run", "--detach", "--name", self.container,
             "--network", self.network,
             "--env", "HEKATE_REQUIRE_PROVIDER_BINDING=1",
+            "--env", f"HEKATE_PROJECTION_GUARD_URL=http://hekate-fake-provider:{gateway_port}/internal/memory-projection",
             "--add-host", f"hekate-fake-provider:{self.gateway_address}",
             "--mount", f"type=bind,source={self.state},target=/root/.letta",
             "--mount", f"type=bind,source={self.token_path},target=/run/secrets/hekate-ws-token,readonly",

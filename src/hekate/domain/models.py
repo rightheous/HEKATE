@@ -953,7 +953,10 @@ class ProjectionBinding(ContractModel):
     authz_epoch: int = Field(ge=0)
     policy_version: str
     principal_id: PrincipalId
-    fence: int = Field(ge=1)
+    lease_owner: str = Field(min_length=1, max_length=256)
+    lease_fence: int = Field(ge=1)
+    claim_owner: str | None = Field(default=None, max_length=256)
+    claim_fence: int | None = Field(default=None, ge=1)
 
 
 class MemoryProjection(ContractModel):
@@ -964,7 +967,7 @@ class MemoryProjection(ContractModel):
     topic_id: TopicId
     source_version: int = Field(ge=1)
     base_applied_version: int = Field(ge=0)
-    format_version: Literal[1] = 1
+    format_version: Literal[2] = 2
     payload: str = Field(min_length=1, max_length=16_384)
     payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
 
@@ -974,12 +977,35 @@ class MemoryProjectionObservation(ContractModel):
     present: bool
     topic_id: TopicId
     source_version: int = Field(default=0, ge=0)
-    format_version: Literal[1] | None = None
+    format_version: Literal[1, 2] | None = None
     payload_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     payload: str | None = Field(default=None, max_length=16_384)
-    fence: int = Field(default=0, ge=0)
+    lease_fence: int = Field(default=0, ge=0)
+    agent_fence: int = Field(default=0, ge=0)
     memory_revision: str | None = None
     verified: bool
+
+
+class ProjectionWriteAuthorization(ContractModel):
+    """Exact identity checked in PostgreSQL at the pinned runtime write boundary."""
+    operation_id: OperationId
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    scope: ScopeId
+    registry_id: RegistryId
+    provider_agent_id: ProviderAgentId
+    creation_operation_id: OperationId
+    principal_id: PrincipalId
+    policy_version: str = Field(min_length=1, max_length=128)
+    authz_epoch: int = Field(ge=0)
+    lease_owner: str = Field(min_length=1, max_length=256)
+    lease_fence: int = Field(ge=1)
+    claim_owner: str = Field(min_length=1, max_length=256)
+    claim_fence: int = Field(ge=1)
+    topic_id: TopicId
+    source_version: int = Field(ge=1)
+    payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    namespace: Literal["hekate.position.v1"]
+    target_path: Literal["hekate_positions.md"]
 
 
 class ProjectionJob(ContractModel):

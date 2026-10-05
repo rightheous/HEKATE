@@ -85,7 +85,10 @@ class MemoryIdentity(ContractModel):
     policy_version: str = Field(min_length=1, max_length=128)
     principal_id: str = Field(min_length=1, max_length=128)
     namespace: Literal["hekate.position.v1"]
-    fence: int = Field(ge=1)
+    lease_owner: str = Field(min_length=1, max_length=256)
+    lease_fence: int = Field(ge=1)
+    claim_owner: str | None = Field(default=None, max_length=256)
+    claim_fence: int | None = Field(default=None, ge=1)
 
 
 class MemoryReadCommand(BridgeCommandBase):
@@ -98,8 +101,9 @@ class MemoryProjectCommand(BridgeCommandBase):
     command: Literal["memory.project"]
     identity: MemoryIdentity
     topic_id: str = Field(min_length=1, max_length=256)
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     source_version: int = Field(ge=1)
-    format_version: Literal[1] = 1
+    format_version: Literal[2] = 2
     payload: str = Field(min_length=1, max_length=16_384)
     payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
 
@@ -240,7 +244,8 @@ class MemoryResult(ContractModel):
     format_version: int | None = None
     payload_digest: str | None = None
     payload: str | None = Field(default=None, max_length=16_384)
-    fence: int = Field(default=0, ge=0)
+    lease_fence: int = Field(default=0, ge=0)
+    agent_fence: int = Field(default=0, ge=0)
     memory_revision: str | None = None
     verified: bool
 

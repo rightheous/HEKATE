@@ -173,7 +173,10 @@ class LettaRuntimeAdapter(AgentRuntime):
             "policy_version": binding.policy_version,
             "principal_id": str(binding.principal_id),
             "namespace": "hekate.position.v1",
-            "fence": binding.fence,
+            "lease_owner": binding.lease_owner,
+            "lease_fence": binding.lease_fence,
+            "claim_owner": binding.claim_owner,
+            "claim_fence": binding.claim_fence,
         }
 
     async def read_projected_memory(
@@ -194,7 +197,8 @@ class LettaRuntimeAdapter(AgentRuntime):
         reply = await self._request(
             str(projection.operation_id), "memory.project",
             identity=self._projection_identity(binding),
-            topic_id=str(projection.topic_id), source_version=projection.source_version,
+            topic_id=str(projection.topic_id), request_hash=projection.request_hash,
+            source_version=projection.source_version,
             format_version=projection.format_version, payload=projection.payload,
             payload_digest=projection.payload_digest,
         )

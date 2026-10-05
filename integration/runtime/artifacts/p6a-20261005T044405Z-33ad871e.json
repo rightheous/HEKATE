@@ -1,0 +1,153 @@
+{
+  "schema_version": "1",
+  "probe": "phase6a-memory-projection",
+  "run_id": "p6a-20261005T044405Z-33ad871e",
+  "executed_at": "2026-10-05T04:44:05.974924Z",
+  "baseline": {
+    "head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+    "branch": "phase5b-bounded-deliberation",
+    "source_worktree": "/home/hekate/hekate-phase5b-bounded-deliberation",
+    "copy_manifest": "integration/runtime/artifacts/p6a-baseline-20261004T184731Z-f941096c.json",
+    "phase4_phase5a_phase5b_changes": "selected tracked diff and clean nonignored implementation/docs/artifacts copied before Phase 6A edits"
+  },
+  "branch": "phase6a-memory-projection",
+  "head": "282719974110c2264941d6b8e17f3c538c8fd99a",
+  "production_dispatch": "blocked",
+  "real_provider_calls": 0,
+  "projection_inference_calls": 0,
+  "overall_status": "blocked",
+  "results": {},
+  "execution": {
+    "command": "uv run --locked python scripts/phase6a_memory_projection_probe.py --database-url <isolated-db> --empty-migration-database-url <isolated-empty-db> --node-bin /tmp/node-v22.19.0/bin/node",
+    "result": "failed"
+  },
+  "limitations": [
+    "Projection is a bounded reference in persistent HEKATE core memory; PostgreSQL remains authoritative.",
+    "Actual provider access and production dispatch remain disabled; a local synthetic fake provider is used.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Conclusion exact reuse, schema repair/retry, vector search, and automatic deliberation remain out of scope."
+  ],
+  "runtime": {
+    "node_version": "22.19.0",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "sdk_version": "0.8.25",
+    "app_server_version": "0.33.8",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "patched_image_id": "sha256:02d7d5a101f636e5c1744ecadb344213b5b794b91ce36f41fa5c973b8e36a2db",
+    "runtime_patch_sha256": "d6f4706748a4fc7878a1ba50946243cd246bf94e183d6b1ee02e81a93fa1ff19",
+    "bridge_protocol_version": "1",
+    "patch_sha256": "d6f4706748a4fc7878a1ba50946243cd246bf94e183d6b1ee02e81a93fa1ff19"
+  },
+  "database": {
+    "name": "hekate_phase6a_harden_20261005_c",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "migration_head": "0012_projection_write_guard"
+  },
+  "failure": {
+    "type": "AssertionError",
+    "message": "revoked epoch reached runtime memory or changed a committed Task/ledger: projection={'desired_version': 1, 'applied_version': 0, 'observed_memory_version': 0, 'observed_payload_digest': None, 'payload_digest': '9d41522ce1780e5b85ce40c123714f3115a36bdca8029b8df44786d178e3a2b1', 'state': 'UNKNOWN', 'pending_reason': 'runtime_memory_is_older_than_current_Position', 'operation_id': 'e33db411-67f7-542d-8b3c-3bbfbef5b1cc', 'request_hash': '82accc083c82ef4999a496144a3d73961c2fd056220e5f2cc8f1c94c955e54",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/hekate/hekate-phase6a-memory-projection/scripts/phase6a_memory_projection_probe.py\", line 1134, in _run\n    raise AssertionError(\nAssertionError: revoked epoch reached runtime memory or changed a committed Task/ledger: projection={'desired_version': 1, 'applied_version': 0, 'observed_memory_version': 0, 'observed_payload_digest': None, 'payload_digest': '9d41522ce1780e5b85ce40c123714f3115a36bdca8029b8df44786d178e3a2b1', 'state': 'UNKNOWN', 'pending_reason': 'runtime_memory_is_older_than_current_Position', 'operation_id': 'e33db411-67f7-542d-8b3c-3bbfbef5b1cc', 'request_hash': '82accc083c82ef4999a496144a3d73961c2fd056220e5f2cc8f1c94c955e5403'}, operation={'state': 'UNKNOWN', 'failure_reason': 'runtime_memory_is_older_than_current_Position'}, guards=[{'state': 'NO_EFFECT', 'authz_epoch': 1, 'observation': {'reason': 'projection_authorization_snapshot_changed_at_runtime_write', 'decision': 'DENIED_BEFORE_RUNTIME_WRITE'}}], before=present=False topic_id='phase6a-memory-auth-revoke' source_version=0 format_version=None payload_digest=None payload=None lease_fence=0 agent_fence=23 memory_revision='df42f628ad3b0040b9b62d2d62c6ef309053fa70' verified=True, after=present=False topic_id='phase6a-memory-auth-revoke' source_version=0 format_version=None payload_digest=None payload=None lease_fence=0 agent_fence=23 memory_revision='df42f628ad3b0040b9b62d2d62c6ef309053fa70' verified=True, task={'status': 'COMPLETED', 'outcome': 'POSITION_COMMITTED', 'stop_reason': 'COMPLETED', 'responses': 1}\n"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "task_id": "23513ed6-cbf6-478f-b51d-2d2906df6d3d",
+      "topic_id": "phase6a-memory-primary",
+      "registry_id": "3b85b857-2d7b-5d56-8b84-8c4de5b585c4",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "7e3c04dc-eaf9-4754-97a5-178f84356962",
+      "topic_id": "phase6a-memory-primary",
+      "registry_id": "3b85b857-2d7b-5d56-8b84-8c4de5b585c4",
+      "target_position_version": 1,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": true,
+      "runtime_memory_source_version": 1,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "314c6e18-f797-462d-8d43-b85c57819eec",
+      "topic_id": "phase6a-memory-primary",
+      "registry_id": "3b85b857-2d7b-5d56-8b84-8c4de5b585c4",
+      "target_position_version": 2,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": true,
+      "runtime_memory_source_version": 2,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "3bf1d34c-c609-41c4-91da-f7c4053acc75",
+      "topic_id": "phase6a-memory-followup",
+      "registry_id": "3b85b857-2d7b-5d56-8b84-8c4de5b585c4",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "0b799d25-d2ee-4ca9-981b-d698a17db746",
+      "topic_id": "phase6a-memory-serial-a",
+      "registry_id": "3b85b857-2d7b-5d56-8b84-8c4de5b585c4",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "d58993fd-e365-436c-8535-c2f3ac33b392",
+      "topic_id": "phase6a-memory-serial-b",
+      "registry_id": "3b85b857-2d7b-5d56-8b84-8c4de5b585c4",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "562d66e0-2f59-4fb0-9ae0-b7e9b1a471cd",
+      "topic_id": "phase6a-memory-auth-revoke",
+      "registry_id": "3b85b857-2d7b-5d56-8b84-8c4de5b585c4",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    }
+  ],
+  "projection_runtime_errors": [
+    {
+      "call": "memory.project",
+      "type": "RuntimeError",
+      "detail": "Letta memory projection was not confirmed (REJECTED): same projection version is already bound to a different payload digest"
+    },
+    {
+      "call": "memory.project",
+      "type": "RuntimeError",
+      "detail": "Letta memory projection was not confirmed (REJECTED): agent lease fence is stale across the memory namespace"
+    },
+    {
+      "call": "memory.project",
+      "type": "RuntimeError",
+      "detail": "Letta memory projection was not confirmed (REJECTED): agent lease fence is stale across the memory namespace"
+    },
+    {
+      "call": "memory.project",
+      "type": "RuntimeError",
+      "detail": "Letta memory projection was not confirmed (REJECTED): projection_authorization_snapshot_changed_at_runtime_write"
+    }
+  ],
+  "fake_provider_requests": 7,
+  "bridge_stderr_tail": "",
+  "app_server_log_tail": "Listening on ws://0.0.0.0:4500\nWebSocket: ws://0.0.0.0:4500/ws\n",
+  "code_fingerprint_sha256": "e322efbde8bdca6b7ccdc58cdefad149a013c2de8357d22fe00c28528019682b",
+  "migration": {
+    "empty_database": "hekate_phase6a_harden_20261005_empty_c",
+    "upgrade_head": "0012_projection_write_guard",
+    "downgrade_head": "0011_phase6a_memory_projection",
+    "reupgrade_head": "0012_projection_write_guard",
+    "passed": true,
+    "populated_database_downgrade_guard": null
+  },
+  "artifact_path": "integration/runtime/artifacts/p6a-20261005T044405Z-33ad871e.json"
+}

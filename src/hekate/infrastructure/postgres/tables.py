@@ -727,7 +727,7 @@ memory_projections = Table(
     PrimaryKeyConstraint("scope", "topic_id", "target_registry_id", name="pk_memory_projections"),
     CheckConstraint("desired_version >= 0 AND applied_version >= 0 AND applied_version <= desired_version", name="ck_memory_projection_versions"),
     CheckConstraint("state IN ('PENDING_UNSUPPORTED','PENDING','CLAIMED','UNKNOWN','APPLIED','DRIFT','CONFLICT')", name="ck_memory_projection_state"),
-    CheckConstraint("claim_fence >= 0 AND attempt_count >= 0 AND projection_format_version = 1", name="ck_memory_projection_claim_format"),
+    CheckConstraint("claim_fence >= 0 AND attempt_count >= 0 AND projection_format_version IN (1,2)", name="ck_memory_projection_claim_format"),
 )
 Index("ix_memory_projection_due", memory_projections.c.state, memory_projections.c.next_retry_at, memory_projections.c.updated_at)
 
@@ -751,10 +751,37 @@ memory_projection_operations = Table(
     Column("completed_at", instant),
     ForeignKeyConstraint(["scope", "topic_id"], ["position_topics.scope", "position_topics.topic_id"], ondelete="RESTRICT", name="fk_projection_operation_topic"),
     UniqueConstraint("scope", "topic_id", "target_registry_id", "source_version", "request_hash", name="uq_projection_operation_request"),
-    CheckConstraint("source_version >= 1 AND base_applied_version >= 0 AND format_version = 1", name="ck_projection_operation_version"),
+    CheckConstraint("source_version >= 1 AND base_applied_version >= 0 AND format_version IN (1,2)", name="ck_projection_operation_version"),
     CheckConstraint("state IN ('PENDING','STARTED','UNKNOWN','COMPLETED','SUPERSEDED','DRIFT','CONFLICT')", name="ck_projection_operation_state"),
 )
 Index("ix_projection_operation_pending", memory_projection_operations.c.state, memory_projection_operations.c.updated_at)
+
+memory_projection_write_guards = Table(
+    "memory_projection_write_guards", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("operation_id", Text, ForeignKey("memory_projection_operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("topic_id", Text, nullable=False),
+    Column("request_hash", String(64), nullable=False),
+    Column("principal_id", Text, nullable=False),
+    Column("policy_version", Text, nullable=False),
+    Column("authz_epoch", Integer, nullable=False),
+    Column("lease_owner", Text, nullable=False),
+    Column("lease_fence", Integer, nullable=False),
+    Column("claim_owner", Text, nullable=False),
+    Column("claim_fence", Integer, nullable=False),
+    Column("source_version", Integer, nullable=False),
+    Column("payload_digest", String(64), nullable=False),
+    Column("state", Text, nullable=False),
+    Column("observation", JSONB),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    Column("resolved_at", instant),
+    CheckConstraint("authz_epoch >= 0 AND lease_fence >= 1 AND claim_fence >= 1 AND source_version >= 1", name="ck_projection_write_guard_identity"),
+    CheckConstraint("state IN ('AUTHORIZED','EFFECT_CONFIRMED','NO_EFFECT')", name="ck_projection_write_guard_state"),
+)
+Index("ix_projection_write_guard_active", memory_projection_write_guards.c.registry_id, memory_projection_write_guards.c.state)
 
 context_manifests = Table(
     "context_manifests", _metadata,

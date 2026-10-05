@@ -640,8 +640,8 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         async with engine.connect() as connection:
             head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres = await connection.scalar(text("SHOW server_version"))
-        if head != "0011_phase6a_memory_projection":
-            raise ValueError("Phase 5B probe requires migration head 0011")
+        if head != "0012_projection_write_guard":
+            raise ValueError("Phase 5B regression probe requires the current migration head 0012")
         report["database"] = {"name": make_url(database_url).database, "postgres_version": postgres, "migration_head": head}
 
         scope_text, principal_text = f"phase5b:{run_id}", f"principal:{run_id}"
@@ -3711,7 +3711,9 @@ async def _maintenance_migration_snapshot(database_url: str) -> dict[str, object
                     (SELECT COALESCE(sum(held_amount),0)::text FROM budget_accounts) AS held
             """))).mappings().one()
             result: dict[str, object] = {"head": head, **dict(counts)}
-            if head in {"0010_p5b_delib_maint", "0011_phase6a_memory_projection"}:
+            if head in {
+                "0010_p5b_delib_maint", "0011_phase6a_memory_projection", "0012_projection_write_guard",
+            }:
                 progress = (await connection.execute(text("""
                     SELECT count(*) AS steps,
                            count(*) FILTER (WHERE maintenance_completed_at IS NULL) AS unmarked,
@@ -3740,8 +3742,10 @@ def _verify_legacy_migration_preserves_rows(database_url: str) -> dict[str, obje
             else:
                 os.environ["HEKATE_DATABASE_URL"] = previous_url
         migrated = True
-    elif before["head"] not in {"0010_p5b_delib_maint", "0011_phase6a_memory_projection"}:
-        raise ValueError(f"legacy preservation database must be at 0009, 0010, or 0011, found {before['head']}")
+    elif before["head"] not in {
+        "0010_p5b_delib_maint", "0011_phase6a_memory_projection", "0012_projection_write_guard",
+    }:
+        raise ValueError(f"legacy preservation database must be at 0009 through 0012, found {before['head']}")
     after = asyncio.run(_maintenance_migration_snapshot(database_url))
     preserved_keys = ("tasks", "steps", "operations", "ledger_rows", "unknown_operations", "active_holds", "spent", "held")
     if any(before[key] != after[key] for key in preserved_keys):
@@ -3776,10 +3780,14 @@ def _verify_empty_migration_roundtrip(database_url: str) -> dict[str, object]:
     try:
         p3.command.upgrade(cfg, "head")
         upgraded = asyncio.run(_maintenance_migration_snapshot(database_url))
-        if upgraded["head"] != "0011_phase6a_memory_projection" or any(
+        if upgraded["head"] != "0012_projection_write_guard" or any(
             upgraded[key] != 0 for key in ("tasks", "steps", "operations", "ledger_rows", "unknown_operations", "active_holds")
         ):
-            raise AssertionError(f"fresh migration did not create an empty 0011 database: {upgraded}")
+            raise AssertionError(f"fresh migration did not create an empty 0012 database: {upgraded}")
+        p3.command.downgrade(cfg, "-1")
+        downgraded_0012 = asyncio.run(_maintenance_migration_snapshot(database_url))
+        if downgraded_0012["head"] != "0011_phase6a_memory_projection":
+            raise AssertionError(f"empty 0012 downgrade did not stop at 0011: {downgraded_0012}")
         p3.command.downgrade(cfg, "-1")
         downgraded = asyncio.run(_maintenance_migration_snapshot(database_url))
         if downgraded["head"] != "0010_p5b_delib_maint":
@@ -3790,11 +3798,12 @@ def _verify_empty_migration_roundtrip(database_url: str) -> dict[str, object]:
             raise AssertionError(f"empty 0010 downgrade did not stop at 0009: {downgraded}")
         p3.command.upgrade(cfg, "head")
         reupgraded = asyncio.run(_maintenance_migration_snapshot(database_url))
-        if reupgraded["head"] != "0011_phase6a_memory_projection" or reupgraded["steps"] != 0:
+        if reupgraded["head"] != "0012_projection_write_guard" or reupgraded["steps"] != 0:
             raise AssertionError(f"empty migration re-upgrade failed: {reupgraded}")
         return {
             "database": make_url(database_url).database,
             "upgrade_head": upgraded["head"],
+            "intermediate_downgrade_head": downgraded_0012["head"],
             "downgrade_head": downgraded["head"],
             "reupgrade_head": reupgraded["head"],
             "rows_preserved": reupgraded["steps"] == 0,
@@ -3855,6 +3864,10 @@ def main() -> int:
         report["legacy_database_migration_check"] = legacy_migration_check
     populated_downgrade_guard: dict[str, object]
     p3.command.downgrade(cfg, "-1")
+    write_guard_downgrade_head = asyncio.run(_maintenance_migration_snapshot(args.database_url))["head"]
+    if write_guard_downgrade_head != "0011_phase6a_memory_projection":
+        raise AssertionError("empty Phase 6A write-guard state did not permit a downgrade to 0011")
+    p3.command.downgrade(cfg, "-1")
     projection_downgrade_head = asyncio.run(_maintenance_migration_snapshot(args.database_url))["head"]
     if projection_downgrade_head != "0010_p5b_delib_maint":
         raise AssertionError("empty Phase 6A projection progress did not permit a downgrade to 0010")
@@ -3867,7 +3880,9 @@ def main() -> int:
         if head_after_downgrade_attempt != "0010_p5b_delib_maint":
             raise AssertionError("refused populated downgrade changed the migration head") from error
         populated_downgrade_guard = {
-            "refused": True, "reason": str(error), "projection_downgrade_head": projection_downgrade_head,
+            "refused": True, "reason": str(error),
+            "write_guard_downgrade_head": write_guard_downgrade_head,
+            "projection_downgrade_head": projection_downgrade_head,
             "head_unchanged_after_0010_guard": True,
         }
     else:

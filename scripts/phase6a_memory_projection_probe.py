@@ -26,10 +26,10 @@ import phase4_evidence_position_probe as p4
 import phase5b_bounded_deliberation_probe as p5b
 
 from hekate.application.projections import claim_pending_projections, project_position
-from hekate.application.tasks import submit
+from hekate.application.tasks import cancel, submit
 from hekate.domain.contracts import canonical_json, canonical_json_hash
 from hekate.domain.models import AuthorizationSnapshot, MemoryProjection, ProjectionBinding, UserMessage
-from hekate.domain.types import OperationId, PrincipalId, ScopeId, TaskId, TopicId
+from hekate.domain.types import OperationId, PrincipalId, ScopeId, StopReason, TaskId, TopicId
 from hekate.infrastructure.letta.adapter import LettaRuntimeAdapter
 from hekate.infrastructure.letta.bridge_protocol import BridgeClient
 from hekate.infrastructure.letta.provider_gateway import ProviderGatewayProfile
@@ -41,10 +41,74 @@ from hekate.worker import service as worker_service
 
 TOPIC = "phase6a-memory-primary"
 ALT_TOPIC = "phase6a-memory-followup"
+SERIAL_TOPIC_A = "phase6a-memory-serial-a"
+SERIAL_TOPIC_B = "phase6a-memory-serial-b"
+TASK_COMPETE_TOPIC = "phase6a-memory-task-compete"
+AUTH_REVOKE_TOPIC = "phase6a-memory-auth-revoke"
 V1_STATEMENT = "Phase6A durable Position marker: yellow bridge 71-alpha remains valid only within its stated jurisdiction."
 V2_STATEMENT = "Phase6A durable Position marker: yellow bridge 71-alpha is valid within the stated jurisdiction and date window."
 V3_STATEMENT = "Phase6A durable Position marker: yellow bridge 71-alpha requires confirmation of the date window."
 ALT_STATEMENT = "Phase6A secondary topic marker: the blue cable applies only to the stated inspection scope."
+SERIAL_STATEMENT_A = "Phase6A serialized projection marker: first writer retains its own agent lease."
+SERIAL_STATEMENT_B = "Phase6A serialized projection marker: second topic waits for the first writer."
+TASK_COMPETE_STATEMENT = "Phase6A queued Task must wait for the active projection writer."
+AUTH_REVOKE_STATEMENT = "Phase6A authorization revocation marker must not reach runtime memory."
+
+
+class ProjectionGatewayBarrier:
+    """One-shot ASGI barrier at the control-plane projection write boundary."""
+
+    def __init__(self) -> None:
+        self.action: str | None = None
+        self.entered = asyncio.Event()
+        self.release_event = asyncio.Event()
+        self.completed = asyncio.Event()
+        self._used = False
+
+    def arm(self, action: str) -> None:
+        if action not in {"authorize", "complete"}:
+            raise ValueError("unsupported projection gateway barrier")
+        self.action = action
+        self.entered = asyncio.Event()
+        self.release_event = asyncio.Event()
+        self.completed = asyncio.Event()
+        self._used = False
+
+    async def intercept(self, action: str) -> bool:
+        if self.action != action or self._used:
+            return False
+        self._used = True
+        self.action = None
+        self.entered.set()
+        await self.release_event.wait()
+        return True
+
+    def release(self) -> None:
+        self.release_event.set()
+
+
+class ProjectionGatewayBarrierMiddleware:
+    def __init__(self, app, *, barrier: ProjectionGatewayBarrier) -> None:
+        self.app = app
+        self.barrier = barrier
+
+    async def __call__(self, scope, receive, send) -> None:
+        held_action = None
+        if scope.get("type") == "http":
+            path = scope.get("path")
+            if path == "/internal/memory-projection/authorize":
+                action = "authorize"
+            elif path == "/internal/memory-projection/complete":
+                action = "complete"
+            else:
+                action = None
+            if action is not None and await self.barrier.intercept(action):
+                held_action = action
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            if held_action is not None:
+                self.barrier.completed.set()
 
 
 class ProjectionRuntimeProbe:
@@ -56,6 +120,7 @@ class ProjectionRuntimeProbe:
         self.write_calls = 0
         self.drop_next_write_response = False
         self.errors: list[dict[str, str]] = []
+        self.read_observations: list[dict[str, object]] = []
 
     def __getattr__(self, name: str):
         return getattr(self.inner, name)
@@ -63,7 +128,15 @@ class ProjectionRuntimeProbe:
     async def read_projected_memory(self, binding, topic_id, operation_id):
         self.read_calls += 1
         try:
-            return await self.inner.read_projected_memory(binding, topic_id, operation_id)
+            result = await self.inner.read_projected_memory(binding, topic_id, operation_id)
+            self.read_observations.append({
+                "topic_id": str(topic_id), "present": result.present,
+                "source_version": result.source_version,
+                "payload_digest": result.payload_digest,
+                "memory_revision": result.memory_revision,
+                "agent_fence": result.agent_fence,
+            })
+            return result
         except Exception as error:
             self.errors.append({"call": "memory.read", "type": type(error).__name__, "detail": str(error)[:600]})
             raise
@@ -305,6 +378,31 @@ async def _position_body(factory, actor, topic_id: str, registry_id: str, versio
     raise AssertionError(f"Position v{version} is not durable")
 
 
+async def _acquire_probe_lease(factory, registry_id: str, owner: str):
+    async with factory() as uow:
+        lease = await uow.agents.acquire_lease(registry_id, owner, 120)
+        await uow.commit()
+    if lease is None:
+        raise AssertionError(f"probe could not acquire its PostgreSQL agent lease: {owner}")
+    return lease
+
+
+async def _release_probe_lease(factory, lease) -> None:
+    async with factory() as uow:
+        await uow.agents.release_lease(lease)
+        await uow.commit()
+
+
+async def _runtime_read(factory, runtime, actor, registry, topic_id: str, operation_id: str):
+    lease = await _acquire_probe_lease(factory, registry.registry_id, f"p6a-read:{uuid.uuid4()}")
+    try:
+        return await runtime.read_projected_memory(
+            _binding(actor, registry, lease.owner, lease.fence), TopicId(topic_id), OperationId(operation_id),
+        )
+    finally:
+        await _release_probe_lease(factory, lease)
+
+
 async def _run(database_url: str, node: str, image: str, node_archive: Path, artifact: Path, run_id: str) -> dict[str, object]:
     report: dict[str, object] = {
         "schema_version": "1", "probe": "phase6a-memory-projection", "run_id": run_id,
@@ -334,6 +432,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
     temp = tempfile.TemporaryDirectory(prefix="hekate-phase6a-")
     state = Path(temp.name)
     engine = bridge = fake = gateway_server = gateway_task = sandbox = None
+    projection_barrier: ProjectionGatewayBarrier | None = None
     worker_runs: list[tuple[asyncio.Event, asyncio.Task]] = []
     response_observations: list[dict[str, object]] = []
     output_errors: list[str] = []
@@ -347,7 +446,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         async with engine.connect() as connection:
             head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres = await connection.scalar(text("SHOW server_version"))
-        if head != "0011_phase6a_memory_projection":
+        if head != "0012_projection_write_guard":
             raise AssertionError(f"unexpected migration head: {head}")
         report["database"] = {"name": make_url(database_url).database, "postgres_version": postgres, "migration_head": head}
 
@@ -419,6 +518,8 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         )
         from hekate.infrastructure.letta.provider_gateway import create_provider_gateway
         gateway = create_provider_gateway(factory, gateway_profile, private_token, allow_test_profile=True)
+        projection_barrier = ProjectionGatewayBarrier()
+        gateway.add_middleware(ProjectionGatewayBarrierMiddleware, barrier=projection_barrier)
         gateway_server, gateway_task = await p3.start_gateway_server(gateway, sandbox.gateway_address, gateway_port)
         sandbox.start_pinned_app_server(gateway_port, private_token)
         letta_url = f"ws://{sandbox.container_address}:{p3.p1.APP_PORT}"
@@ -444,6 +545,10 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             ("commit-v2", TOPIC, V2_STATEMENT),
             ("commit-v3", TOPIC, V3_STATEMENT),
             ("commit-alt", ALT_TOPIC, ALT_STATEMENT),
+            ("serialize-a", SERIAL_TOPIC_A, SERIAL_STATEMENT_A),
+            ("serialize-b", SERIAL_TOPIC_B, SERIAL_STATEMENT_B),
+            ("serialize-task-competitor", TASK_COMPETE_TOPIC, TASK_COMPETE_STATEMENT),
+            ("auth-revoke", AUTH_REVOKE_TOPIC, AUTH_REVOKE_STATEMENT),
         ]
         def add_task(label: str, topic: str, statement: str):
             async def create():
@@ -478,10 +583,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         status_v1, registry = await _projection_status(factory, actor, TOPIC, str((await _registry(factory, actor)).registry_id))
         if status_v1["state"] != "APPLIED" or status_v1["applied_version"] != 1 or status_v1["observed_memory_version"] != 1:
             raise AssertionError(f"Position v1 was not read-back confirmed: {status_v1}")
-        runtime_read_v1 = await runtime_probe.read_projected_memory(
-            _binding(actor, registry, max(1, int(status_v1["claim_fence"]))), TopicId(TOPIC),
-            OperationId(str(status_v1["operation_id"])),
-        )
+        runtime_read_v1 = await _runtime_read(factory, runtime_probe, actor, registry, TOPIC, str(status_v1["operation_id"]))
         if not runtime_read_v1.present or runtime_read_v1.source_version != 1 or runtime_read_v1.payload_digest != status_v1["payload_digest"]:
             raise AssertionError("pinned runtime read-back did not match the v1 projection digest")
         if V1_STATEMENT not in (runtime_read_v1.payload or ""):
@@ -511,62 +613,19 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             raise AssertionError("Position v2 or its inference accounting did not advance exactly once")
 
         status_v2, registry = await _projection_status(factory, actor, TOPIC, str(registry.registry_id))
-        runtime_read_v2 = await runtime_probe.read_projected_memory(
-            _binding(actor, registry, max(1, int(status_v2["claim_fence"]))), TopicId(TOPIC),
-            OperationId(str(status_v2["operation_id"])),
-        )
+        runtime_read_v2 = await _runtime_read(factory, runtime_probe, actor, registry, TOPIC, str(status_v2["operation_id"]))
         if runtime_read_v2.source_version != 2 or runtime_read_v2.payload_digest != status_v2["payload_digest"]:
             raise AssertionError("pinned runtime read-back did not match the v2 projection digest")
 
-        stale_replay = MemoryProjection(
-            operation_id=OperationId(f"phase6a-stale-v1:{run_id}"), request_hash=hashlib.sha256(f"stale:{run_id}".encode()).hexdigest(),
-            binding=_binding(actor, registry, max(1, int(status_v2["claim_fence"]) - 1)), topic_id=TopicId(TOPIC),
-            source_version=1, base_applied_version=0, format_version=1,
-            payload=runtime_read_v1.payload or "{}", payload_digest=runtime_read_v1.payload_digest or "0" * 64,
-        )
-        newest_replay = MemoryProjection(
-            operation_id=OperationId(f"phase6a-current-v2:{run_id}"), request_hash=hashlib.sha256(f"current-v2:{run_id}".encode()).hexdigest(),
-            binding=_binding(actor, registry, max(1, int(status_v2["claim_fence"]))), topic_id=TopicId(TOPIC),
-            source_version=2, base_applied_version=1, format_version=1,
-            payload=runtime_read_v2.payload or "{}", payload_digest=runtime_read_v2.payload_digest or "0" * 64,
-        )
-        start_projection_race = asyncio.Event()
-
-        async def concurrent_runtime_projection(value, *, stale: bool = False):
-            await start_projection_race.wait()
-            try:
-                return await runtime_probe.project_memory(value)
-            except RuntimeError as error:
-                if stale and "projection fence is stale" in str(error):
-                    return None
-                raise
-
-        stale_task = asyncio.create_task(concurrent_runtime_projection(stale_replay, stale=True))
-        newest_task = asyncio.create_task(concurrent_runtime_projection(newest_replay))
-        start_projection_race.set()
-        stale_result, newest_result = await asyncio.gather(stale_task, newest_task)
-        if stale_result is not None or newest_result is None or newest_result.source_version != 2 or newest_result.payload_digest != status_v2["payload_digest"]:
-            raise AssertionError("concurrent stale and current runtime requests did not preserve v2")
-        current_payload = json.loads(runtime_read_v2.payload or "{}")
-        current_payload["statement"] = "same version with different digest must conflict"
-        conflict_payload = canonical_json(current_payload)
-        conflict_projection = MemoryProjection(
-            operation_id=OperationId(f"phase6a-conflict:{run_id}"), request_hash=hashlib.sha256(f"conflict:{run_id}".encode()).hexdigest(),
-            binding=_binding(actor, registry, max(1, int(status_v2["claim_fence"]) + 101)), topic_id=TopicId(TOPIC),
-            source_version=2, base_applied_version=1, format_version=1,
-            payload=conflict_payload, payload_digest=hashlib.sha256(conflict_payload.encode()).hexdigest(),
-        )
-        same_version_conflict = False
-        try:
-            await runtime_probe.project_memory(conflict_projection)
-        except RuntimeError:
-            same_version_conflict = True
-        confirmed_after_stale = await runtime_probe.read_projected_memory(
-            _binding(actor, registry, max(1, int(status_v2["claim_fence"]) + 102)), TopicId(TOPIC),
-            OperationId(str(status_v2["operation_id"])),
-        )
-        if not same_version_conflict or confirmed_after_stale.source_version != 2 or confirmed_after_stale.payload_digest != status_v2["payload_digest"]:
-            raise AssertionError("same-version digest conflict changed runtime memory")
+        # Use two real PostgreSQL lease acquisitions to create a stale generation.
+        # The upcoming v3 projection advances the pinned runtime's global agent
+        # fence beyond both, independently of either topic's claim fence.
+        old_lease = await _acquire_probe_lease(factory, registry.registry_id, f"p6a-old-agent-owner:{run_id}")
+        await _release_probe_lease(factory, old_lease)
+        replacement_lease = await _acquire_probe_lease(factory, registry.registry_id, f"p6a-new-agent-owner:{run_id}")
+        if replacement_lease.fence <= old_lease.fence:
+            raise AssertionError("PostgreSQL agent lease takeover did not advance its own fence")
+        await _release_probe_lease(factory, replacement_lease)
         memory_provider_count_before = fake.count()
 
         # Keep the v3 memory job pending while the worker accepts the Task. Claim
@@ -603,9 +662,9 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         if failed_receipt is not None:
             raise AssertionError("projection confirmation with injected DB rollback was reported as complete")
         after_rollback_status, registry = await _projection_status(factory, actor, TOPIC, str(registry.registry_id))
-        actual_after_lost_response = await runtime_probe.read_projected_memory(
-            _binding(actor, registry, max(1, int(after_rollback_status["claim_fence"]))), TopicId(TOPIC),
-            OperationId(str(after_rollback_status["operation_id"] or v3_job.original_operation_id)),
+        actual_after_lost_response = await _runtime_read(
+            factory, runtime_probe, actor, registry, TOPIC,
+            str(after_rollback_status["operation_id"] or v3_job.original_operation_id),
         )
         if actual_after_lost_response.source_version != 3 or V3_STATEMENT not in (actual_after_lost_response.payload or ""):
             raise AssertionError("write-response-loss fixture did not leave the actual runtime memory at v3")
@@ -632,13 +691,520 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             raise AssertionError("worker did not recover the v3 retry and advance the other pending topic")
 
         final_v3_status, registry = await _projection_status(factory, actor, TOPIC, str(registry.registry_id))
-        final_v3_read = await runtime_probe.read_projected_memory(
-            _binding(actor, registry, max(1, int(final_v3_status["claim_fence"]))), TopicId(TOPIC),
-            OperationId(str(final_v3_status["operation_id"])),
-        )
+        final_v3_read = await _runtime_read(factory, runtime_probe, actor, registry, TOPIC, str(final_v3_status["operation_id"]))
         final_alt_status, _ = await _projection_status(factory, actor, ALT_TOPIC, str(registry.registry_id))
         if final_v3_read.source_version != 3 or final_v3_read.payload_digest != final_v3_status["payload_digest"]:
             raise AssertionError("restarted worker read-back did not confirm v3")
+
+        if old_lease.fence >= final_v3_read.agent_fence:
+            raise AssertionError("pinned runtime did not record a newer PostgreSQL agent lease fence")
+        current_probe_lease = await _acquire_probe_lease(
+            factory, registry.registry_id, f"p6a-current-agent-owner:{run_id}",
+        )
+        current_identity = _binding(actor, registry, current_probe_lease.owner, current_probe_lease.fence, "claim-probe", 1)
+        conflict_value = json.loads(final_v3_read.payload or "{}")
+        conflict_value["statement"] = "same version with different digest must conflict"
+        conflict_payload = canonical_json(conflict_value)
+        conflict_projection = MemoryProjection(
+            operation_id=OperationId(f"phase6a-conflict:{run_id}"),
+            request_hash=hashlib.sha256(f"conflict:{run_id}".encode()).hexdigest(),
+            binding=current_identity, topic_id=TopicId(TOPIC), source_version=3,
+            base_applied_version=2, format_version=2,
+            payload=conflict_payload, payload_digest=hashlib.sha256(conflict_payload.encode()).hexdigest(),
+        )
+        same_version_conflict = False
+        try:
+            await runtime_probe.project_memory(conflict_projection)
+        except RuntimeError as error:
+            same_version_conflict = "same projection version is already bound" in str(error)
+        if not same_version_conflict:
+            raise AssertionError("same-version digest conflict was not rejected at the pinned runtime")
+
+        stale_binding = _binding(
+            actor, registry, old_lease.owner, old_lease.fence,
+            f"stale-claim:{run_id}", 1,
+        )
+        stale_same_topic = MemoryProjection(
+            operation_id=OperationId(f"phase6a-stale-same-topic:{run_id}"),
+            request_hash=hashlib.sha256(f"stale-same:{run_id}".encode()).hexdigest(),
+            binding=stale_binding, topic_id=TopicId(TOPIC), source_version=1,
+            base_applied_version=0, format_version=2,
+            payload=runtime_read_v1.payload or "{}", payload_digest=runtime_read_v1.payload_digest or "0" * 64,
+        )
+        stale_topic = "phase6a-stale-new-topic"
+        stale_new_value = json.loads(final_v3_read.payload or "{}")
+        stale_new_value["topic_id"] = stale_topic
+        stale_new_value["source_version"] = 1
+        stale_new_payload = canonical_json(stale_new_value)
+        stale_new_topic = MemoryProjection(
+            operation_id=OperationId(f"phase6a-stale-new-topic:{run_id}"),
+            request_hash=hashlib.sha256(f"stale-new:{run_id}".encode()).hexdigest(),
+            binding=stale_binding, topic_id=TopicId(stale_topic), source_version=1,
+            base_applied_version=0, format_version=2,
+            payload=stale_new_payload, payload_digest=hashlib.sha256(stale_new_payload.encode()).hexdigest(),
+        )
+        stale_same_topic_rejected = stale_new_topic_rejected = False
+        for label, value in (("same", stale_same_topic), ("new", stale_new_topic)):
+            try:
+                await runtime_probe.project_memory(value)
+            except RuntimeError as error:
+                if "agent lease fence is stale across the memory namespace" in str(error):
+                    if label == "same":
+                        stale_same_topic_rejected = True
+                    else:
+                        stale_new_topic_rejected = True
+        await _release_probe_lease(factory, current_probe_lease)
+        after_stale_topic = await _runtime_read(
+            factory, runtime_probe, actor, registry, TOPIC, str(final_v3_status["operation_id"]),
+        )
+        after_stale_new_topic = await _runtime_read(
+            factory, runtime_probe, actor, registry, stale_topic, str(final_v3_status["operation_id"]),
+        )
+        if (
+            not stale_same_topic_rejected or not stale_new_topic_rejected
+            or after_stale_topic.source_version != 3
+            or after_stale_topic.payload_digest != final_v3_status["payload_digest"]
+            or after_stale_new_topic.present
+            or after_stale_new_topic.memory_revision != final_v3_read.memory_revision
+        ):
+            raise AssertionError("real stale agent lease changed an existing or previously absent runtime topic")
+
+        normal_phase6_provider_requests = fake.count()
+        if normal_phase6_provider_requests != 4:
+            raise AssertionError(f"normal Phase 6A path must use exactly four fake requests: {normal_phase6_provider_requests}")
+        hardening_results: dict[str, object] = {}
+
+        # Prepare two independent Position projections in PostgreSQL, then let
+        # the actual worker claim both under the same worker id. The pinned
+        # runtime pauses after committing a real MemFS write but before the
+        # control-plane records its effect receipt.
+        container.settings = replace(settings, memory_projection_enabled=False)
+        serialization_tasks: dict[str, dict[str, object]] = {}
+        for index in (4, 5):
+            label, topic_id, statement = task_statements[index]
+            task_id = await add_task(label, topic_id, statement)()
+            stop, worker_task = start_worker(container)
+            worker_runs.append((stop, worker_task))
+            state = await _wait_task(engine, task_id)
+            await _wait_worker(stop, worker_task)
+            worker_runs.pop()
+            if state["status"] != "COMPLETED" or state["responses"] != 1:
+                raise AssertionError(f"serialization fixture Task did not complete: {task_id} {state}")
+            serialization_tasks[topic_id] = {"task_id": task_id, "state": state}
+        serialization_provider_request_delta = fake.count() - normal_phase6_provider_requests
+        if serialization_provider_request_delta != 2:
+            raise AssertionError("the two serialization Position Tasks did not use exactly two fake requests")
+
+        container.settings = settings
+        worker_name = settings.worker_id
+        projection_runs: dict[str, dict[str, object]] = {}
+        projection_finished: set[str] = set()
+        projection_finished_event = asyncio.Event()
+        both_projection_calls_started = asyncio.Event()
+        original_project_position = worker_service.project_position
+        original_prepare_queued_tasks = worker_service.prepare_queued_tasks
+        prepare_monitor: dict[str, object] = {
+            "enabled": False, "task_id": None, "event": asyncio.Event(), "returned": None,
+        }
+
+        async def capture_worker_projection(factory_arg, runtime_arg, actor_arg, job):
+            key = str(job.topic_id)
+            projection_runs[key] = {"job": job, "task": asyncio.current_task()}
+            if len(projection_runs) == 2:
+                both_projection_calls_started.set()
+            try:
+                return await original_project_position(factory_arg, runtime_arg, actor_arg, job)
+            finally:
+                projection_finished.add(key)
+                projection_finished_event.set()
+
+        async def observe_worker_task_prepare(*args, **kwargs):
+            leases = await original_prepare_queued_tasks(*args, **kwargs)
+            if prepare_monitor["enabled"] and prepare_monitor["task_id"] is not None:
+                prepare_monitor["returned"] = len(leases)
+                prepare_monitor["event"].set()
+            return leases
+
+        worker_service.project_position = capture_worker_projection
+        worker_service.prepare_queued_tasks = observe_worker_task_prepare
+        t2_write_calls_before = runtime_probe.write_calls
+        t2_fake_requests_before = fake.count()
+        projection_barrier.arm("complete")
+        stop, worker_task = start_worker(container)
+        worker_runs.append((stop, worker_task))
+        try:
+            await asyncio.wait_for(projection_barrier.entered.wait(), 40)
+            await asyncio.wait_for(both_projection_calls_started.wait(), 10)
+            async with engine.connect() as connection:
+                guards = (await connection.execute(text("""
+                    SELECT id,topic_id,lease_owner,lease_fence,claim_owner,claim_fence,state
+                    FROM memory_projection_write_guards
+                    WHERE scope=:scope AND state='AUTHORIZED'
+                    ORDER BY created_at,id
+                """), {"scope": str(scope)})).mappings().all()
+            if len(guards) != 1:
+                raise AssertionError(f"one pinned-runtime write should be at the completion barrier: {guards}")
+            guard = dict(guards[0])
+            winning_topic = str(guard["topic_id"])
+            other_topic = SERIAL_TOPIC_B if winning_topic == SERIAL_TOPIC_A else SERIAL_TOPIC_A
+            if winning_topic not in {SERIAL_TOPIC_A, SERIAL_TOPIC_B}:
+                raise AssertionError(f"serialized projection wrote an unexpected topic: {winning_topic}")
+            loser_job = projection_runs.get(other_topic, {}).get("job")
+            winner_job = projection_runs.get(winning_topic, {}).get("job")
+            winner_task = projection_runs.get(winning_topic, {}).get("task")
+            if loser_job is None or winner_job is None or not isinstance(winner_task, asyncio.Task):
+                raise AssertionError("worker did not concurrently start both distinct topic projection attempts")
+
+            deadline = asyncio.get_running_loop().time() + 10
+            while other_topic not in projection_finished and asyncio.get_running_loop().time() < deadline:
+                projection_finished_event.clear()
+                if other_topic not in projection_finished:
+                    await asyncio.wait_for(projection_finished_event.wait(), 2)
+            if other_topic not in projection_finished:
+                raise AssertionError("second topic projection did not return while the first held the agent lease")
+
+            async with engine.connect() as connection:
+                active_lease = (await connection.execute(text("""
+                    SELECT owner_worker,fence,expires_at FROM agent_leases WHERE registry_id=:registry
+                """), {"registry": str(registry.registry_id)})).mappings().one()
+                serialized_rows = (await connection.execute(text("""
+                    SELECT topic_id,state,pending_reason,applied_version
+                    FROM memory_projections WHERE scope=:scope AND topic_id IN (:a,:b)
+                    ORDER BY topic_id
+                """), {"scope": str(scope), "a": SERIAL_TOPIC_A, "b": SERIAL_TOPIC_B})).mappings().all()
+            if (
+                active_lease["owner_worker"] != guard["lease_owner"]
+                or active_lease["fence"] != guard["lease_fence"]
+                or not any(row["topic_id"] == other_topic and row["state"] == "PENDING"
+                           and row["pending_reason"] == "persistent_HEKATE_lease_busy"
+                           and row["applied_version"] == 0 for row in serialized_rows)
+                or runtime_probe.write_calls - t2_write_calls_before != 1
+            ):
+                raise AssertionError(
+                    "different topic did not wait behind the first task-specific agent lease: "
+                    f"lease={dict(active_lease)}, rows={[dict(row) for row in serialized_rows]}, "
+                    f"runtime_write_attempts={runtime_probe.write_calls - t2_write_calls_before}"
+                )
+
+            # A same-worker queued Task must not reenter the projection's agent
+            # lease while the runtime's committed response is still unresolved.
+            competitor_id = await add_task(*task_statements[6])()
+            prepare_monitor["task_id"] = competitor_id
+            prepare_monitor["enabled"] = True
+            await asyncio.wait_for(prepare_monitor["event"].wait(), 12)
+            if prepare_monitor["returned"] != 0:
+                raise AssertionError("same-worker Task preparation acquired the active projection lease")
+            async with engine.connect() as connection:
+                competitor_status = await connection.scalar(
+                    text("SELECT status FROM tasks WHERE id=:task"), {"task": competitor_id},
+                )
+                t2_guard_state = await connection.scalar(
+                    text("SELECT state FROM memory_projection_write_guards WHERE id=:id"), {"id": guard["id"]},
+                )
+                competitor_provider_calls = await connection.scalar(text("""
+                    SELECT count(*) FROM provider_calls p JOIN operations o ON o.id=p.operation_id
+                    WHERE o.owner_scope=:scope AND o.task_id=:task
+                """), {"scope": str(scope), "task": competitor_id})
+            if (
+                competitor_status != "QUEUED" or t2_guard_state != "AUTHORIZED"
+                or competitor_provider_calls != 0 or fake.count() != t2_fake_requests_before
+            ):
+                raise AssertionError("queued Task crossed an unresolved projection memory write")
+
+            # Cancel the real worker's projection coroutine while the App Server
+            # still owns the MemFS critical section. Expire its DB lease to prove
+            # that an unconfirmed external write still fences a restarted owner.
+            winner_task.cancel()
+            cancelled_projection = False
+            try:
+                await winner_task
+            except asyncio.CancelledError:
+                cancelled_projection = True
+            if not cancelled_projection:
+                raise AssertionError("projection coroutine cancellation did not propagate")
+            async with engine.begin() as connection:
+                await connection.execute(text("""
+                    UPDATE agent_leases SET expires_at=now()-interval '1 second'
+                    WHERE registry_id=:registry AND owner_worker=:owner AND fence=:fence
+                """), {
+                    "registry": str(registry.registry_id), "owner": guard["lease_owner"],
+                    "fence": guard["lease_fence"],
+                })
+            async with factory() as uow:
+                takeover = await uow.agents.acquire_lease(
+                    registry.registry_id, f"p6a-restarted-writer:{run_id}", 45,
+                )
+                await uow.commit()
+            if takeover is not None:
+                raise AssertionError("expired lease with an AUTHORIZED write guard was acquired by a new owner")
+            async with engine.connect() as connection:
+                retained_guard = await connection.scalar(
+                    text("SELECT state FROM memory_projection_write_guards WHERE id=:id"), {"id": guard["id"]},
+                )
+                retained_lease = (await connection.execute(text("""
+                    SELECT owner_worker,fence FROM agent_leases WHERE registry_id=:registry
+                """), {"registry": str(registry.registry_id)})).mappings().one()
+            if retained_guard != "AUTHORIZED" or retained_lease["owner_worker"] != guard["lease_owner"]:
+                raise AssertionError("cancelling the Python worker released an unresolved runtime write owner")
+
+            cancelled_competitor = await cancel(
+                factory, actor, TaskId(competitor_id), StopReason.USER_CANCELLED,
+            )
+            stop.set()
+            container.settings = replace(settings, memory_projection_enabled=False)
+            projection_barrier.release()
+            await asyncio.wait_for(projection_barrier.completed.wait(), 15)
+            await _wait_worker(stop, worker_task)
+            worker_runs.pop()
+            worker_service.project_position = original_project_position
+            worker_service.prepare_queued_tasks = original_prepare_queued_tasks
+
+            async with engine.connect() as connection:
+                resolved_guard = await connection.scalar(
+                    text("SELECT state FROM memory_projection_write_guards WHERE id=:id"), {"id": guard["id"]},
+                )
+            if resolved_guard != "EFFECT_CONFIRMED":
+                raise AssertionError(f"pinned runtime committed but its durable effect guard did not resolve: {resolved_guard}")
+            recovery_receipt = await project_position(factory, runtime_probe, actor, winner_job)
+            if recovery_receipt is None or recovery_receipt.state != "APPLIED":
+                raise AssertionError(f"read-back did not recover the cancelled projection: {recovery_receipt}")
+            if runtime_probe.write_calls - t2_write_calls_before != 1:
+                raise AssertionError("cancelled write recovery issued a duplicate runtime memory write")
+            winner_runtime_write_attempts = runtime_probe.write_calls - t2_write_calls_before
+            if cancelled_competitor["state"] != "CANCELLED":
+                raise AssertionError(f"queued Task cancellation failed to converge: {cancelled_competitor}")
+
+            # A fresh actual worker resumes the other topic after the first
+            # projection's verified read-back releases its own lease.
+            container.settings = settings
+            stop, worker_task = start_worker(container)
+            worker_runs.append((stop, worker_task))
+            status_a = await _wait_projection(engine, str(scope), SERIAL_TOPIC_A, 1, timeout=35)
+            status_b = await _wait_projection(engine, str(scope), SERIAL_TOPIC_B, 1, timeout=35)
+            await _wait_worker(stop, worker_task)
+            worker_runs.pop()
+            if status_a["state"] != "APPLIED" or status_b["state"] != "APPLIED":
+                raise AssertionError("a waiting topic did not advance after the first projection was reconciled")
+            serial_read_a = await _runtime_read(
+                factory, runtime_probe, actor, registry, SERIAL_TOPIC_A, str(status_a["operation_id"]),
+            )
+            serial_read_b = await _runtime_read(
+                factory, runtime_probe, actor, registry, SERIAL_TOPIC_B, str(status_b["operation_id"]),
+            )
+            if (
+                serial_read_a.source_version != 1 or serial_read_a.payload_digest != status_a["payload_digest"]
+                or serial_read_b.source_version != 1 or serial_read_b.payload_digest != status_b["payload_digest"]
+            ):
+                raise AssertionError("serialized topic projections do not match pinned runtime read-back")
+            if runtime_probe.write_calls - t2_write_calls_before != 2:
+                raise AssertionError("first-topic recovery or second-topic progress issued an unexpected runtime write count")
+            if fake.count() != t2_fake_requests_before:
+                raise AssertionError("Task/projection serialization caused an unauthorized provider request")
+            hardening_results["same_worker_task_projection_serialization_and_cancel_recovery"] = {
+                "worker_id": worker_name,
+                "topics": [SERIAL_TOPIC_A, SERIAL_TOPIC_B],
+                "worker_claimed_both_topics": True,
+                "one_runtime_write_at_completion_barrier": True,
+                "other_topic_wait_reason": "persistent_HEKATE_lease_busy",
+                "queued_task_status_while_write_unresolved": competitor_status,
+                "queued_task_provider_calls_while_write_unresolved": int(competitor_provider_calls),
+                "projection_cancel_propagated": cancelled_projection,
+                "expired_lease_new_owner_denied_while_write_guard_authorized": takeover is None,
+                "durable_guard_after_runtime_completion": resolved_guard,
+                "same_operation_readback_recovery": recovery_receipt.state,
+                "runtime_write_attempts_for_cancelled_topic_including_recovery": winner_runtime_write_attempts,
+                "both_topics_applied_after_recovery": [int(status_a["applied_version"]), int(status_b["applied_version"])],
+                "runtime_readback_digests_match": True,
+                "provider_request_delta": fake.count() - t2_fake_requests_before,
+            }
+        finally:
+            projection_barrier.release()
+            worker_service.project_position = original_project_position
+            worker_service.prepare_queued_tasks = original_prepare_queued_tasks
+
+        # Revoke authorization after the Task and projection have been prepared,
+        # while the pinned runtime is inside its MemFS lock but before the
+        # PostgreSQL write authorization handler runs.
+        container.settings = replace(settings, memory_projection_enabled=False)
+        auth_task = await add_task(*task_statements[7])()
+        stop, worker_task = start_worker(container)
+        worker_runs.append((stop, worker_task))
+        auth_task_state = await _wait_task(engine, auth_task)
+        await _wait_worker(stop, worker_task)
+        worker_runs.pop()
+        if auth_task_state["status"] != "COMPLETED" or auth_task_state["responses"] != 1:
+            raise AssertionError(f"authorization-revocation fixture Task did not finish normally: {auth_task_state}")
+
+        registry = await _registry(factory, actor)
+        auth_status_before, _ = await _projection_status(factory, actor, AUTH_REVOKE_TOPIC, str(registry.registry_id))
+        if auth_status_before["applied_version"] != 0:
+            raise AssertionError("authorization-revocation fixture was projected before its write-boundary test")
+        auth_operation_before = str(auth_status_before["operation_id"] or f"phase6a-auth-read:{run_id}")
+        auth_runtime_before = await _runtime_read(
+            factory, runtime_probe, actor, registry, AUTH_REVOKE_TOPIC, auth_operation_before,
+        )
+        if auth_runtime_before.present:
+            raise AssertionError("authorization-revocation topic unexpectedly existed before projection")
+        async with engine.connect() as connection:
+            auth_task_before = dict((await connection.execute(text("""
+                SELECT status,outcome,stop_reason,
+                       (SELECT count(*) FROM task_responses WHERE task_id=tasks.id) AS responses
+                FROM tasks WHERE id=:task
+            """), {"task": auth_task})).mappings().one())
+            auth_receipts_before = await connection.scalar(
+                text("SELECT count(*) FROM position_commit_receipts WHERE scope=:scope"), {"scope": str(scope)},
+            )
+            auth_calls_before = await connection.scalar(text("""
+                SELECT count(*) FROM provider_calls p JOIN operations o ON o.id=p.operation_id
+                WHERE o.owner_scope=:scope
+            """), {"scope": str(scope)})
+            auth_budget_before = dict((await connection.execute(text("""
+                SELECT COALESCE(sum(spent_amount),0)::text AS spent,
+                       COALESCE(sum(held_amount),0)::text AS held
+                FROM budget_accounts WHERE scope_kind='SYSTEM' AND scope_ref='hekate'
+            """))).mappings().one())
+
+        container.settings = settings
+        projection_barrier.arm("authorize")
+        stop, worker_task = start_worker(container)
+        worker_runs.append((stop, worker_task))
+        await asyncio.wait_for(projection_barrier.entered.wait(), 40)
+        async with engine.begin() as connection:
+            revoked_epoch = await connection.scalar(text("""
+                UPDATE authorization_scopes SET authz_epoch=authz_epoch+1
+                WHERE id=:scope RETURNING authz_epoch
+            """), {"scope": str(scope)})
+        if revoked_epoch != 2:
+            raise AssertionError(f"authorization epoch revocation did not advance from 1: {revoked_epoch}")
+        projection_barrier.release()
+        await asyncio.wait_for(projection_barrier.completed.wait(), 15)
+        stop.set()
+        await _wait_worker(stop, worker_task)
+        worker_runs.pop()
+
+        async with engine.connect() as connection:
+            auth_status_denied = dict((await connection.execute(text("""
+                SELECT desired_version,applied_version,observed_memory_version,observed_payload_digest,
+                       payload_digest,state,pending_reason,operation_id,request_hash
+                FROM memory_projections WHERE scope=:scope AND topic_id=:topic
+            """), {"scope": str(scope), "topic": AUTH_REVOKE_TOPIC})).mappings().one())
+            auth_operation = dict((await connection.execute(text("""
+                SELECT state,failure_reason FROM memory_projection_operations
+                WHERE id=:operation
+            """), {"operation": auth_status_denied["operation_id"]})).mappings().one())
+            denial_guards = (await connection.execute(text("""
+                SELECT state,authz_epoch,observation FROM memory_projection_write_guards
+                WHERE scope=:scope AND topic_id=:topic ORDER BY created_at,id
+            """), {"scope": str(scope), "topic": AUTH_REVOKE_TOPIC})).mappings().all()
+            auth_task_after = dict((await connection.execute(text("""
+                SELECT status,outcome,stop_reason,
+                       (SELECT count(*) FROM task_responses WHERE task_id=tasks.id) AS responses
+                FROM tasks WHERE id=:task
+            """), {"task": auth_task})).mappings().one())
+            auth_receipts_after = await connection.scalar(
+                text("SELECT count(*) FROM position_commit_receipts WHERE scope=:scope"), {"scope": str(scope)},
+            )
+            auth_calls_after = await connection.scalar(text("""
+                SELECT count(*) FROM provider_calls p JOIN operations o ON o.id=p.operation_id
+                WHERE o.owner_scope=:scope
+            """), {"scope": str(scope)})
+            auth_budget_after = dict((await connection.execute(text("""
+                SELECT COALESCE(sum(spent_amount),0)::text AS spent,
+                       COALESCE(sum(held_amount),0)::text AS held
+                FROM budget_accounts WHERE scope_kind='SYSTEM' AND scope_ref='hekate'
+            """))).mappings().one())
+        auth_runtime_denied = await _runtime_read(
+            factory, runtime_probe, actor, registry, AUTH_REVOKE_TOPIC,
+            str(auth_status_denied["operation_id"]),
+        )
+        if (
+            auth_runtime_denied.present or auth_runtime_denied.source_version != 0
+            or auth_runtime_denied.memory_revision != auth_runtime_before.memory_revision
+            or auth_status_denied["applied_version"] != 0
+            or auth_status_denied["state"] != "PENDING"
+            or auth_status_denied["pending_reason"] != "runtime_memory_write_authorization_denied_before_effect"
+            or auth_operation["state"] != "PENDING"
+            or len(denial_guards) != 1 or denial_guards[0]["state"] != "NO_EFFECT"
+            or denial_guards[0]["authz_epoch"] != 1
+            or auth_task_after != auth_task_before
+            or auth_receipts_after != auth_receipts_before
+            or auth_calls_after != auth_calls_before
+            or auth_budget_after != auth_budget_before
+        ):
+            raise AssertionError(
+                "revoked epoch reached runtime memory or changed a committed Task/ledger: "
+                f"projection={auth_status_denied}, operation={auth_operation}, guards={[dict(row) for row in denial_guards]}, "
+                f"before={auth_runtime_before}, after={auth_runtime_denied}, task={auth_task_after}"
+            )
+
+        # Reprocess only after constructing the current actor snapshot. This is a
+        # projection retry, not a new Task or inference.
+        local_identity = yaml.safe_load((config_dir / "local.yaml").read_text(encoding="utf-8"))
+        local_identity["identity"]["authz_epoch"] = 2
+        (config_dir / "local.yaml").write_text(yaml.safe_dump(local_identity), encoding="utf-8")
+        settings2 = load_settings(env, config_dir)
+        actor2 = configured_local_actor(settings2)
+        container.settings = settings2
+        stop, worker_task = start_worker(container)
+        worker_runs.append((stop, worker_task))
+        auth_status_applied = await _wait_projection(engine, str(scope), AUTH_REVOKE_TOPIC, 1, timeout=35)
+        await _wait_worker(stop, worker_task)
+        worker_runs.pop()
+        registry2 = await _registry(factory, actor2)
+        auth_runtime_after_retry = await _runtime_read(
+            factory, runtime_probe, actor2, registry2, AUTH_REVOKE_TOPIC,
+            str(auth_status_applied["operation_id"]),
+        )
+        async with engine.connect() as connection:
+            auth_task_final = dict((await connection.execute(text("""
+                SELECT status,outcome,stop_reason,
+                       (SELECT count(*) FROM task_responses WHERE task_id=tasks.id) AS responses
+                FROM tasks WHERE id=:task
+            """), {"task": auth_task})).mappings().one())
+            auth_calls_final = await connection.scalar(text("""
+                SELECT count(*) FROM provider_calls p JOIN operations o ON o.id=p.operation_id
+                WHERE o.owner_scope=:scope
+            """), {"scope": str(scope)})
+            denial_and_effect_states = (await connection.execute(text("""
+                SELECT state,authz_epoch,source_version,payload_digest,observation
+                FROM memory_projection_write_guards WHERE scope=:scope AND topic_id=:topic
+                ORDER BY created_at,id
+            """), {"scope": str(scope), "topic": AUTH_REVOKE_TOPIC})).mappings().all()
+        if (
+            auth_status_applied["applied_version"] != 1
+            or not auth_runtime_after_retry.present
+            or auth_runtime_after_retry.source_version != 1
+            or auth_runtime_after_retry.payload_digest != auth_status_applied["payload_digest"]
+            or auth_runtime_after_retry.memory_revision == auth_runtime_before.memory_revision
+            or auth_task_final != auth_task_before
+            or auth_calls_final != auth_calls_before
+            or not any(row["state"] == "EFFECT_CONFIRMED" and row["authz_epoch"] == 2 for row in denial_and_effect_states)
+        ):
+            raise AssertionError("current-epoch projection retry did not apply without new Task inference")
+        hardening_results["authorization_revocation_at_serialized_runtime_write_boundary"] = {
+            "prepared_actor_epoch": 1, "database_epoch_at_gate_release": int(revoked_epoch),
+            "old_epoch_write_guard": dict(denial_guards[0]),
+            "old_epoch_operation_state": auth_operation["state"],
+            "old_epoch_projection_state": auth_status_denied["state"],
+            "old_epoch_applied_version": int(auth_status_denied["applied_version"]),
+            "runtime_memory_before": {
+                "present": auth_runtime_before.present, "version": auth_runtime_before.source_version,
+                "digest": auth_runtime_before.payload_digest, "revision": auth_runtime_before.memory_revision,
+            },
+            "runtime_memory_after_denial": {
+                "present": auth_runtime_denied.present, "version": auth_runtime_denied.source_version,
+                "digest": auth_runtime_denied.payload_digest, "revision": auth_runtime_denied.memory_revision,
+            },
+            "memory_revision_unchanged_at_denial": auth_runtime_denied.memory_revision == auth_runtime_before.memory_revision,
+            "task_response_and_position_receipt_unchanged": auth_task_after == auth_task_before and auth_receipts_after == auth_receipts_before,
+            "provider_and_budget_ledger_unchanged": auth_calls_after == auth_calls_before and auth_budget_after == auth_budget_before,
+            "current_epoch_retry_state": auth_status_applied["state"],
+            "current_epoch_effect_guard_states": [dict(row) for row in denial_and_effect_states],
+            "final_memory_version": auth_runtime_after_retry.source_version,
+            "provider_requests_for_denial_and_projection_retry": 0,
+        }
+        report["hardening_scenarios"] = hardening_results
+
         async with engine.connect() as connection:
             position_rows = (await connection.execute(text("SELECT topic_id,current_version FROM position_topics WHERE scope=:scope ORDER BY topic_id"), {"scope": str(scope)})).all()
             receipt_count = await connection.scalar(text("SELECT count(*) FROM position_commit_receipts WHERE scope=:scope"), {"scope": str(scope)})
@@ -659,15 +1225,26 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
                        COALESCE(sum(ba.held_amount),0)::text AS held
                 FROM budget_accounts ba WHERE ba.scope_kind='SYSTEM' AND ba.scope_ref='hekate'
             """))).mappings().one()
-        if provider_call_count != fake.count() or provider_call_count != 4:
-            raise AssertionError(f"provider usage ledger differs from the four fake Task requests: db={provider_call_count}, fake={fake.count()}")
+        completed_projection_ops = sum(row["state"] in {"COMPLETED", "SUPERSEDED"} for row in projection_ops)
+        if (
+            provider_call_count != fake.count()
+            or normal_phase6_provider_requests != 4
+            or serialization_provider_request_delta != 2
+            or fake.count() != normal_phase6_provider_requests + serialization_provider_request_delta + 1
+        ):
+            raise AssertionError(
+                "provider usage ledger differs from the normal and hardening fake Task requests: "
+                f"db={provider_call_count}, fake={fake.count()}, normal={normal_phase6_provider_requests}, "
+                f"serialization={serialization_provider_request_delta}"
+            )
         if linked_projection_ops != len(projection_ops):
             raise AssertionError("projection operation provenance did not link to its parent runtime operation")
-        if fake.count() != memory_provider_count_before + 2:
-            # v3 and the independent topic each use one physical inference; all
-            # projection reads/writes, retries, and conflict probes use none.
+        if fake.count() != memory_provider_count_before + 5:
+            # v3, the independent topic, two serialization fixtures, and the
+            # authorization-revocation Task use five requests; projection
+            # reads, writes, retries, barriers, and the blocked Task use none.
             raise AssertionError("projection work changed the expected fake-provider request delta")
-        if runtime_probe.write_calls < 4 or confirmation_audits != len(projection_ops):
+        if runtime_probe.write_calls < 4 or confirmation_audits != completed_projection_ops:
             raise AssertionError("projection write or durable audit counts do not match confirmed operations")
 
         # A confirmed populated projection migration refuses destructive downgrade.
@@ -679,12 +1256,12 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             try:
                 await asyncio.to_thread(p3.command.downgrade, cfg, "-1")
             except Exception as error:
-                if "refusing to discard persisted Position-to-Letta memory projection progress" not in str(error):
+                if "refusing to discard projection authorization and effect observations" not in str(error):
                     raise
                 async with engine.connect() as connection:
                     guarded_head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
-                if guarded_head != "0011_phase6a_memory_projection":
-                    raise AssertionError("populated projection downgrade guard changed the schema head") from error
+                if guarded_head != "0012_projection_write_guard":
+                    raise AssertionError("populated projection write-guard downgrade changed the schema head") from error
                 report["results"]["populated_downgrade_guard"] = {"refused": True, "head_unchanged": True}
             else:
                 raise AssertionError("migration allowed destructive downgrade after memory projection progress")
@@ -712,8 +1289,20 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "confirmation_audit_count": int(confirmation_audits),
             "worker_restart_retained_memory": True,
             "next_task_runtime_core_memory_loaded_outside_task_capsule": fixture.v1_seen_in_runtime_prompt,
-            "stale_v1_after_v2_preserved_v2": stale_result is None and confirmed_after_stale.source_version == 2,
-            "concurrent_stale_v1_and_current_v2_preserved_v2": newest_result.source_version == 2 and confirmed_after_stale.source_version == 2,
+            "real_postgres_agent_lease_takeover": {
+                "old_owner": old_lease.owner, "old_fence": old_lease.fence,
+                "replacement_owner": replacement_lease.owner, "replacement_fence": replacement_lease.fence,
+                "runtime_global_agent_fence": final_v3_read.agent_fence,
+                "claim_fence_for_final_topic": int(final_v3_status["claim_fence"]),
+            },
+            "stale_agent_lease_rejected_on_existing_topic": stale_same_topic_rejected,
+            "stale_agent_lease_rejected_on_new_topic": stale_new_topic_rejected,
+            "stale_rejections_preserved_digest_version_and_runtime_revision": (
+                after_stale_topic.source_version == 3
+                and after_stale_topic.payload_digest == final_v3_status["payload_digest"]
+                and not after_stale_new_topic.present
+                and after_stale_new_topic.memory_revision == final_v3_read.memory_revision
+            ),
             "same_version_different_digest_rejected": same_version_conflict,
             "response_loss_readback_and_db_rollback": {
                 "runtime_v3_effect_survived_response_loss": actual_after_lost_response.source_version == 3,
@@ -738,7 +1327,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         }
         report["runtime_memory_contract"] = {
             "path": "root MemFS core memory file hekate_positions.md",
-            "namespace": "hekate.position.v1", "format_version": 1,
+            "namespace": "hekate.position.v1", "format_version": 2,
             "entry_limit_bytes": 4096, "document_limit_bytes": 32768, "topic_limit": 8,
             "atomic_commit_and_readback": True, "provider_or_inference_call_for_projection": False,
             "persistent_agent_binding_verified_by_runtime_tags": True,
@@ -746,6 +1335,14 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         report["provider_observations"] = response_observations
         report["projection_runtime_errors"] = runtime_probe.errors if runtime_probe is not None else []
         report["provider_fixture_errors"] = output_errors
+        report["provider_requests_by_scenario"] = {
+            "normal_phase6a_v1_v2_v3_other_topic": normal_phase6_provider_requests,
+            "same_worker_serialization_position_tasks": serialization_provider_request_delta,
+            "queued_task_blocked_by_active_projection": 0,
+            "authorization_denial_and_current_epoch_projection_retry": 1,
+        }
+        report["runtime_memory_write_attempts"] = runtime_probe.write_calls if runtime_probe is not None else 0
+        report["runtime_memory_commits_inferred_from_revision_changes"] = "recorded per hardening scenario; denied write left revision unchanged"
         report["real_provider_calls"] = 0
         report["projection_inference_calls"] = 0
         report["code_fingerprint_sha256"] = await p4._code_identity()
@@ -778,6 +1375,8 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         report["execution"]["result"] = "failed"
         return report
     finally:
+        if projection_barrier is not None:
+            projection_barrier.release()
         for stop, task in worker_runs:
             if not task.done():
                 stop.set()
@@ -809,11 +1408,16 @@ async def _registry(factory, actor):
     return registry
 
 
-def _binding(actor, registry, fence: int) -> ProjectionBinding:
+def _binding(
+    actor, registry, lease_owner: str, lease_fence: int,
+    claim_owner: str | None = None, claim_fence: int | None = None,
+) -> ProjectionBinding:
     return ProjectionBinding(
         scope=actor.scope, registry_id=registry.registry_id, provider_agent_id=registry.provider_id,
         creation_operation_id=registry.creation_operation_id, authz_epoch=actor.authz_epoch,
-        policy_version=actor.policy_version, principal_id=actor.principal_id, fence=fence,
+        policy_version=actor.policy_version, principal_id=actor.principal_id,
+        lease_owner=lease_owner, lease_fence=lease_fence,
+        claim_owner=claim_owner, claim_fence=claim_fence,
     )
 
 
@@ -858,15 +1462,15 @@ def main() -> int:
             finally:
                 await target_engine.dispose()
         empty_upgraded = asyncio.run(migration_head(args.empty_migration_database_url))
-        if empty_upgraded != "0011_phase6a_memory_projection":
-            raise AssertionError(f"fresh upgrade did not reach 0011: {empty_upgraded}")
+        if empty_upgraded != "0012_projection_write_guard":
+            raise AssertionError(f"fresh upgrade did not reach the projection write-guard head: {empty_upgraded}")
         p3.command.downgrade(empty_cfg, "-1")
         empty_downgraded = asyncio.run(migration_head(args.empty_migration_database_url))
-        if empty_downgraded != "0010_p5b_delib_maint":
-            raise AssertionError(f"empty projection downgrade did not stop at 0010: {empty_downgraded}")
+        if empty_downgraded != "0011_phase6a_memory_projection":
+            raise AssertionError(f"empty projection write-guard downgrade did not stop at 0011: {empty_downgraded}")
         p3.command.upgrade(empty_cfg, "head")
         empty_reupgraded = asyncio.run(migration_head(args.empty_migration_database_url))
-        if empty_reupgraded != "0011_phase6a_memory_projection":
+        if empty_reupgraded != "0012_projection_write_guard":
             raise AssertionError(f"empty projection re-upgrade failed: {empty_reupgraded}")
     finally:
         if prior_url is None:

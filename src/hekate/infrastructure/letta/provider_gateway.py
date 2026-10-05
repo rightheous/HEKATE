@@ -18,6 +18,7 @@ from starlette.background import BackgroundTask
 
 from hekate.application.budgets import authorize_provider_call, consume_call_permit
 from hekate.application.budgets import _restore_binding
+from hekate.application.projections import authorize_runtime_memory_write, record_runtime_memory_write_result
 from hekate.application.runtime_inbox import InboxBinding, RuntimeInboxPayload, process_runtime_observation
 from hekate.domain.contracts import canonical_json
 from hekate.domain.errors import HekateError
@@ -25,6 +26,7 @@ from hekate.domain.models import (
     ExecutionEnvelope,
     NormalizedUsage,
     PriceTable,
+    ProjectionWriteAuthorization,
     ProviderCallPlan,
     RuntimeLimits,
     BillableCallIntent,
@@ -206,6 +208,52 @@ def create_provider_gateway(
         if not authenticated(request):
             return JSONResponse({"error": "unauthorized"}, status_code=401)
         return {"object": "list", "data": [{"id": profile.price_table.model, "object": "model"}]}
+
+    @app.post("/internal/memory-projection/authorize")
+    async def authorize_memory_projection(request: Request):
+        if not authenticated(request):
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+        try:
+            raw = _strict_json(await _read_body(request))
+            if not isinstance(raw, dict):
+                raise ValueError("projection write authorization must be an object")
+            identity = ProjectionWriteAuthorization.model_validate(raw, strict=True)
+            grant_id = await authorize_runtime_memory_write(factory, identity)
+            return {"grant_id": grant_id, "decision": "AUTHORIZED"}
+        except (ValueError, ValidationError) as error:
+            return JSONResponse({"error": str(error)[:240]}, status_code=400)
+        except HekateError as error:
+            return JSONResponse({"error": str(error)[:240]}, status_code=403)
+        except Exception as error:
+            _LOG.exception("projection write authorization failed")
+            return JSONResponse({"error": type(error).__name__}, status_code=503)
+
+    @app.post("/internal/memory-projection/complete")
+    async def complete_memory_projection(request: Request):
+        if not authenticated(request):
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+        try:
+            raw = _strict_json(await _read_body(request))
+            if not isinstance(raw, dict) or set(raw) - {"grant_id", "state", "observation"} or not {
+                "grant_id", "state",
+            }.issubset(raw):
+                raise ValueError("projection write completion has an invalid shape")
+            grant_id = raw["grant_id"]
+            state = raw["state"]
+            observation = raw.get("observation")
+            if not isinstance(grant_id, str) or not grant_id or state not in {"EFFECT_CONFIRMED", "NO_EFFECT"}:
+                raise ValueError("projection write completion identity is invalid")
+            if observation is not None and not isinstance(observation, dict):
+                raise ValueError("projection write observation must be an object")
+            await record_runtime_memory_write_result(factory, grant_id, state, observation)
+            return {"grant_id": grant_id, "state": state}
+        except (ValueError, ValidationError) as error:
+            return JSONResponse({"error": str(error)[:240]}, status_code=400)
+        except HekateError as error:
+            return JSONResponse({"error": str(error)[:240]}, status_code=409)
+        except Exception as error:
+            _LOG.exception("projection write completion failed")
+            return JSONResponse({"error": type(error).__name__}, status_code=503)
 
     @app.api_route("/v1/{endpoint:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
     async def proxy(request: Request, endpoint: str):

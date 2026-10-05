@@ -138,12 +138,36 @@ class PostgresAgentRepository:
             raise ValueError("lease ttl must be positive")
         await self.lock_registry(registry_id)
         now = aware_now()
+        pending_writes = (await self.connection.execute(select(
+            tables.memory_projection_write_guards.c.lease_owner,
+            tables.memory_projection_write_guards.c.lease_fence,
+        ).where(
+            tables.memory_projection_write_guards.c.registry_id == registry_id,
+            tables.memory_projection_write_guards.c.state == "AUTHORIZED",
+        ).order_by(
+            tables.memory_projection_write_guards.c.created_at,
+            tables.memory_projection_write_guards.c.id,
+        ).with_for_update())).all()
+        if pending_writes and any(row.lease_owner != owner for row in pending_writes):
+            return None
         row = (await self.connection.execute(select(tables.agent_leases).where(
             tables.agent_leases.c.registry_id == registry_id,
         ).with_for_update())).mappings().one_or_none()
+        if pending_writes:
+            # Only the same durable projection operation may reconcile an uncertain
+            # external write. Keep its lease generation even after TTL expiry; a
+            # different operation remains fenced out until reconciliation completes.
+            guarded_fences = {int(item.lease_fence) for item in pending_writes}
+            if (
+                row is None or row["owner_worker"] != owner
+                or len(guarded_fences) != 1 or row["fence"] not in guarded_fences
+            ):
+                return None
+            fence = int(row["fence"])
+        else:
+            fence = row["fence"] if row and row["expires_at"] > now and row["owner_worker"] == owner else (row["fence"] + 1 if row else 1)
         if row is not None and row["expires_at"] > now and row["owner_worker"] != owner:
             return None
-        fence = row["fence"] if row and row["expires_at"] > now else (row["fence"] + 1 if row else 1)
         expires_at = now + timedelta(seconds=ttl)
         if row is None:
             await self.connection.execute(insert(tables.agent_leases).values(
