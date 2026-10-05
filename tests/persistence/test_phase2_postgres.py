@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import unittest
 from dataclasses import replace
@@ -39,6 +40,7 @@ from hekate.domain.models import (
     InputChange,
     NormalizedUsage,
     PriceTable,
+    ProviderRequestMeasurement,
     ReservationRequest,
     RuntimeLimits,
     SettlementReceipt,
@@ -63,6 +65,7 @@ from hekate.domain.types import (
     TaskStatus,
 )
 from hekate.infrastructure.postgres import tables
+from hekate.infrastructure.postgres.budget_repository import PostgresBudgetRepository
 from hekate.infrastructure.postgres.database import check_database, create_engine, create_uow_factory
 from hekate.infrastructure.postgres.delivery_repository import PostgresDeliveryRepository
 
@@ -1289,6 +1292,425 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         finally:
             await broken_engine.dispose()
         self.assertEqual(await self._scalar("SELECT count(*) FROM provider_calls"), 0)
+
+    async def test_phase6b_legacy_unmeasured_settlement_compatibility(self):
+        report: dict[str, object] = {
+            "fixture_origin": "synthetic persisted provider-call rows; no gateway/upstream request",
+            "provider_requests": 0,
+            "real_provider_calls": 0,
+        }
+        system_created = False
+
+        async def prepare(label: str, *, measured: bool = False, state: str = "QUIESCENT",
+                          existing_spend: tuple[Decimal, Decimal] | None = None):
+            nonlocal system_created
+            context = await self._seed(label, create_system=not system_created)
+            system_created = True
+            if existing_spend is not None:
+                await apply_adjustment(
+                    self.factory, context["task_account_id"], f"fixture-spend-task:{label}", existing_spend[0],
+                )
+                await apply_adjustment(
+                    self.factory, context["system_account_id"], f"fixture-spend-system:{label}", existing_spend[1],
+                )
+            request, _ = await self._admit(context, amount=Decimal("1"), slots=1)
+            call = replace(
+                self._call(request, f"legacy-call:{label}", allocation=Decimal("1")),
+                price_table=PriceTable(
+                    model="test-model", version="test-price-v1",
+                    input_usd_per_million=Decimal("1"),
+                    output_usd_per_million=Decimal("2"), synthetic=True,
+                ),
+            )
+            measurement = None
+            if measured:
+                measurement = ProviderRequestMeasurement(
+                    request_digest=("1" if label.endswith("missing") else "2") * 64,
+                    profile_digest="a" * 64,
+                    tokenizer_identity="tiktoken/0.14.0:test-asset",
+                    renderer_identity="hekate.fake.chat-renderer.v1/test",
+                    pricing_version="test-price-v1",
+                    pricing_digest="b" * 64,
+                    usage_semantics="aggregate_input_output_v1",
+                    measured_input_tokens=6,
+                    requested_output_tokens=10,
+                    context_window_tokens=64,
+                    additional_reserved_tokens=0,
+                    verification_state="TEST_CONTRACT_VERIFIED",
+                    measured_at=datetime.now(UTC),
+                )
+                call = replace(call, measurement=measurement)
+            permit = await authorize_provider_call(self.factory, call)
+            if measurement is not None:
+                wrong_request = False
+                try:
+                    await consume_call_permit(
+                        self.factory, request.binding, request.lease_owner,
+                        permit.permit_id, permit.accounting_call_id,
+                        expected_request_digest="f" * 64,
+                        expected_profile_digest=measurement.profile_digest,
+                    )
+                except Conflict:
+                    wrong_request = True
+                wrong_profile = False
+                try:
+                    await consume_call_permit(
+                        self.factory, request.binding, request.lease_owner,
+                        permit.permit_id, permit.accounting_call_id,
+                        expected_request_digest=measurement.request_digest,
+                        expected_profile_digest="f" * 64,
+                    )
+                except Conflict:
+                    wrong_profile = True
+                self.assertTrue(wrong_request)
+                self.assertTrue(wrong_profile)
+                report.setdefault("measured_permit_binding", {})
+                report["measured_permit_binding"][label] = {
+                    "wrong_request_digest_rejected": wrong_request,
+                    "wrong_profile_digest_rejected": wrong_profile,
+                }
+                await consume_call_permit(
+                    self.factory, request.binding, request.lease_owner,
+                    permit.permit_id, permit.accounting_call_id,
+                    expected_request_digest=measurement.request_digest,
+                    expected_profile_digest=measurement.profile_digest,
+                )
+            else:
+                await consume_call_permit(
+                    self.factory, request.binding, request.lease_owner,
+                    permit.permit_id, permit.accounting_call_id,
+                )
+            await record_call_observation(self.factory, CallObservation(
+                accounting_call_id=call.accounting_call_id,
+                binding=request.binding,
+                state=state,
+                source="bridge_disconnect" if state == "UNKNOWN" else "provider_response",
+                observed_at=datetime.now(UTC),
+                lease_owner=request.lease_owner,
+                observer_fence=context["lease"].fence,
+            ))
+            return context, request, call, permit, measurement
+
+        async def write_usage(request, call, *, identity: str, completeness: str = "COMPLETE",
+                              input_tokens: int | None = 100, output_tokens: int | None = 10,
+                              total_tokens: int | None = 110, cache_tokens: int | None = None,
+                              reasoning_tokens: int | None = None, source: str = "runtime_reported",
+                              application_path: bool = False):
+            if application_path:
+                return await record_usage(self.factory, UsageRecord(
+                    accounting_call_id=call.accounting_call_id,
+                    binding=request.binding,
+                    observation_identity=identity,
+                    source=source,
+                    observed_at=datetime.now(UTC),
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    total_tokens=total_tokens,
+                    cache_tokens=cache_tokens,
+                    reasoning_tokens=reasoning_tokens,
+                    completeness=completeness,
+                    pricing_version="test-price-v1",
+                ))
+            async with self.factory() as uow:
+                receipt = await uow.budgets.record_usage(UsageObservation(
+                    accounting_call_id=call.accounting_call_id,
+                    source=source,
+                    observation_identity=identity,
+                    usage=NormalizedUsage(
+                        completeness=completeness,
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                        total_tokens=total_tokens,
+                        cache_tokens=cache_tokens,
+                        reasoning_tokens=reasoning_tokens,
+                    ),
+                    binding=request.binding,
+                    observed_at=datetime.now(UTC),
+                ))
+                await uow.commit()
+                return receipt
+
+        async def snapshot(context, request, call):
+            async with self.engine.connect() as connection:
+                call_row = (await connection.execute(text(
+                    "SELECT status, measurement_status, request_digest, profile_digest, measurement_data, "
+                    "test_only, model, pricing_version, input_usd_per_million, output_usd_per_million, allocation_amount "
+                    "FROM provider_calls WHERE accounting_call_id=:id"
+                ), {"id": str(call.accounting_call_id)})).mappings().one()
+                permit_row = (await connection.execute(text(
+                    "SELECT state, measurement_status, request_digest, profile_digest, measurement_data "
+                    "FROM call_permits WHERE accounting_call_id=:id"
+                ), {"id": str(call.accounting_call_id)})).mappings().one()
+                projection = (await connection.execute(text(
+                    "SELECT completeness, has_conflict, settlement_state, input_tokens, output_tokens, "
+                    "cache_tokens, reasoning_tokens, evaluated_cost_usd, overrun "
+                    "FROM usage_projections WHERE accounting_call_id=:id"
+                ), {"id": str(call.accounting_call_id)})).mappings().one_or_none()
+                accounts = (await connection.execute(text(
+                    "SELECT id, spent_amount, held_amount FROM budget_accounts WHERE id IN (:task,:system) ORDER BY id"
+                ), {"task": context["task_account_id"], "system": context["system_account_id"]})).mappings().all()
+                reservation = (await connection.execute(text(
+                    "SELECT r.status, COALESCE(sum(ra.held_amount),0) AS held_amount "
+                    "FROM budget_reservations r JOIN reservation_accounts ra ON ra.reservation_id=r.id "
+                    "WHERE r.id=:id GROUP BY r.status"
+                ), {"id": str(request.reservation.id)})).mappings().one()
+                reservation_accounts = (await connection.execute(text(
+                    "SELECT account_id, held_amount FROM reservation_accounts WHERE reservation_id=:id ORDER BY account_id"
+                ), {"id": str(request.reservation.id)})).mappings().all()
+                allocations = (await connection.execute(text(
+                    "SELECT account_id, amount FROM call_allocations WHERE accounting_call_id=:id ORDER BY account_id"
+                ), {"id": str(call.accounting_call_id)})).mappings().all()
+                ledger = (await connection.execute(text(
+                    "SELECT account_id, effect_type, amount, held_delta, spent_delta, effect_key "
+                    "FROM budget_ledger WHERE reservation_id=:id ORDER BY account_id,effect_key"
+                ), {"id": str(request.reservation.id)})).mappings().all()
+
+            def clean(row):
+                if row is None:
+                    return None
+                return {
+                    key: str(value) if isinstance(value, Decimal) else value
+                    for key, value in dict(row).items()
+                }
+            return {
+                "call": clean(call_row),
+                "permit": clean(permit_row),
+                "usage_projection": clean(projection),
+                "accounts": [clean(row) for row in accounts],
+                "reservation": clean(reservation),
+                "reservation_accounts": [clean(row) for row in reservation_accounts],
+                "call_allocations": [clean(row) for row in allocations],
+                "ledger": [clean(row) for row in ledger],
+            }
+
+        def assert_no_accounting_effects(before, after):
+            self.assertEqual(
+                [(row["id"], row["spent_amount"], row["held_amount"]) for row in before["accounts"]],
+                [(row["id"], row["spent_amount"], row["held_amount"]) for row in after["accounts"]],
+            )
+            self.assertEqual(before["reservation_accounts"], after["reservation_accounts"])
+            before_settle = [row for row in before["ledger"] if row["effect_type"] == "SETTLE"]
+            after_settle = [row for row in after["ledger"] if row["effect_type"] == "SETTLE"]
+            self.assertEqual(before_settle, after_settle)
+
+        async def make_quiescent_legacy(label: str):
+            context, request, call, permit, _ = await prepare(label)
+            return context, request, call
+
+        # T1: actual application usage path settles a pre-0013 test-only call.
+        context, request, call = await make_quiescent_legacy("phase6b-legacy-normal")
+        before = await snapshot(context, request, call)
+        app_usage = await write_usage(request, call, identity="legacy-complete-100-10", application_path=True)
+        after = await snapshot(context, request, call)
+        replay = await settle_call(self.factory, call.accounting_call_id)
+        after_replay = await snapshot(context, request, call)
+        self.assertTrue(app_usage.accepted)
+        self.assertEqual(app_usage.settlement_state, "SETTLED")
+        self.assertTrue(replay.settled)
+        self.assertEqual(replay.actual_cost, Decimal("0.00012"))
+        self.assertEqual(after, after_replay)
+        self.assertEqual(before["call"]["measurement_status"], "LEGACY_UNMEASURED")
+        self.assertIsNone(before["call"]["request_digest"])
+        self.assertIsNone(before["call"]["profile_digest"])
+        self.assertIsNone(before["call"]["measurement_data"])
+        self.assertEqual(after["call"]["measurement_status"], "LEGACY_UNMEASURED")
+        self.assertIsNone(after["call"]["request_digest"])
+        self.assertIsNone(after["call"]["profile_digest"])
+        self.assertIsNone(after["call"]["measurement_data"])
+        self.assertEqual(Decimal(after["usage_projection"]["evaluated_cost_usd"]), Decimal("0.000120"))
+        self.assertEqual(after["reservation"]["status"], "SETTLED")
+        self.assertEqual(len([row for row in after["ledger"] if row["effect_type"] == "SETTLE"]), 2)
+        self.assertEqual(len(before["call_allocations"]), 2)
+        self.assertEqual(Decimal(before["call"]["allocation_amount"]), Decimal("1"))
+        for before_account, after_account in zip(before["accounts"], after["accounts"], strict=True):
+            self.assertEqual(Decimal(before_account["spent_amount"]), Decimal("0"))
+            self.assertEqual(Decimal(before_account["held_amount"]), Decimal("1"))
+            self.assertEqual(Decimal(after_account["spent_amount"]), Decimal("0.000120"))
+            self.assertEqual(Decimal(after_account["held_amount"]), Decimal("0"))
+        report["t1_legacy_normal"] = {
+            "call_id": str(call.accounting_call_id), "before": before, "after": after,
+            "after_replay": after_replay,
+            "usage_receipt": {"accepted": app_usage.accepted, "settlement_state": app_usage.settlement_state},
+            "settlement_receipt": {
+                "settled": replay.settled, "actual_cost": str(replay.actual_cost),
+                "pending_reason": replay.pending_reason,
+            },
+        }
+
+        # T2: simultaneous settlement requests serialize in PostgreSQL; retry is a no-op.
+        context, request, call = await make_quiescent_legacy("phase6b-legacy-concurrent")
+        await write_usage(request, call, identity="legacy-concurrent-usage")
+        concurrent_before = await snapshot(context, request, call)
+        gate = asyncio.Event()
+        arrived = 0
+        async def concurrent_settle():
+            nonlocal arrived
+            arrived += 1
+            if arrived == 2:
+                gate.set()
+            await gate.wait()
+            return await settle_call(self.factory, call.accounting_call_id)
+        concurrent_receipts = await asyncio.gather(concurrent_settle(), concurrent_settle())
+        concurrent_after = await snapshot(context, request, call)
+        await settle_call(self.factory, call.accounting_call_id)
+        concurrent_replay = await snapshot(context, request, call)
+        self.assertTrue(all(item.settled and item.actual_cost == Decimal("0.00012") for item in concurrent_receipts))
+        self.assertEqual(concurrent_after, concurrent_replay)
+        self.assertEqual(len([row for row in concurrent_after["ledger"] if row["effect_type"] == "SETTLE"]), 2)
+        report["t2_concurrent_and_replay"] = {
+            "call_id": str(call.accounting_call_id), "before": concurrent_before,
+            "after": concurrent_after, "after_replay": concurrent_replay,
+            "receipts": [{"settled": item.settled, "actual_cost": str(item.actual_cost)} for item in concurrent_receipts],
+        }
+
+        # T2: failure after account mutation and before ledger insert rolls the unit of work back.
+        context, request, call = await make_quiescent_legacy("phase6b-legacy-rollback")
+        await write_usage(request, call, identity="legacy-rollback-usage")
+        rollback_before = await snapshot(context, request, call)
+        original_ledger = PostgresBudgetRepository._ledger
+        async def fail_settlement_ledger(repository, account_id, effect_key, effect_type, amount, **kwargs):
+            if effect_type == "SETTLE":
+                raise RuntimeError("injected settlement ledger failure")
+            return await original_ledger(repository, account_id, effect_key, effect_type, amount, **kwargs)
+        with patch.object(PostgresBudgetRepository, "_ledger", fail_settlement_ledger):
+            with self.assertRaisesRegex(RuntimeError, "injected settlement"):
+                await settle_call(self.factory, call.accounting_call_id)
+        rollback_after_failure = await snapshot(context, request, call)
+        self.assertEqual(rollback_before, rollback_after_failure)
+        retry_receipt = await settle_call(self.factory, call.accounting_call_id)
+        rollback_after_retry = await snapshot(context, request, call)
+        self.assertTrue(retry_receipt.settled)
+        self.assertEqual(retry_receipt.actual_cost, Decimal("0.00012"))
+        self.assertEqual(len([row for row in rollback_after_retry["ledger"] if row["effect_type"] == "SETTLE"]), 2)
+        report["t2_rollback_and_retry"] = {
+            "call_id": str(call.accounting_call_id), "before": rollback_before,
+            "after_injected_failure": rollback_after_failure, "after_retry": rollback_after_retry,
+            "rollback_equal_before_retry": rollback_before == rollback_after_failure,
+            "retry_cost": str(retry_receipt.actual_cost),
+        }
+
+        # T3: unsafe or unproven settlement conditions preserve spend and holds.
+        pending_specs = (
+            ("unknown_execution", {"state": "UNKNOWN"}, {}, "execution is not confirmed quiescent"),
+            ("incomplete_usage", {}, {"completeness": "PARTIAL", "input_tokens": 100, "output_tokens": None, "total_tokens": 100}, "usage is incomplete"),
+            ("cache_usage", {}, {"cache_tokens": 1}, "usage dimensions are unsupported"),
+            ("reasoning_usage", {}, {"reasoning_tokens": 1}, "usage dimensions are unsupported"),
+            ("legacy_unverified_production", {}, {}, "legacy non-test pricing semantics lack frozen profile evidence"),
+            ("legacy_unknown_price_version", {}, {}, "legacy synthetic pricing version is not recognized"),
+        )
+        pending_report = {}
+        for label, prepare_options, usage_options, reason_fragment in pending_specs:
+            context, request, call, _, _ = await prepare(
+                f"phase6b-{label}", existing_spend=(Decimal("0.05"), Decimal("0.07")), **prepare_options,
+            )
+            if label == "legacy_unverified_production":
+                async with self.engine.begin() as connection:
+                    await connection.execute(text(
+                        "UPDATE provider_calls SET test_only=false, model_profile_verified=true, "
+                        "pricing_verified=true, tokenizer_verified=true WHERE accounting_call_id=:id"
+                    ), {"id": str(call.accounting_call_id)})
+            elif label == "legacy_unknown_price_version":
+                async with self.engine.begin() as connection:
+                    await connection.execute(text(
+                        "UPDATE provider_calls SET pricing_version='unrecognized-legacy-price-v9' "
+                        "WHERE accounting_call_id=:id"
+                    ), {"id": str(call.accounting_call_id)})
+            await write_usage(request, call, identity=f"{label}-usage", **usage_options)
+            before_pending = await snapshot(context, request, call)
+            pending_receipt = await settle_call(self.factory, call.accounting_call_id)
+            after_pending = await snapshot(context, request, call)
+            self.assertFalse(pending_receipt.settled)
+            self.assertIn(reason_fragment, pending_receipt.pending_reason or "")
+            self.assertGreater(
+                sum(Decimal(row["spent_amount"]) for row in before_pending["accounts"]), Decimal("0"),
+            )
+            assert_no_accounting_effects(before_pending, after_pending)
+            pending_report[label] = {
+                "call_id": str(call.accounting_call_id), "pending_reason": pending_receipt.pending_reason,
+                "before": before_pending, "after": after_pending,
+                "spent_and_held_preserved": True,
+            }
+
+        context, request, conflict_call, _, _ = await prepare(
+            "phase6b-usage-conflict", existing_spend=(Decimal("0.05"), Decimal("0.07")),
+        )
+        await write_usage(request, conflict_call, identity="conflict-identity")
+        await write_usage(request, conflict_call, identity="conflict-identity", input_tokens=101, total_tokens=111)
+        conflict_before = await snapshot(context, request, conflict_call)
+        conflict_receipt = await settle_call(self.factory, conflict_call.accounting_call_id)
+        conflict_after = await snapshot(context, request, conflict_call)
+        self.assertFalse(conflict_receipt.settled)
+        self.assertEqual(conflict_receipt.pending_reason, "usage conflict is unresolved")
+        assert_no_accounting_effects(conflict_before, conflict_after)
+        pending_report["usage_conflict"] = {
+            "call_id": str(conflict_call.accounting_call_id),
+            "pending_reason": conflict_receipt.pending_reason,
+            "before": conflict_before, "after": conflict_after,
+            "spent_and_held_preserved": True,
+        }
+        report["t3_pending_conditions"] = pending_report
+
+        # T4: MEASURED settlement still requires matching immutable request/profile metadata.
+        context, request, call, _, measurement = await prepare("phase6b-measured-success", measured=True)
+        before_measured = await snapshot(context, request, call)
+        measured_usage = await write_usage(
+            request, call, identity="measured-usage", input_tokens=6, output_tokens=4,
+            total_tokens=10, application_path=True,
+        )
+        after_measured = await snapshot(context, request, call)
+        measured_replay = await settle_call(self.factory, call.accounting_call_id)
+        self.assertTrue(measured_usage.accepted)
+        self.assertEqual(measured_usage.settlement_state, "SETTLED")
+        self.assertTrue(measured_replay.settled)
+        self.assertEqual(measured_replay.actual_cost, Decimal("0.000014"))
+        self.assertEqual(after_measured["call"]["measurement_status"], "MEASURED")
+        self.assertEqual(after_measured["call"]["request_digest"], measurement.request_digest)
+        self.assertEqual(after_measured["call"]["profile_digest"], measurement.profile_digest)
+        report["t4_measured_success"] = {
+            "call_id": str(call.accounting_call_id), "before": before_measured,
+            "after": after_measured,
+            "actual_cost": str(measured_replay.actual_cost),
+            "preflight_input_tokens": measurement.measured_input_tokens,
+            "provider_usage_input_tokens": 6,
+        }
+
+        measured_invalid = {}
+        for label, corruption in (
+            ("measured_metadata_missing", "missing"),
+            ("measured_metadata_mismatched", "mismatch"),
+        ):
+            context, request, call, _, measurement = await prepare(f"phase6b-{label}", measured=True)
+            await write_usage(request, call, identity=f"{label}-usage", input_tokens=6, output_tokens=4, total_tokens=10)
+            async with self.engine.begin() as connection:
+                if corruption == "missing":
+                    data = {}
+                else:
+                    data = measurement.model_dump(mode="json")
+                    data["profile_digest"] = "f" * 64
+                await connection.execute(text(
+                    "UPDATE provider_calls SET measurement_data=CAST(:data AS jsonb) "
+                    "WHERE accounting_call_id=:id"
+                ), {"data": json.dumps(data), "id": str(call.accounting_call_id)})
+            before_invalid = await snapshot(context, request, call)
+            invalid_receipt = await settle_call(self.factory, call.accounting_call_id)
+            after_invalid = await snapshot(context, request, call)
+            self.assertFalse(invalid_receipt.settled)
+            self.assertIn("measured provider call", invalid_receipt.pending_reason or "")
+            assert_no_accounting_effects(before_invalid, after_invalid)
+            measured_invalid[label] = {
+                "call_id": str(call.accounting_call_id), "pending_reason": invalid_receipt.pending_reason,
+                "before": before_invalid, "after": after_invalid,
+                "legacy_fallback_used": False,
+            }
+        report["t4_measured_invalid_metadata"] = measured_invalid
+
+        health = await check_database(self.engine)
+        self.assertTrue(health.available)
+        report["database"] = {
+            "postgres_version": health.postgres_version,
+            "migration_head": health.migration_head,
+        }
+        self.phase6b_legacy_report = report
 
 
 if __name__ == "__main__":

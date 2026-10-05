@@ -1,0 +1,2908 @@
+{
+  "baseline_head": "60b304ae96d863fada19543191e18479fabd30aa",
+  "branch": "phase6b-token-accounting",
+  "calls": {
+    "fake_provider_requests": 0,
+    "real_provider_calls": 0
+  },
+  "code_fingerprint_sha256": "b2b97b412e447a0a02ffbb23d2069fe1694e1ee1af78bbd46c61f16f794cbd96",
+  "command": [
+    "uv",
+    "run",
+    "--locked",
+    "python",
+    "scripts/phase6b_legacy_settlement_probe.py",
+    "--database-url",
+    "<isolated-loopback-postgresql-url>"
+  ],
+  "database_target": {
+    "database": "hekate_phase2_test",
+    "host": "127.0.0.1",
+    "isolated_fresh_container": "postgres:16.15, loopback port 55437",
+    "migration_head": "0013_provider_token_measurement",
+    "port": 55437,
+    "postgres_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu"
+  },
+  "executed_at": "2026-10-05T14:46:14.994371Z",
+  "file_digests": [
+    {
+      "bytes": 5180,
+      "path": "scripts/phase6b_legacy_settlement_probe.py",
+      "sha256": "91df242a45ac7cd834af8aec8e1992ac5035a0dada6252adb2796e939b1735a4"
+    },
+    {
+      "bytes": 60450,
+      "path": "src/hekate/infrastructure/postgres/budget_repository.py",
+      "sha256": "f002d480b53aa811b3fa7dff94329bf8f0653ba79c01b0fb18ce1909fc56ffb5"
+    },
+    {
+      "bytes": 91575,
+      "path": "tests/persistence/test_phase2_postgres.py",
+      "sha256": "1da865e9b7d23476c86df796263a7d679dec2ac299ac4e4d28d415ba372c9834"
+    }
+  ],
+  "head": "60b304ae96d863fada19543191e18479fabd30aa",
+  "preexisting_unknown_and_unsettled_fixture_databases": "not accessed; fresh isolated database only",
+  "probe": "phase6b-legacy-unmeasured-settlement",
+  "production_dispatch": "blocked",
+  "run_id": "p6b-legacy-20261005T144610Z-3bf23853",
+  "schema_version": "1",
+  "settlement_scenarios": {
+    "database": {
+      "migration_head": "0013_provider_token_measurement",
+      "postgres_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu"
+    },
+    "fixture_origin": "synthetic persisted provider-call rows; no gateway/upstream request",
+    "measured_permit_binding": {
+      "phase6b-measured-success": {
+        "wrong_profile_digest_rejected": true,
+        "wrong_request_digest_rejected": true
+      },
+      "phase6b-measured_metadata_mismatched": {
+        "wrong_profile_digest_rejected": true,
+        "wrong_request_digest_rejected": true
+      },
+      "phase6b-measured_metadata_missing": {
+        "wrong_profile_digest_rejected": true,
+        "wrong_request_digest_rejected": true
+      }
+    },
+    "provider_requests": 0,
+    "real_provider_calls": 0,
+    "t1_legacy_normal": {
+      "after": {
+        "accounts": [
+          {
+            "held_amount": "0",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.00012"
+          },
+          {
+            "held_amount": "0",
+            "id": "task-budget:phase6b-legacy-normal",
+            "spent_amount": "0.00012"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-normal",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-normal",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-normal",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-normal",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "0",
+          "status": "SETTLED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "held_amount": "0"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": "0.00012",
+          "has_conflict": false,
+          "input_tokens": 100,
+          "output_tokens": 10,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "SETTLED"
+        }
+      },
+      "after_replay": {
+        "accounts": [
+          {
+            "held_amount": "0",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.00012"
+          },
+          {
+            "held_amount": "0",
+            "id": "task-budget:phase6b-legacy-normal",
+            "spent_amount": "0.00012"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-normal",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-normal",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-normal",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-normal",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "0",
+          "status": "SETTLED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "held_amount": "0"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": "0.00012",
+          "has_conflict": false,
+          "input_tokens": 100,
+          "output_tokens": 10,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "SETTLED"
+        }
+      },
+      "before": {
+        "accounts": [
+          {
+            "held_amount": "1",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0"
+          },
+          {
+            "held_amount": "1",
+            "id": "task-budget:phase6b-legacy-normal",
+            "spent_amount": "0"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-normal",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-normal",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "2",
+          "status": "RESERVED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-normal",
+            "held_amount": "1"
+          }
+        ],
+        "usage_projection": null
+      },
+      "call_id": "accounting:legacy-call:phase6b-legacy-normal",
+      "settlement_receipt": {
+        "actual_cost": "0.00012",
+        "pending_reason": null,
+        "settled": true
+      },
+      "usage_receipt": {
+        "accepted": true,
+        "settlement_state": "SETTLED"
+      }
+    },
+    "t2_concurrent_and_replay": {
+      "after": {
+        "accounts": [
+          {
+            "held_amount": "0",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.00024"
+          },
+          {
+            "held_amount": "0",
+            "id": "task-budget:phase6b-legacy-concurrent",
+            "spent_amount": "0.00012"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-concurrent",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-concurrent",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-concurrent",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-concurrent",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "0",
+          "status": "SETTLED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "held_amount": "0"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": "0.00012",
+          "has_conflict": false,
+          "input_tokens": 100,
+          "output_tokens": 10,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "SETTLED"
+        }
+      },
+      "after_replay": {
+        "accounts": [
+          {
+            "held_amount": "0",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.00024"
+          },
+          {
+            "held_amount": "0",
+            "id": "task-budget:phase6b-legacy-concurrent",
+            "spent_amount": "0.00012"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-concurrent",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-concurrent",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-concurrent",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-concurrent",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "0",
+          "status": "SETTLED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "held_amount": "0"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": "0.00012",
+          "has_conflict": false,
+          "input_tokens": 100,
+          "output_tokens": 10,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "SETTLED"
+        }
+      },
+      "before": {
+        "accounts": [
+          {
+            "held_amount": "1",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.00012"
+          },
+          {
+            "held_amount": "1",
+            "id": "task-budget:phase6b-legacy-concurrent",
+            "spent_amount": "0"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-concurrent",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-concurrent",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "2",
+          "status": "RESERVED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-concurrent",
+            "held_amount": "1"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": null,
+          "has_conflict": false,
+          "input_tokens": 100,
+          "output_tokens": 10,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "PENDING"
+        }
+      },
+      "call_id": "accounting:legacy-call:phase6b-legacy-concurrent",
+      "receipts": [
+        {
+          "actual_cost": "0.00012",
+          "settled": true
+        },
+        {
+          "actual_cost": "0.00012",
+          "settled": true
+        }
+      ]
+    },
+    "t2_rollback_and_retry": {
+      "after_injected_failure": {
+        "accounts": [
+          {
+            "held_amount": "1",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.00024"
+          },
+          {
+            "held_amount": "1",
+            "id": "task-budget:phase6b-legacy-rollback",
+            "spent_amount": "0"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-rollback",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-rollback",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "2",
+          "status": "RESERVED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "held_amount": "1"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": null,
+          "has_conflict": false,
+          "input_tokens": 100,
+          "output_tokens": 10,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "PENDING"
+        }
+      },
+      "after_retry": {
+        "accounts": [
+          {
+            "held_amount": "0",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.00036"
+          },
+          {
+            "held_amount": "0",
+            "id": "task-budget:phase6b-legacy-rollback",
+            "spent_amount": "0.00012"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-rollback",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-rollback",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-rollback",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "amount": "0.00012",
+            "effect_key": "settle:accounting:legacy-call:phase6b-legacy-rollback",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.00012"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "0",
+          "status": "SETTLED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "held_amount": "0"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": "0.00012",
+          "has_conflict": false,
+          "input_tokens": 100,
+          "output_tokens": 10,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "SETTLED"
+        }
+      },
+      "before": {
+        "accounts": [
+          {
+            "held_amount": "1",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.00024"
+          },
+          {
+            "held_amount": "1",
+            "id": "task-budget:phase6b-legacy-rollback",
+            "spent_amount": "0"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": null,
+          "request_digest": null,
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-rollback",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-legacy-rollback",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          }
+        ],
+        "permit": {
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "profile_digest": null,
+          "request_digest": null,
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "2",
+          "status": "RESERVED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-legacy-rollback",
+            "held_amount": "1"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": null,
+          "has_conflict": false,
+          "input_tokens": 100,
+          "output_tokens": 10,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "PENDING"
+        }
+      },
+      "call_id": "accounting:legacy-call:phase6b-legacy-rollback",
+      "retry_cost": "0.00012",
+      "rollback_equal_before_retry": true
+    },
+    "t3_pending_conditions": {
+      "cache_usage": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "3",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.21036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-cache_usage",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-cache_usage",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-cache_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-cache_usage",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-cache_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-cache_usage",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": 1,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "3",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.21036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-cache_usage",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-cache_usage",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-cache_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-cache_usage",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-cache_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "RESERVED"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-cache_usage",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": 1,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-cache_usage",
+        "pending_reason": "provider usage dimensions are unsupported by the frozen pricing profile",
+        "spent_and_held_preserved": true
+      },
+      "incomplete_usage": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "2",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.14036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-incomplete_usage",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-incomplete_usage",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-incomplete_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-incomplete_usage",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-incomplete_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-incomplete_usage",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "PARTIAL",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": null,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "2",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.14036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-incomplete_usage",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-incomplete_usage",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-incomplete_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-incomplete_usage",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-incomplete_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "RESERVED"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-incomplete_usage",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "PARTIAL",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": null,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-incomplete_usage",
+        "pending_reason": "provider usage is incomplete",
+        "spent_and_held_preserved": true
+      },
+      "legacy_unknown_price_version": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "6",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.42036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-legacy_unknown_price_version",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "unrecognized-legacy-price-v9",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unknown_price_version",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-legacy_unknown_price_version",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unknown_price_version",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-legacy_unknown_price_version",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unknown_price_version",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "6",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.42036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-legacy_unknown_price_version",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "unrecognized-legacy-price-v9",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unknown_price_version",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-legacy_unknown_price_version",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unknown_price_version",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-legacy_unknown_price_version",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "RESERVED"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unknown_price_version",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-legacy_unknown_price_version",
+        "pending_reason": "legacy synthetic pricing version is not recognized",
+        "spent_and_held_preserved": true
+      },
+      "legacy_unverified_production": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "5",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.35036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-legacy_unverified_production",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": false
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unverified_production",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-legacy_unverified_production",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unverified_production",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-legacy_unverified_production",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unverified_production",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "5",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.35036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-legacy_unverified_production",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": false
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unverified_production",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-legacy_unverified_production",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unverified_production",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-legacy_unverified_production",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "RESERVED"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-legacy_unverified_production",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-legacy_unverified_production",
+        "pending_reason": "legacy non-test pricing semantics lack frozen profile evidence",
+        "spent_and_held_preserved": true
+      },
+      "reasoning_usage": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "4",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.28036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-reasoning_usage",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-reasoning_usage",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-reasoning_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-reasoning_usage",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-reasoning_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-reasoning_usage",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": 1,
+            "settlement_state": "PENDING"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "4",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.28036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-reasoning_usage",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-reasoning_usage",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-reasoning_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-reasoning_usage",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-reasoning_usage",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "RESERVED"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-reasoning_usage",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": 1,
+            "settlement_state": "PENDING"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-reasoning_usage",
+        "pending_reason": "provider usage dimensions are unsupported by the frozen pricing profile",
+        "spent_and_held_preserved": true
+      },
+      "unknown_execution": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "1",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.07036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-unknown_execution",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "UNKNOWN",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-unknown_execution",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-unknown_execution",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-unknown_execution",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-unknown_execution",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-unknown_execution",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "1",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.07036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-unknown_execution",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "UNKNOWN",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-unknown_execution",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-unknown_execution",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-unknown_execution",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-unknown_execution",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "RESERVED"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-unknown_execution",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-unknown_execution",
+        "pending_reason": "provider call execution is not confirmed quiescent",
+        "spent_and_held_preserved": true
+      },
+      "usage_conflict": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "7",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.49036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-usage-conflict",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-usage-conflict",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-usage-conflict",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-usage-conflict",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-usage-conflict",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-usage-conflict",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": true,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "CONFLICT"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "7",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.49036"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-usage-conflict",
+              "spent_amount": "0.05"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": null,
+            "request_digest": null,
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-usage-conflict",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-usage-conflict",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-usage-conflict",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-usage-conflict",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": null,
+            "measurement_status": "LEGACY_UNMEASURED",
+            "profile_digest": null,
+            "request_digest": null,
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-usage-conflict",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": true,
+            "input_tokens": 100,
+            "output_tokens": 10,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "CONFLICT"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-usage-conflict",
+        "pending_reason": "usage conflict is unresolved",
+        "spent_and_held_preserved": true
+      }
+    },
+    "t4_measured_invalid_metadata": {
+      "measured_metadata_mismatched": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "9",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.490374"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-measured_metadata_mismatched",
+              "spent_amount": "0"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 64,
+              "measured_at": "2026-10-05T14:46:14.775327Z",
+              "measured_input_tokens": 6,
+              "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "pricing_version": "test-price-v1",
+              "profile_digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+              "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+              "requested_output_tokens": 10,
+              "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_mismatched",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-measured_metadata_mismatched",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_mismatched",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-measured_metadata_mismatched",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 64,
+              "measured_at": "2026-10-05T14:46:14.775327Z",
+              "measured_input_tokens": 6,
+              "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "pricing_version": "test-price-v1",
+              "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+              "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+              "requested_output_tokens": 10,
+              "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_mismatched",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 6,
+            "output_tokens": 4,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "9",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.490374"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-measured_metadata_mismatched",
+              "spent_amount": "0"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 64,
+              "measured_at": "2026-10-05T14:46:14.775327Z",
+              "measured_input_tokens": 6,
+              "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "pricing_version": "test-price-v1",
+              "profile_digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+              "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+              "requested_output_tokens": 10,
+              "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_mismatched",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-measured_metadata_mismatched",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_mismatched",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-measured_metadata_mismatched",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 64,
+              "measured_at": "2026-10-05T14:46:14.775327Z",
+              "measured_input_tokens": 6,
+              "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "pricing_version": "test-price-v1",
+              "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+              "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+              "requested_output_tokens": 10,
+              "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "RESERVED"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_mismatched",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 6,
+            "output_tokens": 4,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-measured_metadata_mismatched",
+        "legacy_fallback_used": false,
+        "pending_reason": "measured provider call metadata does not match its frozen binding"
+      },
+      "measured_metadata_missing": {
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "8",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.490374"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-measured_metadata_missing",
+              "spent_amount": "0"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": {},
+            "measurement_status": "MEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "request_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_missing",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-measured_metadata_missing",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_missing",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-measured_metadata_missing",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 64,
+              "measured_at": "2026-10-05T14:46:14.485881Z",
+              "measured_input_tokens": 6,
+              "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "pricing_version": "test-price-v1",
+              "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+              "request_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "requested_output_tokens": 10,
+              "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "request_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "PENDING_SETTLEMENT"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_missing",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 6,
+            "output_tokens": 4,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "8",
+              "id": "system-budget:2026-09",
+              "spent_amount": "0.490374"
+            },
+            {
+              "held_amount": "1",
+              "id": "task-budget:phase6b-measured_metadata_missing",
+              "spent_amount": "0"
+            }
+          ],
+          "call": {
+            "allocation_amount": "1",
+            "input_usd_per_million": "1",
+            "measurement_data": {},
+            "measurement_status": "MEASURED",
+            "model": "test-model",
+            "output_usd_per_million": "2",
+            "pricing_version": "test-price-v1",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "request_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+            "status": "QUIESCENT",
+            "test_only": true
+          },
+          "call_allocations": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_missing",
+              "amount": "1"
+            }
+          ],
+          "ledger": [
+            {
+              "account_id": "system-budget:2026-09",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-measured_metadata_missing",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_missing",
+              "amount": "1",
+              "effect_key": "reserve:reservation:operation:phase6b-measured_metadata_missing",
+              "effect_type": "HOLD",
+              "held_delta": "1",
+              "spent_delta": "0"
+            }
+          ],
+          "permit": {
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 64,
+              "measured_at": "2026-10-05T14:46:14.485881Z",
+              "measured_input_tokens": 6,
+              "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "pricing_version": "test-price-v1",
+              "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+              "request_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+              "requested_output_tokens": 10,
+              "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "request_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+            "state": "CONSUMED"
+          },
+          "reservation": {
+            "held_amount": "2",
+            "status": "RESERVED"
+          },
+          "reservation_accounts": [
+            {
+              "account_id": "system-budget:2026-09",
+              "held_amount": "1"
+            },
+            {
+              "account_id": "task-budget:phase6b-measured_metadata_missing",
+              "held_amount": "1"
+            }
+          ],
+          "usage_projection": {
+            "cache_tokens": null,
+            "completeness": "COMPLETE",
+            "evaluated_cost_usd": null,
+            "has_conflict": false,
+            "input_tokens": 6,
+            "output_tokens": 4,
+            "overrun": false,
+            "reasoning_tokens": null,
+            "settlement_state": "PENDING"
+          }
+        },
+        "call_id": "accounting:legacy-call:phase6b-measured_metadata_missing",
+        "legacy_fallback_used": false,
+        "pending_reason": "measured provider call metadata does not match its frozen binding"
+      }
+    },
+    "t4_measured_success": {
+      "actual_cost": "0.000014",
+      "after": {
+        "accounts": [
+          {
+            "held_amount": "7",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.490374"
+          },
+          {
+            "held_amount": "0",
+            "id": "task-budget:phase6b-measured-success",
+            "spent_amount": "0.000014"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 64,
+            "measured_at": "2026-10-05T14:46:14.155378Z",
+            "measured_input_tokens": 6,
+            "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "pricing_version": "test-price-v1",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+            "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+            "requested_output_tokens": 10,
+            "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-measured-success",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-measured-success",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "0.000014",
+            "effect_key": "settle:accounting:legacy-call:phase6b-measured-success",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.000014"
+          },
+          {
+            "account_id": "task-budget:phase6b-measured-success",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-measured-success",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-measured-success",
+            "amount": "0.000014",
+            "effect_key": "settle:accounting:legacy-call:phase6b-measured-success",
+            "effect_type": "SETTLE",
+            "held_delta": "-1",
+            "spent_delta": "0.000014"
+          }
+        ],
+        "permit": {
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 64,
+            "measured_at": "2026-10-05T14:46:14.155378Z",
+            "measured_input_tokens": 6,
+            "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "pricing_version": "test-price-v1",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+            "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+            "requested_output_tokens": 10,
+            "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "0",
+          "status": "SETTLED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-measured-success",
+            "held_amount": "0"
+          }
+        ],
+        "usage_projection": {
+          "cache_tokens": null,
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": "0.000014",
+          "has_conflict": false,
+          "input_tokens": 6,
+          "output_tokens": 4,
+          "overrun": false,
+          "reasoning_tokens": null,
+          "settlement_state": "SETTLED"
+        }
+      },
+      "before": {
+        "accounts": [
+          {
+            "held_amount": "8",
+            "id": "system-budget:2026-09",
+            "spent_amount": "0.49036"
+          },
+          {
+            "held_amount": "1",
+            "id": "task-budget:phase6b-measured-success",
+            "spent_amount": "0"
+          }
+        ],
+        "call": {
+          "allocation_amount": "1",
+          "input_usd_per_million": "1",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 64,
+            "measured_at": "2026-10-05T14:46:14.155378Z",
+            "measured_input_tokens": 6,
+            "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "pricing_version": "test-price-v1",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+            "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+            "requested_output_tokens": 10,
+            "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "model": "test-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "test-price-v1",
+          "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+          "status": "QUIESCENT",
+          "test_only": true
+        },
+        "call_allocations": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-measured-success",
+            "amount": "1"
+          }
+        ],
+        "ledger": [
+          {
+            "account_id": "system-budget:2026-09",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-measured-success",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          },
+          {
+            "account_id": "task-budget:phase6b-measured-success",
+            "amount": "1",
+            "effect_key": "reserve:reservation:operation:phase6b-measured-success",
+            "effect_type": "HOLD",
+            "held_delta": "1",
+            "spent_delta": "0"
+          }
+        ],
+        "permit": {
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 64,
+            "measured_at": "2026-10-05T14:46:14.155378Z",
+            "measured_input_tokens": 6,
+            "pricing_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "pricing_version": "test-price-v1",
+            "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/test",
+            "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+            "requested_output_tokens": 10,
+            "tokenizer_identity": "tiktoken/0.14.0:test-asset",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "profile_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "request_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+          "state": "CONSUMED"
+        },
+        "reservation": {
+          "held_amount": "2",
+          "status": "RESERVED"
+        },
+        "reservation_accounts": [
+          {
+            "account_id": "system-budget:2026-09",
+            "held_amount": "1"
+          },
+          {
+            "account_id": "task-budget:phase6b-measured-success",
+            "held_amount": "1"
+          }
+        ],
+        "usage_projection": null
+      },
+      "call_id": "accounting:legacy-call:phase6b-measured-success",
+      "preflight_input_tokens": 6,
+      "provider_usage_input_tokens": 6
+    }
+  },
+  "skipped": [],
+  "test": {
+    "errors": [],
+    "id": "test_phase2_postgres.Phase2PostgresTests.test_phase6b_legacy_unmeasured_settlement_compatibility",
+    "status": "pass",
+    "tests_run": 1
+  },
+  "unexecuted": [
+    "No provider gateway or fake provider was invoked; this probe exercises the application and PostgreSQL settlement path.",
+    "Production pricing, production dispatch, and provider-reported cost sourcing were not modified or externally validated."
+  ]
+}

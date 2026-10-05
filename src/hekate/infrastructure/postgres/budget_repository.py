@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 
@@ -30,6 +30,88 @@ from hekate.domain.types import AccountingCallId, AttemptId, OperationId, Permit
 
 from . import tables
 from .common import aware_now, json_value, new_key, require_money
+
+
+# Before migration 0013, the repository's synthetic/test PriceTable contract
+# priced aggregate input/output usage without storing a usage_semantics value.
+# Keep this allowlist explicit: a missing measurement is not general evidence
+# that an arbitrary historical or production price rule was aggregate usage.
+_LEGACY_TEST_AGGREGATE_PRICING_VERSIONS = frozenset({
+    "test-price-v1",
+    "test-prices-v1",
+    "synthetic-v1",
+    "local-pricing-v1",
+    "phase3b-synthetic-v1",
+    "phase4-synthetic-v1",
+    "phase5a-synthetic-pricing-v1",
+    "phase5b-synthetic-pricing-v1",
+    "phase6a-synthetic-pricing-v1",
+})
+_AGGREGATE_INPUT_OUTPUT_V1 = "aggregate_input_output_v1"
+
+
+def _valid_saved_rate(value: object) -> bool:
+    try:
+        amount = value if isinstance(value, Decimal) else Decimal(value)
+    except (TypeError, ValueError, ArithmeticError):
+        return False
+    return amount.is_finite() and amount >= 0
+
+
+def _settlement_usage_semantics(call: Mapping[str, object]) -> tuple[str | None, str | None]:
+    status = call.get("measurement_status")
+    measurement = call.get("measurement_data")
+    request_digest = call.get("request_digest")
+    profile_digest = call.get("profile_digest")
+
+    if status == "LEGACY_UNMEASURED":
+        if request_digest is not None or profile_digest is not None or measurement is not None:
+            return None, "legacy call has inconsistent measurement metadata"
+        if call.get("test_only") is not True:
+            return None, "legacy non-test pricing semantics lack frozen profile evidence"
+        model = call.get("model")
+        version = call.get("pricing_version")
+        if not isinstance(model, str) or not model.strip() or version not in _LEGACY_TEST_AGGREGATE_PRICING_VERSIONS:
+            return None, "legacy synthetic pricing version is not recognized"
+        if not _valid_saved_rate(call.get("input_usd_per_million")) or not _valid_saved_rate(
+            call.get("output_usd_per_million")
+        ):
+            return None, "legacy synthetic price table is incomplete or invalid"
+        # This is a local interpretation of the pre-0013 test pricing contract.
+        # It is deliberately not written into call or permit measurement data.
+        return _AGGREGATE_INPUT_OUTPUT_V1, None
+
+    if status != "MEASURED":
+        return None, "provider call measurement status is unsupported"
+    if not isinstance(measurement, Mapping):
+        return None, "measured provider call is missing frozen measurement metadata"
+    if (
+        not isinstance(request_digest, str)
+        or len(request_digest) != 64
+        or measurement.get("request_digest") != request_digest
+        or not isinstance(profile_digest, str)
+        or len(profile_digest) != 64
+        or measurement.get("profile_digest") != profile_digest
+        or measurement.get("pricing_version") != call.get("pricing_version")
+    ):
+        return None, "measured provider call metadata does not match its frozen binding"
+    if measurement.get("usage_semantics") != _AGGREGATE_INPUT_OUTPUT_V1:
+        return None, "measured provider call usage semantics are unsupported"
+    if call.get("test_only") is True:
+        if measurement.get("verification_state") != "TEST_CONTRACT_VERIFIED":
+            return None, "test-only provider measurement is not contract-verified"
+    elif (
+        measurement.get("verification_state") != "PRODUCTION_VERIFIED"
+        or not call.get("model_profile_verified")
+        or not call.get("pricing_verified")
+        or not call.get("tokenizer_verified")
+    ):
+        return None, "production provider measurement lacks verified profile evidence"
+    if not _valid_saved_rate(call.get("input_usd_per_million")) or not _valid_saved_rate(
+        call.get("output_usd_per_million")
+    ):
+        return None, "measured provider price table is incomplete or invalid"
+    return _AGGREGATE_INPUT_OUTPUT_V1, None
 
 
 class PostgresBudgetRepository:
@@ -678,17 +760,18 @@ class PostgresBudgetRepository:
             reason = "usage conflict is unresolved"
         elif projection["reported_cost_usd"] is not None and projection["reported_cost_source"] == "provider_reported":
             cost = projection["reported_cost_usd"]
-        elif projection["completeness"] == "COMPLETE" and (
-            call["test_only"] or (call["model_profile_verified"] and call["pricing_verified"] and call["tokenizer_verified"])
-        ):
-            measurement = call.get("measurement_data") or {}
-            if (
-                measurement.get("usage_semantics") != "aggregate_input_output_v1"
-                or projection["cache_tokens"] not in (None, 0)
+        elif projection["completeness"] != "COMPLETE":
+            reason = "provider usage is incomplete"
+        elif projection["input_tokens"] is None or projection["output_tokens"] is None:
+            reason = "complete provider usage is missing input or output token counts"
+        else:
+            usage_semantics, reason = _settlement_usage_semantics(call)
+            if reason is None and (
+                projection["cache_tokens"] not in (None, 0)
                 or projection["reasoning_tokens"] not in (None, 0)
             ):
                 reason = "provider usage dimensions are unsupported by the frozen pricing profile"
-            else:
+            elif reason is None:
                 assessment = price_usage(NormalizedUsage(
                     completeness=projection["completeness"],
                     input_tokens=projection["input_tokens"],
@@ -705,11 +788,9 @@ class PostgresBudgetRepository:
                     pricing_verified=call["pricing_verified"],
                     tokenizer_verified=call["tokenizer_verified"],
                     synthetic=call["test_only"],
-                    usage_semantics=measurement.get("usage_semantics"),
+                    usage_semantics=usage_semantics,
                 ))
                 cost = assessment.amount
-        else:
-            reason = "pricing or usage semantics are incomplete"
         if cost is None:
             await self.connection.execute(update(tables.usage_projections).where(
                 tables.usage_projections.c.accounting_call_id == accounting_call_id,
