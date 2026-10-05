@@ -1,0 +1,71 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5a-critic-synthesis",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "f26f0510a981424f59db595b102febb1131f7faeeb7b0048ee7df435998c5b5b",
+  "database": {
+    "migration_head": "0007_phase5a_critic_workflows",
+    "name": "hekate_phase5a_test",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "executed_at": "2026-10-03T15:19:12.105883Z",
+  "execution": {
+    "command": "uv run python scripts/phase5a_critic_synthesis_probe.py",
+    "result": "failed"
+  },
+  "failure": {
+    "message": "planning terminated before spawn adoption: {'status': 'FAILED', 'stop_reason': 'POLICY'}; fake errors=[]",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/scripts/phase5a_critic_synthesis_probe.py\", line 460, in _run\n    raise AssertionError(f\"planning terminated before spawn adoption: {dict(state_row)}; fake errors={response_errors}\")\nAssertionError: planning terminated before spawn adoption: {'status': 'FAILED', 'stop_reason': 'POLICY'}; fake errors=[]\n",
+    "type": "AssertionError"
+  },
+  "fake_provider_requests": 1,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review is limited to one initial review; continuation, repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5a-critic-synthesis",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5a-shared-synthetic-v1",
+    "hekate": "phase5a-shared-synthetic-v1",
+    "pricing": "phase5a-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "2b718296-897f-5282-accd-05f10d328f2a",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "a8bf03a9-bde4-4cae-9cb7-5b1e706e78c2"
+      ],
+      "prompt_sha256": "9f5cabeebe20c5231a8e33bffcb7353d105c80899e5a54ebedadd2adacc79a08",
+      "reasoning_role": "hekate",
+      "registry_id": "f1a07258-f53e-5a52-aaa6-049a80962f48",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "e55560fa-d70d-457c-9fb8-b1054f02931c"
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5a-20261003T151912Z-9377167c",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

@@ -1,0 +1,536 @@
+{
+  "accounting": {
+    "pending_or_unknown_operations": [],
+    "synthetic_fake_pricing_only": true,
+    "unsettled_reservations": [],
+    "workflow_operation_statuses": [
+      {
+        "execution_state": "QUIESCENT",
+        "id": "518ec008-89ff-554f-99e5-b81bb7726410",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "7ecdbdeb-80b8-51e1-982e-9ba664832c9e",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      }
+    ]
+  },
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5a-critic-synthesis",
+  "budget_denial_scenario": {
+    "available_task_budget_before_spawn": "0.001000",
+    "child_reservations": 0,
+    "critic_agent_counter": 0,
+    "critic_create_intents": 0,
+    "critic_registries": 0,
+    "critic_workflows": 0,
+    "passed": true,
+    "planning_result_inbox_id": "5bbf9902-1b68-4b84-9405-7e7a912a15f8",
+    "position_versions": 0,
+    "provider_calls_for_scenario": 1,
+    "provider_requests_for_scenario": 1,
+    "rejection_reason": "budget_critic_and_synthesis_unavailable",
+    "required_critic_envelope": "0.036864",
+    "result_state": "REJECTED",
+    "review_round_counter": 0,
+    "task_id": "9efae502-4a02-4205-8cd8-8d507dd6c491",
+    "task_responses": 1,
+    "task_status": "FAILED"
+  },
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "d09506b15e0ed288609f48ce11eb86f780613f22537a47e190b6e28b082d1315",
+  "database": {
+    "migration_head": "0007_phase5a_critic_workflows",
+    "name": "hekate_phase5a_test",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "executed_at": "2026-10-03T17:22:19.153025Z",
+  "execution": {
+    "command": "uv run python scripts/phase5a_critic_synthesis_probe.py",
+    "result": "passed"
+  },
+  "fake_provider_requests": 4,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review is limited to one initial review; continuation, repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "normal_path": {
+    "concurrent_spawn_receipts": [
+      {
+        "create_operation_id": "3b223c7b-61c9-52e8-bac1-83a217048b91",
+        "critic_conclusion_id": null,
+        "critic_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5a-synthetic-pricing-v1",
+          "profile_id": "phase5a-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "critic_registry_id": "5de3a11f-41e9-50b0-90e6-1714b637ff41",
+        "delete_operation_id": null,
+        "hekate_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5a-synthetic-pricing-v1",
+          "profile_id": "phase5a-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "input_revision": 1,
+        "owner_scope": "phase5a:p5a-20261003T172219Z-92380bc0",
+        "parent_attempt_id": "c00ac461-faf6-5ec9-bc1e-0b6c432e73a5",
+        "planning_conclusion_id": "b9e2d391-59d7-5b38-a46e-1718afe63629",
+        "planning_operation_id": "1f0b4f94-9e56-5f42-8f0e-efad651f8f5c",
+        "proposal": {
+          "action": "spawn",
+          "expected_decision_impact": "A stale source would change the applicability of the Position",
+          "purpose": "Check source freshness",
+          "role": "critic",
+          "schema_version": "1",
+          "target_uncertainty": "The source could be stale",
+          "task_id": "139724c2-fc13-4d54-bdfb-f9c2e44aaad6"
+        },
+        "review_attempt_id": "e6895562-fcd5-5153-a362-d0a556c80eb1",
+        "review_operation_id": "518ec008-89ff-554f-99e5-b81bb7726410",
+        "review_reservation_id": "9564d196-bed3-5ac6-95ca-077bb07d2e5d",
+        "spawn_request_hash": "36a7284ae72ee078e4113021f6fc0c9a1c73051452f9e73fd0cc1266d5797afb",
+        "stage": "CREATE_PENDING",
+        "synthesis_attempt_id": "f944ea54-633d-55c8-8448-7e58cee808e5",
+        "synthesis_operation_id": "7ecdbdeb-80b8-51e1-982e-9ba664832c9e",
+        "synthesis_reservation_id": "eb2b96cf-ea76-56a5-8dff-d9ea0c6f52e8",
+        "task_id": "139724c2-fc13-4d54-bdfb-f9c2e44aaad6",
+        "updated_at": "2026-10-03T17:22:30.189031Z"
+      },
+      {
+        "create_operation_id": "3b223c7b-61c9-52e8-bac1-83a217048b91",
+        "critic_conclusion_id": null,
+        "critic_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5a-synthetic-pricing-v1",
+          "profile_id": "phase5a-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "critic_registry_id": "5de3a11f-41e9-50b0-90e6-1714b637ff41",
+        "delete_operation_id": null,
+        "hekate_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5a-synthetic-pricing-v1",
+          "profile_id": "phase5a-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "input_revision": 1,
+        "owner_scope": "phase5a:p5a-20261003T172219Z-92380bc0",
+        "parent_attempt_id": "c00ac461-faf6-5ec9-bc1e-0b6c432e73a5",
+        "planning_conclusion_id": "b9e2d391-59d7-5b38-a46e-1718afe63629",
+        "planning_operation_id": "1f0b4f94-9e56-5f42-8f0e-efad651f8f5c",
+        "proposal": {
+          "action": "spawn",
+          "expected_decision_impact": "A stale source would change the applicability of the Position",
+          "purpose": "Check source freshness",
+          "role": "critic",
+          "schema_version": "1",
+          "target_uncertainty": "The source could be stale",
+          "task_id": "139724c2-fc13-4d54-bdfb-f9c2e44aaad6"
+        },
+        "review_attempt_id": "e6895562-fcd5-5153-a362-d0a556c80eb1",
+        "review_operation_id": "518ec008-89ff-554f-99e5-b81bb7726410",
+        "review_reservation_id": "9564d196-bed3-5ac6-95ca-077bb07d2e5d",
+        "spawn_request_hash": "36a7284ae72ee078e4113021f6fc0c9a1c73051452f9e73fd0cc1266d5797afb",
+        "stage": "CREATE_PENDING",
+        "synthesis_attempt_id": "f944ea54-633d-55c8-8448-7e58cee808e5",
+        "synthesis_operation_id": "7ecdbdeb-80b8-51e1-982e-9ba664832c9e",
+        "synthesis_reservation_id": "eb2b96cf-ea76-56a5-8dff-d9ea0c6f52e8",
+        "task_id": "139724c2-fc13-4d54-bdfb-f9c2e44aaad6",
+        "updated_at": "2026-10-03T17:22:30.189031Z"
+      }
+    ],
+    "concurrent_spawn_replay_no_new_effects": true,
+    "create_response_lost_then_owned_tag_recovered": true,
+    "critic_create_calls": 1,
+    "critic_delete_calls": 2,
+    "critic_output_boundaries": {
+      "critic_cannot_claim_unprovided_evidence": true,
+      "critic_cannot_impersonate_persistent_hekate": true,
+      "critic_output_schema_rejects_executable_proposal": true,
+      "stored_critic_output_validates_against_trusted_binding": true
+    },
+    "db_effect_counts": {
+      "commit_receipts": 1,
+      "dispatch_rows": 3,
+      "dissent_rows": 1,
+      "position_versions": 1,
+      "provider_calls": 3,
+      "responses": 1
+    },
+    "delete_failure_retried_after_restart": true,
+    "effects_after_critic_replay": {
+      "calls": 3,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 1,
+      "outbox": 6,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 3,
+      "responses": 1,
+      "review_rounds": 1,
+      "workflows": 1
+    },
+    "effects_after_replay": {
+      "calls": 3,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 1,
+      "outbox": 6,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 3,
+      "responses": 1,
+      "review_rounds": 1,
+      "workflows": 1
+    },
+    "effects_before_replay": {
+      "calls": 3,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 1,
+      "outbox": 6,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 3,
+      "responses": 1,
+      "review_rounds": 1,
+      "workflows": 1
+    },
+    "inbox_replay": {
+      "critic_result": {
+        "inbox_id": "53c482e3-a27f-4373-a298-772e9d89ac16",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "planning_spawn": {
+        "inbox_id": "45029ff4-6bd1-43bf-9d91-73f9a147ade0",
+        "processed": true,
+        "state": "ACCEPTED"
+      }
+    },
+    "lifecycle_operations": [
+      {
+        "execution_state": "QUIESCENT",
+        "id": "518ec008-89ff-554f-99e5-b81bb7726410",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "7ecdbdeb-80b8-51e1-982e-9ba664832c9e",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      }
+    ],
+    "one_critic_after_postgres_race": true,
+    "operations_and_reservations": [
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "1f0b4f94-9e56-5f42-8f0e-efad651f8f5c",
+        "kind": "hekate.turn",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "518ec008-89ff-554f-99e5-b81bb7726410",
+        "kind": "critic.review",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "7ecdbdeb-80b8-51e1-982e-9ba664832c9e",
+        "kind": "hekate.synthesis",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      }
+    ],
+    "passed": true,
+    "persistent_hekate_retained": true,
+    "postgres_primary_and_competing_approval_race": {
+      "competing_approvals_returned_same_registry": true,
+      "competing_operation_lock_attempts": 2,
+      "create_outbox_intent_inserted_once": true,
+      "critic_and_synthesis_holds_reserved_once": true,
+      "one_durable_workflow_and_create_intent": true,
+      "planning_result_accepted": true,
+      "primary_transaction_paused_before_workflow_insert": true
+    },
+    "projection": {
+      "applied_version": 0,
+      "desired_version": 1,
+      "pending_reason": "memory_projection_not_implemented",
+      "state": "PENDING_UNSUPPORTED"
+    },
+    "provider_requests": 3,
+    "replay_no_new_effects": true,
+    "requests": [
+      {
+        "attempt_id": "c00ac461-faf6-5ec9-bc1e-0b6c432e73a5",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "285a10d5-6c3a-4cbc-93eb-c473f9969435"
+        ],
+        "prompt_sha256": "ce2d8319767172e40703c731b94ac2234c340c60a7d6f853514760adb7a58351",
+        "reasoning_role": "hekate",
+        "registry_id": "646a3450-67ab-50b3-9e9d-77c3cb748abe",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "planning",
+        "task_id": "139724c2-fc13-4d54-bdfb-f9c2e44aaad6",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "e6895562-fcd5-5153-a362-d0a556c80eb1",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "285a10d5-6c3a-4cbc-93eb-c473f9969435"
+        ],
+        "prompt_sha256": "cff5628334927ce21e17ccc284fd610f12215ef5754b2419d5c74529b8baf39f",
+        "reasoning_role": "critic",
+        "registry_id": "5de3a11f-41e9-50b0-90e6-1714b637ff41",
+        "schema": "critic-turn-output.v1.schema.json",
+        "stage": "critic_review",
+        "task_id": "139724c2-fc13-4d54-bdfb-f9c2e44aaad6",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "f944ea54-633d-55c8-8448-7e58cee808e5",
+        "context_checked": true,
+        "critic_conclusion_received": true,
+        "dissent_ids": [
+          "fe324298-d34c-5cc2-8333-49a7db331131"
+        ],
+        "evidence_ids": [
+          "285a10d5-6c3a-4cbc-93eb-c473f9969435"
+        ],
+        "prompt_sha256": "3f1525dedcb0475cb32448262d70e21b955a5fb96c9fc96a1ab63f949a32f378",
+        "reasoning_role": "hekate",
+        "registry_id": "646a3450-67ab-50b3-9e9d-77c3cb748abe",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "synthesis",
+        "task_id": "139724c2-fc13-4d54-bdfb-f9c2e44aaad6",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      }
+    ],
+    "spawn_effect_counts_after_replay": {
+      "calls": 1,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 0,
+      "outbox": 2,
+      "positions": 0,
+      "receipts": 0,
+      "reservations": 3,
+      "responses": 0,
+      "review_rounds": 0,
+      "workflows": 1
+    },
+    "spawn_effect_counts_before_replay": {
+      "calls": 1,
+      "critic_agents": 0,
+      "critics": 0,
+      "dissent": 0,
+      "outbox": 1,
+      "positions": 0,
+      "receipts": 0,
+      "reservations": 1,
+      "responses": 0,
+      "review_rounds": 0,
+      "workflows": 0
+    }
+  },
+  "overall_status": "pass",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5a-critic-synthesis",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5a-shared-synthetic-v1",
+    "hekate": "phase5a-shared-synthetic-v1",
+    "pricing": "phase5a-synthetic-pricing-v1"
+  },
+  "provider_calls": {
+    "compaction": 0,
+    "fake": 4,
+    "real": 0
+  },
+  "provider_request_scenarios": {
+    "insufficient_budget_planning_only": 1,
+    "normal_planning_critic_synthesis": 3
+  },
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5a-20261003T172219Z-92380bc0",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "verification": {
+    "accounting_and_exclusions": {
+      "not_run_or_deferred": [
+        "live production provider",
+        "Letta memory projection",
+        "second Critic review",
+        "ContinuationProposal execution",
+        "schema repair",
+        "transient inference retry",
+        "G7 same-execution resume",
+        "G8 full-request tokenization"
+      ],
+      "phase4_fixture_note": "One ISSUED/ALLOCATED call without execution evidence is deliberately retained; no settlement or execution evidence was fabricated.",
+      "phase4_fixture_unresolved_or_unsettled": 1,
+      "phase5a_unresolved_or_unsettled": 0,
+      "production_dispatch": "closed",
+      "real_provider_calls": 0
+    },
+    "final_code_fingerprint_matches_probe": true,
+    "final_code_fingerprint_sha256": "d09506b15e0ed288609f48ce11eb86f780613f22537a47e190b6e28b082d1315",
+    "generated_schemas": {
+      "command": "uv run --locked python scripts/export_contracts.py --output-dir <temporary-directory>; diff -ru contracts/generated <temporary-directory>",
+      "count": 7,
+      "result": "all checked-in generated schemas matched the Python generator byte-for-byte",
+      "status": "passed"
+    },
+    "phase3_verifier": {
+      "commands": "14/14",
+      "phase3a_artifact": "integration/runtime/artifacts/p3-20261003T161910Z-e2616faa.json",
+      "phase3a_scenarios": "9/9",
+      "phase3b_artifact": "integration/runtime/artifacts/p3b-20261003T161927Z-6c23440d.json",
+      "phase3b_scenarios": "8/8",
+      "scope_note": "Later edits were confined to Phase 5A probe reporting/budget-denial validation and documentation; shared application/runtime source was unchanged.",
+      "status": "passed"
+    },
+    "phase4_regression": {
+      "artifact": "integration/runtime/artifacts/p4-20261003T165018Z-b67da98c.json",
+      "fake_provider_requests": 10,
+      "fingerprint_note": "This run preceded final Phase 5A probe-only reporting/budget-scenario edits; Phase 4 application/runtime source was unchanged.",
+      "real_provider_calls": 0,
+      "scenarios": "13/13",
+      "status": "passed",
+      "unresolved_provider_calls_preserved": 1
+    },
+    "phase5a_migration": {
+      "database": "hekate_phase5a_migration_test (isolated empty DB)",
+      "populated_downgrade_guard": "rejected downgrade; retained migration head 0007 and the one existing workflow row",
+      "status": "passed",
+      "steps": [
+        "upgrade head 0007",
+        "alembic check",
+        "downgrade to 0006",
+        "re-upgrade head 0007",
+        "alembic check"
+      ]
+    },
+    "phase5a_runtime": {
+      "artifact": "integration/runtime/artifacts/p5a-20261003T172219Z-92380bc0.json",
+      "command": "HEKATE_TEST_DATABASE_URL=<isolated-loopback-Phase5A-DB> HEKATE_NODE_BIN=<pinned-Node-22.19.0> uv run --locked python scripts/phase5a_critic_synthesis_probe.py",
+      "normal_and_budget_reservations_unsettled": 0,
+      "normal_and_budget_task_operations_unknown": 0,
+      "normal_path_provider_requests": 3,
+      "real_provider_calls": 0,
+      "separate_budget_denial_provider_requests": 1,
+      "status": "passed"
+    },
+    "python_compile": {
+      "command": "uv run --locked python -m compileall -q src scripts tests",
+      "result": "run after final Phase 5A probe and documentation edits",
+      "status": "passed"
+    },
+    "whitespace": {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  },
+  "verification_completed_at": "2026-10-03T17:25:21.265770Z",
+  "workflow": {
+    "create_operation_id": "3b223c7b-61c9-52e8-bac1-83a217048b91",
+    "critic_conclusion_id": "167a8dc8-1c12-58e6-9516-897390243ac5",
+    "critic_registry_id": "5de3a11f-41e9-50b0-90e6-1714b637ff41",
+    "critic_registry_state": "DELETED",
+    "delete_operation_id": "afff71a4-f430-558d-b054-12ffdaf170a5",
+    "dissent_ids": [
+      "fe324298-d34c-5cc2-8333-49a7db331131"
+    ],
+    "hekate_registry_id": "646a3450-67ab-50b3-9e9d-77c3cb748abe",
+    "input_revision": 1,
+    "planning_attempt_id": "c00ac461-faf6-5ec9-bc1e-0b6c432e73a5",
+    "planning_operation_id": "1f0b4f94-9e56-5f42-8f0e-efad651f8f5c",
+    "position_projection": "PENDING_UNSUPPORTED",
+    "position_projection_pending_reason": "memory_projection_not_implemented",
+    "position_statement": "The copper seal remains valid, with source freshness subject to verification.",
+    "position_version": 1,
+    "review_attempt_id": "e6895562-fcd5-5153-a362-d0a556c80eb1",
+    "review_operation_id": "518ec008-89ff-554f-99e5-b81bb7726410",
+    "spawn_request_hash": "36a7284ae72ee078e4113021f6fc0c9a1c73051452f9e73fd0cc1266d5797afb",
+    "synthesis_attempt_id": "f944ea54-633d-55c8-8448-7e58cee808e5",
+    "synthesis_operation_id": "7ecdbdeb-80b8-51e1-982e-9ba664832c9e",
+    "task_id": "139724c2-fc13-4d54-bdfb-f9c2e44aaad6",
+    "task_response": "Position saved for phase5a-main-topic as version 1: The copper seal remains valid, with source freshness subject to verification.",
+    "task_status": "COMPLETED"
+  }
+}
