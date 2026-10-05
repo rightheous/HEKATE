@@ -1,0 +1,3827 @@
+{
+  "accounting": {
+    "pending_lifecycle_operations": [],
+    "pending_or_unknown_operations": [
+      {
+        "deferred_task_id": "bb40b915-a659-48a8-82ab-6c4d3e940b24",
+        "dispatch_state": "UNKNOWN",
+        "execution_state": "UNKNOWN",
+        "id": "d876f5a1-14b3-51d5-a93a-79a560a81a45",
+        "kind": "critic.review",
+        "state": "UNKNOWN",
+        "task_id": null
+      },
+      {
+        "deferred_task_id": "18d3c1f0-47fb-4f84-9aed-c5ea858f65df",
+        "dispatch_state": "UNKNOWN",
+        "execution_state": "UNKNOWN",
+        "id": "f71458e5-091f-54a6-9d7c-972ba8dba43c",
+        "kind": "hekate.reasoning",
+        "state": "UNKNOWN",
+        "task_id": "18d3c1f0-47fb-4f84-9aed-c5ea858f65df"
+      }
+    ],
+    "pending_unadmitted_workflow_operations": [
+      {
+        "deferred_stage_hash": "551c487a5206804260aa968c84bd17515de13cc4b5aa6913e5bbed70c1e56111",
+        "deferred_task_id": "bb40b915-a659-48a8-82ab-6c4d3e940b24",
+        "dispatch_state": "NOT_STARTED",
+        "execution_state": "PENDING",
+        "id": "c555701c-addf-5aaa-80b1-c37c64bffbbb",
+        "kind": "hekate.synthesis",
+        "state": "CLAIMED"
+      }
+    ],
+    "synthetic_fake_pricing_only": true,
+    "unknown_fixture_explanation": "The remaining UNKNOWN review/hold is an explicit control-plane preservation fixture with zero provider-call rows; it was not normalized or given fabricated termination or usage evidence.",
+    "unsettled_reservations": [
+      {
+        "amount": "0.036864",
+        "held": "0.073728",
+        "kind": "hekate.synthesis",
+        "operation_id": "c555701c-addf-5aaa-80b1-c37c64bffbbb",
+        "status": "RESERVED",
+        "task_id": "bb40b915-a659-48a8-82ab-6c4d3e940b24"
+      },
+      {
+        "amount": "0.036864",
+        "held": "0.073728",
+        "kind": "critic.review",
+        "operation_id": "d876f5a1-14b3-51d5-a93a-79a560a81a45",
+        "status": "RESERVED",
+        "task_id": "bb40b915-a659-48a8-82ab-6c4d3e940b24"
+      },
+      {
+        "amount": "0.036864",
+        "held": "0.073728",
+        "kind": "hekate.reasoning",
+        "operation_id": "f71458e5-091f-54a6-9d7c-972ba8dba43c",
+        "status": "RESERVED",
+        "task_id": "18d3c1f0-47fb-4f84-9aed-c5ea858f65df"
+      }
+    ],
+    "workflow_operation_statuses": [
+      {
+        "execution_state": "QUIESCENT",
+        "id": "8fb16fad-4e4e-5a36-954b-b110ecf8078c",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "cd0b9c5b-5567-5ea0-96d2-2f5760c26afc",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "c0c28394-13a2-559a-a215-6c9c3aab5e8e",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "6eeb033d-7c5c-5d82-908c-bdc25174880c",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      }
+    ]
+  },
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "bounded_path_scenarios": {
+    "combined_with_one_hekate_continuation": 6,
+    "hekate_solo_continuation": {
+      "critic_review_operations": [],
+      "critic_state": null,
+      "dissent_rows": 0,
+      "evidence_id": "4eb9f42a-b23f-4ca5-b07c-647265bdbad5",
+      "observed_stages": [
+        "planning_continue",
+        "hekate_reasoning_answer"
+      ],
+      "passed": true,
+      "position_receipts": 0,
+      "position_versions": 0,
+      "provider_call_rows": 2,
+      "provider_requests": 2,
+      "steps": [
+        {
+          "attempt_id": "a0849d0b-197b-500b-a289-d96517c8195b",
+          "conclusion_id": "edabb682-ed84-5fda-97d8-1bad3bce04fd",
+          "conversation_id": "local-conv-15",
+          "execution_state": "QUIESCENT",
+          "operation_id": "d3f50fa0-fe43-59fc-a5c8-7936f05a2cfe",
+          "operation_state": "COMPLETED",
+          "provider_agent_id": "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef",
+          "reservation_id": "30573f8d-9017-5e78-b9be-eae847ccadb0",
+          "review_round": 0,
+          "state": "COMPLETE",
+          "step_kind": "hekate_reasoning",
+          "step_slot": "hekate_reasoning_1"
+        }
+      ],
+      "task_id": "620cb95c-4f80-40af-9193-8870bbabfd02",
+      "task_state": {
+        "critic_agents": 0,
+        "hekate_continuations": 1,
+        "outcome": "PROVISIONAL_ANSWER",
+        "responses": 1,
+        "review_rounds": 0,
+        "status": "COMPLETED",
+        "stop_reason": "COMPLETED",
+        "workflow_stage": null
+      },
+      "topic_id": "p5b-solo-continuation"
+    },
+    "inference_counts": {
+      "combined": 6,
+      "compaction_calls": 0,
+      "hekate_solo_continuation": 2,
+      "second_critic_review_and_synthesis": 5
+    },
+    "second_critic_review_and_synthesis": {
+      "critic_review_operations": [
+        {
+          "attempt_id": "cfee5c89-ed03-53cd-a22c-f2a7d3f8fb34",
+          "conversation_id": "local-conv-18",
+          "id": "44575bb5-19f2-5bca-a2bc-49472b8dfd45",
+          "provider_agent_id": "agent-local-dea7476b-ad86-4a04-b36a-f111b224f674",
+          "registry_id": "508ade3a-3fd2-5ee0-8bd8-cc8b304c85bc"
+        },
+        {
+          "attempt_id": "258c4cdd-1a42-5fe2-b59c-605bf4ebc9be",
+          "conversation_id": "local-conv-20",
+          "id": "966452fe-d541-5869-818d-5440a62535d5",
+          "provider_agent_id": "agent-local-dea7476b-ad86-4a04-b36a-f111b224f674",
+          "registry_id": "508ade3a-3fd2-5ee0-8bd8-cc8b304c85bc"
+        }
+      ],
+      "critic_state": "DELETED",
+      "dissent_rows": 2,
+      "evidence_id": "c1719888-78b7-43b4-89fc-71aa633ff275",
+      "observed_stages": [
+        "planning",
+        "critic_review_1",
+        "synthesis_1_review_continue",
+        "critic_review_2",
+        "synthesis_2"
+      ],
+      "passed": true,
+      "position_receipts": 1,
+      "position_versions": 1,
+      "provider_call_rows": 5,
+      "provider_requests": 5,
+      "steps": [
+        {
+          "attempt_id": "258c4cdd-1a42-5fe2-b59c-605bf4ebc9be",
+          "conclusion_id": "7065d06f-9f93-59ad-99fa-4948bd6ef881",
+          "conversation_id": "local-conv-20",
+          "execution_state": "QUIESCENT",
+          "operation_id": "966452fe-d541-5869-818d-5440a62535d5",
+          "operation_state": "COMPLETED",
+          "provider_agent_id": "agent-local-dea7476b-ad86-4a04-b36a-f111b224f674",
+          "reservation_id": "d91a3479-68e5-54bd-9cad-7567d6bf1e90",
+          "review_round": 2,
+          "state": "RESULT_ACCEPTED",
+          "step_kind": "critic_review",
+          "step_slot": "critic_review_2"
+        },
+        {
+          "attempt_id": "c5b735af-d99c-5283-a99d-1ef45d9db447",
+          "conclusion_id": "eefccd9c-9df6-50b9-b58e-d36b6d5ed2c7",
+          "conversation_id": "local-conv-21",
+          "execution_state": "QUIESCENT",
+          "operation_id": "127c4c64-14e2-580a-9cb0-8288a06c4380",
+          "operation_state": "COMPLETED",
+          "provider_agent_id": "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef",
+          "reservation_id": "fea0c7bc-17d8-5f28-ab5e-09c858b6c005",
+          "review_round": 2,
+          "state": "COMPLETE",
+          "step_kind": "synthesis",
+          "step_slot": "synthesis_2"
+        }
+      ],
+      "task_id": "63ea8324-3f25-4ed9-88d1-3252573c0e10",
+      "task_state": {
+        "critic_agents": 1,
+        "hekate_continuations": 0,
+        "outcome": "POSITION_COMMITTED",
+        "responses": 1,
+        "review_rounds": 2,
+        "status": "COMPLETED",
+        "stop_reason": "COMPLETED",
+        "workflow_stage": "COMPLETE"
+      },
+      "topic_id": "p5b-review-round-two"
+    }
+  },
+  "bounded_stop_scenarios": {
+    "duplicate_continuation_request": {
+      "critic_state": "DELETED",
+      "deliberation_steps": [
+        {
+          "state": "COMPLETE",
+          "step_slot": "hekate_reasoning_1",
+          "stop_reason": "NO_NEW_WORK"
+        }
+      ],
+      "hekate_continuations": 1,
+      "marker": "PHASE5B_DUPLICATE_REASONING",
+      "passed": true,
+      "position_versions": 0,
+      "provider_requests": 4,
+      "review_rounds": 1,
+      "task_id": "79dacabb-ac00-4f5a-8c4e-6d2aa4043a1c",
+      "task_state": {
+        "critic_agents": 1,
+        "hekate_continuations": 1,
+        "outcome": "PROVISIONAL_ANSWER",
+        "responses": 1,
+        "review_rounds": 1,
+        "status": "COMPLETED",
+        "stop_reason": "NO_NEW_WORK",
+        "workflow_stage": "COMPLETE"
+      }
+    },
+    "second_hekate_reasoning_request": {
+      "critic_state": "DELETED",
+      "deliberation_steps": [
+        {
+          "state": "COMPLETE",
+          "step_slot": "hekate_reasoning_1",
+          "stop_reason": "ROUND_LIMIT"
+        }
+      ],
+      "hekate_continuations": 1,
+      "marker": "PHASE5B_REASONING_CAP",
+      "passed": true,
+      "position_versions": 0,
+      "provider_requests": 4,
+      "review_rounds": 1,
+      "task_id": "76235a57-35e7-4960-8421-0a4d4077de50",
+      "task_state": {
+        "critic_agents": 1,
+        "hekate_continuations": 1,
+        "outcome": "PROVISIONAL_ANSWER",
+        "responses": 1,
+        "review_rounds": 1,
+        "status": "COMPLETED",
+        "stop_reason": "ROUND_LIMIT",
+        "workflow_stage": "COMPLETE"
+      }
+    },
+    "third_critic_review_request": {
+      "critic_state": "DELETED",
+      "deliberation_steps": [
+        {
+          "state": "RESULT_ACCEPTED",
+          "step_slot": "critic_review_2",
+          "stop_reason": null
+        },
+        {
+          "state": "COMPLETE",
+          "step_slot": "synthesis_2",
+          "stop_reason": "ROUND_LIMIT"
+        }
+      ],
+      "hekate_continuations": 0,
+      "marker": "PHASE5B_REVIEW_CAP",
+      "passed": true,
+      "position_versions": 0,
+      "provider_requests": 5,
+      "review_rounds": 2,
+      "task_id": "6e87882e-48b6-42a6-bacc-7b00f2fcfece",
+      "task_state": {
+        "critic_agents": 1,
+        "hekate_continuations": 0,
+        "outcome": "PROVISIONAL_ANSWER",
+        "responses": 1,
+        "review_rounds": 2,
+        "status": "COMPLETED",
+        "stop_reason": "ROUND_LIMIT",
+        "workflow_stage": "COMPLETE"
+      }
+    }
+  },
+  "branch": "phase6a-memory-projection",
+  "budget_denial_scenario": {
+    "available_task_budget_before_spawn": "0.001000",
+    "child_reservations": 0,
+    "critic_agent_counter": 0,
+    "critic_create_intents": 0,
+    "critic_registries": 0,
+    "critic_workflows": 0,
+    "passed": true,
+    "planning_result_inbox_id": "2067f74d-4d44-4d9e-86fa-f6368f22377c",
+    "position_versions": 0,
+    "provider_calls_for_scenario": 1,
+    "provider_requests_for_scenario": 1,
+    "rejection_reason": "budget_critic_and_synthesis_unavailable",
+    "required_critic_envelope": "0.036864",
+    "result_state": "REJECTED",
+    "review_round_counter": 0,
+    "task_id": "dc99a65f-5362-4bfb-ad30-3d38756ee659",
+    "task_responses": 1,
+    "task_status": "FAILED"
+  },
+  "checked_out_head": "dfe099875d757d8f023252a42bda89778847502e",
+  "code_fingerprint_sha256": "1ed97fe530cdbffb76f27d20f96fead83cd12392027c03ed2eb86522705affed",
+  "critic_workflow_stop_and_wait_regressions": {
+    "authorization_epoch_changed_at_synthesis_two": {
+      "final": {
+        "budget_ledger_rows": 10,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "SETTLED"
+          }
+        ],
+        "response": {
+          "input_revision": 1,
+          "proposal": {
+            "action": "abstain",
+            "failure_code": "authorization_changed",
+            "server_generated": true
+          },
+          "response_text": "The task stopped because its authorization changed.",
+          "stop_reason": "POLICY"
+        },
+        "task": {
+          "critic_agents": 1,
+          "id": "09325125-7b6e-448d-b9ed-b58460fd412f",
+          "input_revision": 1,
+          "outcome": "FAILED",
+          "review_rounds": 2,
+          "status": "FAILED",
+          "stop_reason": "POLICY"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000180"
+        },
+        "workflow": {
+          "critic_registry_id": "870a35de-15d4-5746-8df6-3c85ce51262f",
+          "critic_state": "DELETED",
+          "delete_operation_id": "18a2b120-7cf1-5fd5-80f3-d4dc07428a05",
+          "input_revision": 1,
+          "review_operation_id": "f76ab2c1-bf86-54c6-b5a0-04530baee1fd",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "886d943f-3e3e-5ce5-bc49-cb3bcf4f1ec4"
+        }
+      },
+      "passed": true,
+      "provider_requests_after_change": 0,
+      "stale_actor_did_not_block_policy_response_or_critic_cleanup": true,
+      "step_slot": "synthesis_2",
+      "stored_authz_epoch": 2,
+      "task_id": "09325125-7b6e-448d-b9ed-b58460fd412f",
+      "terminal_state": {
+        "outcome": "FAILED",
+        "responses": 1,
+        "status": "FAILED",
+        "stop_reason": "POLICY",
+        "workflow_stage": "COMPLETE"
+      },
+      "worker_actor_epoch": 1
+    },
+    "busy_and_lease_wait": {
+      "final": {
+        "budget_ledger_rows": 6,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 1,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "SETTLED"
+          }
+        ],
+        "response": {
+          "input_revision": 1,
+          "proposal": {
+            "action": "commit",
+            "base_version": 0,
+            "input_revision": 1,
+            "operation_id": "ddf789ec-5b90-5c05-b694-aedc38b38817:position.commit",
+            "proposed_position": {
+              "applicability": [
+                "the submitted question and source context"
+              ],
+              "assumptions": [],
+              "confidence": {
+                "basis": [
+                  "source excerpt and Critic review"
+                ],
+                "level": "medium",
+                "missing_evidence": []
+              },
+              "dissent_refs": [
+                "73b74104-be87-5c44-a13b-c8db9752939f"
+              ],
+              "evidence_refs": [
+                "197b5994-3dc0-40f6-9745-f25fdaa284f6"
+              ],
+              "statement": "The copper seal remains valid, with source freshness subject to verification.",
+              "uncertainty": "Confirm the retrieval date against the applicable rule."
+            },
+            "reason_for_change": "Incorporate the Critic's freshness objection.",
+            "schema_version": "1",
+            "task_id": "1b5a4a31-9729-4cf7-9c63-e5df8b32ad79",
+            "topic_id": "p5b-busy-lease-resume"
+          },
+          "response_text": "Position saved for p5b-busy-lease-resume as version 1: The copper seal remains valid, with source freshness subject to verification.",
+          "stop_reason": "COMPLETED"
+        },
+        "task": {
+          "critic_agents": 1,
+          "id": "1b5a4a31-9729-4cf7-9c63-e5df8b32ad79",
+          "input_revision": 1,
+          "outcome": "POSITION_COMMITTED",
+          "review_rounds": 1,
+          "status": "COMPLETED",
+          "stop_reason": "COMPLETED"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000135"
+        },
+        "workflow": {
+          "critic_registry_id": "bb943fe1-4f08-582d-923c-ad33db4c7ad6",
+          "critic_state": "DELETED",
+          "delete_operation_id": "db9c5f3d-9dbf-5f8f-9ac8-c100f7488910",
+          "input_revision": 1,
+          "review_operation_id": "d1d1cf9e-b252-5d93-8e95-c3af8e126002",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "ddf789ec-5b90-5c05-b694-aedc38b38817"
+        }
+      },
+      "passed": true,
+      "provider_requests_during_waits": 0,
+      "same_attempt_and_operation_resumed": true,
+      "task_id": "1b5a4a31-9729-4cf7-9c63-e5df8b32ad79",
+      "task_provider_requests": [
+        "planning",
+        "critic_review_1",
+        "synthesis"
+      ],
+      "workflow_after_waits": {
+        "budget_ledger_rows": 5,
+        "critic_delete_outbox_rows": 0,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.073728",
+            "kind": "hekate.synthesis",
+            "status": "RESERVED"
+          }
+        ],
+        "response": null,
+        "task": {
+          "critic_agents": 1,
+          "id": "1b5a4a31-9729-4cf7-9c63-e5df8b32ad79",
+          "input_revision": 1,
+          "outcome": null,
+          "review_rounds": 1,
+          "status": "WAITING",
+          "stop_reason": null
+        },
+        "task_budget": {
+          "held_amount": "0.036864",
+          "spent_amount": "0.000090"
+        },
+        "workflow": {
+          "critic_registry_id": "bb943fe1-4f08-582d-923c-ad33db4c7ad6",
+          "critic_state": "READY",
+          "delete_operation_id": null,
+          "input_revision": 1,
+          "review_operation_id": "d1d1cf9e-b252-5d93-8e95-c3af8e126002",
+          "stage": "SYNTHESIS_PENDING",
+          "synthesis_operation_id": "ddf789ec-5b90-5c05-b694-aedc38b38817"
+        }
+      },
+      "workflow_before_waits": {
+        "budget_ledger_rows": 5,
+        "critic_delete_outbox_rows": 0,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.073728",
+            "kind": "hekate.synthesis",
+            "status": "RESERVED"
+          }
+        ],
+        "response": null,
+        "task": {
+          "critic_agents": 1,
+          "id": "1b5a4a31-9729-4cf7-9c63-e5df8b32ad79",
+          "input_revision": 1,
+          "outcome": null,
+          "review_rounds": 1,
+          "status": "WAITING",
+          "stop_reason": null
+        },
+        "task_budget": {
+          "held_amount": "0.036864",
+          "spent_amount": "0.000090"
+        },
+        "workflow": {
+          "critic_registry_id": "bb943fe1-4f08-582d-923c-ad33db4c7ad6",
+          "critic_state": "READY",
+          "delete_operation_id": null,
+          "input_revision": 1,
+          "review_operation_id": "d1d1cf9e-b252-5d93-8e95-c3af8e126002",
+          "stage": "SYNTHESIS_PENDING",
+          "synthesis_operation_id": "ddf789ec-5b90-5c05-b694-aedc38b38817"
+        }
+      }
+    },
+    "cancel": {
+      "final": {
+        "budget_ledger_rows": 6,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "RELEASED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "RELEASED"
+          }
+        ],
+        "response": null,
+        "task": {
+          "critic_agents": 1,
+          "id": "ae087dca-2322-4a7b-9558-f396e9aa18ce",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000045"
+        },
+        "workflow": {
+          "critic_registry_id": "89893e18-8498-516e-8bb2-b6faea7458bc",
+          "critic_state": "DELETED",
+          "delete_operation_id": "7d9ec240-8f9f-585a-9588-9e176af61cb0",
+          "input_revision": 1,
+          "review_operation_id": "e556c4a9-60b9-5cf0-8d4d-ff68766485a8",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "ef24612c-3ba8-5589-ab23-d2c5e5a260fb"
+        }
+      },
+      "passed": true,
+      "provider_requests_after_stop": 0,
+      "task_id": "ae087dca-2322-4a7b-9558-f396e9aa18ce"
+    },
+    "critic_workflow_reject_rollback": {
+      "passed": true,
+      "provider_requests_after_rollback": 3,
+      "recovered": {
+        "budget_ledger_rows": 12,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 1,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "SETTLED"
+          }
+        ],
+        "response": {
+          "input_revision": 1,
+          "proposal": {
+            "action": "commit",
+            "base_version": 0,
+            "input_revision": 1,
+            "operation_id": "1a86b07c-4a0f-5b71-ba34-210b7399438d:position.commit",
+            "proposed_position": {
+              "applicability": [
+                "the submitted question and source context"
+              ],
+              "assumptions": [],
+              "confidence": {
+                "basis": [
+                  "source excerpt and two bounded Critic reviews"
+                ],
+                "level": "medium",
+                "missing_evidence": []
+              },
+              "dissent_refs": [
+                "51ef02c8-4de7-554e-9a27-643daae57420",
+                "9adc685d-ac70-5bcc-a524-4851da4e72f9"
+              ],
+              "evidence_refs": [
+                "214c6691-67c0-48d0-83a0-1ea12f4634be"
+              ],
+              "statement": "The copper seal remains usable with jurisdiction and freshness qualifications.",
+              "uncertainty": "Confirm source scope and retrieval date against the governing rule."
+            },
+            "reason_for_change": "Incorporate both bounded Critic reviews.",
+            "schema_version": "1",
+            "task_id": "fe19b2ce-7508-4511-afc9-c21da2850759",
+            "topic_id": "p5b-critic-workflow-reject-rollback"
+          },
+          "response_text": "Position saved for p5b-critic-workflow-reject-rollback as version 1: The copper seal remains usable with jurisdiction and freshness qualifications.",
+          "stop_reason": "COMPLETED"
+        },
+        "task": {
+          "critic_agents": 1,
+          "id": "fe19b2ce-7508-4511-afc9-c21da2850759",
+          "input_revision": 1,
+          "outcome": "POSITION_COMMITTED",
+          "review_rounds": 2,
+          "status": "COMPLETED",
+          "stop_reason": "COMPLETED"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000270"
+        },
+        "workflow": {
+          "critic_registry_id": "bdc09162-43d2-5bd4-be49-50750c46f996",
+          "critic_state": "DELETED",
+          "delete_operation_id": "ee72f2bf-3af3-5ab0-8b14-c78cf93acb79",
+          "input_revision": 1,
+          "review_operation_id": "8f9bbb54-76a5-53bc-a37e-b6ec85d8a368",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "a5b7d7fc-24a8-541e-8a7e-1921e9d005a4"
+        }
+      },
+      "rollback": {
+        "actual_repository_deadline_check": true,
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "0.036864",
+              "reservation_held": "0.036864",
+              "scope_kind": "SYSTEM",
+              "scope_ref": "hekate",
+              "spent_amount": "0.001755"
+            },
+            {
+              "held_amount": "0.036864",
+              "reservation_held": "0.036864",
+              "scope_kind": "TASK",
+              "scope_ref": "fe19b2ce-7508-4511-afc9-c21da2850759",
+              "spent_amount": "0.000135"
+            }
+          ],
+          "critic_agents": 1,
+          "critic_workflows": 1,
+          "execution_holds": [],
+          "position_versions": 0,
+          "release_ledger": [],
+          "responses": 0,
+          "steps": [
+            {
+              "dispatch_state": "NOT_STARTED",
+              "execution_state": "PENDING",
+              "id": "f0e2a4c6-be78-570e-845b-83c5e1c07f74",
+              "maintenance_completed_at": null,
+              "maintenance_retry_after": null,
+              "operation_id": "534bbe4f-1867-577f-8161-e412ba88d057",
+              "operation_state": "CLAIMED",
+              "operation_task_id": null,
+              "provider_calls": 0,
+              "reservation_held": "0.073728",
+              "reservation_id": "fe43c3ae-17ab-5a0c-be5d-dfa1f9b6d0a0",
+              "reservation_state": "RESERVED",
+              "reserved_amount": "0.036864",
+              "settled_at": null,
+              "step_revision": 1,
+              "step_slot": "hekate_reasoning_1",
+              "step_state": "READY",
+              "step_stop_reason": null
+            }
+          ],
+          "stop_audits": [],
+          "task": {
+            "critic_agents": 1,
+            "hekate_continuations": 1,
+            "id": "fe19b2ce-7508-4511-afc9-c21da2850759",
+            "input_revision": 1,
+            "outcome": null,
+            "review_rounds": 1,
+            "status": "WAITING",
+            "stop_reason": null
+          },
+          "workflow_stage": "SYNTHESIS_ADMITTED"
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "0.036864",
+              "reservation_held": "0.036864",
+              "scope_kind": "SYSTEM",
+              "scope_ref": "hekate",
+              "spent_amount": "0.001755"
+            },
+            {
+              "held_amount": "0.036864",
+              "reservation_held": "0.036864",
+              "scope_kind": "TASK",
+              "scope_ref": "fe19b2ce-7508-4511-afc9-c21da2850759",
+              "spent_amount": "0.000135"
+            }
+          ],
+          "critic_agents": 1,
+          "critic_workflows": 1,
+          "execution_holds": [],
+          "position_versions": 0,
+          "release_ledger": [],
+          "responses": 0,
+          "steps": [
+            {
+              "dispatch_state": "NOT_STARTED",
+              "execution_state": "PENDING",
+              "id": "f0e2a4c6-be78-570e-845b-83c5e1c07f74",
+              "maintenance_completed_at": null,
+              "maintenance_retry_after": null,
+              "operation_id": "534bbe4f-1867-577f-8161-e412ba88d057",
+              "operation_state": "CLAIMED",
+              "operation_task_id": null,
+              "provider_calls": 0,
+              "reservation_held": "0.073728",
+              "reservation_id": "fe43c3ae-17ab-5a0c-be5d-dfa1f9b6d0a0",
+              "reservation_state": "RESERVED",
+              "reserved_amount": "0.036864",
+              "settled_at": null,
+              "step_revision": 1,
+              "step_slot": "hekate_reasoning_1",
+              "step_state": "READY",
+              "step_stop_reason": null
+            }
+          ],
+          "stop_audits": [],
+          "task": {
+            "critic_agents": 1,
+            "hekate_continuations": 1,
+            "id": "fe19b2ce-7508-4511-afc9-c21da2850759",
+            "input_revision": 1,
+            "outcome": null,
+            "review_rounds": 1,
+            "status": "WAITING",
+            "stop_reason": null
+          },
+          "workflow_stage": "SYNTHESIS_ADMITTED"
+        },
+        "outcome": "task_changed"
+      },
+      "task_id": "fe19b2ce-7508-4511-afc9-c21da2850759"
+    },
+    "deadline": {
+      "final": {
+        "budget_ledger_rows": 6,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "RELEASED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "RELEASED"
+          }
+        ],
+        "response": null,
+        "task": {
+          "critic_agents": 1,
+          "id": "4141eb56-bc8f-4290-836c-8669cd148949",
+          "input_revision": 1,
+          "outcome": "FAILED",
+          "review_rounds": 0,
+          "status": "FAILED",
+          "stop_reason": "DEADLINE"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000045"
+        },
+        "workflow": {
+          "critic_registry_id": "e0210dae-c110-53a7-bae6-678ae2461b53",
+          "critic_state": "DELETED",
+          "delete_operation_id": "61094940-fef3-5b28-bb08-5acc041f8a13",
+          "input_revision": 1,
+          "review_operation_id": "5262190f-212e-524b-8ba1-a7fb86085b2e",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "dd2c022c-dc5b-5c36-b036-6f71fc54d3dd"
+        }
+      },
+      "passed": true,
+      "provider_requests_after_stop": 0,
+      "task_id": "4141eb56-bc8f-4290-836c-8669cd148949"
+    },
+    "evidence_expired_before_second_review": {
+      "atomic_failure_rollback": {
+        "budget_ledger_rows": 8,
+        "critic_delete_outbox_rows": 0,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "SETTLED"
+          }
+        ],
+        "response": null,
+        "task": {
+          "critic_agents": 1,
+          "id": "3ad968a7-6ded-430a-b3c4-c45e00d7294a",
+          "input_revision": 1,
+          "outcome": null,
+          "review_rounds": 1,
+          "status": "WAITING",
+          "stop_reason": null
+        },
+        "task_budget": {
+          "held_amount": "0.073728",
+          "spent_amount": "0.000135"
+        },
+        "workflow": {
+          "critic_registry_id": "8e8e2c1e-8403-5356-b2cc-67914d6fd49e",
+          "critic_state": "READY",
+          "delete_operation_id": null,
+          "input_revision": 1,
+          "review_operation_id": "2b1dd3f8-20c8-50f3-ab1e-1a3e7c1c0326",
+          "stage": "SYNTHESIS_ADMITTED",
+          "synthesis_operation_id": "cc89baa6-fb2a-525b-99f1-7eda236349d7"
+        }
+      },
+      "evidence_expiry": {
+        "archive_exists": false,
+        "artifact_state": "DELETED",
+        "availability": "EXPIRED",
+        "maintenance_result": {
+          "deleted_artifacts": [
+            "sha256:9a17b58acca95fd8b5d91f8fd7e8c410f349d1dcb4b02301cb4ddb86838865e7"
+          ],
+          "expired_evidence": 1,
+          "failed_artifacts": []
+        },
+        "original_input_exists": true
+      },
+      "final_snapshot": {
+        "budget_ledger_rows": 10,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "SETTLED"
+          }
+        ],
+        "response": {
+          "input_revision": 1,
+          "proposal": {
+            "action": "abstain",
+            "failure_code": "evidence_unavailable",
+            "server_generated": true
+          },
+          "response_text": "The task stopped because selected evidence is no longer available.",
+          "stop_reason": "POLICY"
+        },
+        "task": {
+          "critic_agents": 1,
+          "id": "3ad968a7-6ded-430a-b3c4-c45e00d7294a",
+          "input_revision": 1,
+          "outcome": "FAILED",
+          "review_rounds": 1,
+          "status": "FAILED",
+          "stop_reason": "POLICY"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000135"
+        },
+        "workflow": {
+          "critic_registry_id": "8e8e2c1e-8403-5356-b2cc-67914d6fd49e",
+          "critic_state": "DELETED",
+          "delete_operation_id": "e05b665c-2ae9-58ed-9d97-4404206afa06",
+          "input_revision": 1,
+          "review_operation_id": "2b1dd3f8-20c8-50f3-ab1e-1a3e7c1c0326",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "cc89baa6-fb2a-525b-99f1-7eda236349d7"
+        }
+      },
+      "passed": true,
+      "provider_requests_after_stop": 3,
+      "provider_requests_before_step": 3,
+      "replay_effects_unchanged": true,
+      "step_slot": "critic_review_2",
+      "task_id": "3ad968a7-6ded-430a-b3c4-c45e00d7294a",
+      "terminal_state": {
+        "outcome": "FAILED",
+        "responses": 1,
+        "status": "FAILED",
+        "stop_reason": "POLICY",
+        "workflow_stage": "COMPLETE"
+      },
+      "unused_holds_released_and_critic_deleted": true
+    },
+    "evidence_expired_before_second_synthesis": {
+      "atomic_failure_rollback": null,
+      "evidence_expiry": {
+        "archive_exists": false,
+        "artifact_state": "DELETED",
+        "availability": "EXPIRED",
+        "maintenance_result": {
+          "deleted_artifacts": [
+            "sha256:51939642f813a2945b410f7cddc85af91f530cfa408f1e455596c54958188bb8"
+          ],
+          "expired_evidence": 1,
+          "failed_artifacts": []
+        },
+        "original_input_exists": true
+      },
+      "final_snapshot": {
+        "budget_ledger_rows": 10,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "SETTLED"
+          }
+        ],
+        "response": {
+          "input_revision": 1,
+          "proposal": {
+            "action": "abstain",
+            "failure_code": "evidence_unavailable",
+            "server_generated": true
+          },
+          "response_text": "The task stopped because selected evidence is no longer available.",
+          "stop_reason": "POLICY"
+        },
+        "task": {
+          "critic_agents": 1,
+          "id": "c406c748-2428-4d25-9104-ff7838635cff",
+          "input_revision": 1,
+          "outcome": "FAILED",
+          "review_rounds": 2,
+          "status": "FAILED",
+          "stop_reason": "POLICY"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000180"
+        },
+        "workflow": {
+          "critic_registry_id": "623692e2-de08-53e3-942a-ef20e1ced74d",
+          "critic_state": "DELETED",
+          "delete_operation_id": "d1dd4ad9-d1d3-5e1d-8f89-d7301b579c4e",
+          "input_revision": 1,
+          "review_operation_id": "0bffbb98-f953-50af-905c-6f60d81967e7",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "d2b0a796-28c2-58f4-9515-2f3b3ff7c736"
+        }
+      },
+      "passed": true,
+      "provider_requests_after_stop": 4,
+      "provider_requests_before_step": 4,
+      "replay_effects_unchanged": true,
+      "step_slot": "synthesis_2",
+      "task_id": "c406c748-2428-4d25-9104-ff7838635cff",
+      "terminal_state": {
+        "outcome": "FAILED",
+        "responses": 1,
+        "status": "FAILED",
+        "stop_reason": "POLICY",
+        "workflow_stage": "COMPLETE"
+      },
+      "unused_holds_released_and_critic_deleted": true
+    },
+    "evidence_expired_critic_ready": {
+      "atomic_rollback_after_injected_failure": {
+        "budget_ledger_rows": 4,
+        "critic_delete_outbox_rows": 0,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.073728",
+            "kind": "critic.review",
+            "status": "RESERVED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.073728",
+            "kind": "hekate.synthesis",
+            "status": "RESERVED"
+          }
+        ],
+        "response": null,
+        "task": {
+          "critic_agents": 1,
+          "id": "a8f58d45-ac8a-4900-a644-2d7a80940caf",
+          "input_revision": 1,
+          "outcome": null,
+          "review_rounds": 0,
+          "status": "WAITING",
+          "stop_reason": null
+        },
+        "task_budget": {
+          "held_amount": "0.073728",
+          "spent_amount": "0.000045"
+        },
+        "workflow": {
+          "critic_registry_id": "cf959c4f-7b08-5d00-b5d2-fdaf6f550a63",
+          "critic_state": "READY",
+          "delete_operation_id": null,
+          "input_revision": 1,
+          "review_operation_id": "c615858d-082a-5b66-8690-7fe7ed820b1b",
+          "stage": "CRITIC_READY",
+          "synthesis_operation_id": "7e717bc3-3f14-5915-b1e4-557d385043ca"
+        }
+      },
+      "evidence": {
+        "archive_exists": false,
+        "artifact_state": "DELETED",
+        "availability": "EXPIRED",
+        "maintenance_result": {
+          "deleted_artifacts": [
+            "sha256:2faa4ec4825ab7a9ad0c8bc49228f01d4fd275700966f08722e6df33a79ebd05"
+          ],
+          "expired_evidence": 1,
+          "failed_artifacts": []
+        },
+        "original_input_exists": true
+      },
+      "failure_transaction_inbox_and_operation_source_preserved": true,
+      "final": {
+        "budget_ledger_rows": 6,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "RELEASED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "RELEASED"
+          }
+        ],
+        "response": {
+          "input_revision": 1,
+          "proposal": {
+            "action": "abstain",
+            "failure_code": "evidence_unavailable",
+            "server_generated": true
+          },
+          "response_text": "The task stopped because selected evidence is no longer available.",
+          "stop_reason": "POLICY"
+        },
+        "task": {
+          "critic_agents": 1,
+          "id": "a8f58d45-ac8a-4900-a644-2d7a80940caf",
+          "input_revision": 1,
+          "outcome": "FAILED",
+          "review_rounds": 0,
+          "status": "FAILED",
+          "stop_reason": "POLICY"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000045"
+        },
+        "workflow": {
+          "critic_registry_id": "cf959c4f-7b08-5d00-b5d2-fdaf6f550a63",
+          "critic_state": "DELETED",
+          "delete_operation_id": "a4ec0f9a-2c3f-5f8f-acd3-6cd85bf4e981",
+          "input_revision": 1,
+          "review_operation_id": "c615858d-082a-5b66-8690-7fe7ed820b1b",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "7e717bc3-3f14-5915-b1e4-557d385043ca"
+        }
+      },
+      "passed": true,
+      "provider_requests_after_failure": 43,
+      "provider_requests_before_expiry": 43,
+      "replay_effects_unchanged": true,
+      "task_id": "a8f58d45-ac8a-4900-a644-2d7a80940caf"
+    },
+    "evidence_expired_synthesis_pending": {
+      "evidence": {
+        "archive_exists": false,
+        "artifact_state": "DELETED",
+        "availability": "EXPIRED",
+        "maintenance_result": {
+          "deleted_artifacts": [
+            "sha256:701912d510be6c2d502a218b363bd99480a21553f20a70ee3330dd3b46b87930"
+          ],
+          "expired_evidence": 1,
+          "failed_artifacts": []
+        },
+        "original_input_exists": true
+      },
+      "final": {
+        "budget_ledger_rows": 6,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          },
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "RELEASED"
+          }
+        ],
+        "response": {
+          "input_revision": 1,
+          "proposal": {
+            "action": "abstain",
+            "failure_code": "evidence_unavailable",
+            "server_generated": true
+          },
+          "response_text": "The task stopped because selected evidence is no longer available.",
+          "stop_reason": "POLICY"
+        },
+        "task": {
+          "critic_agents": 1,
+          "id": "790d43ab-2806-425c-927d-327155246aeb",
+          "input_revision": 1,
+          "outcome": "FAILED",
+          "review_rounds": 1,
+          "status": "FAILED",
+          "stop_reason": "POLICY"
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000090"
+        },
+        "workflow": {
+          "critic_registry_id": "c17266a9-29e8-51f6-8e84-be5c2c179ffb",
+          "critic_state": "DELETED",
+          "delete_operation_id": "da0b09bc-8be7-54ce-adbf-3fda0c329784",
+          "input_revision": 1,
+          "review_operation_id": "11ec5ea6-8b2c-5baa-8e8d-ddf139427d33",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "8a027810-17fb-5c8a-994e-0e98d84e5f85"
+        }
+      },
+      "passed": true,
+      "provider_requests_after_failure": 45,
+      "provider_requests_before_expiry": 45,
+      "review_spend_preserved": true,
+      "synthesis_hold_released": true,
+      "task_id": "790d43ab-2806-425c-927d-327155246aeb",
+      "workflow_before_rejection": {
+        "create_operation_id": "0b6e98a3-324b-5e7a-9846-9ab7f1c314c2",
+        "critic_agents": 1,
+        "critic_conclusion_id": "79ab4a6d-8fad-5c3d-b085-0b353741c440",
+        "critic_registry_id": "c17266a9-29e8-51f6-8e84-be5c2c179ffb",
+        "delete_operation_id": "da0b09bc-8be7-54ce-adbf-3fda0c329784",
+        "input_revision": 1,
+        "parent_attempt_id": "d22d8c98-9f8d-5fe0-a60f-72549e6d9bf2",
+        "planning_operation_id": "5b7ff3a9-f26f-5de2-9e21-678540d0dc86",
+        "provider_agent_id": "agent-local-0f1d9bee-af2c-4a86-88b7-3f37d2d8e7b4",
+        "registry_state": "DELETED",
+        "review_attempt_id": "8e0851b1-af6f-5ee4-986c-d70d13ef7d82",
+        "review_operation_id": "11ec5ea6-8b2c-5baa-8e8d-ddf139427d33",
+        "review_rounds": 1,
+        "spawn_request_hash": "96e5bfae601a57eecd3059ac088f462f0ac40cb47e817e398b9018b283914815",
+        "stage": "COMPLETE",
+        "synthesis_attempt_id": "2b3bd3b8-45b7-5de3-aec8-f9e83bb0c7c7",
+        "synthesis_operation_id": "8a027810-17fb-5c8a-994e-0e98d84e5f85",
+        "task_status": "FAILED"
+      }
+    },
+    "revision_superseded": {
+      "final": {
+        "budget_ledger_rows": 6,
+        "critic_delete_outbox_rows": 1,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "critic.review",
+            "status": "RELEASED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.000000",
+            "kind": "hekate.synthesis",
+            "status": "RELEASED"
+          }
+        ],
+        "response": null,
+        "task": {
+          "critic_agents": 1,
+          "id": "376ea074-a2fa-4fa3-b21a-4501fc67baca",
+          "input_revision": 2,
+          "outcome": null,
+          "review_rounds": 0,
+          "status": "WAITING",
+          "stop_reason": null
+        },
+        "task_budget": {
+          "held_amount": "0.000000",
+          "spent_amount": "0.000045"
+        },
+        "workflow": {
+          "critic_registry_id": "421f1a90-5e4e-5000-ae9f-f9d64f97b198",
+          "critic_state": "DELETED",
+          "delete_operation_id": "e9a49bc8-8333-5525-a27a-cf4fb4a24c60",
+          "input_revision": 1,
+          "review_operation_id": "89da46f0-7be5-591c-8a88-f47ebfc1ad0c",
+          "stage": "COMPLETE",
+          "synthesis_operation_id": "67506508-48c9-59cb-8405-b42b55a2166f"
+        }
+      },
+      "passed": true,
+      "provider_requests_after_stop": 0,
+      "task_id": "376ea074-a2fa-4fa3-b21a-4501fc67baca"
+    },
+    "standalone_cancel_concurrent_maintenance": {
+      "after_cleanup": {
+        "accounts": [
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.001575"
+          },
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "TASK",
+            "scope_ref": "da588498-e8ef-40c1-bb72-aec4c06ebfbe",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [
+          {
+            "count": 2,
+            "held_delta": "-0.073728",
+            "reservation_id": "6e15285e-144e-5ab1-83f6-900b22231171",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "d5fb8a9b-25dd-5b57-91e2-fdc1a086da7b",
+            "maintenance_completed_at": "2026-10-05 07:17:00.040493+00:00",
+            "maintenance_retry_after": null,
+            "operation_id": "e5913366-fca2-532d-9b14-968cbb417960",
+            "operation_state": "FAILED",
+            "operation_task_id": null,
+            "provider_calls": 0,
+            "reservation_held": "0.000000",
+            "reservation_id": "6e15285e-144e-5ab1-83f6-900b22231171",
+            "reservation_state": "RELEASED",
+            "reserved_amount": "0.036864",
+            "settled_at": "2026-10-05 07:17:00.037654+00:00",
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_cancelled"
+          }
+        ],
+        "stop_audits": [
+          {
+            "count": 1,
+            "event_kind": "deliberation.step_maintenance_stopped",
+            "operation_id": "e5913366-fca2-532d-9b14-968cbb417960"
+          }
+        ],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "da588498-e8ef-40c1-bb72-aec4c06ebfbe",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "initial_worker_ticks": [
+        0,
+        0
+      ],
+      "maintenance_results": [
+        0,
+        1
+      ],
+      "passed": true,
+      "provider_requests_after_ready_gate": 0,
+      "task_id": "da588498-e8ef-40c1-bb72-aec4c06ebfbe",
+      "worker_replay_ticks": [
+        0,
+        0
+      ]
+    },
+    "standalone_deadline_and_reject_rollback": {
+      "after_cleanup": {
+        "accounts": [
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.001530"
+          },
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "TASK",
+            "scope_ref": "483cd938-03f5-4984-8377-d16fe12eae2f",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [
+          {
+            "count": 2,
+            "held_delta": "-0.073728",
+            "reservation_id": "1fff4cc9-3a83-5c92-8433-5e5ade17458a",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "19c8eddf-9a0f-50ac-9ea3-98ebf1cb5125",
+            "maintenance_completed_at": "2026-10-05 07:16:55.887278+00:00",
+            "maintenance_retry_after": null,
+            "operation_id": "b7586a60-2cff-530b-ab72-dff3647264cf",
+            "operation_state": "FAILED",
+            "operation_task_id": null,
+            "provider_calls": 0,
+            "reservation_held": "0.000000",
+            "reservation_id": "1fff4cc9-3a83-5c92-8433-5e5ade17458a",
+            "reservation_state": "RELEASED",
+            "reserved_amount": "0.036864",
+            "settled_at": "2026-10-05 07:16:55.883190+00:00",
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_deadline"
+          }
+        ],
+        "stop_audits": [
+          {
+            "count": 1,
+            "event_kind": "deliberation.step_maintenance_stopped",
+            "operation_id": "b7586a60-2cff-530b-ab72-dff3647264cf"
+          }
+        ],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "483cd938-03f5-4984-8377-d16fe12eae2f",
+          "input_revision": 1,
+          "outcome": "FAILED",
+          "review_rounds": 0,
+          "status": "FAILED",
+          "stop_reason": "DEADLINE"
+        },
+        "workflow_stage": null
+      },
+      "passed": true,
+      "provider_requests_after_ready_gate": 0,
+      "rollback": {
+        "actual_repository_deadline_check": true,
+        "after": {
+          "accounts": [
+            {
+              "held_amount": "0.036864",
+              "reservation_held": "0.036864",
+              "scope_kind": "SYSTEM",
+              "scope_ref": "hekate",
+              "spent_amount": "0.001530"
+            },
+            {
+              "held_amount": "0.036864",
+              "reservation_held": "0.036864",
+              "scope_kind": "TASK",
+              "scope_ref": "483cd938-03f5-4984-8377-d16fe12eae2f",
+              "spent_amount": "0.000045"
+            }
+          ],
+          "critic_agents": 0,
+          "critic_workflows": 0,
+          "execution_holds": [],
+          "position_versions": 0,
+          "release_ledger": [],
+          "responses": 0,
+          "steps": [
+            {
+              "dispatch_state": "NOT_STARTED",
+              "execution_state": "PENDING",
+              "id": "19c8eddf-9a0f-50ac-9ea3-98ebf1cb5125",
+              "maintenance_completed_at": null,
+              "maintenance_retry_after": null,
+              "operation_id": "b7586a60-2cff-530b-ab72-dff3647264cf",
+              "operation_state": "CLAIMED",
+              "operation_task_id": null,
+              "provider_calls": 0,
+              "reservation_held": "0.073728",
+              "reservation_id": "1fff4cc9-3a83-5c92-8433-5e5ade17458a",
+              "reservation_state": "RESERVED",
+              "reserved_amount": "0.036864",
+              "settled_at": null,
+              "step_revision": 1,
+              "step_slot": "hekate_reasoning_1",
+              "step_state": "READY",
+              "step_stop_reason": null
+            }
+          ],
+          "stop_audits": [],
+          "task": {
+            "critic_agents": 0,
+            "hekate_continuations": 1,
+            "id": "483cd938-03f5-4984-8377-d16fe12eae2f",
+            "input_revision": 1,
+            "outcome": null,
+            "review_rounds": 0,
+            "status": "WAITING",
+            "stop_reason": null
+          },
+          "workflow_stage": null
+        },
+        "before": {
+          "accounts": [
+            {
+              "held_amount": "0.036864",
+              "reservation_held": "0.036864",
+              "scope_kind": "SYSTEM",
+              "scope_ref": "hekate",
+              "spent_amount": "0.001530"
+            },
+            {
+              "held_amount": "0.036864",
+              "reservation_held": "0.036864",
+              "scope_kind": "TASK",
+              "scope_ref": "483cd938-03f5-4984-8377-d16fe12eae2f",
+              "spent_amount": "0.000045"
+            }
+          ],
+          "critic_agents": 0,
+          "critic_workflows": 0,
+          "execution_holds": [],
+          "position_versions": 0,
+          "release_ledger": [],
+          "responses": 0,
+          "steps": [
+            {
+              "dispatch_state": "NOT_STARTED",
+              "execution_state": "PENDING",
+              "id": "19c8eddf-9a0f-50ac-9ea3-98ebf1cb5125",
+              "maintenance_completed_at": null,
+              "maintenance_retry_after": null,
+              "operation_id": "b7586a60-2cff-530b-ab72-dff3647264cf",
+              "operation_state": "CLAIMED",
+              "operation_task_id": null,
+              "provider_calls": 0,
+              "reservation_held": "0.073728",
+              "reservation_id": "1fff4cc9-3a83-5c92-8433-5e5ade17458a",
+              "reservation_state": "RESERVED",
+              "reserved_amount": "0.036864",
+              "settled_at": null,
+              "step_revision": 1,
+              "step_slot": "hekate_reasoning_1",
+              "step_state": "READY",
+              "step_stop_reason": null
+            }
+          ],
+          "stop_audits": [],
+          "task": {
+            "critic_agents": 0,
+            "hekate_continuations": 1,
+            "id": "483cd938-03f5-4984-8377-d16fe12eae2f",
+            "input_revision": 1,
+            "outcome": null,
+            "review_rounds": 0,
+            "status": "WAITING",
+            "stop_reason": null
+          },
+          "workflow_stage": null
+        },
+        "outcome": "task_changed"
+      },
+      "task_id": "483cd938-03f5-4984-8377-d16fe12eae2f",
+      "worker_maintenance_ticks": [
+        1,
+        0
+      ],
+      "worker_restart_ticks": [
+        0,
+        0
+      ]
+    },
+    "standalone_revision_superseded": {
+      "after_cleanup": {
+        "accounts": [
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.001620"
+          },
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "TASK",
+            "scope_ref": "fa88c5ad-216c-40a9-9eea-60884753578a",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [
+          {
+            "count": 2,
+            "held_delta": "-0.073728",
+            "reservation_id": "3203835e-1433-514b-b813-7961588c04dd",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "898a1dc0-d815-5175-b517-2de93d7fe45b",
+            "maintenance_completed_at": "2026-10-05 07:17:03.593299+00:00",
+            "maintenance_retry_after": null,
+            "operation_id": "bff8d020-1e74-52b8-9838-c15d058a7595",
+            "operation_state": "FAILED",
+            "operation_task_id": null,
+            "provider_calls": 0,
+            "reservation_held": "0.000000",
+            "reservation_id": "3203835e-1433-514b-b813-7961588c04dd",
+            "reservation_state": "RELEASED",
+            "reserved_amount": "0.036864",
+            "settled_at": "2026-10-05 07:17:03.590567+00:00",
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "revision_superseded"
+          }
+        ],
+        "stop_audits": [
+          {
+            "count": 1,
+            "event_kind": "deliberation.step_maintenance_stopped",
+            "operation_id": "bff8d020-1e74-52b8-9838-c15d058a7595"
+          }
+        ],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "fa88c5ad-216c-40a9-9eea-60884753578a",
+          "input_revision": 2,
+          "outcome": null,
+          "review_rounds": 0,
+          "status": "WAITING",
+          "stop_reason": null
+        },
+        "workflow_stage": null
+      },
+      "passed": true,
+      "provider_requests_after_ready_gate": 0,
+      "task_id": "fa88c5ad-216c-40a9-9eea-60884753578a",
+      "worker_maintenance_ticks": [
+        1,
+        0
+      ],
+      "worker_restart_ticks": [
+        0,
+        0
+      ]
+    },
+    "standalone_unknown_preserved": {
+      "after_maintenance": {
+        "accounts": [
+          {
+            "held_amount": "0.110592",
+            "reservation_held": "0.036864",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002790"
+          },
+          {
+            "held_amount": "0.036864",
+            "reservation_held": "0.036864",
+            "scope_kind": "TASK",
+            "scope_ref": "18d3c1f0-47fb-4f84-9aed-c5ea858f65df",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [
+          {
+            "operation_id": "f71458e5-091f-54a6-9d7c-972ba8dba43c",
+            "quiescent_at": null,
+            "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+            "state": "UNKNOWN"
+          }
+        ],
+        "position_versions": 0,
+        "release_ledger": [],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "UNKNOWN",
+            "execution_state": "UNKNOWN",
+            "id": "3b6155f0-e750-56cc-837f-ff098f1df589",
+            "maintenance_completed_at": null,
+            "maintenance_retry_after": "2026-10-05 07:19:31.793727+00:00",
+            "operation_id": "f71458e5-091f-54a6-9d7c-972ba8dba43c",
+            "operation_state": "UNKNOWN",
+            "operation_task_id": "18d3c1f0-47fb-4f84-9aed-c5ea858f65df",
+            "provider_calls": 0,
+            "reservation_held": "0.073728",
+            "reservation_id": "9518454d-7e2f-5701-9fb8-307005d67bb6",
+            "reservation_state": "RESERVED",
+            "reserved_amount": "0.036864",
+            "settled_at": null,
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "READY",
+            "step_stop_reason": null
+          }
+        ],
+        "stop_audits": [],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "18d3c1f0-47fb-4f84-9aed-c5ea858f65df",
+          "input_revision": 1,
+          "outcome": null,
+          "review_rounds": 0,
+          "status": "STOPPING",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "passed": true,
+      "provider_interruption_simulated": false,
+      "provider_requests_after_ready_gate": 0,
+      "restart_ticks": [
+        0,
+        0
+      ],
+      "synthetic_control_plane_fixture": true,
+      "task_id": "18d3c1f0-47fb-4f84-9aed-c5ea858f65df",
+      "worker_maintenance_ticks": [
+        0,
+        0
+      ]
+    },
+    "unknown_preserved_across_restart": {
+      "control_plane_state": {
+        "execution_state": "UNKNOWN",
+        "hold_state": "UNKNOWN",
+        "provider_call_rows": 0,
+        "quiescent_at": null,
+        "state": "UNKNOWN"
+      },
+      "critic_not_deleted": true,
+      "final": {
+        "budget_ledger_rows": 4,
+        "critic_delete_outbox_rows": 0,
+        "position_versions": 0,
+        "provider_calls": [
+          {
+            "settlement_state": "SETTLED",
+            "status": "QUIESCENT"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0.036864",
+            "held": "0.073728",
+            "kind": "critic.review",
+            "status": "RESERVED"
+          },
+          {
+            "amount": "0.036864",
+            "held": "0.073728",
+            "kind": "hekate.synthesis",
+            "status": "RESERVED"
+          }
+        ],
+        "response": null,
+        "task": {
+          "critic_agents": 1,
+          "id": "bb40b915-a659-48a8-82ab-6c4d3e940b24",
+          "input_revision": 1,
+          "outcome": null,
+          "review_rounds": 0,
+          "status": "WAITING",
+          "stop_reason": null
+        },
+        "task_budget": {
+          "held_amount": "0.073728",
+          "spent_amount": "0.000045"
+        },
+        "workflow": {
+          "critic_registry_id": "4e116d44-a221-5bfa-b156-31f7ef9c2fd2",
+          "critic_state": "READY",
+          "delete_operation_id": null,
+          "input_revision": 1,
+          "review_operation_id": "d876f5a1-14b3-51d5-a93a-79a560a81a45",
+          "stage": "CRITIC_READY",
+          "synthesis_operation_id": "c555701c-addf-5aaa-80b1-c37c64bffbbb"
+        }
+      },
+      "fixture_is_synthetic_unresolved_state": true,
+      "held_budget_preserved": true,
+      "passed": true,
+      "provider_call_rows_for_fixture": 0,
+      "provider_requests_during_wait_and_restart": 0,
+      "review_operation_id": "d876f5a1-14b3-51d5-a93a-79a560a81a45",
+      "task_id": "bb40b915-a659-48a8-82ab-6c4d3e940b24"
+    }
+  },
+  "database": {
+    "migration_head": "0012_projection_write_guard",
+    "name": "hekate_phase5b_readback_20261005a",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "dispatch_safety": {
+    "fake_provider_requests": 62,
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-05T07:14:48.563902Z",
+  "execution": {
+    "command": "uv run --locked python scripts/phase5b_bounded_deliberation_probe.py --database-url <fresh-isolated-db> --legacy-database-url <existing-phase5b-db> --empty-migration-database-url <fresh-empty-db> --node-bin /tmp/node-v22.19.0/bin/node",
+    "environment_variables": [
+      "isolated Phase 5B database URLs (redacted)",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "passed"
+  },
+  "fake_provider_requests": 62,
+  "legacy_database_migration_check": {
+    "after": {
+      "active_holds": 0,
+      "head": "0012_projection_write_guard",
+      "held": "0",
+      "ledger_rows": 0,
+      "maintenance_progress": {
+        "deferred": 0,
+        "steps": 0,
+        "unmarked": 0
+      },
+      "operations": 0,
+      "spent": "0",
+      "steps": 0,
+      "tasks": 0,
+      "unknown_operations": 0
+    },
+    "before": {
+      "active_holds": 0,
+      "head": "0009_p5b_parent_attempt_id",
+      "held": "0",
+      "ledger_rows": 0,
+      "operations": 0,
+      "spent": "0",
+      "steps": 0,
+      "tasks": 0,
+      "unknown_operations": 0
+    },
+    "database": "hekate_phase5b_legacy_20261005a",
+    "migrated_from_0009": true,
+    "rows_and_accounting_preserved": true
+  },
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review and synthesis are bounded at two each; HEKATE-only continuation is bounded at one. Repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "migration_safety": {
+    "empty_upgrade_downgrade_reupgrade": {
+      "database": "hekate_phase5b_migration_20261005a",
+      "downgrade_head": "0009_p5b_parent_attempt_id",
+      "intermediate_downgrade_head": "0011_phase6a_memory_projection",
+      "passed": true,
+      "reupgrade_head": "0012_projection_write_guard",
+      "rows_preserved": true,
+      "upgrade_head": "0012_projection_write_guard"
+    },
+    "legacy_rows_preserved": {
+      "after": {
+        "active_holds": 0,
+        "head": "0012_projection_write_guard",
+        "held": "0",
+        "ledger_rows": 0,
+        "maintenance_progress": {
+          "deferred": 0,
+          "steps": 0,
+          "unmarked": 0
+        },
+        "operations": 0,
+        "spent": "0",
+        "steps": 0,
+        "tasks": 0,
+        "unknown_operations": 0
+      },
+      "before": {
+        "active_holds": 0,
+        "head": "0009_p5b_parent_attempt_id",
+        "held": "0",
+        "ledger_rows": 0,
+        "operations": 0,
+        "spent": "0",
+        "steps": 0,
+        "tasks": 0,
+        "unknown_operations": 0
+      },
+      "database": "hekate_phase5b_legacy_20261005a",
+      "migrated_from_0009": true,
+      "rows_and_accounting_preserved": true
+    },
+    "populated_downgrade_guard": {
+      "head_unchanged_after_0010_guard": true,
+      "projection_downgrade_head": "0010_p5b_delib_maint",
+      "reason": "refusing to discard persisted deliberation maintenance progress",
+      "refused": true,
+      "write_guard_downgrade_head": "0011_phase6a_memory_projection"
+    }
+  },
+  "normal_path": {
+    "concurrent_spawn_receipts": [
+      {
+        "create_operation_id": "963f67f9-2f7e-5aa0-9c6d-472e879c19f1",
+        "critic_conclusion_id": null,
+        "critic_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5b-synthetic-pricing-v1",
+          "profile_id": "phase5b-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "critic_registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+        "delete_operation_id": null,
+        "hekate_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5b-synthetic-pricing-v1",
+          "profile_id": "phase5b-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "input_revision": 1,
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b",
+        "parent_attempt_id": "c709d103-9662-5f8e-978c-4711cc6797a8",
+        "planning_conclusion_id": "c1677f57-a6bd-5301-bf49-d643c21c329f",
+        "planning_operation_id": "001aa6e7-694f-583e-a3ac-cdc10e842c74",
+        "proposal": {
+          "action": "spawn",
+          "expected_decision_impact": "A stale source would change the applicability of the Position",
+          "purpose": "Check source freshness",
+          "role": "critic",
+          "schema_version": "1",
+          "target_uncertainty": "The source could be stale",
+          "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f"
+        },
+        "review_attempt_id": "8eb18eb5-70f7-5bdf-8e83-003438db2a9e",
+        "review_operation_id": "8fb16fad-4e4e-5a36-954b-b110ecf8078c",
+        "review_reservation_id": "00a5fd67-5cf8-5566-8a75-e9d6163e6e26",
+        "spawn_request_hash": "07e144d164d6a87433851d50eae66f1cdf3febd27dc5b2f4f33cbbb618eee04d",
+        "stage": "CREATE_PENDING",
+        "synthesis_attempt_id": "f617b12e-4813-5ce2-950b-18271358264b",
+        "synthesis_operation_id": "cd0b9c5b-5567-5ea0-96d2-2f5760c26afc",
+        "synthesis_reservation_id": "f8516dc8-4b99-5567-b981-1e8ce0f025d1",
+        "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+        "updated_at": "2026-10-05T07:15:00.314124Z"
+      },
+      {
+        "create_operation_id": "963f67f9-2f7e-5aa0-9c6d-472e879c19f1",
+        "critic_conclusion_id": null,
+        "critic_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5b-synthetic-pricing-v1",
+          "profile_id": "phase5b-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "critic_registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+        "delete_operation_id": null,
+        "hekate_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5b-synthetic-pricing-v1",
+          "profile_id": "phase5b-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "input_revision": 1,
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b",
+        "parent_attempt_id": "c709d103-9662-5f8e-978c-4711cc6797a8",
+        "planning_conclusion_id": "c1677f57-a6bd-5301-bf49-d643c21c329f",
+        "planning_operation_id": "001aa6e7-694f-583e-a3ac-cdc10e842c74",
+        "proposal": {
+          "action": "spawn",
+          "expected_decision_impact": "A stale source would change the applicability of the Position",
+          "purpose": "Check source freshness",
+          "role": "critic",
+          "schema_version": "1",
+          "target_uncertainty": "The source could be stale",
+          "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f"
+        },
+        "review_attempt_id": "8eb18eb5-70f7-5bdf-8e83-003438db2a9e",
+        "review_operation_id": "8fb16fad-4e4e-5a36-954b-b110ecf8078c",
+        "review_reservation_id": "00a5fd67-5cf8-5566-8a75-e9d6163e6e26",
+        "spawn_request_hash": "07e144d164d6a87433851d50eae66f1cdf3febd27dc5b2f4f33cbbb618eee04d",
+        "stage": "CREATE_PENDING",
+        "synthesis_attempt_id": "f617b12e-4813-5ce2-950b-18271358264b",
+        "synthesis_operation_id": "cd0b9c5b-5567-5ea0-96d2-2f5760c26afc",
+        "synthesis_reservation_id": "f8516dc8-4b99-5567-b981-1e8ce0f025d1",
+        "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+        "updated_at": "2026-10-05T07:15:00.314124Z"
+      }
+    ],
+    "concurrent_spawn_replay_no_new_effects": true,
+    "continuation_output_boundaries": {
+      "allowed_next_actions": [
+        "hekate_reasoning",
+        "critic_review"
+      ],
+      "blank_purpose_rejected_by_control_plane": true,
+      "unknown_next_action_rejected_by_control_plane": true
+    },
+    "continuation_restart_boundaries": {
+      "actual_runtime_session_preparations": [
+        {
+          "attempt_id": "8eb18eb5-70f7-5bdf-8e83-003438db2a9e",
+          "conversation_id": "local-conv-4",
+          "output_contract": "critic_turn_output_v1",
+          "provider_agent_id": "agent-local-93dbe44a-e7e0-427b-9ec9-d9cb508ffba6",
+          "registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+          "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f"
+        },
+        {
+          "attempt_id": "4e82f04d-2261-5e19-98af-d0d56e7b011d",
+          "conversation_id": "local-conv-7",
+          "output_contract": "critic_turn_output_v1",
+          "provider_agent_id": "agent-local-93dbe44a-e7e0-427b-9ec9-d9cb508ffba6",
+          "registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+          "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f"
+        }
+      ],
+      "distinct_critic_attempt_operation_and_conversation": true,
+      "hekate_reasoning_approved_before_admission": {
+        "attempt_id": "e8a0526f-effc-5945-8f8a-64bd57725fd3",
+        "id": "0b591d96-2d20-5138-a6e7-07d2505e2a50",
+        "operation_id": "f48fc44f-965a-5a14-8368-9be4c0725158",
+        "provider_requests_at_approval": 3,
+        "request_hash": "a6aa1a829f6ec9edf6214e42b8da1328dcc8a532c66d08e00a5c5523f081ec16",
+        "reservation_id": "70c1959c-f2e2-5aae-a6c3-f9f04ea0a213",
+        "state": "READY"
+      },
+      "passed": true,
+      "same_critic_registry_and_provider": true,
+      "synthesis_2_ready_after_review_2_restart": {
+        "attempt_id": "2919a570-ea14-5274-8b2a-4ae2159a5b6e",
+        "binding": {},
+        "conclusion_id": null,
+        "dissent_count": 2,
+        "id": "8e047eec-306e-578d-865e-df2efde04a80",
+        "operation_id": "6eeb033d-7c5c-5d82-908c-bdc25174880c",
+        "parent_conclusion_id": "209543b4-2aec-5dfb-bee6-ccbadcaf1b1f",
+        "prior_conclusion_id": "209543b4-2aec-5dfb-bee6-ccbadcaf1b1f",
+        "prior_review_state": "RESULT_ACCEPTED",
+        "provider_requests_at_ready": 5,
+        "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+        "reservation_id": "b076618d-212c-5621-8ac6-5ec34d73aaea",
+        "review_bindings": [
+          {
+            "attempt_id": "8eb18eb5-70f7-5bdf-8e83-003438db2a9e",
+            "binding": {
+              "agent_registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+              "attempt_id": "8eb18eb5-70f7-5bdf-8e83-003438db2a9e",
+              "authz_epoch": 1,
+              "conversation_id": "local-conv-4",
+              "fence": 1,
+              "input_revision": 1,
+              "policy_version": "phase5b-synthetic-policy-v1",
+              "principal_id": "principal:p5b-20261005T071448Z-4830ea1b",
+              "provider_agent_id": "agent-local-93dbe44a-e7e0-427b-9ec9-d9cb508ffba6",
+              "scope": "phase5b:p5b-20261005T071448Z-4830ea1b",
+              "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f"
+            },
+            "operation_id": "8fb16fad-4e4e-5a36-954b-b110ecf8078c",
+            "registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+            "review_round": 1
+          },
+          {
+            "attempt_id": "4e82f04d-2261-5e19-98af-d0d56e7b011d",
+            "binding": {
+              "agent_registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+              "attempt_id": "4e82f04d-2261-5e19-98af-d0d56e7b011d",
+              "authz_epoch": 1,
+              "conversation_id": "local-conv-7",
+              "fence": 2,
+              "input_revision": 1,
+              "policy_version": "phase5b-synthetic-policy-v1",
+              "principal_id": "principal:p5b-20261005T071448Z-4830ea1b",
+              "provider_agent_id": "agent-local-93dbe44a-e7e0-427b-9ec9-d9cb508ffba6",
+              "scope": "phase5b:p5b-20261005T071448Z-4830ea1b",
+              "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f"
+            },
+            "operation_id": "c0c28394-13a2-559a-a215-6c9c3aab5e8e",
+            "registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+            "review_round": 2
+          }
+        ],
+        "state": "READY"
+      }
+    },
+    "create_response_lost_then_owned_tag_recovered": true,
+    "critic_create_calls": 1,
+    "critic_delete_calls": 2,
+    "critic_output_boundaries": {
+      "critic_cannot_claim_unprovided_evidence": true,
+      "critic_cannot_impersonate_persistent_hekate": true,
+      "critic_output_schema_rejects_executable_proposal": true,
+      "stored_critic_output_validates_against_trusted_binding": true
+    },
+    "db_effect_counts": {
+      "commit_receipts": 1,
+      "dispatch_rows": 6,
+      "dissent_rows": 2,
+      "position_versions": 1,
+      "provider_calls": 6,
+      "responses": 1
+    },
+    "delete_failure_retried_after_restart": true,
+    "effects_after_critic_replay": {
+      "calls": 6,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 2,
+      "outbox": 9,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 6,
+      "responses": 1,
+      "review_rounds": 2,
+      "workflows": 1
+    },
+    "effects_after_replay": {
+      "calls": 6,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 2,
+      "outbox": 9,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 6,
+      "responses": 1,
+      "review_rounds": 2,
+      "workflows": 1
+    },
+    "effects_before_replay": {
+      "calls": 6,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 2,
+      "outbox": 9,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 6,
+      "responses": 1,
+      "review_rounds": 2,
+      "workflows": 1
+    },
+    "inbox_replay": {
+      "critic_result": {
+        "inbox_id": "c8ab0086-bdf5-4033-8307-20c5207d170f",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "planning_spawn": {
+        "inbox_id": "136fb009-9321-4508-bddf-555b23e818a7",
+        "processed": true,
+        "state": "ACCEPTED"
+      }
+    },
+    "lifecycle_operations": [
+      {
+        "execution_state": "QUIESCENT",
+        "id": "8fb16fad-4e4e-5a36-954b-b110ecf8078c",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "cd0b9c5b-5567-5ea0-96d2-2f5760c26afc",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "c0c28394-13a2-559a-a215-6c9c3aab5e8e",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "6eeb033d-7c5c-5d82-908c-bdc25174880c",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      }
+    ],
+    "one_critic_after_postgres_race": true,
+    "operations_and_reservations": [
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "001aa6e7-694f-583e-a3ac-cdc10e842c74",
+        "kind": "hekate.turn",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "8fb16fad-4e4e-5a36-954b-b110ecf8078c",
+        "kind": "critic.review",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "cd0b9c5b-5567-5ea0-96d2-2f5760c26afc",
+        "kind": "hekate.synthesis",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "f48fc44f-965a-5a14-8368-9be4c0725158",
+        "kind": "hekate.reasoning",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "c0c28394-13a2-559a-a215-6c9c3aab5e8e",
+        "kind": "critic.review",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "6eeb033d-7c5c-5d82-908c-bdc25174880c",
+        "kind": "hekate.synthesis",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      }
+    ],
+    "passed": true,
+    "persistent_hekate_retained": true,
+    "postgres_concurrent_continuation_adoption": {
+      "after": {
+        "continue_result_state": "ACCEPTED",
+        "step_count": 1,
+        "step_operation_count": 1,
+        "step_reservation_count": 1,
+        "steps": [
+          {
+            "operation_id": "f48fc44f-965a-5a14-8368-9be4c0725158",
+            "reservation_id": "70c1959c-f2e2-5aae-a6c3-f9f04ea0a213",
+            "state": "READY",
+            "step_kind": "hekate_reasoning",
+            "step_slot": "hekate_reasoning_1"
+          }
+        ],
+        "task": {
+          "hekate_continuations": 1,
+          "input_revision": 1,
+          "review_rounds": 1,
+          "status": "WAITING"
+        }
+      },
+      "before": {
+        "continue_result_state": "WAITING_EXECUTION",
+        "step_count": 0,
+        "step_operation_count": 0,
+        "step_reservation_count": 0,
+        "steps": [],
+        "task": {
+          "hekate_continuations": 0,
+          "input_revision": 1,
+          "review_rounds": 1,
+          "status": "RUNNING"
+        }
+      },
+      "competing_result": {
+        "inbox_id": "250cdaa1-b59c-4010-b814-44c2763e8fd9",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "inbox_id": "250cdaa1-b59c-4010-b814-44c2763e8fd9",
+      "provider_requests_at_approval": 3,
+      "row_lock_contenders": 2,
+      "single_approved_reasoning_step": true
+    },
+    "postgres_concurrent_spawn_replay": {
+      "competing_approvals_returned_same_registry": true,
+      "competing_operation_lock_attempts": 2,
+      "create_outbox_intent_inserted_once": true,
+      "critic_and_synthesis_holds_reserved_once": true,
+      "one_durable_workflow_and_create_intent": true,
+      "planning_result_accepted": true,
+      "postgres_spawn_approval_replay_contenders": 2,
+      "replay_effects_unchanged": true
+    },
+    "projection": {
+      "applied_version": 0,
+      "desired_version": 1,
+      "pending_reason": "memory_projection_not_implemented",
+      "state": "PENDING_UNSUPPORTED"
+    },
+    "provider_requests": 6,
+    "replay_no_new_effects": true,
+    "requests": [
+      {
+        "attempt_id": "c709d103-9662-5f8e-978c-4711cc6797a8",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "96a1fa15-5d68-42b9-972c-9ccfc8011e3e"
+        ],
+        "prompt_sha256": "8c6c1a161282063dab1ab67bf265b31068a1826f8562bac6aab2f91aa855d3bf",
+        "reasoning_role": "hekate",
+        "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "planning",
+        "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "8eb18eb5-70f7-5bdf-8e83-003438db2a9e",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "96a1fa15-5d68-42b9-972c-9ccfc8011e3e"
+        ],
+        "prompt_sha256": "8444d48e31a3eefb058a15d559b11c7aa5d28c0dff30876e912c77c4880c569f",
+        "reasoning_role": "critic",
+        "registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+        "schema": "critic-turn-output.v1.schema.json",
+        "stage": "critic_review_1",
+        "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "f617b12e-4813-5ce2-950b-18271358264b",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [
+          "1ec1530d-3111-5f5e-87c6-68a2a1b65bf4"
+        ],
+        "evidence_ids": [
+          "96a1fa15-5d68-42b9-972c-9ccfc8011e3e"
+        ],
+        "prompt_sha256": "60c973153d67e44333c1a366901c914cb88aaec9a469695ded6c2b656f4e608c",
+        "reasoning_role": "hekate",
+        "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "synthesis_1_continue",
+        "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "e8a0526f-effc-5945-8f8a-64bd57725fd3",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "96a1fa15-5d68-42b9-972c-9ccfc8011e3e"
+        ],
+        "prompt_sha256": "986f74b224953e878afe6734b801f7aba85921f1a3720f9596381d8d76b9ff1d",
+        "reasoning_role": "hekate",
+        "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "hekate_reasoning",
+        "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "4e82f04d-2261-5e19-98af-d0d56e7b011d",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "96a1fa15-5d68-42b9-972c-9ccfc8011e3e"
+        ],
+        "prompt_sha256": "79e20909ed83866c9ac745e56258c7996dcae26d91059e666aad90b391dc841c",
+        "reasoning_role": "critic",
+        "registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+        "schema": "critic-turn-output.v1.schema.json",
+        "stage": "critic_review_2",
+        "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "2919a570-ea14-5274-8b2a-4ae2159a5b6e",
+        "context_checked": true,
+        "critic_conclusion_received": true,
+        "dissent_ids": [
+          "1c3a28e9-c077-5fc4-a6a1-5cb2d8afdf03",
+          "1ec1530d-3111-5f5e-87c6-68a2a1b65bf4"
+        ],
+        "evidence_ids": [
+          "96a1fa15-5d68-42b9-972c-9ccfc8011e3e"
+        ],
+        "prompt_sha256": "3e7990828623258c1d248c420e9a647ade237058f63ce06e144a77909a0d03f9",
+        "reasoning_role": "hekate",
+        "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "synthesis_2",
+        "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      }
+    ],
+    "spawn_effect_counts_after_replay": {
+      "calls": 1,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 0,
+      "outbox": 2,
+      "positions": 0,
+      "receipts": 0,
+      "reservations": 3,
+      "responses": 0,
+      "review_rounds": 0,
+      "workflows": 1
+    },
+    "spawn_effect_counts_before_replay": {
+      "calls": 1,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 0,
+      "outbox": 2,
+      "positions": 0,
+      "receipts": 0,
+      "reservations": 3,
+      "responses": 0,
+      "review_rounds": 0,
+      "workflows": 1
+    }
+  },
+  "overall_status": "pass",
+  "persistent_hekate_create_journal": {
+    "binding_journal_transaction_rollback": {
+      "failure_injected_after_binding_before_completion": true,
+      "new_create_calls_during_recovery": 0,
+      "recovered_state": {
+        "active_attempt_id": null,
+        "creation_operation_id": "567e8b31-db7f-52aa-87b5-1c7c137520b5",
+        "dispatch_state": "QUIESCENT",
+        "execution_state": "QUIESCENT",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "confirmation": "agent.list",
+          "creation_tag": "567e8b31-db7f-52aa-87b5-1c7c137520b5",
+          "external_call_started": true,
+          "owner": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:binding-journal-rollback",
+          "present": true,
+          "provider_agent_id": "agent-local-ec854a93-5178-4798-82cc-8224905d662b",
+          "registry_id": "669c1737-53cd-5369-be4b-1dc76f0f9e37",
+          "role": "hekate"
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:binding-journal-rollback",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-ec854a93-5178-4798-82cc-8224905d662b",
+        "provider_calls": 0,
+        "registry_id": "669c1737-53cd-5369-be4b-1dc76f0f9e37",
+        "request_hash": "acc4b4341734c21b6d61b076ac7418487d316f6d913424fe11c89322a4460405",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "COMPLETED",
+        "updated_at": "2026-10-05T07:15:22.583257+00:00"
+      },
+      "rolled_back_state": {
+        "active_attempt_id": null,
+        "creation_operation_id": "567e8b31-db7f-52aa-87b5-1c7c137520b5",
+        "dispatch_state": "NOT_STARTED",
+        "execution_state": "PENDING",
+        "intended_state": "CREATING",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "external_call_started": true
+        },
+        "observed_state": "UNKNOWN",
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:binding-journal-rollback",
+        "persistence": "persistent",
+        "provider_agent_id": null,
+        "provider_calls": 0,
+        "registry_id": "669c1737-53cd-5369-be4b-1dc76f0f9e37",
+        "request_hash": "acc4b4341734c21b6d61b076ac7418487d316f6d913424fe11c89322a4460405",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "CLAIMED",
+        "updated_at": "2026-10-05T07:15:21.845159+00:00"
+      }
+    },
+    "busy_registry_preserved": {
+      "active_execution_hold_unchanged": true,
+      "ensure_waited": true,
+      "journal_completed": true,
+      "lease_expiry_unchanged": true,
+      "lease_fence": 1,
+      "lease_owner": "phase5a-busy-p5b-20261005T071448Z-4830ea1b",
+      "provider_agent_id_unchanged": true,
+      "registry_state": "BUSY"
+    },
+    "completed_replay": {
+      "new_create_calls": 0,
+      "new_owner_list_calls": 0,
+      "provider_agent_id": "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef",
+      "same_completion_timestamp": true,
+      "same_journal_observation": true
+    },
+    "create_operations_have_no_provider_calls_or_budget_reservations": true,
+    "create_response_lost": {
+      "actual_owner_tag_query": true,
+      "after_recovery": {
+        "active_attempt_id": null,
+        "creation_operation_id": "98b0bc5f-47d4-59c6-9f12-e8254fa7f835",
+        "dispatch_state": "QUIESCENT",
+        "execution_state": "QUIESCENT",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "confirmation": "agent.list",
+          "creation_tag": "98b0bc5f-47d4-59c6-9f12-e8254fa7f835",
+          "external_call_started": true,
+          "owner": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:create-response-lost",
+          "present": true,
+          "provider_agent_id": "agent-local-4739c156-102f-47ab-91a7-b0d641e74efb",
+          "registry_id": "bd79bb58-a89d-58c2-81c0-720763b1cfae",
+          "role": "hekate"
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:create-response-lost",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-4739c156-102f-47ab-91a7-b0d641e74efb",
+        "provider_calls": 0,
+        "registry_id": "bd79bb58-a89d-58c2-81c0-720763b1cfae",
+        "request_hash": "f02224cee99a456aee096cddda228079c2efface0d93f8c08fb1bd027ed23518",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "COMPLETED",
+        "updated_at": "2026-10-05T07:15:23.270278+00:00"
+      },
+      "before_recovery": {
+        "active_attempt_id": null,
+        "creation_operation_id": "98b0bc5f-47d4-59c6-9f12-e8254fa7f835",
+        "dispatch_state": "UNKNOWN",
+        "execution_state": "UNKNOWN",
+        "intended_state": "CREATING",
+        "kind": "agent.create",
+        "last_error": "ConnectionError",
+        "ledger_rows": 0,
+        "observation": {
+          "external_call_started": true
+        },
+        "observed_state": "UNKNOWN",
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:create-response-lost",
+        "persistence": "persistent",
+        "provider_agent_id": null,
+        "provider_calls": 0,
+        "registry_id": "bd79bb58-a89d-58c2-81c0-720763b1cfae",
+        "request_hash": "f02224cee99a456aee096cddda228079c2efface0d93f8c08fb1bd027ed23518",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "UNKNOWN",
+        "updated_at": "2026-10-05T07:15:23.233039+00:00"
+      },
+      "create_invocation_delta_for_scenario": 1
+    },
+    "legacy_incomplete_journal": {
+      "after": {
+        "active_attempt_id": null,
+        "creation_operation_id": "f6d73b1f-d2b3-5761-ace0-33a6b0c80ef4",
+        "dispatch_state": "QUIESCENT",
+        "execution_state": "QUIESCENT",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "confirmation": "agent.list",
+          "creation_tag": "f6d73b1f-d2b3-5761-ace0-33a6b0c80ef4",
+          "external_call_started": true,
+          "owner": "phase5b:p5b-20261005T071448Z-4830ea1b",
+          "present": true,
+          "provider_agent_id": "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef",
+          "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+          "role": "hekate"
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef",
+        "provider_calls": 0,
+        "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+        "request_hash": "e1545367bb55f4c21fa2b2f821d1265090866fc6070853b85bcde71887052e28",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "COMPLETED",
+        "updated_at": "2026-10-05T07:15:21.127642+00:00"
+      },
+      "before": {
+        "active_attempt_id": null,
+        "creation_operation_id": "f6d73b1f-d2b3-5761-ace0-33a6b0c80ef4",
+        "dispatch_state": "NOT_STARTED",
+        "execution_state": "PENDING",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {},
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef",
+        "provider_calls": 0,
+        "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+        "request_hash": "e1545367bb55f4c21fa2b2f821d1265090866fc6070853b85bcde71887052e28",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "CLAIMED",
+        "updated_at": "2026-10-05T07:14:57.355342+00:00"
+      },
+      "new_create_calls": 0,
+      "replay_unchanged": true,
+      "runtime_owner_tag_list_calls": 1
+    },
+    "normal_generation": {
+      "active_attempt_id": null,
+      "creation_operation_id": "f6d73b1f-d2b3-5761-ace0-33a6b0c80ef4",
+      "dispatch_state": "QUIESCENT",
+      "execution_state": "QUIESCENT",
+      "intended_state": "READY",
+      "kind": "agent.create",
+      "last_error": null,
+      "ledger_rows": 0,
+      "observation": {
+        "confirmation": "agent.get",
+        "creation_tag": "f6d73b1f-d2b3-5761-ace0-33a6b0c80ef4",
+        "external_call_started": true,
+        "owner": "phase5b:p5b-20261005T071448Z-4830ea1b",
+        "present": true,
+        "provider_agent_id": "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef",
+        "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+        "role": "hekate"
+      },
+      "observed_state": "PRESENT",
+      "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b",
+      "persistence": "persistent",
+      "provider_agent_id": "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef",
+      "provider_calls": 0,
+      "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+      "request_hash": "e1545367bb55f4c21fa2b2f821d1265090866fc6070853b85bcde71887052e28",
+      "reservations": 0,
+      "role": "hekate",
+      "state": "COMPLETED",
+      "updated_at": "2026-10-05T07:14:57.355342+00:00"
+    },
+    "owner_scoped_agent_list_calls": {
+      "phase5b:p5b-20261005T071448Z-4830ea1b": 4,
+      "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:binding-journal-rollback": 1,
+      "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:busy-registry": 1,
+      "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:concurrent-ensure": 2,
+      "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:create-response-lost": 1,
+      "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:provider-binding-mismatch": 4
+    },
+    "passed": true,
+    "postgres_concurrent_ensure": {
+      "competing_call_unknown_while_first_create_waited": true,
+      "confirmed_owned_agent_count": 1,
+      "new_create_calls": 1,
+      "same_created_registry_provider_id": "agent-local-b9989a8e-981d-4b14-9bc0-3072d5902d78",
+      "started_marker_prevented_second_create": true
+    },
+    "provider_binding_mismatch": {
+      "owned_agent_query_response_lost": {
+        "after_failure": {
+          "active_attempt_id": null,
+          "creation_operation_id": "9f6b2eca-ec2b-5514-a06b-bf50942ff6b6",
+          "dispatch_state": "UNKNOWN",
+          "execution_state": "UNKNOWN",
+          "intended_state": "READY",
+          "kind": "agent.create",
+          "last_error": "ConnectionError",
+          "ledger_rows": 0,
+          "observation": {
+            "external_call_started": true
+          },
+          "observed_state": "PRESENT",
+          "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:provider-binding-mismatch",
+          "persistence": "persistent",
+          "provider_agent_id": "agent-local-60371b53-6cfa-4995-9b43-a341ce439922",
+          "provider_calls": 0,
+          "registry_id": "a859da14-f94c-5df8-8736-6940d357f277",
+          "request_hash": "f87c33468315f6f58ec8537bf62803fd85d98df06fe95a5fa6c86c65c5394f39",
+          "reservations": 0,
+          "role": "hekate",
+          "state": "UNKNOWN",
+          "updated_at": "2026-10-05T07:15:24.498425+00:00"
+        },
+        "after_later_confirmed_query": {
+          "active_attempt_id": null,
+          "creation_operation_id": "9f6b2eca-ec2b-5514-a06b-bf50942ff6b6",
+          "dispatch_state": "QUIESCENT",
+          "execution_state": "QUIESCENT",
+          "intended_state": "READY",
+          "kind": "agent.create",
+          "last_error": null,
+          "ledger_rows": 0,
+          "observation": {
+            "confirmation": "agent.list",
+            "creation_tag": "9f6b2eca-ec2b-5514-a06b-bf50942ff6b6",
+            "external_call_started": true,
+            "owner": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:provider-binding-mismatch",
+            "present": true,
+            "provider_agent_id": "agent-local-60371b53-6cfa-4995-9b43-a341ce439922",
+            "registry_id": "a859da14-f94c-5df8-8736-6940d357f277",
+            "role": "hekate"
+          },
+          "observed_state": "PRESENT",
+          "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:provider-binding-mismatch",
+          "persistence": "persistent",
+          "provider_agent_id": "agent-local-60371b53-6cfa-4995-9b43-a341ce439922",
+          "provider_calls": 0,
+          "registry_id": "a859da14-f94c-5df8-8736-6940d357f277",
+          "request_hash": "f87c33468315f6f58ec8537bf62803fd85d98df06fe95a5fa6c86c65c5394f39",
+          "reservations": 0,
+          "role": "hekate",
+          "state": "COMPLETED",
+          "updated_at": "2026-10-05T07:15:24.520050+00:00"
+        },
+        "rejected_as_unconfirmed": true
+      },
+      "recovered_after_fixture_restore": {
+        "active_attempt_id": null,
+        "creation_operation_id": "9f6b2eca-ec2b-5514-a06b-bf50942ff6b6",
+        "dispatch_state": "QUIESCENT",
+        "execution_state": "QUIESCENT",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "confirmation": "agent.list",
+          "creation_tag": "9f6b2eca-ec2b-5514-a06b-bf50942ff6b6",
+          "external_call_started": true,
+          "owner": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:provider-binding-mismatch",
+          "present": true,
+          "provider_agent_id": "agent-local-60371b53-6cfa-4995-9b43-a341ce439922",
+          "registry_id": "a859da14-f94c-5df8-8736-6940d357f277",
+          "role": "hekate"
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:provider-binding-mismatch",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-60371b53-6cfa-4995-9b43-a341ce439922",
+        "provider_calls": 0,
+        "registry_id": "a859da14-f94c-5df8-8736-6940d357f277",
+        "request_hash": "f87c33468315f6f58ec8537bf62803fd85d98df06fe95a5fa6c86c65c5394f39",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "COMPLETED",
+        "updated_at": "2026-10-05T07:15:24.467881+00:00"
+      },
+      "rejected": true,
+      "rejected_state": {
+        "active_attempt_id": null,
+        "creation_operation_id": "9f6b2eca-ec2b-5514-a06b-bf50942ff6b6",
+        "dispatch_state": "UNKNOWN",
+        "execution_state": "UNKNOWN",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": "runtime ownership or provider binding mismatch",
+        "ledger_rows": 0,
+        "observation": {
+          "external_call_started": true
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261005T071448Z-4830ea1b:create-journal:provider-binding-mismatch",
+        "persistence": "persistent",
+        "provider_agent_id": "provider-mismatch:p5b-20261005T071448Z-4830ea1b",
+        "provider_calls": 0,
+        "registry_id": "a859da14-f94c-5df8-8736-6940d357f277",
+        "request_hash": "f87c33468315f6f58ec8537bf62803fd85d98df06fe95a5fa6c86c65c5394f39",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "UNKNOWN",
+        "updated_at": "2026-10-05T07:15:24.441547+00:00"
+      }
+    },
+    "provider_inference_requests_added": 0,
+    "real_pinned_runtime_create_calls": 6,
+    "restart_replay": {
+      "journal_unchanged": true,
+      "new_create_calls": 0,
+      "new_owner_list_calls": 0,
+      "same_provider_agent_id": true
+    },
+    "targeted_agent_get_calls": {
+      "agent-local-241e480d-f731-4338-9dd6-bb161c3627ef": 1,
+      "agent-local-60371b53-6cfa-4995-9b43-a341ce439922": 1,
+      "agent-local-b9989a8e-981d-4b14-9bc0-3072d5902d78": 1,
+      "agent-local-eba6a9d7-e42e-4280-ae5c-da5bb53543fe": 1,
+      "agent-local-ec854a93-5178-4798-82cc-8224905d662b": 1
+    }
+  },
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "preserved_prior_state": {
+    "g7_g8": "deferred",
+    "phase4_issued_allocated_fixture": {
+      "current_probe_database_touched": false,
+      "previously_reported_state": "one ISSUED/ALLOCATED provider call without execution evidence",
+      "settlement_or_usage_synthesized": false,
+      "source_artifact": "integration/runtime/artifacts/p4-20261003T165018Z-b67da98c.json"
+    },
+    "position_projection": {
+      "applied_watermark": 0,
+      "changed_by_create_journal": false,
+      "state": "PENDING_UNSUPPORTED"
+    },
+    "production_dispatch": "blocked",
+    "unknown_fixture": {
+      "changed_by_create_journal": false,
+      "real_provider_calls_for_fixture": 0,
+      "state": "UNKNOWN with review and synthesis holds preserved"
+    }
+  },
+  "probe": "phase5b-bounded-deliberation",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5b-shared-synthetic-v1",
+    "hekate": "phase5b-shared-synthetic-v1",
+    "pricing": "phase5b-synthetic-pricing-v1"
+  },
+  "provider_calls": {
+    "compaction": 0,
+    "fake": 62,
+    "real": 0
+  },
+  "provider_request_scenarios": {
+    "insufficient_budget_planning_only": 1,
+    "normal_planning_two_critic_reviews_one_continuation_two_syntheses": 6,
+    "permanent_rejection_and_stop_scenarios": {
+      "authorization_epoch_changed_at_synthesis_two": 4,
+      "busy_and_lease_wait": 3,
+      "cancel": 1,
+      "critic_workflow_reject_rollback": 6,
+      "deadline": 1,
+      "evidence_expired_before_second_review": 3,
+      "evidence_expired_before_second_synthesis": 4,
+      "evidence_expired_critic_ready": 1,
+      "evidence_expired_synthesis_pending": 2,
+      "revision_superseded": 1,
+      "standalone_cancel_concurrent_maintenance": 1,
+      "standalone_deadline_and_reject_rollback": 1,
+      "standalone_revision_superseded": 1,
+      "standalone_unknown_preserved": 1,
+      "unknown_preserved_across_restart": 1
+    },
+    "temporary_busy_task_planning_critic_synthesis": 3
+  },
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5b-20261005T071448Z-4830ea1b",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:02d7d5a101f636e5c1744ecadb344213b5b794b91ce36f41fa5c973b8e36a2db",
+    "runtime_patch_sha256": "d6f4706748a4fc7878a1ba50946243cd246bf94e183d6b1ee02e81a93fa1ff19",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "standalone_maintenance_batch_progress": {
+    "completed_backlog_over_default_limit": {
+      "after_completion": {
+        "accounts": [
+          {
+            "held_amount": "0.073728",
+            "reservation_held": "0.000000",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002610"
+          },
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "TASK",
+            "scope_ref": "76474d15-0068-42ee-9452-c5bd27014871",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [
+          {
+            "count": 2,
+            "held_delta": "-0.073728",
+            "reservation_id": "9296abdb-21d2-5e76-bf65-e0e171ca7e9e",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "1dd26dd2-30cd-5aed-93e8-a49b2ec9c3eb",
+            "maintenance_completed_at": "2026-10-05 07:18:16.152023+00:00",
+            "maintenance_retry_after": null,
+            "operation_id": "99a359bf-9311-50ac-95ad-5b9d89e4440e",
+            "operation_state": "FAILED",
+            "operation_task_id": null,
+            "provider_calls": 0,
+            "reservation_held": "0.000000",
+            "reservation_id": "9296abdb-21d2-5e76-bf65-e0e171ca7e9e",
+            "reservation_state": "RELEASED",
+            "reserved_amount": "0.036864",
+            "settled_at": "2026-10-05 07:18:16.148364+00:00",
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_cancelled"
+          }
+        ],
+        "stop_audits": [
+          {
+            "count": 1,
+            "event_kind": "deliberation.step_maintenance_stopped",
+            "operation_id": "99a359bf-9311-50ac-95ad-5b9d89e4440e"
+          }
+        ],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "76474d15-0068-42ee-9452-c5bd27014871",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "batch_limit": 100,
+      "candidate_step_ids_before_processing": [
+        "1dd26dd2-30cd-5aed-93e8-a49b2ec9c3eb"
+      ],
+      "completed_fixture_count": 101,
+      "concurrent_candidate_snapshots": [
+        [
+          "1dd26dd2-30cd-5aed-93e8-a49b2ec9c3eb"
+        ],
+        [
+          "1dd26dd2-30cd-5aed-93e8-a49b2ec9c3eb"
+        ]
+      ],
+      "concurrent_completion_counts": [
+        0,
+        1
+      ],
+      "fixture_kind": "synthetic database rows with committed maintenance markers; no execution is claimed",
+      "marker_failure_rolled_back": true,
+      "passed": true,
+      "post_replay_completion_count": 0,
+      "provider_requests_after_cancel_gate": 0,
+      "step_id": "1dd26dd2-30cd-5aed-93e8-a49b2ec9c3eb",
+      "task_id": "76474d15-0068-42ee-9452-c5bd27014871"
+    },
+    "unknown_partial_and_later_target": {
+      "batch_limit": 1,
+      "fixture_counts": {
+        "completed_markers": 101,
+        "partial_stopped": 1,
+        "safe_later": 1,
+        "unknown": 1
+      },
+      "partial_after_tick_one": {
+        "accounts": [
+          {
+            "held_amount": "0.184320",
+            "reservation_held": "0.036864",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002745"
+          },
+          {
+            "held_amount": "0.036864",
+            "reservation_held": "0.036864",
+            "scope_kind": "TASK",
+            "scope_ref": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "b99b9b23-092b-5d5e-9fa2-c4e5fdb7a002",
+            "maintenance_completed_at": null,
+            "maintenance_retry_after": null,
+            "operation_id": "ff5c1825-c501-5821-b001-293d0038fe7d",
+            "operation_state": "FAILED",
+            "operation_task_id": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+            "provider_calls": 0,
+            "reservation_held": "0.073728",
+            "reservation_id": "6676524d-61ee-5367-833f-5b0f00dc4ea2",
+            "reservation_state": "RESERVED",
+            "reserved_amount": "0.036864",
+            "settled_at": null,
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_cancelled"
+          }
+        ],
+        "stop_audits": [],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "partial_after_tick_two": {
+        "accounts": [
+          {
+            "held_amount": "0.147456",
+            "reservation_held": "0.000000",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002745"
+          },
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "TASK",
+            "scope_ref": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [
+          {
+            "count": 2,
+            "held_delta": "-0.073728",
+            "reservation_id": "6676524d-61ee-5367-833f-5b0f00dc4ea2",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "b99b9b23-092b-5d5e-9fa2-c4e5fdb7a002",
+            "maintenance_completed_at": "2026-10-05 07:18:27.853220+00:00",
+            "maintenance_retry_after": null,
+            "operation_id": "ff5c1825-c501-5821-b001-293d0038fe7d",
+            "operation_state": "FAILED",
+            "operation_task_id": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+            "provider_calls": 0,
+            "reservation_held": "0.000000",
+            "reservation_id": "6676524d-61ee-5367-833f-5b0f00dc4ea2",
+            "reservation_state": "RELEASED",
+            "reserved_amount": "0.036864",
+            "settled_at": "2026-10-05 07:18:27.851754+00:00",
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_cancelled"
+          }
+        ],
+        "stop_audits": [],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "partial_before": {
+        "accounts": [
+          {
+            "held_amount": "0.184320",
+            "reservation_held": "0.036864",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002745"
+          },
+          {
+            "held_amount": "0.036864",
+            "reservation_held": "0.036864",
+            "scope_kind": "TASK",
+            "scope_ref": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "b99b9b23-092b-5d5e-9fa2-c4e5fdb7a002",
+            "maintenance_completed_at": null,
+            "maintenance_retry_after": null,
+            "operation_id": "ff5c1825-c501-5821-b001-293d0038fe7d",
+            "operation_state": "FAILED",
+            "operation_task_id": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+            "provider_calls": 0,
+            "reservation_held": "0.073728",
+            "reservation_id": "6676524d-61ee-5367-833f-5b0f00dc4ea2",
+            "reservation_state": "RESERVED",
+            "reserved_amount": "0.036864",
+            "settled_at": null,
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_cancelled"
+          }
+        ],
+        "stop_audits": [],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "ddc850d7-a5ed-44d0-88fb-63ef94e4c33e",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "passed": true,
+      "provider_requests_after_cancel_gate": 0,
+      "provider_requests_to_create_three_ready_steps": 3,
+      "real_provider_interruption_simulated": false,
+      "restart_completed_count": 0,
+      "retry_candidate_ids_after_terminal_observation": [
+        "a45dbcf3-3954-5224-8c73-458bdbdf6e8e"
+      ],
+      "retry_completed_count": 1,
+      "safe_after_restart": {
+        "accounts": [
+          {
+            "held_amount": "0.110592",
+            "reservation_held": "0.000000",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002745"
+          },
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "TASK",
+            "scope_ref": "b1edba2d-7919-4e74-afdf-aa27047b5597",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [
+          {
+            "count": 2,
+            "held_delta": "-0.073728",
+            "reservation_id": "6ff0e124-0163-5a2e-b2be-af89327bf01c",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "dcd374e2-fb33-55d3-8580-922144744617",
+            "maintenance_completed_at": "2026-10-05 07:18:27.925899+00:00",
+            "maintenance_retry_after": null,
+            "operation_id": "debac2dd-ad14-587d-b2b4-2eb731c2917a",
+            "operation_state": "FAILED",
+            "operation_task_id": null,
+            "provider_calls": 0,
+            "reservation_held": "0.000000",
+            "reservation_id": "6ff0e124-0163-5a2e-b2be-af89327bf01c",
+            "reservation_state": "RELEASED",
+            "reserved_amount": "0.036864",
+            "settled_at": "2026-10-05 07:18:27.923167+00:00",
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_cancelled"
+          }
+        ],
+        "stop_audits": [
+          {
+            "count": 1,
+            "event_kind": "deliberation.step_maintenance_stopped",
+            "operation_id": "debac2dd-ad14-587d-b2b4-2eb731c2917a"
+          }
+        ],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "b1edba2d-7919-4e74-afdf-aa27047b5597",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "safe_after_tick_three": {
+        "accounts": [
+          {
+            "held_amount": "0.110592",
+            "reservation_held": "0.000000",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002745"
+          },
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "TASK",
+            "scope_ref": "b1edba2d-7919-4e74-afdf-aa27047b5597",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [],
+        "position_versions": 0,
+        "release_ledger": [
+          {
+            "count": 2,
+            "held_delta": "-0.073728",
+            "reservation_id": "6ff0e124-0163-5a2e-b2be-af89327bf01c",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "dcd374e2-fb33-55d3-8580-922144744617",
+            "maintenance_completed_at": "2026-10-05 07:18:27.925899+00:00",
+            "maintenance_retry_after": null,
+            "operation_id": "debac2dd-ad14-587d-b2b4-2eb731c2917a",
+            "operation_state": "FAILED",
+            "operation_task_id": null,
+            "provider_calls": 0,
+            "reservation_held": "0.000000",
+            "reservation_id": "6ff0e124-0163-5a2e-b2be-af89327bf01c",
+            "reservation_state": "RELEASED",
+            "reserved_amount": "0.036864",
+            "settled_at": "2026-10-05 07:18:27.923167+00:00",
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_cancelled"
+          }
+        ],
+        "stop_audits": [
+          {
+            "count": 1,
+            "event_kind": "deliberation.step_maintenance_stopped",
+            "operation_id": "debac2dd-ad14-587d-b2b4-2eb731c2917a"
+          }
+        ],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "b1edba2d-7919-4e74-afdf-aa27047b5597",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "synthetic_retry_deadline_advance_while_untried_rows_exist": true,
+      "synthetic_terminal_observation": true,
+      "terminal_task_states": "synthetic direct database fixture after real Task planning and READY-step creation",
+      "tick_one_completed_count": 0,
+      "tick_one_selected": [
+        "a45dbcf3-3954-5224-8c73-458bdbdf6e8e"
+      ],
+      "tick_three_completed_count": 1,
+      "tick_three_selected": [
+        "dcd374e2-fb33-55d3-8580-922144744617"
+      ],
+      "tick_two_completed_count": 1,
+      "tick_two_selected": [
+        "b99b9b23-092b-5d5e-9fa2-c4e5fdb7a002"
+      ],
+      "unknown_after_restart": {
+        "accounts": [
+          {
+            "held_amount": "0.110592",
+            "reservation_held": "0.036864",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002745"
+          },
+          {
+            "held_amount": "0.036864",
+            "reservation_held": "0.036864",
+            "scope_kind": "TASK",
+            "scope_ref": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [
+          {
+            "operation_id": "eb233c64-3282-5c72-8856-676292478788",
+            "quiescent_at": null,
+            "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+            "state": "UNKNOWN"
+          }
+        ],
+        "position_versions": 0,
+        "release_ledger": [],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "UNKNOWN",
+            "execution_state": "UNKNOWN",
+            "id": "a45dbcf3-3954-5224-8c73-458bdbdf6e8e",
+            "maintenance_completed_at": null,
+            "maintenance_retry_after": "2026-10-05 07:19:27.965633+00:00",
+            "operation_id": "eb233c64-3282-5c72-8856-676292478788",
+            "operation_state": "UNKNOWN",
+            "operation_task_id": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+            "provider_calls": 0,
+            "reservation_held": "0.073728",
+            "reservation_id": "702f1a0a-cfca-523f-8e3e-a4a47cf9d061",
+            "reservation_state": "RESERVED",
+            "reserved_amount": "0.036864",
+            "settled_at": null,
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "READY",
+            "step_stop_reason": null
+          }
+        ],
+        "stop_audits": [],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "unknown_after_terminal_observation": {
+        "accounts": [
+          {
+            "held_amount": "0.073728",
+            "reservation_held": "0.000000",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002745"
+          },
+          {
+            "held_amount": "0.000000",
+            "reservation_held": "0.000000",
+            "scope_kind": "TASK",
+            "scope_ref": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [
+          {
+            "operation_id": "eb233c64-3282-5c72-8856-676292478788",
+            "quiescent_at": "2026-10-05 07:18:27.998992+00:00",
+            "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+            "state": "QUIESCENT"
+          }
+        ],
+        "position_versions": 0,
+        "release_ledger": [
+          {
+            "count": 2,
+            "held_delta": "-0.073728",
+            "reservation_id": "702f1a0a-cfca-523f-8e3e-a4a47cf9d061",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "QUIESCENT",
+            "execution_state": "QUIESCENT",
+            "id": "a45dbcf3-3954-5224-8c73-458bdbdf6e8e",
+            "maintenance_completed_at": "2026-10-05 07:18:28.056752+00:00",
+            "maintenance_retry_after": null,
+            "operation_id": "eb233c64-3282-5c72-8856-676292478788",
+            "operation_state": "FAILED",
+            "operation_task_id": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+            "provider_calls": 0,
+            "reservation_held": "0.000000",
+            "reservation_id": "702f1a0a-cfca-523f-8e3e-a4a47cf9d061",
+            "reservation_state": "RELEASED",
+            "reserved_amount": "0.036864",
+            "settled_at": "2026-10-05 07:18:28.053745+00:00",
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "STOPPED",
+            "step_stop_reason": "task_cancelled"
+          }
+        ],
+        "stop_audits": [
+          {
+            "count": 1,
+            "event_kind": "deliberation.step_maintenance_stopped",
+            "operation_id": "eb233c64-3282-5c72-8856-676292478788"
+          }
+        ],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      },
+      "unknown_after_tick_one": {
+        "accounts": [
+          {
+            "held_amount": "0.184320",
+            "reservation_held": "0.036864",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0.002745"
+          },
+          {
+            "held_amount": "0.036864",
+            "reservation_held": "0.036864",
+            "scope_kind": "TASK",
+            "scope_ref": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+            "spent_amount": "0.000045"
+          }
+        ],
+        "critic_agents": 0,
+        "critic_workflows": 0,
+        "execution_holds": [
+          {
+            "operation_id": "eb233c64-3282-5c72-8856-676292478788",
+            "quiescent_at": null,
+            "registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+            "state": "UNKNOWN"
+          }
+        ],
+        "position_versions": 0,
+        "release_ledger": [],
+        "responses": 0,
+        "steps": [
+          {
+            "dispatch_state": "UNKNOWN",
+            "execution_state": "UNKNOWN",
+            "id": "a45dbcf3-3954-5224-8c73-458bdbdf6e8e",
+            "maintenance_completed_at": null,
+            "maintenance_retry_after": "2026-10-05 07:19:27.767264+00:00",
+            "operation_id": "eb233c64-3282-5c72-8856-676292478788",
+            "operation_state": "UNKNOWN",
+            "operation_task_id": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+            "provider_calls": 0,
+            "reservation_held": "0.073728",
+            "reservation_id": "702f1a0a-cfca-523f-8e3e-a4a47cf9d061",
+            "reservation_state": "RESERVED",
+            "reserved_amount": "0.036864",
+            "settled_at": null,
+            "step_revision": 1,
+            "step_slot": "hekate_reasoning_1",
+            "step_state": "READY",
+            "step_stop_reason": null
+          }
+        ],
+        "stop_audits": [],
+        "task": {
+          "critic_agents": 0,
+          "hekate_continuations": 1,
+          "id": "2fe4de12-02a9-4f80-9781-1b0458ce5506",
+          "input_revision": 1,
+          "outcome": "CANCELLED",
+          "review_rounds": 0,
+          "status": "CANCELLED",
+          "stop_reason": "USER_CANCELLED"
+        },
+        "workflow_stage": null
+      }
+    }
+  },
+  "workflow": {
+    "create_operation_id": "963f67f9-2f7e-5aa0-9c6d-472e879c19f1",
+    "critic_conclusion_id": "54281231-a45f-5359-9a96-0926d89f2fce",
+    "critic_registry_id": "f1128dcd-51e2-55c1-a98d-c61a1819ff34",
+    "critic_registry_state": "DELETED",
+    "delete_operation_id": "bf7f522b-c115-55c7-b451-189a9db46aff",
+    "dissent_ids": [
+      "1c3a28e9-c077-5fc4-a6a1-5cb2d8afdf03",
+      "1ec1530d-3111-5f5e-87c6-68a2a1b65bf4"
+    ],
+    "hekate_registry_id": "d921b88b-ed69-505a-a824-065ed4e4275e",
+    "input_revision": 1,
+    "planning_attempt_id": "c709d103-9662-5f8e-978c-4711cc6797a8",
+    "planning_operation_id": "001aa6e7-694f-583e-a3ac-cdc10e842c74",
+    "position_projection": "PENDING_UNSUPPORTED",
+    "position_projection_pending_reason": "memory_projection_not_implemented",
+    "position_statement": "The copper seal remains usable with jurisdiction and freshness qualifications.",
+    "position_version": 1,
+    "review_attempt_id": "8eb18eb5-70f7-5bdf-8e83-003438db2a9e",
+    "review_operation_id": "8fb16fad-4e4e-5a36-954b-b110ecf8078c",
+    "spawn_request_hash": "07e144d164d6a87433851d50eae66f1cdf3febd27dc5b2f4f33cbbb618eee04d",
+    "synthesis_attempt_id": "f617b12e-4813-5ce2-950b-18271358264b",
+    "synthesis_operation_id": "cd0b9c5b-5567-5ea0-96d2-2f5760c26afc",
+    "task_id": "d9233ff4-9efc-45d1-9c79-6b93494dd10f",
+    "task_response": "Position saved for phase5a-main-topic as version 1: The copper seal remains usable with jurisdiction and freshness qualifications.",
+    "task_status": "COMPLETED"
+  }
+}

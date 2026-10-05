@@ -25,10 +25,14 @@ import phase3_runtime_probe as p3
 import phase4_evidence_position_probe as p4
 import phase5b_bounded_deliberation_probe as p5b
 
+from hekate.application import projections as projection_application
 from hekate.application.projections import claim_pending_projections, project_position
 from hekate.application.tasks import cancel, submit
 from hekate.domain.contracts import canonical_json, canonical_json_hash
-from hekate.domain.models import AuthorizationSnapshot, MemoryProjection, ProjectionBinding, UserMessage
+from hekate.domain.models import (
+    AuthorizationSnapshot, MemoryProjection, MemoryProjectionObservation, ProjectionBinding,
+    ProjectionWriteAuthorization, UserMessage,
+)
 from hekate.domain.types import OperationId, PrincipalId, ScopeId, StopReason, TaskId, TopicId
 from hekate.infrastructure.letta.adapter import LettaRuntimeAdapter
 from hekate.infrastructure.letta.bridge_protocol import BridgeClient
@@ -45,6 +49,7 @@ SERIAL_TOPIC_A = "phase6a-memory-serial-a"
 SERIAL_TOPIC_B = "phase6a-memory-serial-b"
 TASK_COMPETE_TOPIC = "phase6a-memory-task-compete"
 AUTH_REVOKE_TOPIC = "phase6a-memory-auth-revoke"
+READBACK_RACE_TOPIC = "phase6a-memory-readback-race"
 V1_STATEMENT = "Phase6A durable Position marker: yellow bridge 71-alpha remains valid only within its stated jurisdiction."
 V2_STATEMENT = "Phase6A durable Position marker: yellow bridge 71-alpha is valid within the stated jurisdiction and date window."
 V3_STATEMENT = "Phase6A durable Position marker: yellow bridge 71-alpha requires confirmation of the date window."
@@ -53,6 +58,8 @@ SERIAL_STATEMENT_A = "Phase6A serialized projection marker: first writer retains
 SERIAL_STATEMENT_B = "Phase6A serialized projection marker: second topic waits for the first writer."
 TASK_COMPETE_STATEMENT = "Phase6A queued Task must wait for the active projection writer."
 AUTH_REVOKE_STATEMENT = "Phase6A authorization revocation marker must not reach runtime memory."
+READBACK_RACE_V1 = "Phase6A read-back race baseline: source remains version one until the next commit."
+READBACK_RACE_V2 = "Phase6A read-back race target: source advances to version two after the next commit."
 
 
 class ProjectionGatewayBarrier:
@@ -66,7 +73,7 @@ class ProjectionGatewayBarrier:
         self._used = False
 
     def arm(self, action: str) -> None:
-        if action not in {"authorize", "complete"}:
+        if action not in {"authorize", "authorize_committed", "complete"}:
             raise ValueError("unsupported projection gateway barrier")
         self.action = action
         self.entered = asyncio.Event()
@@ -94,18 +101,35 @@ class ProjectionGatewayBarrierMiddleware:
 
     async def __call__(self, scope, receive, send) -> None:
         held_action = None
+        committed_authorize = False
         if scope.get("type") == "http":
             path = scope.get("path")
             if path == "/internal/memory-projection/authorize":
-                action = "authorize"
+                if self.barrier.action == "authorize_committed":
+                    committed_authorize = True
+                    action = None
+                else:
+                    action = "authorize"
             elif path == "/internal/memory-projection/complete":
                 action = "complete"
             else:
                 action = None
             if action is not None and await self.barrier.intercept(action):
                 held_action = action
+
+        async def send_after_committed_authorize(message) -> None:
+            nonlocal held_action
+            if (
+                committed_authorize and held_action is None
+                and message.get("type") == "http.response.start"
+                and message.get("status") == 200
+                and await self.barrier.intercept("authorize_committed")
+            ):
+                held_action = "authorize_committed"
+            await send(message)
+
         try:
-            await self.app(scope, receive, send)
+            await self.app(scope, receive, send_after_committed_authorize if committed_authorize else send)
         finally:
             if held_action is not None:
                 self.barrier.completed.set()
@@ -121,6 +145,15 @@ class ProjectionRuntimeProbe:
         self.drop_next_write_response = False
         self.errors: list[dict[str, str]] = []
         self.read_observations: list[dict[str, object]] = []
+        self.read_observation_values: list[MemoryProjectionObservation] = []
+        self._read_barrier: tuple[asyncio.Event, asyncio.Event, str | None] | None = None
+
+    def arm_read_barrier(self, operation_id: str | None = None) -> tuple[asyncio.Event, asyncio.Event]:
+        if self._read_barrier is not None:
+            raise RuntimeError("a runtime read barrier is already armed")
+        entered, release = asyncio.Event(), asyncio.Event()
+        self._read_barrier = (entered, release, operation_id)
+        return entered, release
 
     def __getattr__(self, name: str):
         return getattr(self.inner, name)
@@ -136,6 +169,12 @@ class ProjectionRuntimeProbe:
                 "memory_revision": result.memory_revision,
                 "agent_fence": result.agent_fence,
             })
+            self.read_observation_values.append(result)
+            barrier = self._read_barrier
+            if barrier is not None and (barrier[2] is None or barrier[2] == str(operation_id)):
+                self._read_barrier = None
+                barrier[0].set()
+                await barrier[1].wait()
             return result
         except Exception as error:
             self.errors.append({"call": "memory.read", "type": type(error).__name__, "detail": str(error)[:600]})
@@ -549,6 +588,8 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             ("serialize-b", SERIAL_TOPIC_B, SERIAL_STATEMENT_B),
             ("serialize-task-competitor", TASK_COMPETE_TOPIC, TASK_COMPETE_STATEMENT),
             ("auth-revoke", AUTH_REVOKE_TOPIC, AUTH_REVOKE_STATEMENT),
+            ("readback-race-v1", READBACK_RACE_TOPIC, READBACK_RACE_V1),
+            ("readback-race-v2", READBACK_RACE_TOPIC, READBACK_RACE_V2),
         ]
         def add_task(label: str, topic: str, statement: str):
             async def create():
@@ -1203,6 +1244,430 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "final_memory_version": auth_runtime_after_retry.source_version,
             "provider_requests_for_denial_and_projection_retry": 0,
         }
+
+        # Reproduce the read-back race through two real workers and the pinned
+        # App Server. A reads runtime v1, then its claim expires; B takes the same
+        # deterministic topic lease and commits an AUTHORIZED v2 grant before the
+        # runtime is allowed to rename the file.
+        actor = actor2
+        settings = settings2
+        container.settings = replace(settings, memory_projection_enabled=False)
+        readback_task_v1 = await add_task(*task_statements[8])()
+        stop, worker_task = start_worker(container)
+        worker_runs.append((stop, worker_task))
+        readback_task_v1_state = await _wait_task(engine, readback_task_v1)
+        await _wait_worker(stop, worker_task)
+        worker_runs.remove((stop, worker_task))
+        if readback_task_v1_state["status"] != "COMPLETED":
+            raise AssertionError("read-back race v1 fixture Task did not complete")
+
+        container.settings = settings
+        stop, worker_task = start_worker(container)
+        worker_runs.append((stop, worker_task))
+        readback_v1_status = await _wait_projection(engine, str(scope), READBACK_RACE_TOPIC, 1)
+        await _wait_worker(stop, worker_task)
+        worker_runs.remove((stop, worker_task))
+
+        container.settings = replace(settings, memory_projection_enabled=False)
+        readback_task_v2 = await add_task(*task_statements[9])()
+        stop, worker_task = start_worker(container)
+        worker_runs.append((stop, worker_task))
+        readback_task_v2_state = await _wait_task(engine, readback_task_v2)
+        await _wait_worker(stop, worker_task)
+        worker_runs.remove((stop, worker_task))
+        if readback_task_v2_state["status"] != "COMPLETED":
+            raise AssertionError("read-back race v2 fixture Task did not complete")
+
+        container.settings = settings
+        race_worker_name = settings.worker_id
+        race_jobs: dict[int, object] = {}
+        race_done: dict[int, asyncio.Event] = {}
+        race_snapshots: dict[int, dict[str, object]] = {}
+        original_race_project = worker_service.project_position
+        original_capture_snapshot = projection_application._capture_read_back_snapshot
+
+        async def capture_race_project(factory_arg, runtime_arg, actor_arg, job):
+            if str(job.topic_id) == READBACK_RACE_TOPIC:
+                race_jobs[int(job.fence)] = job
+                race_done[int(job.fence)] = asyncio.Event()
+                try:
+                    return await original_race_project(factory_arg, runtime_arg, actor_arg, job)
+                finally:
+                    race_done[int(job.fence)].set()
+            return await original_race_project(factory_arg, runtime_arg, actor_arg, job)
+
+        async def capture_race_snapshot(factory_arg, job, projection):
+            snapshot = await original_capture_snapshot(factory_arg, job, projection)
+            if str(job.topic_id) == READBACK_RACE_TOPIC:
+                race_snapshots[int(job.fence)] = {"projection": projection, "snapshot": snapshot}
+            return snapshot
+
+        worker_service.project_position = capture_race_project
+        projection_application._capture_read_back_snapshot = capture_race_snapshot
+        readback_fake_before = fake.count()
+        readback_writes_before = runtime_probe.write_calls
+        read_observation_start = len(runtime_probe.read_observations)
+        read_entered, read_release = runtime_probe.arm_read_barrier()
+        stop_a, worker_a = start_worker(container)
+        worker_runs.append((stop_a, worker_a))
+        stop_b = worker_b = None
+        try:
+            await asyncio.wait_for(read_entered.wait(), 40)
+            if not race_jobs:
+                raise AssertionError("worker A reached the pinned runtime before its durable claim was captured")
+            a_fence = min(race_jobs)
+            job_a = race_jobs[a_fence]
+            snapshot_a = race_snapshots[a_fence]["snapshot"]
+            projection_a = race_snapshots[a_fence]["projection"]
+            a_runtime_observation = runtime_probe.read_observations[read_observation_start]
+            a_runtime_observation_value = runtime_probe.read_observation_values[read_observation_start]
+            if snapshot_a.candidates:
+                raise AssertionError("worker A unexpectedly captured a pre-existing write guard")
+            if (
+                a_runtime_observation["topic_id"] != READBACK_RACE_TOPIC
+                or a_runtime_observation["source_version"] != 1
+                or a_runtime_observation["payload_digest"] != readback_v1_status["payload_digest"]
+            ):
+                raise AssertionError("worker A did not read back the real pinned-runtime v1 before B's grant")
+            async with engine.connect() as connection:
+                a_projection_before = dict((await connection.execute(text("""
+                    SELECT state,operation_id,request_hash,claim_owner,claim_fence,
+                           applied_version,desired_version,payload_digest
+                    FROM memory_projections WHERE scope=:scope AND topic_id=:topic
+                """), {"scope": str(scope), "topic": READBACK_RACE_TOPIC})).mappings().one())
+            if a_projection_before["claim_fence"] != a_fence or a_projection_before["applied_version"] != 1:
+                raise AssertionError(f"worker A did not own the intended v2 projection claim: {a_projection_before}")
+            async with engine.begin() as connection:
+                expired_claims = await connection.execute(text("""
+                    UPDATE memory_projections SET claim_expires_at=now()-interval '1 second'
+                    WHERE scope=:scope AND topic_id=:topic AND claim_owner=:owner AND claim_fence=:fence
+                    RETURNING claim_fence
+                """), {
+                    "scope": str(scope), "topic": READBACK_RACE_TOPIC,
+                    "owner": race_worker_name, "fence": a_fence,
+                })
+                if expired_claims.scalar_one_or_none() != a_fence:
+                    raise AssertionError("could not expire exactly worker A's projection claim")
+
+            # Same configured worker name and deterministic topic lease owner.
+            projection_barrier.arm("authorize_committed")
+            stop_b, worker_b = start_worker(container)
+            worker_runs.append((stop_b, worker_b))
+            await asyncio.wait_for(projection_barrier.entered.wait(), 40)
+            b_fence = max(race_jobs)
+            job_b = race_jobs[b_fence]
+            snapshot_b = race_snapshots[b_fence]["snapshot"]
+            projection_b = race_snapshots[b_fence]["projection"]
+            if b_fence <= a_fence or job_a.worker_id != job_b.worker_id:
+                raise AssertionError("worker B did not replace A with a newer claim under the same worker name")
+            if (
+                projection_a.binding.lease_owner != projection_b.binding.lease_owner
+                or projection_a.binding.lease_fence != projection_b.binding.lease_fence
+            ):
+                raise AssertionError("A and B did not retain the same stable topic lease owner and agent fence")
+            if snapshot_b.candidates:
+                raise AssertionError("worker B captured the later authorization before its pinned read")
+
+            async with engine.connect() as connection:
+                guard_before_a = dict((await connection.execute(text("""
+                    SELECT id,operation_id,request_hash,scope,registry_id,topic_id,state,
+                           lease_owner,lease_fence,claim_owner,claim_fence,source_version,payload_digest
+                    FROM memory_projection_write_guards
+                    WHERE scope=:scope AND topic_id=:topic AND state='AUTHORIZED'
+                    ORDER BY created_at DESC,id DESC LIMIT 1
+                """), {"scope": str(scope), "topic": READBACK_RACE_TOPIC})).mappings().one())
+                b_projection_before_a = dict((await connection.execute(text("""
+                    SELECT state,operation_id,claim_owner,claim_fence,applied_version,desired_version
+                    FROM memory_projections WHERE scope=:scope AND topic_id=:topic
+                """), {"scope": str(scope), "topic": READBACK_RACE_TOPIC})).mappings().one())
+                b_operation_before_a = await connection.scalar(text("""
+                    SELECT state FROM memory_projection_operations WHERE id=:operation
+                """), {"operation": str(guard_before_a["operation_id"])})
+                lease_before_a = dict((await connection.execute(text("""
+                    SELECT owner_worker,fence,expires_at FROM agent_leases WHERE registry_id=:registry
+                """), {"registry": str(registry.registry_id)})).mappings().one())
+            if (
+                guard_before_a["state"] != "AUTHORIZED"
+                or guard_before_a["operation_id"] != str(projection_b.operation_id)
+                or guard_before_a["claim_owner"] != race_worker_name
+                or guard_before_a["claim_fence"] != b_fence
+                or b_projection_before_a["state"] != "CLAIMED"
+                or b_projection_before_a["claim_fence"] != b_fence
+                or b_projection_before_a["applied_version"] != 1
+                or b_operation_before_a != "STARTED"
+                or lease_before_a["owner_worker"] != projection_b.binding.lease_owner
+                or lease_before_a["fence"] != projection_b.binding.lease_fence
+            ):
+                raise AssertionError("worker B's committed authorization was not fenced before external write")
+
+            # Make the exact version/digest-match case decisive. Insert a second
+            # valid PostgreSQL grant after B's empty pre-read snapshot, then run
+            # resolution with a deliberately matching observation in a transaction
+            # that is rolled back. This probes the candidate-ID boundary only; it
+            # does not create or persist runtime-effect evidence.
+            binding_b = projection_b.binding
+            request_b = ProjectionWriteAuthorization(
+                operation_id=projection_b.operation_id, request_hash=projection_b.request_hash,
+                scope=binding_b.scope, registry_id=binding_b.registry_id,
+                provider_agent_id=binding_b.provider_agent_id,
+                creation_operation_id=binding_b.creation_operation_id,
+                principal_id=binding_b.principal_id, policy_version=binding_b.policy_version,
+                authz_epoch=binding_b.authz_epoch, lease_owner=binding_b.lease_owner,
+                lease_fence=binding_b.lease_fence, claim_owner=job_b.worker_id,
+                claim_fence=job_b.fence, topic_id=projection_b.topic_id,
+                source_version=projection_b.source_version,
+                payload_digest=projection_b.payload_digest,
+                namespace="hekate.position.v1", target_path="hekate_positions.md",
+            )
+            matching_observation = MemoryProjectionObservation(
+                present=True, topic_id=projection_b.topic_id,
+                source_version=projection_b.source_version, format_version=2,
+                payload_digest=projection_b.payload_digest, payload=projection_b.payload,
+                lease_fence=binding_b.lease_fence, agent_fence=binding_b.lease_fence,
+                memory_revision="probe-only-unpersisted-matching-observation", verified=True,
+            )
+            async with factory() as uow:
+                synthetic_grant_id = await uow.projections.authorize_runtime_write(request_b)
+                await uow.projections.resolve_write_guards_after_read(
+                    job_b, snapshot_b, matching_observation,
+                )
+                synthetic_guard_state = await uow.session.scalar(text(
+                    "SELECT state FROM memory_projection_write_guards WHERE id=:id"
+                ), {"id": synthetic_grant_id})
+                still_authorized = await uow.session.scalar(text("""
+                    SELECT count(*) FROM memory_projection_write_guards
+                    WHERE scope=:scope AND topic_id=:topic AND state='AUTHORIZED'
+                """), {"scope": str(scope), "topic": READBACK_RACE_TOPIC})
+                await uow.rollback()
+            if synthetic_guard_state != "AUTHORIZED" or still_authorized != 2:
+                raise AssertionError("a same-version/digest post-snapshot grant was resolved by an older observation")
+
+            # Inject failure after a bounded candidate has been updated but before
+            # the read-back transaction commits. A's actual v1 observation would
+            # otherwise resolve B's v2 guard as NO_EFFECT; rollback must preserve it.
+            snapshot_b_with_guard = await projection_application._capture_read_back_snapshot(
+                factory, job_b, projection_b,
+            )
+            if [item.id for item in snapshot_b_with_guard.candidates] != [guard_before_a["id"]]:
+                raise AssertionError("post-grant snapshot did not contain exactly B's durable guard")
+            original_resolve_guards = PostgresProjectionRepository.resolve_write_guards_after_read
+
+            async def resolve_then_inject_failure(repository, *args, **kwargs):
+                await original_resolve_guards(repository, *args, **kwargs)
+                raise RuntimeError("phase6a_injected_guard_resolution_failure_before_commit")
+
+            PostgresProjectionRepository.resolve_write_guards_after_read = resolve_then_inject_failure
+            rollback_injected = False
+            try:
+                try:
+                    await projection_application._resolve_after_runtime_read(
+                        factory, job_b, projection_b, snapshot_b_with_guard,
+                        a_runtime_observation_value,
+                    )
+                except RuntimeError as error:
+                    rollback_injected = "phase6a_injected_guard_resolution_failure_before_commit" in str(error)
+            finally:
+                PostgresProjectionRepository.resolve_write_guards_after_read = original_resolve_guards
+            if not rollback_injected:
+                raise AssertionError("guard resolution failure injection did not reach its pre-commit boundary")
+            async with engine.connect() as connection:
+                guard_after_rollback = await connection.scalar(text(
+                    "SELECT state FROM memory_projection_write_guards WHERE id=:id"
+                ), {"id": guard_before_a["id"]})
+                projection_after_rollback = dict((await connection.execute(text("""
+                    SELECT state,operation_id,claim_owner,claim_fence,applied_version,desired_version
+                    FROM memory_projections WHERE scope=:scope AND topic_id=:topic
+                """), {"scope": str(scope), "topic": READBACK_RACE_TOPIC})).mappings().one())
+                operation_after_rollback = await connection.scalar(text(
+                    "SELECT state FROM memory_projection_operations WHERE id=:id"
+                ), {"id": guard_before_a["operation_id"]})
+                lease_after_rollback = dict((await connection.execute(text("""
+                    SELECT owner_worker,fence FROM agent_leases WHERE registry_id=:registry
+                """), {"registry": str(registry.registry_id)})).mappings().one())
+            if (
+                guard_after_rollback != "AUTHORIZED"
+                or projection_after_rollback != b_projection_before_a
+                or operation_after_rollback != b_operation_before_a
+                or lease_after_rollback != {
+                    "owner_worker": lease_before_a["owner_worker"], "fence": lease_before_a["fence"],
+                }
+            ):
+                raise AssertionError("failed guard cleanup transaction partially changed B's durable state")
+
+            read_release.set()
+            await asyncio.wait_for(race_done[a_fence].wait(), 20)
+            async with engine.connect() as connection:
+                guard_after_a = dict((await connection.execute(text("""
+                    SELECT state,claim_owner,claim_fence,lease_owner,lease_fence,operation_id
+                    FROM memory_projection_write_guards WHERE id=:id
+                """), {"id": guard_before_a["id"]})).mappings().one())
+                b_projection_after_a = dict((await connection.execute(text("""
+                    SELECT state,operation_id,claim_owner,claim_fence,applied_version,desired_version
+                    FROM memory_projections WHERE scope=:scope AND topic_id=:topic
+                """), {"scope": str(scope), "topic": READBACK_RACE_TOPIC})).mappings().one())
+                b_operation_after_a = await connection.scalar(text("""
+                    SELECT state FROM memory_projection_operations WHERE id=:operation
+                """), {"operation": str(guard_before_a["operation_id"])})
+                lease_after_a = dict((await connection.execute(text("""
+                    SELECT owner_worker,fence,expires_at FROM agent_leases WHERE registry_id=:registry
+                """), {"registry": str(registry.registry_id)})).mappings().one())
+            if (
+                guard_after_a["state"] != "AUTHORIZED"
+                or b_projection_after_a != b_projection_before_a
+                or b_operation_after_a != b_operation_before_a
+                or lease_after_a != lease_before_a
+            ):
+                raise AssertionError("stale worker A changed worker B's guard, claim, operation, watermark, or lease")
+
+            # An expired agent lease remains fenced while B's exact runtime write
+            # is unresolved. Then restore only its TTL so B can finish the same call.
+            async with engine.begin() as connection:
+                await connection.execute(text("""
+                    UPDATE agent_leases SET expires_at=now()-interval '1 second'
+                    WHERE registry_id=:registry AND owner_worker=:owner AND fence=:fence
+                """), {
+                    "registry": str(registry.registry_id), "owner": lease_after_a["owner_worker"],
+                    "fence": lease_after_a["fence"],
+                })
+            async with factory() as uow:
+                takeover = await uow.agents.acquire_lease(
+                    registry.registry_id, f"p6a-readback-unrelated:{run_id}", 45,
+                )
+                await uow.commit()
+            if takeover is not None:
+                raise AssertionError("expired lease with B's AUTHORIZED guard allowed an unrelated owner")
+            async with engine.begin() as connection:
+                await connection.execute(text("""
+                    UPDATE agent_leases SET expires_at=now()+interval '120 seconds'
+                    WHERE registry_id=:registry AND owner_worker=:owner AND fence=:fence
+                """), {
+                    "registry": str(registry.registry_id), "owner": lease_after_a["owner_worker"],
+                    "fence": lease_after_a["fence"],
+                })
+
+            projection_barrier.release()
+            await asyncio.wait_for(projection_barrier.completed.wait(), 20)
+            await asyncio.wait_for(race_done[b_fence].wait(), 30)
+            race_v2_status = await _wait_projection(engine, str(scope), READBACK_RACE_TOPIC, 2)
+            if race_v2_status["state"] != "APPLIED" or race_v2_status["applied_version"] != 2:
+                raise AssertionError(f"worker B did not complete its pinned runtime write: {race_v2_status}")
+            async with engine.connect() as connection:
+                race_guard_after_b = dict((await connection.execute(text("""
+                    SELECT state,claim_owner,claim_fence,source_version,payload_digest
+                    FROM memory_projection_write_guards WHERE id=:id
+                """), {"id": guard_before_a["id"]})).mappings().one())
+                race_operation_after_b = dict((await connection.execute(text("""
+                    SELECT state,observation FROM memory_projection_operations WHERE id=:operation
+                """), {"operation": str(guard_before_a["operation_id"])})).mappings().one())
+                race_audit_count = await connection.scalar(text("""
+                    SELECT count(*) FROM audit_events WHERE owner_scope=:scope
+                      AND event_kind='position.memory_projection.confirmed'
+                      AND safe_payload->>'projection_operation_id'=:operation
+                """), {"scope": str(scope), "operation": str(guard_before_a["operation_id"])})
+            race_runtime_final = await _runtime_read(
+                factory, runtime_probe, actor, registry, READBACK_RACE_TOPIC,
+                str(guard_before_a["operation_id"]),
+            )
+            if (
+                race_guard_after_b["state"] != "EFFECT_CONFIRMED"
+                or race_guard_after_b["claim_fence"] != b_fence
+                or race_operation_after_b["state"] != "COMPLETED"
+                or race_runtime_final.source_version != 2
+                or race_runtime_final.payload_digest != race_v2_status["payload_digest"]
+                or race_audit_count != 1
+            ):
+                raise AssertionError("B's runtime effect did not converge once to its own guard and watermark")
+
+            stop_b.set()
+            await _wait_worker(stop_b, worker_b)
+            worker_runs.remove((stop_b, worker_b))
+            stop_a.set()
+            await _wait_worker(stop_a, worker_a)
+            worker_runs.remove((stop_a, worker_a))
+            writes_before_restart = runtime_probe.write_calls
+            restart_claim_tick = asyncio.Event()
+            original_worker_claim = worker_service.claim_pending_projections
+
+            async def observe_restart_claim(*args, **kwargs):
+                claimed = await original_worker_claim(*args, **kwargs)
+                restart_claim_tick.set()
+                return claimed
+
+            worker_service.claim_pending_projections = observe_restart_claim
+            try:
+                restart_stop, restart_worker = start_worker(container)
+                worker_runs.append((restart_stop, restart_worker))
+                await asyncio.wait_for(restart_claim_tick.wait(), 20)
+                restart_stop.set()
+                await _wait_worker(restart_stop, restart_worker)
+                worker_runs.remove((restart_stop, restart_worker))
+            finally:
+                worker_service.claim_pending_projections = original_worker_claim
+            if runtime_probe.write_calls != writes_before_restart:
+                raise AssertionError("worker restart replayed the completed projection write")
+
+            hardening_results["read_back_guard_snapshot_and_stale_claim_fencing"] = {
+                "topic_id": READBACK_RACE_TOPIC,
+                "worker_a": {"id": job_a.worker_id, "claim_fence": a_fence, "captured_guard_ids": []},
+                "worker_b": {
+                    "id": job_b.worker_id, "claim_fence": b_fence,
+                    "captured_guard_ids_before_runtime_read": [candidate.id for candidate in snapshot_b.candidates],
+                },
+                "agent_lease": {
+                    "owner": projection_b.binding.lease_owner,
+                    "fence": projection_b.binding.lease_fence,
+                    "same_for_a_and_b": (
+                        projection_a.binding.lease_owner == projection_b.binding.lease_owner
+                        and projection_a.binding.lease_fence == projection_b.binding.lease_fence
+                    ),
+                },
+                "runtime_observation_a": a_runtime_observation,
+                "same_version_digest_post_snapshot_grant": {
+                    "candidate_ids_captured_before_read": [item.id for item in snapshot_b.candidates],
+                    "grant_inserted_after_snapshot": True,
+                    "matching_observation_version": matching_observation.source_version,
+                    "matching_observation_digest": matching_observation.payload_digest,
+                    "matching_observation_agent_fence": matching_observation.agent_fence,
+                    "guard_state_before_test_transaction_rollback": synthetic_guard_state,
+                    "authorized_guards_including_real_b_before_rollback": int(still_authorized),
+                    "test_transaction_rolled_back_without_persisting_observation": True,
+                },
+                "read_back_transaction_rollback": {
+                    "injected_after_candidate_update": rollback_injected,
+                    "guard_after_rollback": guard_after_rollback,
+                    "projection_after_rollback": projection_after_rollback,
+                    "operation_after_rollback": operation_after_rollback,
+                    "lease_after_rollback": lease_after_rollback,
+                },
+                "guard_and_projection_before_a_resumed": {
+                    "guard": guard_before_a, "projection": b_projection_before_a,
+                    "operation_state": b_operation_before_a, "lease": lease_before_a,
+                },
+                "after_a_resumed": {
+                    "guard": guard_after_a, "projection": b_projection_after_a,
+                    "operation_state": b_operation_after_a, "lease": lease_after_a,
+                    "a_did_not_release_successor_lease": lease_after_a == lease_before_a,
+                },
+                "expired_lease_unrelated_takeover_denied": takeover is None,
+                "after_b_runtime_write": {
+                    "guard": race_guard_after_b, "operation": race_operation_after_b,
+                    "projection_state": race_v2_status["state"],
+                    "applied_version": race_v2_status["applied_version"],
+                    "runtime_version": race_runtime_final.source_version,
+                    "runtime_digest": race_runtime_final.payload_digest,
+                    "projection_digest": race_v2_status["payload_digest"],
+                    "confirmation_audit_count": int(race_audit_count),
+                    "worker_restart_added_runtime_writes": runtime_probe.write_calls - writes_before_restart,
+                },
+                "fake_provider_request_delta": fake.count() - readback_fake_before,
+                "runtime_write_delta": runtime_probe.write_calls - readback_writes_before,
+            }
+        finally:
+            read_release.set()
+            projection_barrier.release()
+            worker_service.project_position = original_race_project
+            projection_application._capture_read_back_snapshot = original_capture_snapshot
+
         report["hardening_scenarios"] = hardening_results
 
         async with engine.connect() as connection:
@@ -1230,7 +1695,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             provider_call_count != fake.count()
             or normal_phase6_provider_requests != 4
             or serialization_provider_request_delta != 2
-            or fake.count() != normal_phase6_provider_requests + serialization_provider_request_delta + 1
+            or fake.count() != normal_phase6_provider_requests + serialization_provider_request_delta + 1 + 2
         ):
             raise AssertionError(
                 "provider usage ledger differs from the normal and hardening fake Task requests: "
@@ -1239,10 +1704,11 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             )
         if linked_projection_ops != len(projection_ops):
             raise AssertionError("projection operation provenance did not link to its parent runtime operation")
-        if fake.count() != memory_provider_count_before + 5:
+        if fake.count() != memory_provider_count_before + 7:
             # v3, the independent topic, two serialization fixtures, and the
-            # authorization-revocation Task use five requests; projection
-            # reads, writes, retries, barriers, and the blocked Task use none.
+            # authorization-revocation Task plus two read-back race Tasks use
+            # seven requests; projection operations, retries, barriers, and the
+            # blocked Task use none.
             raise AssertionError("projection work changed the expected fake-provider request delta")
         if runtime_probe.write_calls < 4 or confirmation_audits != completed_projection_ops:
             raise AssertionError("projection write or durable audit counts do not match confirmed operations")
@@ -1273,6 +1739,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
 
         report["positions"] = {
             "task_v1": task_v1, "task_v2": task_v2, "task_v3": task_v3, "task_other_topic": task_alt,
+            "readback_race_v1": readback_task_v1, "readback_race_v2": readback_task_v2,
             "topic_versions": {str(topic): int(version) for topic, version in position_rows},
             "commit_receipts": int(receipt_count), "task_response_states": {
                 "v1": task_v1_state, "v2": task_v2_state, "v3": task_v3_state, "other_topic": task_alt_state,
@@ -1340,6 +1807,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "same_worker_serialization_position_tasks": serialization_provider_request_delta,
             "queued_task_blocked_by_active_projection": 0,
             "authorization_denial_and_current_epoch_projection_retry": 1,
+            "read_back_guard_claim_race_v1_v2_tasks": 2,
         }
         report["runtime_memory_write_attempts"] = runtime_probe.write_calls if runtime_probe is not None else 0
         report["runtime_memory_commits_inferred_from_revision_changes"] = "recorded per hardening scenario; denied write left revision unchanged"

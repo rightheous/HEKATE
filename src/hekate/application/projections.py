@@ -11,7 +11,7 @@ from hekate.domain.contracts import canonical_json, canonical_json_hash
 from hekate.domain.errors import Conflict, PolicyDenied, StaleInput
 from hekate.domain.models import (
     MemoryProjection, MemoryProjectionObservation, ProjectionBinding, ProjectionJob,
-    ProjectionWriteAuthorization,
+    ProjectionReadBackSnapshot, ProjectionWriteAuthorization,
     ProjectionReceipt, ProjectionStatus,
 )
 from hekate.domain.types import ActorContext, OperationId, RegistryId, ScopeId, TopicId
@@ -210,16 +210,68 @@ async def record_runtime_memory_write_result(
 
 
 async def _resolve_after_runtime_read(
-    factory: UowFactory, projection: MemoryProjection, observation: MemoryProjectionObservation,
+    factory: UowFactory, job: ProjectionJob, projection: MemoryProjection,
+    snapshot: ProjectionReadBackSnapshot, observation: MemoryProjectionObservation,
 ) -> None:
     binding = projection.binding
+    if (
+        snapshot.scope != binding.scope or snapshot.registry_id != binding.registry_id
+        or snapshot.topic_id != projection.topic_id or snapshot.operation_id != projection.operation_id
+        or snapshot.request_hash != projection.request_hash
+        or snapshot.lease_owner != binding.lease_owner or snapshot.lease_fence != binding.lease_fence
+        or snapshot.claim_owner != job.worker_id or snapshot.claim_fence != job.fence
+        or snapshot.source_version != projection.source_version
+        or snapshot.payload_digest != projection.payload_digest
+    ):
+        raise StaleInput("runtime observation snapshot differs from its projection binding")
     async with factory() as uow:
         await uow.agents.lock_registry(binding.registry_id)
         await uow.agents.assert_current_lease(binding.registry_id, binding.lease_owner, binding.lease_fence)
         await uow.projections.resolve_write_guards_after_read(
-            binding.registry_id, binding.lease_owner, projection.topic_id, observation,
+            job, snapshot, observation,
         )
         await uow.commit()
+
+
+async def _capture_read_back_snapshot(
+    factory: UowFactory, job: ProjectionJob, projection: MemoryProjection,
+) -> ProjectionReadBackSnapshot:
+    binding = projection.binding
+    async with factory() as uow:
+        await uow.agents.lock_registry(binding.registry_id)
+        await uow.agents.assert_current_lease(binding.registry_id, binding.lease_owner, binding.lease_fence)
+        snapshot = await uow.projections.capture_read_back_snapshot(job, projection)
+        await uow.commit()
+    return snapshot
+
+
+async def _read_and_resolve(
+    factory: UowFactory, runtime: AgentRuntime, job: ProjectionJob, projection: MemoryProjection,
+) -> MemoryProjectionObservation:
+    # The finite grant set is committed before opening the external serialized
+    # runtime read. Grants approved afterwards are outside this observation's proof.
+    snapshot = await _capture_read_back_snapshot(factory, job, projection)
+    observation = _observe(await runtime.read_projected_memory(
+        projection.binding, projection.topic_id, projection.operation_id,
+    ))
+    await _resolve_after_runtime_read(factory, job, projection, snapshot, observation)
+    return observation
+
+
+async def _release_projection_lease_if_current(
+    factory: UowFactory, job: ProjectionJob, projection: MemoryProjection, lease,
+) -> bool:
+    async with factory() as uow:
+        await uow.agents.lock_registry(lease.registry_id)
+        current = await uow.agents.get_lease(lease.registry_id, lock=True)
+        allowed = (
+            current is not None and current.owner == lease.owner and current.fence == lease.fence
+            and await uow.projections.claim_generation_allows_lease_release(job, projection.operation_id)
+        )
+        if allowed:
+            await uow.agents.release_lease(lease)
+        await uow.commit()
+        return bool(allowed)
 
 
 async def _defer(factory: UowFactory, job: ProjectionJob, reason: str, *, seconds: int = _RETRY_SECONDS, operation_id=None, state: str = "PENDING") -> None:
@@ -333,9 +385,6 @@ async def _complete(
         if observation.topic_id != job.topic_id:
             raise ValueError("runtime memory read-back returned a different topic")
         _, current_digest = _payload(current.current)
-        await uow.projections.resolve_write_guards_after_read(
-            registry.registry_id, lease.owner, job.topic_id, observation,
-        )
         newly_confirmed = await uow.projections.finish(
             job, projection.operation_id, observation.model_dump(mode="json"),
             requested_version=projection.source_version, requested_digest=projection.payload_digest,
@@ -381,8 +430,7 @@ async def project_position(
         if prepared is None:
             return None
         projection, lease = prepared
-        read = _observe(await runtime.read_projected_memory(projection.binding, projection.topic_id, projection.operation_id))
-        await _resolve_after_runtime_read(factory, projection, read)
+        read = await _read_and_resolve(factory, runtime, job, projection)
         if read.present and read.source_version == projection.source_version and read.payload_digest == projection.payload_digest:
             observed = read
         elif read.present and read.source_version == projection.source_version and read.payload_digest != projection.payload_digest:
@@ -403,16 +451,14 @@ async def project_position(
                 runtime_quiescence_confirmed = True
             except Exception as write_error:
                 try:
-                    observed = _observe(await runtime.read_projected_memory(projection.binding, projection.topic_id, projection.operation_id))
+                    observed = await _read_and_resolve(factory, runtime, job, projection)
                     runtime_quiescence_confirmed = True
-                    await _resolve_after_runtime_read(factory, projection, observed)
                 except Exception:
                     await _defer(factory, job, "runtime_memory_write_outcome_unknown:" + type(write_error).__name__, seconds=10, operation_id=projection.operation_id, state="UNKNOWN")
                     return None
             else:
                 try:
-                    observed = _observe(await runtime.read_projected_memory(projection.binding, projection.topic_id, projection.operation_id))
-                    await _resolve_after_runtime_read(factory, projection, observed)
+                    observed = await _read_and_resolve(factory, runtime, job, projection)
                 except Exception as read_error:
                     await _defer(
                         factory, job, "runtime_memory_write_readback_unknown:" + type(read_error).__name__,
@@ -447,9 +493,8 @@ async def project_position(
     finally:
         if lease is not None and (not runtime_write_started or runtime_quiescence_confirmed):
             try:
-                async with factory() as uow:
-                    await uow.agents.release_lease(lease)
-                    await uow.commit()
+                if projection is not None:
+                    await _release_projection_lease_if_current(factory, job, projection, lease)
             except Exception as error:
                 _LOG.warning("Position projection registry lease release failed: %s", type(error).__name__)
         elif lease is not None:

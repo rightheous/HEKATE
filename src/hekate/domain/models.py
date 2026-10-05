@@ -1008,6 +1008,41 @@ class ProjectionWriteAuthorization(ContractModel):
     target_path: Literal["hekate_positions.md"]
 
 
+class ProjectionWriteGuardCandidate(ContractModel):
+    """One exact durable write grant captured before a serialized runtime read."""
+    id: str = Field(min_length=1)
+    operation_id: OperationId
+    scope: ScopeId
+    registry_id: RegistryId
+    topic_id: TopicId
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    principal_id: PrincipalId
+    policy_version: str
+    authz_epoch: int = Field(ge=0)
+    lease_owner: str = Field(min_length=1, max_length=256)
+    lease_fence: int = Field(ge=1)
+    claim_owner: str = Field(min_length=1, max_length=256)
+    claim_fence: int = Field(ge=1)
+    source_version: int = Field(ge=1)
+    payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ProjectionReadBackSnapshot(ContractModel):
+    """Claim binding and the finite grant set a later runtime observation may resolve."""
+    scope: ScopeId
+    registry_id: RegistryId
+    topic_id: TopicId
+    operation_id: OperationId
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    lease_owner: str = Field(min_length=1, max_length=256)
+    lease_fence: int = Field(ge=1)
+    claim_owner: str = Field(min_length=1, max_length=256)
+    claim_fence: int = Field(ge=1)
+    source_version: int = Field(ge=1)
+    payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    candidates: tuple[ProjectionWriteGuardCandidate, ...] = ()
+
+
 class ProjectionJob(ContractModel):
     id: str
     original_operation_id: OperationId

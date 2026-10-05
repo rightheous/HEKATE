@@ -191,10 +191,11 @@ class PostgresAgentRepository:
             raise StaleInput("agent lease or fence is stale")
         return Lease(registry_id=registry_id, owner=owner, fence=fence, expires_at=row["expires_at"])
 
-    async def get_lease(self, registry_id: RegistryId) -> Lease | None:
-        row = (await self.connection.execute(select(tables.agent_leases).where(
-            tables.agent_leases.c.registry_id == registry_id,
-        ))).mappings().one_or_none()
+    async def get_lease(self, registry_id: RegistryId, *, lock: bool = False) -> Lease | None:
+        query = select(tables.agent_leases).where(tables.agent_leases.c.registry_id == registry_id)
+        if lock:
+            query = query.with_for_update()
+        row = (await self.connection.execute(query)).mappings().one_or_none()
         if row is None:
             return None
         return Lease(registry_id=registry_id, owner=row["owner_worker"], fence=row["fence"], expires_at=row["expires_at"])

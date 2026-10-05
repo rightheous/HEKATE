@@ -9,7 +9,10 @@ from sqlalchemy import or_, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from hekate.domain.errors import Conflict, StaleInput
-from hekate.domain.models import MemoryProjectionObservation, ProjectionJob, ProjectionWriteAuthorization
+from hekate.domain.models import (
+    MemoryProjection, MemoryProjectionObservation, ProjectionJob,
+    ProjectionReadBackSnapshot, ProjectionWriteAuthorization, ProjectionWriteGuardCandidate,
+)
 from hekate.domain.types import OperationId, RegistryId, ScopeId, TopicId
 from . import tables
 from .common import aware_now, json_value, new_key
@@ -160,21 +163,149 @@ class PostgresProjectionRepository:
         ))
         return True
 
+    @staticmethod
+    def _guard_candidate(row) -> ProjectionWriteGuardCandidate:
+        return ProjectionWriteGuardCandidate(
+            id=row["id"], operation_id=OperationId(row["operation_id"]),
+            scope=ScopeId(row["scope"]), registry_id=RegistryId(row["registry_id"]),
+            topic_id=TopicId(row["topic_id"]), request_hash=row["request_hash"],
+            principal_id=row["principal_id"], policy_version=row["policy_version"],
+            authz_epoch=row["authz_epoch"], lease_owner=row["lease_owner"],
+            lease_fence=row["lease_fence"], claim_owner=row["claim_owner"],
+            claim_fence=row["claim_fence"], source_version=row["source_version"],
+            payload_digest=row["payload_digest"],
+        )
+
+    @staticmethod
+    def _assert_snapshot_operation(operation, *, job: ProjectionJob, snapshot: ProjectionReadBackSnapshot) -> None:
+        expected = (
+            snapshot.scope, snapshot.topic_id, snapshot.registry_id, snapshot.source_version,
+            2, snapshot.payload_digest, snapshot.request_hash, job.original_operation_id,
+        )
+        actual = tuple(operation[key] for key in (
+            "scope", "topic_id", "target_registry_id", "source_version", "format_version",
+            "payload_digest", "request_hash", "original_operation_id",
+        ))
+        if actual != expected:
+            raise StaleInput("projection read-back operation identity changed")
+
+    async def capture_read_back_snapshot(
+        self, job: ProjectionJob, projection: MemoryProjection,
+    ) -> ProjectionReadBackSnapshot:
+        binding = projection.binding
+        if (
+            binding.scope != job.scope or binding.registry_id != job.target_registry_id
+            or binding.claim_owner != job.worker_id or binding.claim_fence != job.fence
+            or projection.topic_id != job.topic_id
+        ):
+            raise StaleInput("projection read-back binding differs from its claim")
+        claim = await self._locked_claim(job)
+        if (
+            claim["state"] != "CLAIMED" or claim["operation_id"] != projection.operation_id
+            or claim["request_hash"] != projection.request_hash
+            or claim["desired_version"] != projection.source_version
+            or claim["payload_digest"] != projection.payload_digest
+        ):
+            raise StaleInput("projection changed before runtime read-back")
+        operation = (await self.connection.execute(select(tables.memory_projection_operations).where(
+            tables.memory_projection_operations.c.id == projection.operation_id,
+        ).with_for_update())).mappings().one_or_none()
+        if operation is None:
+            raise StaleInput("projection operation disappeared before runtime read-back")
+        snapshot = ProjectionReadBackSnapshot(
+            scope=job.scope, registry_id=job.target_registry_id, topic_id=job.topic_id,
+            operation_id=projection.operation_id, request_hash=projection.request_hash,
+            lease_owner=binding.lease_owner, lease_fence=binding.lease_fence,
+            claim_owner=job.worker_id, claim_fence=job.fence,
+            source_version=projection.source_version, payload_digest=projection.payload_digest,
+        )
+        self._assert_snapshot_operation(operation, job=job, snapshot=snapshot)
+        rows = (await self.connection.execute(select(tables.memory_projection_write_guards).where(
+            tables.memory_projection_write_guards.c.scope == job.scope,
+            tables.memory_projection_write_guards.c.registry_id == job.target_registry_id,
+            tables.memory_projection_write_guards.c.topic_id == job.topic_id,
+            tables.memory_projection_write_guards.c.lease_owner == binding.lease_owner,
+            tables.memory_projection_write_guards.c.state == "AUTHORIZED",
+        ).order_by(
+            tables.memory_projection_write_guards.c.created_at,
+            tables.memory_projection_write_guards.c.id,
+        ).with_for_update())).mappings().all()
+        return snapshot.model_copy(update={"candidates": tuple(self._guard_candidate(row) for row in rows)})
+
     async def resolve_write_guards_after_read(
-        self, registry_id: RegistryId, lease_owner: str, topic_id: TopicId,
+        self, job: ProjectionJob, snapshot: ProjectionReadBackSnapshot,
         observation: MemoryProjectionObservation,
     ) -> int:
-        # The pinned App Server serializes reads and writes under one MemFS mutex.
-        # A verified read therefore proves that every prior authorized write in this
-        # logical projection lease has left the external-effect critical section.
+        if (
+            snapshot.scope != job.scope or snapshot.registry_id != job.target_registry_id
+            or snapshot.topic_id != job.topic_id or snapshot.claim_owner != job.worker_id
+            or snapshot.claim_fence != job.fence or observation.topic_id != snapshot.topic_id
+        ):
+            raise StaleInput("runtime observation does not match its projection read-back snapshot")
+        claim = await self._locked_claim(job)
+        if (
+            claim["state"] != "CLAIMED" or claim["operation_id"] != snapshot.operation_id
+            or claim["request_hash"] != snapshot.request_hash
+            or claim["desired_version"] != snapshot.source_version
+            or claim["payload_digest"] != snapshot.payload_digest
+        ):
+            raise StaleInput("projection claim changed before read-back guard resolution")
+        operation = (await self.connection.execute(select(tables.memory_projection_operations).where(
+            tables.memory_projection_operations.c.id == snapshot.operation_id,
+        ).with_for_update())).mappings().one_or_none()
+        if operation is None:
+            raise StaleInput("projection operation disappeared before guard resolution")
+        self._assert_snapshot_operation(operation, job=job, snapshot=snapshot)
+        candidate_ids = [candidate.id for candidate in snapshot.candidates]
+        if not candidate_ids:
+            return 0
         rows = (await self.connection.execute(select(tables.memory_projection_write_guards).where(
-            tables.memory_projection_write_guards.c.registry_id == registry_id,
-            tables.memory_projection_write_guards.c.lease_owner == lease_owner,
-            tables.memory_projection_write_guards.c.topic_id == topic_id,
-            tables.memory_projection_write_guards.c.state == "AUTHORIZED",
-        ).order_by(tables.memory_projection_write_guards.c.created_at, tables.memory_projection_write_guards.c.id).with_for_update())).mappings().all()
+            tables.memory_projection_write_guards.c.id.in_(candidate_ids),
+        ).order_by(tables.memory_projection_write_guards.c.id).with_for_update())).mappings().all()
+        by_id = {row["id"]: row for row in rows}
+        if len(by_id) != len(snapshot.candidates):
+            raise StaleInput("a captured projection write guard disappeared before resolution")
         count = 0
-        for row in rows:
+        for candidate in snapshot.candidates:
+            row = by_id[candidate.id]
+            if (
+                candidate.scope != snapshot.scope or candidate.registry_id != snapshot.registry_id
+                or candidate.topic_id != snapshot.topic_id or candidate.lease_owner != snapshot.lease_owner
+            ):
+                raise Conflict("captured projection write guard is outside its read-back binding")
+            if self._guard_candidate(row) != candidate:
+                raise Conflict("captured projection write guard identity changed")
+        candidate_operation_ids = sorted({
+            candidate.operation_id for candidate in snapshot.candidates
+            if candidate.operation_id != snapshot.operation_id
+        })
+        if candidate_operation_ids:
+            candidate_operations = (await self.connection.execute(select(
+                tables.memory_projection_operations,
+            ).where(
+                tables.memory_projection_operations.c.id.in_(candidate_operation_ids),
+            ).order_by(tables.memory_projection_operations.c.id).with_for_update())).mappings().all()
+            candidate_operations_by_id = {row["id"]: row for row in candidate_operations}
+            if len(candidate_operations_by_id) != len(candidate_operation_ids):
+                raise StaleInput("a captured projection write operation disappeared")
+            for candidate in snapshot.candidates:
+                prior_operation = candidate_operations_by_id.get(candidate.operation_id)
+                if prior_operation is None:
+                    continue
+                expected = (
+                    candidate.scope, candidate.topic_id, candidate.registry_id,
+                    candidate.source_version, candidate.request_hash, candidate.payload_digest,
+                )
+                actual = tuple(prior_operation[key] for key in (
+                    "scope", "topic_id", "target_registry_id", "source_version",
+                    "request_hash", "payload_digest",
+                ))
+                if actual != expected:
+                    raise Conflict("captured projection write guard operation identity changed")
+        for candidate in snapshot.candidates:
+            row = by_id[candidate.id]
+            if row["state"] != "AUTHORIZED":
+                continue
             effect_matches = (
                 observation.present
                 and observation.source_version == row["source_version"]
@@ -191,6 +322,18 @@ class PostgresProjectionRepository:
             ))
             count += 1
         return count
+
+    async def claim_generation_allows_lease_release(
+        self, job: ProjectionJob, operation_id: OperationId,
+    ) -> bool:
+        row = (await self.connection.execute(select(tables.memory_projections).where(
+            tables.memory_projections.c.scope == job.scope,
+            tables.memory_projections.c.topic_id == job.topic_id,
+            tables.memory_projections.c.target_registry_id == job.target_registry_id,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None or row["claim_fence"] != job.fence or row["operation_id"] != operation_id:
+            return False
+        return row["claim_owner"] in (job.worker_id, None)
 
     async def enable_pending(self, limit: int = 100) -> int:
         rows = (await self.connection.execute(select(
@@ -280,7 +423,11 @@ class PostgresProjectionRepository:
             tables.memory_projections.c.topic_id == job.topic_id,
             tables.memory_projections.c.target_registry_id == job.target_registry_id,
         ).with_for_update())).mappings().one_or_none()
-        if row is None or row["claim_owner"] != job.worker_id or row["claim_fence"] != job.fence or row["claim_expires_at"] <= aware_now():
+        if (
+            row is None or row["state"] != "CLAIMED"
+            or row["claim_owner"] != job.worker_id or row["claim_fence"] != job.fence
+            or row["claim_expires_at"] is None or row["claim_expires_at"] <= aware_now()
+        ):
             raise StaleInput("Position projection claim was superseded")
         return row
 
