@@ -1201,8 +1201,8 @@ async def _run(
         async with engine.connect() as connection:
             head_value = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             pg_version = await connection.scalar(text("SHOW server_version"))
-        if head_value != "0010_p5b_delib_maint":
-            raise ValueError("Phase 4 database migration head is not current")
+        if head_value != "0013_provider_token_measurement":
+            raise ValueError("Phase 4 provider-measurement migration head is not current")
         report["database"] = {"database_name": make_url(database_url).database, "postgres_version": pg_version, "migration_head": head_value}
 
         scope_text, principal_text = f"phase4:{run_id}", f"principal:{run_id}"
@@ -1231,8 +1231,9 @@ async def _run(
             "profile_id": "phase4-fake-v1", "model": f"openai-compatible/{p3.FAKE_MODEL}",
             "provider_model": p3.FAKE_MODEL, "max_input_tokens": 32768,
             "max_output_tokens": 2048, "max_compaction_calls": 1,
+            "model_revision": "fake-provider-chat-contract-v1", "context_window_tokens": 65536,
         }}), encoding="utf-8")
-        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase4-synthetic-v1", "prices": {
+        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase4-synthetic-v1", "effective_at": "2026-10-01T00:00:00Z", "prices": {
             p3.FAKE_MODEL: {"input_usd_per_million": "1", "output_usd_per_million": "2"},
         }}), encoding="utf-8")
 
@@ -1262,12 +1263,22 @@ async def _run(
         private_token = __import__("secrets").token_urlsafe(40)
         profile = ProviderGatewayProfile(
             profile_id="phase4-fake-v1",
-            price_table=p3.PriceTable(
-                model=p3.FAKE_MODEL, version="phase4-synthetic-v1",
-                input_usd_per_million=Decimal("1"), output_usd_per_million=Decimal("2"), synthetic=True,
-            ),
+            price_table=__import__("hekate.infrastructure.letta.token_accounting", fromlist=["test_execution_profile"]).test_execution_profile(
+                profile_id="phase4-fake-v1", model=p3.FAKE_MODEL,
+                model_revision="fake-provider-chat-contract-v1", context_window_tokens=65536,
+                max_input_tokens=32768, max_output_tokens=2048, pricing_version="phase4-synthetic-v1",
+                input_usd_per_million=Decimal("1"), output_usd_per_million=Decimal("2"),
+                pricing_effective_at="2026-10-01T00:00:00Z",
+            )[1],
             upstream_base_url=f"http://127.0.0.1:{fake.port}", upstream_api_key="isolated-fake-only",
             max_input_tokens=32768, max_output_tokens=2048, test_only=True,
+            execution_profile=__import__("hekate.infrastructure.letta.token_accounting", fromlist=["test_execution_profile"]).test_execution_profile(
+                profile_id="phase4-fake-v1", model=p3.FAKE_MODEL,
+                model_revision="fake-provider-chat-contract-v1", context_window_tokens=65536,
+                max_input_tokens=32768, max_output_tokens=2048, pricing_version="phase4-synthetic-v1",
+                input_usd_per_million=Decimal("1"), output_usd_per_million=Decimal("2"),
+                pricing_effective_at="2026-10-01T00:00:00Z",
+            )[0],
         )
         gateway_app = p3.create_provider_gateway(factory, profile, private_token, allow_test_profile=True)
         gateway_server, gateway_task = await p3.start_gateway_server(gateway_app, sandbox.gateway_address, gateway_port)

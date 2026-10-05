@@ -69,6 +69,10 @@ class TaskExecutionConfig:
     max_input_tokens: int
     max_output_tokens: int
     max_compaction_calls: int
+    context_window_tokens: int
+    model_revision: str
+    profile_digest: str
+    pricing_effective_at: str
 
 
 def snapshot_task(
@@ -156,6 +160,7 @@ class ExecutionEnvelope(ContractModel):
 class ProviderCallPlan(ContractModel):
     """Immutable admission plan for physical provider requests."""
     profile_id: str = Field(min_length=1, max_length=128)
+    profile_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     model: str = Field(min_length=1, max_length=256)
     pricing_version: str = Field(min_length=1, max_length=128)
     max_input_tokens: int = Field(ge=0)
@@ -545,6 +550,66 @@ class PriceTable:
     pricing_verified: bool = False
     tokenizer_verified: bool = False
     synthetic: bool = False
+    currency: str | None = None
+    unit: str | None = None
+    effective_at: str | None = None
+    usage_semantics: str | None = None
+
+
+class ProviderExecutionProfile(ContractModel):
+    """Content-addressed model, request, tokenizer, renderer, and pricing contract."""
+
+    profile_id: str = Field(min_length=1, max_length=128)
+    test_only: bool
+    provider: str = Field(min_length=1, max_length=128)
+    request_protocol: str = Field(min_length=1, max_length=128)
+    model: str = Field(min_length=1, max_length=256)
+    model_revision: str = Field(min_length=1, max_length=128)
+    context_window_tokens: int = Field(ge=1)
+    max_input_tokens: int = Field(ge=0)
+    max_output_tokens: int = Field(ge=1)
+    output_ceiling_includes_reasoning: bool
+    additional_reserved_tokens: int = Field(ge=0)
+    tokenizer_implementation: str = Field(min_length=1, max_length=128)
+    tokenizer_version: str = Field(min_length=1, max_length=64)
+    tokenizer_encoding: str = Field(min_length=1, max_length=128)
+    tokenizer_asset_revision: str = Field(min_length=1, max_length=128)
+    tokenizer_asset_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    renderer_id: str = Field(min_length=1, max_length=128)
+    renderer_revision: str = Field(min_length=1, max_length=128)
+    renderer_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    pricing_version: str = Field(min_length=1, max_length=128)
+    pricing_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    currency: str = Field(min_length=3, max_length=3)
+    pricing_unit: str = Field(min_length=1, max_length=64)
+    pricing_effective_at: str = Field(min_length=1, max_length=40)
+    usage_semantics: str = Field(min_length=1, max_length=128)
+    verification_state: Literal[
+        "TEST_CONTRACT_VERIFIED", "PRODUCTION_VERIFIED", "UNCONFIGURED", "UNSUPPORTED", "UNVERIFIED",
+    ]
+    evidence_digests: tuple[str, ...] = Field(min_length=1, max_length=16)
+
+    @property
+    def content_digest(self) -> str:
+        return canonical_json_hash(self)
+
+
+class ProviderRequestMeasurement(ContractModel):
+    """Non-content audit data binding a measured request to its frozen profile."""
+
+    request_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    profile_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    tokenizer_identity: str = Field(min_length=1, max_length=256)
+    renderer_identity: str = Field(min_length=1, max_length=256)
+    pricing_version: str = Field(min_length=1, max_length=128)
+    pricing_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    usage_semantics: str = Field(min_length=1, max_length=128)
+    measured_input_tokens: int = Field(ge=0)
+    requested_output_tokens: int = Field(ge=1)
+    context_window_tokens: int = Field(ge=1)
+    additional_reserved_tokens: int = Field(ge=0)
+    verification_state: Literal["TEST_CONTRACT_VERIFIED", "PRODUCTION_VERIFIED"]
+    measured_at: datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -651,6 +716,7 @@ class BillableCallIntent:
     lease_owner: str
     test_only: bool = False
     reservation_id: ReservationId | None = None
+    measurement: ProviderRequestMeasurement | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -664,6 +730,10 @@ class CallPermit:
     expires_at: datetime
     consumed: bool
     test_only: bool
+    measurement_status: str = "LEGACY_UNMEASURED"
+    request_digest: str | None = None
+    profile_digest: str | None = None
+    measured_input_tokens: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

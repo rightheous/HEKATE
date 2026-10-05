@@ -485,7 +485,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         async with engine.connect() as connection:
             head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres = await connection.scalar(text("SHOW server_version"))
-        if head != "0012_projection_write_guard":
+        if head != "0013_provider_token_measurement":
             raise AssertionError(f"unexpected migration head: {head}")
         report["database"] = {"name": make_url(database_url).database, "postgres_version": postgres, "migration_head": head}
 
@@ -511,9 +511,10 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         (config_dir / "models.yaml").write_text(yaml.safe_dump({"hekate": {
             "profile_id": "phase6a-fake-only-v1", "model": f"openai-compatible/{p3.FAKE_MODEL}",
             "provider_model": p3.FAKE_MODEL, "max_input_tokens": 32768, "max_output_tokens": 2048,
-            "max_compaction_calls": 0,
+            "max_compaction_calls": 0, "model_revision": "fake-provider-chat-contract-v1",
+            "context_window_tokens": 65536,
         }}), encoding="utf-8")
-        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase6a-synthetic-pricing-v1", "prices": {
+        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase6a-synthetic-pricing-v1", "effective_at": "2026-10-01T00:00:00Z", "prices": {
             p3.FAKE_MODEL: {"input_usd_per_million": "1", "output_usd_per_million": "2"},
         }}), encoding="utf-8")
 
@@ -531,6 +532,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         task_config = configured_task_execution(settings)
 
         fake = p3.FakeProvider()
+        fake.enable_test_token_inspection()
         fixture = ProjectionAwareResponses(response_observations)
         def checked_response(request: dict[str, object]) -> object:
             try:
@@ -544,16 +546,15 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         sandbox.start_network()
         gateway_port = p3.reserve_port(sandbox.gateway_address)
         private_token = __import__("secrets").token_urlsafe(40)
+        from hekate.infrastructure.letta.token_accounting import test_profile_and_price_for_config
+        task_execution_profile, task_price_table = test_profile_and_price_for_config(task_config)
         gateway_profile = ProviderGatewayProfile(
             profile_id=task_config.profile_id,
-            price_table=p3.PriceTable(
-                model=p3.FAKE_MODEL, version=task_config.pricing_version,
-                input_usd_per_million=task_config.input_usd_per_million,
-                output_usd_per_million=task_config.output_usd_per_million, synthetic=True,
-            ),
+            price_table=task_price_table,
             upstream_base_url=f"http://127.0.0.1:{fake.port}", upstream_api_key="isolated-fake-only",
             max_input_tokens=task_config.max_input_tokens, max_output_tokens=task_config.max_output_tokens,
             test_only=True,
+            execution_profile=task_execution_profile,
         )
         from hekate.infrastructure.letta.provider_gateway import create_provider_gateway
         gateway = create_provider_gateway(factory, gateway_profile, private_token, allow_test_profile=True)
@@ -1685,6 +1686,18 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
                 WHERE p.scope=:scope
             """), {"scope": str(scope)})
             confirmation_audits = await connection.scalar(text("SELECT count(*) FROM audit_events WHERE owner_scope=:scope AND event_kind='position.memory_projection.confirmed'"), {"scope": str(scope)})
+            measured_calls = (await connection.execute(text("""
+                SELECT p.accounting_call_id, p.call_kind, p.status, p.measurement_status,
+                       p.request_digest, p.profile_digest, p.measurement_data,
+                       cp.measurement_status AS permit_measurement_status,
+                       cp.request_digest AS permit_request_digest, cp.profile_digest AS permit_profile_digest,
+                       up.input_tokens AS observed_input_tokens
+                FROM provider_calls p
+                JOIN operations o ON o.id=p.operation_id
+                JOIN call_permits cp ON cp.accounting_call_id=p.accounting_call_id
+                LEFT JOIN usage_projections up ON up.accounting_call_id=p.accounting_call_id
+                WHERE o.owner_scope=:scope ORDER BY p.created_at,p.accounting_call_id
+            """), {"scope": str(scope)})).mappings().all()
             scope_cost = (await connection.execute(text("""
                 SELECT COALESCE(sum(ba.spent_amount),0)::text AS spent,
                        COALESCE(sum(ba.held_amount),0)::text AS held
@@ -1702,6 +1715,31 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
                 f"db={provider_call_count}, fake={fake.count()}, normal={normal_phase6_provider_requests}, "
                 f"serialization={serialization_provider_request_delta}"
             )
+        if len(measured_calls) != fake.count() or any(
+            row["measurement_status"] != "MEASURED"
+            or row["permit_measurement_status"] != "MEASURED"
+            or row["request_digest"] != row["permit_request_digest"]
+            or row["profile_digest"] != row["permit_profile_digest"]
+            or row["measurement_data"].get("request_digest") != row["request_digest"]
+            or row["measurement_data"].get("profile_digest") != row["profile_digest"]
+            or row["profile_digest"] != task_config.profile_digest
+            for row in measured_calls
+        ):
+            raise AssertionError("provider calls and permits do not share a complete frozen request measurement")
+        fake_by_digest = {str(item["raw_request_sha256"]): item for item in fake.requests}
+        if len(fake_by_digest) != fake.count() or any(
+            row["request_digest"] not in fake_by_digest
+            or row["measurement_data"].get("measured_input_tokens")
+            != fake_by_digest[row["request_digest"]].get("independent_input_tokens")
+            for row in measured_calls
+        ):
+            raise AssertionError("gateway measurements differ from the raw fake-upstream request or independent token count")
+        if not any(
+            row["observed_input_tokens"] is not None
+            and row["observed_input_tokens"] != row["measurement_data"].get("measured_input_tokens")
+            for row in measured_calls
+        ):
+            raise AssertionError("preflight token measurement was not kept distinct from provider usage observation")
         if linked_projection_ops != len(projection_ops):
             raise AssertionError("projection operation provenance did not link to its parent runtime operation")
         if fake.count() != memory_provider_count_before + 7:
@@ -1722,13 +1760,15 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             try:
                 await asyncio.to_thread(p3.command.downgrade, cfg, "-1")
             except Exception as error:
-                if "refusing to discard projection authorization and effect observations" not in str(error):
+                if "refusing to discard measured provider request history in call_permits" not in str(error):
                     raise
                 async with engine.connect() as connection:
                     guarded_head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
-                if guarded_head != "0012_projection_write_guard":
-                    raise AssertionError("populated projection write-guard downgrade changed the schema head") from error
-                report["results"]["populated_downgrade_guard"] = {"refused": True, "head_unchanged": True}
+                if guarded_head != "0013_provider_token_measurement":
+                    raise AssertionError("measured request downgrade changed the schema head") from error
+                report["results"]["populated_downgrade_guard"] = {
+                    "refused": True, "head_unchanged": True, "reason": str(error),
+                }
             else:
                 raise AssertionError("migration allowed destructive downgrade after memory projection progress")
         finally:
@@ -1791,6 +1831,25 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "projection_cost_calls": 0, "compaction_calls": 0, "synthetic_pricing_only": True,
             "unknown_or_unsettled_rows_in_isolated_phase6a_database": 0,
             "phase5b_unknown_hold_and_phase4_allocated_fixture": "separate Phase 5B regression database/artifact; not modified by Phase 6A probe",
+        }
+        report["phase6b_token_accounting"] = {
+            "verification_state": "TEST_CONTRACT_VERIFIED",
+            "production_profile_state": "UNCONFIGURED",
+            "profile_id": task_config.profile_id,
+            "profile_digest": task_config.profile_digest,
+            "measured_physical_calls": len(measured_calls),
+            "permit_measurements_match_call_measurements": True,
+            "raw_gateway_request_digest_matches_fake_upstream": True,
+            "independent_tiktoken_count_matches_gateway": True,
+            "preflight_measurement_is_separate_from_provider_usage": True,
+            "calls": [{
+                "accounting_call_id": row["accounting_call_id"], "call_kind": row["call_kind"],
+                "request_digest": row["request_digest"], "profile_digest": row["profile_digest"],
+                "measured_input_tokens": row["measurement_data"].get("measured_input_tokens"),
+                "requested_output_tokens": row["measurement_data"].get("requested_output_tokens"),
+                "context_window_tokens": row["measurement_data"].get("context_window_tokens"),
+                "provider_usage_input_tokens": row["observed_input_tokens"], "call_state": row["status"],
+            } for row in measured_calls],
         }
         report["runtime_memory_contract"] = {
             "path": "root MemFS core memory file hekate_positions.md",
@@ -1930,16 +1989,20 @@ def main() -> int:
             finally:
                 await target_engine.dispose()
         empty_upgraded = asyncio.run(migration_head(args.empty_migration_database_url))
-        if empty_upgraded != "0012_projection_write_guard":
-            raise AssertionError(f"fresh upgrade did not reach the projection write-guard head: {empty_upgraded}")
+        if empty_upgraded != "0013_provider_token_measurement":
+            raise AssertionError(f"fresh upgrade did not reach the Phase 6B migration head: {empty_upgraded}")
         p3.command.downgrade(empty_cfg, "-1")
         empty_downgraded = asyncio.run(migration_head(args.empty_migration_database_url))
-        if empty_downgraded != "0011_phase6a_memory_projection":
-            raise AssertionError(f"empty projection write-guard downgrade did not stop at 0011: {empty_downgraded}")
+        if empty_downgraded != "0012_projection_write_guard":
+            raise AssertionError(f"empty Phase 6B downgrade did not stop at 0012: {empty_downgraded}")
+        p3.command.downgrade(empty_cfg, "-1")
+        empty_downgraded_0012 = asyncio.run(migration_head(args.empty_migration_database_url))
+        if empty_downgraded_0012 != "0011_phase6a_memory_projection":
+            raise AssertionError(f"empty projection write-guard downgrade did not stop at 0011: {empty_downgraded_0012}")
         p3.command.upgrade(empty_cfg, "head")
         empty_reupgraded = asyncio.run(migration_head(args.empty_migration_database_url))
-        if empty_reupgraded != "0012_projection_write_guard":
-            raise AssertionError(f"empty projection re-upgrade failed: {empty_reupgraded}")
+        if empty_reupgraded != "0013_provider_token_measurement":
+            raise AssertionError(f"empty Phase 6B re-upgrade failed: {empty_reupgraded}")
     finally:
         if prior_url is None:
             os.environ.pop("HEKATE_DATABASE_URL", None)

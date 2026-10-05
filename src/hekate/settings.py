@@ -13,6 +13,7 @@ import yaml
 
 from hekate.domain.models import TaskExecutionConfig
 from hekate.domain.types import ActorContext, PrincipalId, ScopeId
+from hekate.infrastructure.letta.token_accounting import test_execution_profile
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +96,8 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
     letta_model = profile.get("model")
     model = profile.get("provider_model")
     profile_id = profile.get("profile_id")
+    model_revision = profile.get("model_revision")
+    context_window_tokens = profile.get("context_window_tokens")
     pricing_version = settings.pricing.get("version")
     prices = settings.pricing.get("prices")
     price = prices.get(model) if isinstance(prices, dict) and isinstance(model, str) else None
@@ -122,8 +125,25 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
             raise ValueError(f"{name} must be an explicitly configured nonnegative integer")
         return value
 
-    if not all(isinstance(value, str) and value for value in (letta_model, model, profile_id, pricing_version)):
-        raise ValueError("fixed Letta model, provider model, profile_id, and pricing version are required")
+    if not all(isinstance(value, str) and value for value in (letta_model, model, profile_id, pricing_version, model_revision)):
+        raise ValueError("fixed Letta model, provider model, model revision, profile_id, and pricing version are required")
+    if settings.runtime_mode != "test":
+        raise ValueError("production provider profiles remain blocked pending model, tokenizer, renderer, and pricing evidence")
+    context_window = integer_value(context_window_tokens, "context_window_tokens")
+    max_input_tokens = integer_value(profile.get("max_input_tokens"), "max_input_tokens")
+    max_output_tokens = integer_value(profile.get("max_output_tokens"), "max_output_tokens")
+    pricing_effective_at = settings.pricing.get("effective_at")
+    if not isinstance(pricing_effective_at, str) or not pricing_effective_at:
+        raise ValueError("pricing effective_at is required for the fixed test contract")
+    input_price = decimal_value(price.get("input_usd_per_million"), "input_usd_per_million", allow_zero=True)
+    output_price = decimal_value(price.get("output_usd_per_million"), "output_usd_per_million", allow_zero=True)
+    execution_profile, _ = test_execution_profile(
+        profile_id=profile_id, model=model, model_revision=model_revision,
+        context_window_tokens=context_window, max_input_tokens=max_input_tokens,
+        max_output_tokens=max_output_tokens, pricing_version=pricing_version,
+        input_usd_per_million=input_price, output_usd_per_million=output_price,
+        pricing_effective_at=pricing_effective_at,
+    )
     return TaskExecutionConfig(
         task_budget_usd=decimal_value(limits.get("task_budget_usd"), "task_budget_usd"),
         system_daily_budget_usd=decimal_value(limits.get("system_daily_budget_usd"), "system_daily_budget_usd"),
@@ -132,11 +152,15 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
         letta_model=letta_model,
         model=model,
         pricing_version=pricing_version,
-        input_usd_per_million=decimal_value(price.get("input_usd_per_million"), "input_usd_per_million", allow_zero=True),
-        output_usd_per_million=decimal_value(price.get("output_usd_per_million"), "output_usd_per_million", allow_zero=True),
-        max_input_tokens=integer_value(profile.get("max_input_tokens"), "max_input_tokens"),
-        max_output_tokens=integer_value(profile.get("max_output_tokens"), "max_output_tokens"),
+        input_usd_per_million=input_price,
+        output_usd_per_million=output_price,
+        max_input_tokens=max_input_tokens,
+        max_output_tokens=max_output_tokens,
         max_compaction_calls=nonnegative_integer(profile.get("max_compaction_calls"), "max_compaction_calls"),
+        context_window_tokens=context_window,
+        model_revision=model_revision,
+        profile_digest=execution_profile.content_digest,
+        pricing_effective_at=pricing_effective_at,
     )
 
 
@@ -164,7 +188,7 @@ _EXECUTION_CONFIG_FIELDS = frozenset({
     "task_budget_usd", "system_daily_budget_usd", "deadline_seconds", "profile_id",
     "letta_model", "model", "pricing_version", "input_usd_per_million",
     "output_usd_per_million", "max_input_tokens", "max_output_tokens",
-    "max_compaction_calls",
+    "max_compaction_calls", "context_window_tokens", "model_revision", "profile_digest", "pricing_effective_at",
 })
 
 
@@ -183,6 +207,10 @@ def execution_config_snapshot(config: TaskExecutionConfig) -> dict[str, object]:
         "max_input_tokens": config.max_input_tokens,
         "max_output_tokens": config.max_output_tokens,
         "max_compaction_calls": config.max_compaction_calls,
+        "context_window_tokens": config.context_window_tokens,
+        "model_revision": config.model_revision,
+        "profile_digest": config.profile_digest,
+        "pricing_effective_at": config.pricing_effective_at,
     }
 
 
@@ -194,8 +222,8 @@ def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig
         "task_budget_usd", "system_daily_budget_usd",
         "input_usd_per_million", "output_usd_per_million",
     }
-    string_names = {"profile_id", "letta_model", "model", "pricing_version"}
-    integer_names = {"deadline_seconds", "max_input_tokens", "max_output_tokens", "max_compaction_calls"}
+    string_names = {"profile_id", "letta_model", "model", "pricing_version", "model_revision", "profile_digest", "pricing_effective_at"}
+    integer_names = {"deadline_seconds", "max_input_tokens", "max_output_tokens", "max_compaction_calls", "context_window_tokens"}
     if any(not isinstance(value.get(name), str) or not value[name] for name in string_names):
         raise ValueError("persisted workflow execution profile has an invalid identity")
     if any(type(value.get(name)) is not int for name in integer_names):
@@ -220,6 +248,10 @@ def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig
         max_input_tokens=value["max_input_tokens"],
         max_output_tokens=value["max_output_tokens"],
         max_compaction_calls=value["max_compaction_calls"],
+        context_window_tokens=value["context_window_tokens"],
+        model_revision=value["model_revision"],
+        profile_digest=value["profile_digest"],
+        pricing_effective_at=value["pricing_effective_at"],
     )
 
 
@@ -264,13 +296,6 @@ def validate_settings(settings: Settings) -> None:
     if version != "v22.19.0":
         raise ValueError("HEKATE bridge requires the pinned Node.js 22.19.0 runtime")
     if settings.runtime_mode == "production":
-        model_profiles = [settings.models.get("hekate"), settings.models.get("critic")]
-        has_verified_model = any(
-            isinstance(profile, dict)
-            and profile.get("verified") is True
-            and profile.get("tokenizer_verified") is True
-            for profile in model_profiles
-        )
-        pricing_verified = settings.pricing.get("version") not in {None, "unconfigured"} and bool(settings.pricing.get("prices"))
-        if not has_verified_model or not pricing_verified:
-            raise ValueError("no approved model, tokenizer, and pricing profile; production dispatch stays closed")
+        # There is no production evidence bundle or operator approval record in this repository.
+        # YAML booleans and a nonempty price table cannot establish an exact provider request contract.
+        raise ValueError("no approved model, tokenizer, renderer, and pricing evidence; production dispatch stays closed")

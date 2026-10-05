@@ -49,6 +49,16 @@ def _same_binding(stored: object, binding: GuardBinding) -> bool:
     return stored == _json_value(binding)
 
 
+def _call_intent_hash(call: BillableCallIntent) -> str:
+    value = {field.name: getattr(call, field.name) for field in fields(call)}
+    measurement = value.get("measurement")
+    if measurement is not None:
+        measurement_value = measurement.model_dump(mode="json")
+        measurement_value.pop("measured_at", None)
+        value["measurement"] = measurement_value
+    return canonical_json_hash(value)
+
+
 _BINDING_KEYS = frozenset(field.name for field in fields(GuardBinding))
 
 
@@ -212,6 +222,8 @@ async def authorize_provider_call(factory: UowFactory, call: BillableCallIntent)
         dispatch = await uow.delivery.get_dispatch_payload(call.operation_id)
         dispatch_input = dispatch.get("payload") if isinstance(dispatch, Mapping) else None
         raw_plan = dispatch_input.get("call_plan") if isinstance(dispatch_input, Mapping) else None
+        if call.measurement is None and not call.test_only:
+            raise PolicyDenied("provider request has no final-request token measurement")
         if raw_plan is None:
             if not call.test_only:
                 raise PolicyDenied("provider call has no admission-bound call plan")
@@ -228,6 +240,15 @@ async def authorize_provider_call(factory: UowFactory, call: BillableCallIntent)
                 or call.limits.max_output_tokens > plan.max_output_tokens
             ):
                 raise PolicyDenied("provider call exceeds its admission-bound token plan")
+            if call.measurement is not None:
+                if (
+                    plan.profile_digest is None
+                    or call.measurement.profile_digest != plan.profile_digest
+                    or call.measurement.requested_output_tokens != call.limits.max_output_tokens
+                    or call.measurement.measured_input_tokens > min(call.limits.max_input_tokens, plan.max_input_tokens)
+                    or call.measurement.verification_state not in {"TEST_CONTRACT_VERIFIED", "PRODUCTION_VERIFIED"}
+                ):
+                    raise PolicyDenied("provider request measurement differs from its admitted call plan")
             existing_call = await uow.budgets.get_call_descriptor(call.accounting_call_id)
             call_count = await uow.budgets.count_calls_by_kind(call.operation_id, call.call_kind) if existing_call is None else 0
             if existing_call is None and call_count >= role_limit:
@@ -238,7 +259,7 @@ async def authorize_provider_call(factory: UowFactory, call: BillableCallIntent)
             reservation_id,
             attempt.id,
             envelope,
-            canonical_json_hash(call),
+            _call_intent_hash(call),
         )
         await _validate_provider_context(uow, call.operation_id, task, call.binding)
         await uow.commit()
@@ -251,6 +272,9 @@ async def consume_call_permit(
     lease_owner: str,
     permit_id: PermitId,
     accounting_call_id: AccountingCallId,
+    *,
+    expected_request_digest: str | None = None,
+    expected_profile_digest: str | None = None,
 ) -> CallPermit:
     async with factory() as uow:
         descriptor = await uow.budgets.get_call_descriptor(accounting_call_id)
@@ -270,10 +294,21 @@ async def consume_call_permit(
             or descriptor["conversation_id"] != binding.conversation_id
         ):
             raise Conflict("permit is bound to another runtime identity")
+        if expected_request_digest is not None and (
+            descriptor.get("request_digest") != expected_request_digest
+            or descriptor.get("measurement_status") != "MEASURED"
+        ):
+            raise Conflict("permit is bound to another measured provider request")
+        if expected_profile_digest is not None and descriptor.get("profile_digest") != expected_profile_digest:
+            raise Conflict("permit is bound to another immutable execution profile")
         envelope = ExecutionEnvelope.model_validate_json(canonical_json(operation["envelope"]))
         if envelope.deadline <= datetime.now(UTC):
             raise PolicyDenied("operation deadline expired")
-        permit = await uow.budgets.consume_call_permit(permit_id, accounting_call_id)
+        permit = await uow.budgets.consume_call_permit(
+            permit_id, accounting_call_id,
+            expected_request_digest=expected_request_digest,
+            expected_profile_digest=expected_profile_digest,
+        )
         await _validate_provider_context(uow, OperationId(descriptor["operation_id"]), task, binding)
         await uow.commit()
         return permit

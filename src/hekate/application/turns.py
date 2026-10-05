@@ -361,7 +361,7 @@ async def prepare_queued_tasks(
                 max_tool_calls=0, fence=lease.fence, reservation_id=reservation_id,
             )
             call_plan = ProviderCallPlan(
-                profile_id=config.profile_id, model=config.model,
+                profile_id=config.profile_id, profile_digest=config.profile_digest, model=config.model,
                 pricing_version=config.pricing_version, max_input_tokens=config.max_input_tokens,
                 max_output_tokens=config.max_output_tokens, main_turn_calls=1,
                 compaction_calls=config.max_compaction_calls, retry_calls=0,
@@ -744,7 +744,8 @@ async def prepare_critic_workflow_steps(
                 fence=lease.fence, reservation_id=reservation_id,
             )
             call_plan = ProviderCallPlan(
-                profile_id=config.profile_id, model=config.model, pricing_version=config.pricing_version,
+                profile_id=config.profile_id, profile_digest=config.profile_digest,
+                model=config.model, pricing_version=config.pricing_version,
                 max_input_tokens=config.max_input_tokens, max_output_tokens=config.max_output_tokens,
                 main_turn_calls=1, compaction_calls=config.max_compaction_calls, retry_calls=0,
             )
@@ -1121,7 +1122,8 @@ async def prepare_deliberation_steps(
                 fence=lease.fence, reservation_id=reservation_id,
             )
             call_plan = ProviderCallPlan(
-                profile_id=config.profile_id, model=config.model, pricing_version=config.pricing_version,
+                profile_id=config.profile_id, profile_digest=config.profile_digest,
+                model=config.model, pricing_version=config.pricing_version,
                 max_input_tokens=config.max_input_tokens, max_output_tokens=config.max_output_tokens,
                 main_turn_calls=1, compaction_calls=config.max_compaction_calls, retry_calls=0,
             )

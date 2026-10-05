@@ -1,0 +1,1041 @@
+{
+  "accounting_and_deferred_states": {
+    "actual_provider_api_calls": 0,
+    "g7_same_execution_resume": "deferred",
+    "g8_production_tokenization": "blocked_pending_model_and_request_semantics_evidence",
+    "phase3_pending_call_reasons": [
+      {
+        "accounting_call_id": "acc:p3-20261005T134247Z-6b771723:t2-compaction",
+        "call_state": "QUIESCENT",
+        "operation_id": "operation:p3-20261005T134247Z-6b771723:t2:roles",
+        "permit_state": "CONSUMED",
+        "reason": "usage_conflict_requires_reconciliation",
+        "settlement_state": "CONFLICT"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T134247Z-6b771723:t5-consumed-before-send",
+        "call_state": "CONSUMED",
+        "operation_id": "operation:p3-20261005T134247Z-6b771723:t2:roles",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T134247Z-6b771723:t5-consume-failure",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261005T134247Z-6b771723:t2:roles",
+        "permit_state": "REVOKED",
+        "reason": "permit_revoked_before_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "189b7928-9e12-4bba-921f-20500a0b9085",
+        "call_state": "UNKNOWN",
+        "operation_id": "operation:p3-20261005T134247Z-6b771723:t4:disconnect",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T134247Z-6b771723:t5-authorize-cancellation",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261005T134247Z-6b771723:t5-cancellation:t5-cancellation",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T134247Z-6b771723:t5-db-consume",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261005T134247Z-6b771723:t5-db-consume:t5-db-consume",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T134247Z-6b771723:t5-post-forward-db-failure",
+        "call_state": "CONSUMED",
+        "operation_id": "operation:p3-20261005T134247Z-6b771723:t5-post-forward-db-failure:t5-post-forward-db-failure",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T134247Z-6b771723:t5-authorize-revision",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261005T134247Z-6b771723:t5-revision:t5-revision",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      }
+    ],
+    "phase5b_artifact": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase5b.json",
+    "phase6a_isolated_database_unsettled_calls": 0,
+    "production_dispatch": "blocked"
+  },
+  "baseline_head": "5ed7acba82ee6d3633d7f22e3a195a8534f25a34",
+  "branch": "phase6b-token-accounting",
+  "checks": {
+    "phase3_legacy_verifier": true,
+    "t1_input_and_context_boundaries": true,
+    "t2_profile_and_asset_fail_closed": true,
+    "t3_request_and_profile_binding": true,
+    "t4_actual_runtime_full_request_and_memory": true,
+    "t5_actual_runtime_compaction": true,
+    "t6_phase_restarts_and_accounting_regressions": true,
+    "zero_real_provider_calls_and_production_blocked": true
+  },
+  "child_artifacts_reused": true,
+  "children": [
+    {
+      "artifact": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase3.json",
+      "database": {
+        "migration_head": "0013_provider_token_measurement",
+        "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+      },
+      "exit_code": 0,
+      "fake_provider_requests": 8,
+      "label": "phase3_runtime_and_final_gateway_guards",
+      "overall_status": "pass",
+      "real_provider_calls": 0,
+      "redacted_command": [
+        "reuse_completed_child_artifact",
+        "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase3.json"
+      ],
+      "script": "phase3-runtime-dispatch",
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "artifact": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase6a.json",
+      "database": {
+        "migration_head": "0013_provider_token_measurement",
+        "name": "hekate_phase6a_p6b_runtime",
+        "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+      },
+      "exit_code": 0,
+      "fake_provider_requests": 9,
+      "label": "phase6a_projection_and_full_request_regression",
+      "overall_status": "pass",
+      "real_provider_calls": 0,
+      "redacted_command": [
+        "reuse_completed_child_artifact",
+        "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase6a.json"
+      ],
+      "script": "phase6a-memory-projection",
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "artifact": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase5b.json",
+      "database": {
+        "migration_head": "0013_provider_token_measurement",
+        "name": "hekate_phase5b_tokenaccount_runtime",
+        "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+      },
+      "exit_code": 0,
+      "fake_provider_requests": 62,
+      "label": "phase5b_deliberation_and_unknown_hold_regression",
+      "overall_status": "pass",
+      "real_provider_calls": 0,
+      "redacted_command": [
+        "reuse_completed_child_artifact",
+        "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase5b.json"
+      ],
+      "script": "phase5b-bounded-deliberation",
+      "stderr_tail": "",
+      "stdout_tail": ""
+    }
+  ],
+  "code_fingerprint_sha256": "9697fa022164c56de163f42f2f952816fb3eedac7541879fd31e31761da2876b",
+  "commands": [
+    [
+      "reuse_completed_child_artifact",
+      "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase3.json"
+    ],
+    [
+      "reuse_completed_child_artifact",
+      "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase6a.json"
+    ],
+    [
+      "reuse_completed_child_artifact",
+      "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase5b.json"
+    ],
+    [
+      "reuse_phase3_verifier_artifact",
+      "integration/runtime/artifacts/p3-20261005T135809Z-adb3ad1e.json"
+    ]
+  ],
+  "configuration_digests": {
+    "models": "1bf9e3417a047f9d7ff19b7b56ee068358401ce0ea2091f8b91df571e2e2ffb6",
+    "pricing": "96a389fee417d6d50f4871de63fb2f92b65f5cf8aed8ddf9c96142e868071996"
+  },
+  "configuration_state": {
+    "models": "UNCONFIGURED_FOR_PRODUCTION",
+    "pricing": "UNCONFIGURED_FOR_PRODUCTION"
+  },
+  "database_names": {
+    "hekate_phase3_test": "p3_runtime",
+    "hekate_phase5b_tokenaccount_empty": "p5b_empty",
+    "hekate_phase5b_tokenaccount_runtime": "p5b_runtime",
+    "hekate_phase6a_p6b_empty": "p6a_empty",
+    "hekate_phase6a_p6b_runtime": "p6a_runtime"
+  },
+  "executed_at": "2026-10-05T14:01:00.008388Z",
+  "file_digests": [
+    {
+      "bytes": 194,
+      "path": "config/models.yaml",
+      "sha256": "1bf9e3417a047f9d7ff19b7b56ee068358401ce0ea2091f8b91df571e2e2ffb6"
+    },
+    {
+      "bytes": 129,
+      "path": "config/pricing.yaml",
+      "sha256": "96a389fee417d6d50f4871de63fb2f92b65f5cf8aed8ddf9c96142e868071996"
+    },
+    {
+      "bytes": 6589,
+      "path": "docs/implementation/phase6b-token-accounting.md",
+      "sha256": "eaf31ceade94fd39c9871917472de2f7c9d4b356c917626e178127abd1979eb0"
+    },
+    {
+      "bytes": 790,
+      "path": "migrations/versions/0001_operations.py",
+      "sha256": "402e8f9e75a03f6c19eaae70991948439e31711bc060356535a6a39fe621cf2a"
+    },
+    {
+      "bytes": 867,
+      "path": "migrations/versions/0002_budget.py",
+      "sha256": "7f67eea625ab33bdc0fb0297ba0364be38e7b3395efab68548c7597f0253079b"
+    },
+    {
+      "bytes": 1235,
+      "path": "migrations/versions/0003_runtime_dispatch.py",
+      "sha256": "7fd6e361c746a29da9a75a232438b9eb192fecd84967c15e1ffe0b89f8c6389a"
+    },
+    {
+      "bytes": 940,
+      "path": "migrations/versions/0004_terminal_inbox.py",
+      "sha256": "d487a6c053cf69c9921517f19fbd3ad462b038b1ad4c2eecd0ee22f6139202c0"
+    },
+    {
+      "bytes": 6134,
+      "path": "migrations/versions/0005_phase3b.py",
+      "sha256": "ba521737e0c8cad4ba961053c2c55152e7d15c3d1a7064681111f1d44253a4d3"
+    },
+    {
+      "bytes": 12608,
+      "path": "migrations/versions/0006_phase4_knowledge.py",
+      "sha256": "816ddbdbfcc13746e87bc23cf3582713a7b8361008a876f00b93277e7fe31f7c"
+    },
+    {
+      "bytes": 3520,
+      "path": "migrations/versions/0007_phase5a_critic_workflows.py",
+      "sha256": "6f988a5d89a288560a393faad2ae9cb12e4f1585defcfdfb4e0218e73d474caa"
+    },
+    {
+      "bytes": 4308,
+      "path": "migrations/versions/0008_phase5b_deliberation_steps.py",
+      "sha256": "f5af1fe16db89be05b4adf98216688e26bb16fc662956aaa2000027198f321be"
+    },
+    {
+      "bytes": 1176,
+      "path": "migrations/versions/0009_phase5b_parent_attempt_identity.py",
+      "sha256": "4d003e16591a123b14a831779c8af9c51b8982bdbcec1c4dab4ac617952f94c4"
+    },
+    {
+      "bytes": 1562,
+      "path": "migrations/versions/0010_p5b_delib_maint.py",
+      "sha256": "337ee1937a92ec3a79d614199036e26eb413679ad9dda4b426aaff02e266eb07"
+    },
+    {
+      "bytes": 6023,
+      "path": "migrations/versions/0011_phase6a_memory_projection.py",
+      "sha256": "5ca44feed5da3b6a592c7d52156218ff5d50d5c47e2050ceaf53f9d12656a56c"
+    },
+    {
+      "bytes": 4654,
+      "path": "migrations/versions/0012_projection_write_guard.py",
+      "sha256": "a5b0d128bf4542b3e90919566b6c718b1d70df56ede05b0af454f6883459d779"
+    },
+    {
+      "bytes": 2309,
+      "path": "migrations/versions/0013_provider_request_measurements.py",
+      "sha256": "b000f455c1dd124c8c1360aebf170a51a3f6dbdca32fc0acf49b11ec031d3d72"
+    },
+    {
+      "bytes": 832,
+      "path": "pyproject.toml",
+      "sha256": "7186ad657634a039777f48b1c8c1d6fc32503fa7252ad934fa21a2c48c941531"
+    },
+    {
+      "bytes": 110117,
+      "path": "scripts/phase3_runtime_probe.py",
+      "sha256": "0c7d85419756334ca9d48f75b0f4a9b786e7bb7d5400a1381a4053795b79dcc2"
+    },
+    {
+      "bytes": 236353,
+      "path": "scripts/phase5b_bounded_deliberation_probe.py",
+      "sha256": "87690f750afa0bba63b786499ece0cc403d184c8291c9e383884ad4a90148b5b"
+    },
+    {
+      "bytes": 122646,
+      "path": "scripts/phase6a_memory_projection_probe.py",
+      "sha256": "5650387b6dbb5fb5421a58cc7c73551f7570d652ebfb184616761bbd928e0980"
+    },
+    {
+      "bytes": 20483,
+      "path": "scripts/phase6b_token_accounting_probe.py",
+      "sha256": "218aea19db02879c9647b83e0ee875e1d7c64eca573bf7cf3020ee25172ae3c9"
+    },
+    {
+      "bytes": 0,
+      "path": "src/hekate/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7972,
+      "path": "src/hekate/__main__.py",
+      "sha256": "fd30a665f765f9d577d53a1a632d014b382bc4b9b4e225d417e348dc11f1b78b"
+    },
+    {
+      "bytes": 445,
+      "path": "src/hekate/api/app.py",
+      "sha256": "7e0619d2061cac81c0e6dc1fcecadfc44f4343f215d5b32aa6f02d0c7760543b"
+    },
+    {
+      "bytes": 355,
+      "path": "src/hekate/api/auth.py",
+      "sha256": "2461895f55336b62d90b9953002deb23ca35a1c29050c598e7df77505d3c33f5"
+    },
+    {
+      "bytes": 1652,
+      "path": "src/hekate/api/routes.py",
+      "sha256": "392d1c59bedff7dfdf2cfaab7cc567833aaaacc74859d2690b4fbb005dc1eb4a"
+    },
+    {
+      "bytes": 30381,
+      "path": "src/hekate/application/budgets.py",
+      "sha256": "68d269a30467388e3862ea1a461ac0763cc89b26f9facb6b0e3178ea1aa2aab4"
+    },
+    {
+      "bytes": 19275,
+      "path": "src/hekate/application/evidence.py",
+      "sha256": "a174ad8dfd26be4663c3456f93f9b5f51b822dd0b81e2e0021e5a2ed969e34e9"
+    },
+    {
+      "bytes": 81898,
+      "path": "src/hekate/application/lifecycle.py",
+      "sha256": "25eaab36e7013d1493618930c2ff50dba4262cfea85176975215d3bd64da18a2"
+    },
+    {
+      "bytes": 30281,
+      "path": "src/hekate/application/operations.py",
+      "sha256": "579a3931fd8ab47a1f0797d8a52370da280e0f7c3c6ac2cf031aacb2dfb89d2b"
+    },
+    {
+      "bytes": 12069,
+      "path": "src/hekate/application/positions.py",
+      "sha256": "833c9b6a36510d77d94f8bcf3653034b2f9c16da2211258f2f68475b018eed1e"
+    },
+    {
+      "bytes": 29181,
+      "path": "src/hekate/application/projections.py",
+      "sha256": "8f3c7daed6c177f7080d4830aca262cbe98b30499ffa9337ab794cabadb63876"
+    },
+    {
+      "bytes": 665,
+      "path": "src/hekate/application/recovery.py",
+      "sha256": "fa0ff49aaad0ca8923f5ae6de40fb06f0ca48c88dfc0151026dfb10a25807b85"
+    },
+    {
+      "bytes": 71581,
+      "path": "src/hekate/application/results.py",
+      "sha256": "edaf656eefad22052ba98713113ce6a4c2b8d6fa5b3d3290854bb64cc5c68b53"
+    },
+    {
+      "bytes": 13720,
+      "path": "src/hekate/application/runtime_inbox.py",
+      "sha256": "d0f94451f1053fa4635fd3d4370b2e5f3d71dc9d0625b92735cd67099848c87e"
+    },
+    {
+      "bytes": 854,
+      "path": "src/hekate/application/scheduler.py",
+      "sha256": "14a801301700bc510b6de9d8788f155b571eddad18e3f0664edeb3fc2a269c50"
+    },
+    {
+      "bytes": 16983,
+      "path": "src/hekate/application/tasks.py",
+      "sha256": "7e05907c674790e756b225d2f7f5ec73d81121795a13d4094a902147498e3f20"
+    },
+    {
+      "bytes": 602,
+      "path": "src/hekate/application/tools.py",
+      "sha256": "31347b180f5a57f0fd9a85d465d03c3dce4d8aa4d58ba40e51fdd1afa0ae06ef"
+    },
+    {
+      "bytes": 70403,
+      "path": "src/hekate/application/turns.py",
+      "sha256": "872d3299c3b4f7dddfb3480da127e6dc071c5816098ddc726fd847e346531e05"
+    },
+    {
+      "bytes": 1862,
+      "path": "src/hekate/bootstrap.py",
+      "sha256": "56fc8e6aac9acf9a5a02d2853359da8dc26507310e1d3321c4cd96f9b832072b"
+    },
+    {
+      "bytes": 9278,
+      "path": "src/hekate/domain/bridge_contracts.py",
+      "sha256": "cee3aa112cd750479a890415dfb492ab95adc76833e050f09c8c2d8748c7238b"
+    },
+    {
+      "bytes": 2352,
+      "path": "src/hekate/domain/budget_math.py",
+      "sha256": "70a569d36d720b2464ecda40ac3389a3c3cccf70002b7aee407fb1068571bcbe"
+    },
+    {
+      "bytes": 6975,
+      "path": "src/hekate/domain/capsules.py",
+      "sha256": "5ffe1d5a18cb5516d2634ef5fb5f8e3761ff13bd18c92a0fb62357bf969bc7a3"
+    },
+    {
+      "bytes": 2769,
+      "path": "src/hekate/domain/contracts.py",
+      "sha256": "51c639364768c256622d152e4c91767cb8cedc541053e1b8eed78aa1efa0c76f"
+    },
+    {
+      "bytes": 1737,
+      "path": "src/hekate/domain/errors.py",
+      "sha256": "fcdf8d67b504a656245a0d72187ca2f7018a51ca1a3f3a41bdf3e03537b2d146"
+    },
+    {
+      "bytes": 37975,
+      "path": "src/hekate/domain/models.py",
+      "sha256": "f67061072d294f6023b4d75bb71a4785bc0fc08cb144f034af87435800e0a504"
+    },
+    {
+      "bytes": 732,
+      "path": "src/hekate/domain/policy.py",
+      "sha256": "1b6e0ea5cc80a7448397001061f4bda2c48e537b2c135f4cd44741104b804381"
+    },
+    {
+      "bytes": 709,
+      "path": "src/hekate/domain/proposals.py",
+      "sha256": "04a17d460a96aaae1aff375d845e5a522c67ee3cbef1e2ecc902835d8583ac22"
+    },
+    {
+      "bytes": 3725,
+      "path": "src/hekate/domain/transitions.py",
+      "sha256": "7a1f895d5e13f96be64e61708576560e19178bc5f3a6f6908e167ff5e671b32a"
+    },
+    {
+      "bytes": 3800,
+      "path": "src/hekate/domain/types.py",
+      "sha256": "43e64ad65ace3b7c965dfded67bc5060e990d1b235fc0cc21a9a9c0924d244f3"
+    },
+    {
+      "bytes": 422,
+      "path": "src/hekate/evaluation/runner.py",
+      "sha256": "610dededc85cfe5f9cf29071e2f5b5be9e7586543648f29d450c9df7a8878d06"
+    },
+    {
+      "bytes": 404,
+      "path": "src/hekate/evaluation/scoring.py",
+      "sha256": "9abace65fe5f58b8d1d1d50e8b8713e21c7b859608d8fba6aace9389b91bad6b"
+    },
+    {
+      "bytes": 6443,
+      "path": "src/hekate/infrastructure/archive.py",
+      "sha256": "c2272e6d3c350f6ed4e1f4d835f60d6ef57cd9077ce3e9c83c2f3b3852bc1e94"
+    },
+    {
+      "bytes": 11512,
+      "path": "src/hekate/infrastructure/letta/adapter.py",
+      "sha256": "67df98d65ffa1c5cfd9ebacba8fbaa16dd733b02c68ed274305732a97dd472dc"
+    },
+    {
+      "bytes": 1681126,
+      "path": "src/hekate/infrastructure/letta/assets/cl100k_base.tiktoken",
+      "sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7"
+    },
+    {
+      "bytes": 1134,
+      "path": "src/hekate/infrastructure/letta/assets/test_chat_contract.v1.json",
+      "sha256": "b085b61a959742d3cf33d50169d3895a1f15dd5bc3f6539aadfd0e8128622373"
+    },
+    {
+      "bytes": 7388,
+      "path": "src/hekate/infrastructure/letta/bridge_protocol.py",
+      "sha256": "49ab2cb1d3df23df1cac93d5758a5e9132d38bc7cffbb436dd52b6cef552cd0a"
+    },
+    {
+      "bytes": 24912,
+      "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+      "sha256": "b460b469cc2dd1a341eb8bf7f94c274bffd719b3bdf9f5d637826dd6be7197fa"
+    },
+    {
+      "bytes": 19647,
+      "path": "src/hekate/infrastructure/letta/token_accounting.py",
+      "sha256": "7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7"
+    },
+    {
+      "bytes": 352,
+      "path": "src/hekate/infrastructure/observability.py",
+      "sha256": "cfd98aaa5afd62cc64e67272d2a073a098e3444e7ab4299b740b481bea14931d"
+    },
+    {
+      "bytes": 14133,
+      "path": "src/hekate/infrastructure/postgres/agent_repository.py",
+      "sha256": "2ec251250bf042a7d7c0ec91810d7721c7c1906d20442d7591691719ba3bbdd5"
+    },
+    {
+      "bytes": 56574,
+      "path": "src/hekate/infrastructure/postgres/budget_repository.py",
+      "sha256": "fafa5c12b93ff4502a6262f5570fecbfeeb1a4c21476d75187830f1dfbe302ec"
+    },
+    {
+      "bytes": 595,
+      "path": "src/hekate/infrastructure/postgres/common.py",
+      "sha256": "eea38fffde5df8bfcb0fa8410f1fa946841fab1ded9cb7969d23ac6901ddb4c2"
+    },
+    {
+      "bytes": 7365,
+      "path": "src/hekate/infrastructure/postgres/critic_workflow_repository.py",
+      "sha256": "238d8c31fd8ba5705ff1000d2b4201b5039411244f6489ba69cbcbdcf19f5cc6"
+    },
+    {
+      "bytes": 4674,
+      "path": "src/hekate/infrastructure/postgres/database.py",
+      "sha256": "dde9b2e9238b125380d98da9e3234540eaf94ca158624ba305768d749cff273d"
+    },
+    {
+      "bytes": 11653,
+      "path": "src/hekate/infrastructure/postgres/deliberation_repository.py",
+      "sha256": "e80538d235d5f619a48810c9973da92ef74a76f8f809b267a90108dac318c2b3"
+    },
+    {
+      "bytes": 38415,
+      "path": "src/hekate/infrastructure/postgres/delivery_repository.py",
+      "sha256": "87f25fa78efe3fcccd9907dfb5442556a99fbce4297bf1b3f87336feb9636177"
+    },
+    {
+      "bytes": 29581,
+      "path": "src/hekate/infrastructure/postgres/knowledge_repository.py",
+      "sha256": "a3049defe7f751d5a54c4cd40fa7194783d0da82306fc1213d1da0b498624cb1"
+    },
+    {
+      "bytes": 35778,
+      "path": "src/hekate/infrastructure/postgres/projection_repository.py",
+      "sha256": "e8436ee210da0253f8ed45ad1b394a6e75d1a8d07bd8e0e61603e93252b0a9b7"
+    },
+    {
+      "bytes": 48456,
+      "path": "src/hekate/infrastructure/postgres/tables.py",
+      "sha256": "acf518966cd6875378854fb024639d98b3e6a718211e12f3f5b53af7e85b6c8a"
+    },
+    {
+      "bytes": 32114,
+      "path": "src/hekate/infrastructure/postgres/task_repository.py",
+      "sha256": "b8ea3e0c0120f8c9fb6e20d65e657c3368cf657397ed25bcc4ac4833daf08051"
+    },
+    {
+      "bytes": 610,
+      "path": "src/hekate/ports/resources.py",
+      "sha256": "0c50d59d1f063fddfd164f0102268389c7758ac6515c7c95ba93a76df8c3610d"
+    },
+    {
+      "bytes": 1890,
+      "path": "src/hekate/ports/runtime.py",
+      "sha256": "4f25a4a5478ce2dec9987ea306698c9a0e70cb29696a5c8ba57917a528b12441"
+    },
+    {
+      "bytes": 19800,
+      "path": "src/hekate/ports/store.py",
+      "sha256": "c5d4075a71467462254110e2f5b6a4b04413fd5aee8ec277ef7507f3cef99d5f"
+    },
+    {
+      "bytes": 15296,
+      "path": "src/hekate/settings.py",
+      "sha256": "2b6c44f7be6cfdde1f09c885bfce7624a5a59c56dc61ad928ea3c5f69d8dd810"
+    },
+    {
+      "bytes": 26984,
+      "path": "src/hekate/worker/service.py",
+      "sha256": "e8c066fc6cd88ed7feeb3384494333a2853125241bd8304235e36e70bf3cc00c"
+    },
+    {
+      "bytes": 0,
+      "path": "tests/contract/test_billable_guard.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "tests/contract/test_letta_capabilities.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7810,
+      "path": "tests/contract/test_phase3_bridge_and_gateway.py",
+      "sha256": "7770dc57130d3a46b7d50c532585fa35dd5c92128be55cf8d5adeb5399440443"
+    },
+    {
+      "bytes": 13352,
+      "path": "tests/contract/test_schema_compatibility.py",
+      "sha256": "e170821243d7d2a57e60d66549a76a80dcadf0aad7c1e741692c31b6323a8d7e"
+    },
+    {
+      "bytes": 66555,
+      "path": "tests/persistence/test_phase2_postgres.py",
+      "sha256": "9af40ed6e650ff05844787d6b85ae1e20e634ba197606e4c15a86c061539c2b2"
+    },
+    {
+      "bytes": 0,
+      "path": "tests/unit/test_budget_math.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "tests/unit/test_capsules.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "tests/unit/test_policy.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 5182,
+      "path": "tests/unit/test_token_accounting.py",
+      "sha256": "a2f488d3de05327ddc6770bcf3ac3d9111a605b6b3d34aae4fdcfec29a16acb1"
+    },
+    {
+      "bytes": 0,
+      "path": "tests/unit/test_transitions.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 279914,
+      "path": "uv.lock",
+      "sha256": "a8b04942943c44f4ae8228b2511a08e7924c56d34fe2efe002ad30e0b812024a"
+    }
+  ],
+  "head": "5ed7acba82ee6d3633d7f22e3a195a8534f25a34",
+  "overall_status": "pass",
+  "phase3_verifier": {
+    "artifact": "integration/runtime/artifacts/p3-20261005T135809Z-adb3ad1e.json",
+    "commands_failed": 0,
+    "commands_passed": 11,
+    "commands_run": 11,
+    "phase3_scenarios_failed": 0,
+    "phase3_scenarios_passed": 10,
+    "phase3b_artifact": "integration/runtime/artifacts/p3b-20261005T135833Z-795ff18f.json",
+    "phase3b_scenarios_failed": 0,
+    "phase3b_scenarios_passed": 8,
+    "real_provider_calls": 0,
+    "verification_status": "passed"
+  },
+  "probe": "phase6b-provider-token-accounting",
+  "run_id": "p6b-20261005T140059Z-7544031b",
+  "schema_version": "1",
+  "test_profile": {
+    "production_profile_state": "UNCONFIGURED",
+    "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+    "profile_id": "phase6a-fake-only-v1",
+    "renderer_contract": "src/hekate/infrastructure/letta/assets/test_chat_contract.v1.json",
+    "renderer_contract_sha256": "b085b61a959742d3cf33d50169d3895a1f15dd5bc3f6539aadfd0e8128622373",
+    "tokenizer_asset": "src/hekate/infrastructure/letta/assets/cl100k_base.tiktoken",
+    "tokenizer_sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+    "verification_state": "TEST_CONTRACT_VERIFIED"
+  },
+  "token_measurements": {
+    "phase3_boundary": {
+      "changed_body_same_accounting_id": {
+        "after": 1,
+        "operation_call_rows_before": 1,
+        "provider_requests_after": 1,
+        "status": 402
+      },
+      "context_overflow": {
+        "call_rows": 0,
+        "forward_delta": 0,
+        "status": 402
+      },
+      "context_window": 31,
+      "exact_input_and_context_boundary": {
+        "call_id": "acc:p3-20261005T134247Z-6b771723:token-boundary-exact",
+        "fake_independent_input_tokens": 23,
+        "fake_received_digest": "c38d389dcee976ccc9dbbfe055430e1a07d9ba06d32daa0f6c95dcf630928cc1",
+        "gateway_status": 200,
+        "matched": true,
+        "measured_input_tokens": 23,
+        "measurement_status": "MEASURED",
+        "permit_state": "CONSUMED",
+        "request_digest": "c38d389dcee976ccc9dbbfe055430e1a07d9ba06d32daa0f6c95dcf630928cc1"
+      },
+      "input_ceiling": 23,
+      "input_overflow": {
+        "call_rows": 0,
+        "forward_delta": 0,
+        "status": 402
+      },
+      "passed": true,
+      "profile_digest_changed_after_admission": {
+        "call_rows": 0,
+        "original_profile_digest": "f077c71a1f63faa0d3e38df462ba7b66becc2995ad557ddbadd96d37ddb1854a",
+        "provider_forward_delta": 0,
+        "replacement_profile_digest": "d3817838745a1f8022d8b3f973654d04def0fe11365fadadbf6ce67e622e495d",
+        "status": 402
+      },
+      "provider_requests_in_scenario": 1,
+      "real_provider_calls": 0,
+      "system_history_memory_schema_overflow": {
+        "call_rows": 0,
+        "forward_delta": 0,
+        "full_request_components": [
+          "system",
+          "memory",
+          "history",
+          "tool_schema",
+          "structured_output_schema"
+        ],
+        "measured_tokens": 125,
+        "status": 402
+      },
+      "unsupported_input": {
+        "call_rows": 0,
+        "forward_delta": 0,
+        "status": 402
+      }
+    },
+    "phase3_compaction": {
+      "all_calls_quiescent_and_settled": true,
+      "all_physical_calls_measured": true,
+      "bridge_stderr_tail": "",
+      "call_kinds": [
+        "compaction",
+        "turn"
+      ],
+      "call_plan": {
+        "compaction_calls": 2,
+        "main_turn_calls": 1,
+        "max_input_tokens": 8192,
+        "max_output_tokens": 64,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "call_records": [
+        {
+          "accounting_call_id": "2dec5dbc-ce82-4446-8698-46295a2bfda7",
+          "attempt_status": "SUCCEEDED",
+          "call_kind": "compaction",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "dispatch_state": "QUIESCENT",
+          "evaluated_cost_usd": "0.000045",
+          "execution_state": "QUIESCENT",
+          "hold_state": "QUIESCENT",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 32768,
+            "measured_at": "2026-10-05T13:42:59.822881Z",
+            "measured_input_tokens": 7025,
+            "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+            "pricing_version": "synthetic-v1",
+            "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+            "request_digest": "9bc5e82e9cd6eedb7dee6538d916803c41f7174e5add311fbd109c93f6c51861",
+            "requested_output_tokens": 1,
+            "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "permit_id": "e7aa5127-7be0-5ff7-9353-e45a6b9e3ef5",
+          "permit_state": "CONSUMED",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "provider_call_id": "fake-response-3",
+          "request_digest": "9bc5e82e9cd6eedb7dee6538d916803c41f7174e5add311fbd109c93f6c51861",
+          "settlement_state": "SETTLED",
+          "state": "COMPLETED"
+        },
+        {
+          "accounting_call_id": "b3f3676d-f343-4160-8c77-9d9aa601ca58",
+          "attempt_status": "SUCCEEDED",
+          "call_kind": "turn",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "dispatch_state": "QUIESCENT",
+          "evaluated_cost_usd": "0.000045",
+          "execution_state": "QUIESCENT",
+          "hold_state": "QUIESCENT",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 32768,
+            "measured_at": "2026-10-05T13:43:00.234594Z",
+            "measured_input_tokens": 6079,
+            "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+            "pricing_version": "synthetic-v1",
+            "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+            "request_digest": "fcfca9aa20133f089f599a3db0327e06a54511e71cf99918a61b2df100a87e17",
+            "requested_output_tokens": 1,
+            "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "permit_id": "6e1b1a51-ce97-5f20-9f38-2e0821e72f5f",
+          "permit_state": "CONSUMED",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "provider_call_id": "fake-response-4",
+          "request_digest": "fcfca9aa20133f089f599a3db0327e06a54511e71cf99918a61b2df100a87e17",
+          "settlement_state": "SETTLED",
+          "state": "COMPLETED"
+        }
+      ],
+      "consumed_permit_count": 2,
+      "database_measurement_pairs": [
+        [
+          "9bc5e82e9cd6eedb7dee6538d916803c41f7174e5add311fbd109c93f6c51861",
+          7025
+        ],
+        [
+          "fcfca9aa20133f089f599a3db0327e06a54511e71cf99918a61b2df100a87e17",
+          6079
+        ]
+      ],
+      "fake_independent_measurement_pairs": [
+        [
+          "9bc5e82e9cd6eedb7dee6538d916803c41f7174e5add311fbd109c93f6c51861",
+          7025
+        ],
+        [
+          "fcfca9aa20133f089f599a3db0327e06a54511e71cf99918a61b2df100a87e17",
+          6079
+        ]
+      ],
+      "fake_provider_requests": 2,
+      "operation": {
+        "accounting_call_id": "2dec5dbc-ce82-4446-8698-46295a2bfda7",
+        "attempt_status": "SUCCEEDED",
+        "call_kind": "compaction",
+        "call_status": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "dispatch_state": "QUIESCENT",
+        "evaluated_cost_usd": "0.000045",
+        "execution_state": "QUIESCENT",
+        "hold_state": "QUIESCENT",
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 32768,
+          "measured_at": "2026-10-05T13:42:59.822881Z",
+          "measured_input_tokens": 7025,
+          "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+          "pricing_version": "synthetic-v1",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+          "request_digest": "9bc5e82e9cd6eedb7dee6538d916803c41f7174e5add311fbd109c93f6c51861",
+          "requested_output_tokens": 1,
+          "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "permit_id": "e7aa5127-7be0-5ff7-9353-e45a6b9e3ef5",
+        "permit_state": "CONSUMED",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "provider_call_id": "fake-response-3",
+        "request_digest": "9bc5e82e9cd6eedb7dee6538d916803c41f7174e5add311fbd109c93f6c51861",
+        "settlement_state": "SETTLED",
+        "state": "COMPLETED"
+      },
+      "outbox": {
+        "claim_fence": 1,
+        "send_intent_at": "2026-10-05 13:42:59.726905+00:00",
+        "send_intent_fence": 1,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "ACKED"
+      },
+      "passed": true,
+      "permit_count": 2,
+      "physical_call_count": 2,
+      "runtime_observation": {
+        "events": [
+          {
+            "binding": {
+              "agent_registry_id": "ha:p3-20261005T134247Z-6b771723:t2-runtime-compaction",
+              "attempt_id": "attempt:p3-20261005T134247Z-6b771723:t2-runtime-compaction:runtime-compaction",
+              "conversation_id": "local-conv-6",
+              "fence": 1,
+              "input_revision": 1,
+              "provider_agent_id": "agent-local-0305ae61-de92-48c2-a545-2da59d32260c",
+              "task_id": "task:p3-20261005T134247Z-6b771723:t2-runtime-compaction"
+            },
+            "business_result": null,
+            "error_code": null,
+            "event_id": "operation:p3-20261005T134247Z-6b771723:t2-runtime-compaction:runtime-compaction:7:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "operation:p3-20261005T134247Z-6b771723:t2-runtime-compaction:runtime-compaction",
+            "schema_version": "1",
+            "success": null,
+            "usage": {
+              "accounting_call_id": "2dec5dbc-ce82-4446-8698-46295a2bfda7",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 4,
+              "provider_call_id": "fake-response-3",
+              "source": "runtime_reported",
+              "total_tokens": 41
+            }
+          },
+          {
+            "binding": {
+              "agent_registry_id": "ha:p3-20261005T134247Z-6b771723:t2-runtime-compaction",
+              "attempt_id": "attempt:p3-20261005T134247Z-6b771723:t2-runtime-compaction:runtime-compaction",
+              "conversation_id": "local-conv-6",
+              "fence": 1,
+              "input_revision": 1,
+              "provider_agent_id": "agent-local-0305ae61-de92-48c2-a545-2da59d32260c",
+              "task_id": "task:p3-20261005T134247Z-6b771723:t2-runtime-compaction"
+            },
+            "business_result": null,
+            "error_code": null,
+            "event_id": "operation:p3-20261005T134247Z-6b771723:t2-runtime-compaction:runtime-compaction:10:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "operation:p3-20261005T134247Z-6b771723:t2-runtime-compaction:runtime-compaction",
+            "schema_version": "1",
+            "success": null,
+            "usage": {
+              "accounting_call_id": "b3f3676d-f343-4160-8c77-9d9aa601ca58",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 4,
+              "provider_call_id": "fake-response-4",
+              "source": "runtime_reported",
+              "total_tokens": 41
+            }
+          }
+        ],
+        "state": "COMPLETE"
+      },
+      "settlement_ledger_entries": 4
+    },
+    "phase6a_independent_request_checks": {
+      "independent_tiktoken_count_matches_gateway": true,
+      "measured_physical_calls": 9,
+      "permit_measurements_match_call_measurements": true,
+      "preflight_measurement_is_separate_from_provider_usage": true,
+      "raw_gateway_request_digest_matches_fake_upstream": true
+    },
+    "phase6a_runtime_calls": [
+      {
+        "accounting_call_id": "8fab9b4a-439a-4fcf-bf8e-d77e3d2046ce",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 10601,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "eb88c8ffd36b525ec33d24733bda5d30326ef79450b68a32648fa154605e874c",
+        "requested_output_tokens": 2048
+      },
+      {
+        "accounting_call_id": "d174e309-85b4-496c-bcb5-fbbc4ad44793",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 11537,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "93e72e875c4ee42cf052bbd45d603e7f1bb64f787ce6798af05cbb23a0d2f8f8",
+        "requested_output_tokens": 2048
+      },
+      {
+        "accounting_call_id": "6a6779cd-feec-4ebc-b828-e40943d8b664",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 11547,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "1e8c2e26abfb9b3b64f714a806282ba45803224f565d16c5a4915ab38265afd4",
+        "requested_output_tokens": 2048
+      },
+      {
+        "accounting_call_id": "d220b5d8-d4ad-4fcc-9f15-a65fd24ae9fc",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 11238,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "2f9214b5e4ca9f14759e6e8090d0cbd3aec2b9c3e94d9fd175b8c970a258c1ba",
+        "requested_output_tokens": 2048
+      },
+      {
+        "accounting_call_id": "7285b992-5de2-46c0-866f-1b8455d1c8f7",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 11754,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "f7ce1d443db8f72b072546f3ef0083e43218ea3357d8eb3730e884befda9fee2",
+        "requested_output_tokens": 2048
+      },
+      {
+        "accounting_call_id": "095f91ac-67ef-499b-96f7-771455731f2c",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 11753,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "d8f9e43e202389fc6a086e2088110b6303b157fde987eeadb3a15caaac67cfac",
+        "requested_output_tokens": 2048
+      },
+      {
+        "accounting_call_id": "1a0bf4e1-d912-44c5-b6d8-751cd497268c",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 12802,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "7a78908c79518e25eeda4e447bc4af1cd1201cce27951d55084f9a9c11a3635e",
+        "requested_output_tokens": 2048
+      },
+      {
+        "accounting_call_id": "07ce565a-9ca5-41fc-ad48-1a06a78e887f",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 13309,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "9c825f12eca6ae7409691526ba94c791b30ee242a932416354c4932ae9c3c551",
+        "requested_output_tokens": 2048
+      },
+      {
+        "accounting_call_id": "9f8457a3-b651-44bf-85e9-5971325619f0",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "context_window_tokens": 65536,
+        "measured_input_tokens": 14129,
+        "profile_digest": "d19343696ab5ad4a4e5510dd7be77f883469f371bdde91ac49a6930982fa2d8e",
+        "provider_usage_input_tokens": 37,
+        "request_digest": "4f29cbb4758d79c5b0b9cf1d1a2ffc75e9a9008c517ceb423774be161ebdecf7",
+        "requested_output_tokens": 2048
+      }
+    ]
+  },
+  "unexecuted": [
+    "No production-model tokenizer/framing/pricing verification or external provider request was run.",
+    "Generated JSON schemas are unchanged and were not regenerated."
+  ]
+}

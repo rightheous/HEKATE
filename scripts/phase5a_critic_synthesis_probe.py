@@ -402,8 +402,8 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         async with engine.connect() as connection:
             head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres = await connection.scalar(text("SHOW server_version"))
-        if head != "0010_p5b_delib_maint":
-            raise ValueError(f"Phase 5A probe requires current migration head, found {head}")
+        if head != "0013_provider_token_measurement":
+            raise ValueError(f"Phase 5A probe requires current provider-measurement migration head, found {head}")
         report["database"] = {"name": make_url(database_url).database, "postgres_version": postgres, "migration_head": head}
 
         scope_text, principal_text = f"phase5a:{run_id}", f"principal:{run_id}"
@@ -433,9 +433,10 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
                 "profile_id": "phase5a-shared-synthetic-v1", "model": f"openai-compatible/{p3.FAKE_MODEL}",
                 "provider_model": p3.FAKE_MODEL, "max_input_tokens": 32768,
                 "max_output_tokens": 2048, "max_compaction_calls": 0,
+                "model_revision": "fake-provider-chat-contract-v1", "context_window_tokens": 65536,
             }
         (config_dir / "models.yaml").write_text(yaml.safe_dump(models), encoding="utf-8")
-        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase5a-synthetic-pricing-v1", "prices": {
+        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase5a-synthetic-pricing-v1", "effective_at": "2026-10-01T00:00:00Z", "prices": {
             p3.FAKE_MODEL: {"input_usd_per_million": "1", "output_usd_per_million": "2"},
         }}), encoding="utf-8")
 
@@ -469,14 +470,14 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         sandbox.start_network()
         gateway_port = p3.reserve_port(sandbox.gateway_address)
         private_token = __import__("secrets").token_urlsafe(40)
+        from hekate.infrastructure.letta.token_accounting import test_profile_and_price_for_config
+        hekate_execution_profile, hekate_price_table = test_profile_and_price_for_config(hekate_config)
         gateway_profile = ProviderGatewayProfile(
             profile_id=hekate_config.profile_id,
-            price_table=p3.PriceTable(
-                model=p3.FAKE_MODEL, version=hekate_config.pricing_version,
-                input_usd_per_million=Decimal("1"), output_usd_per_million=Decimal("2"), synthetic=True,
-            ),
+            price_table=hekate_price_table,
             upstream_base_url=f"http://127.0.0.1:{fake.port}", upstream_api_key="isolated-fake-only",
             max_input_tokens=32768, max_output_tokens=2048, test_only=True,
+            execution_profile=hekate_execution_profile,
         )
         from hekate.infrastructure.letta.provider_gateway import create_provider_gateway
         gateway_app = create_provider_gateway(factory, gateway_profile, private_token, allow_test_profile=True)

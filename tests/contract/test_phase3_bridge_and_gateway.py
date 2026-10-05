@@ -48,20 +48,22 @@ class Phase3BoundaryTests(unittest.TestCase):
             decode_frame(b" " * 1_048_577)
 
     def test_test_provider_profile_is_explicit_and_cannot_route_external(self):
+        from hekate.infrastructure.letta.token_accounting import test_execution_profile
+        execution_profile, price_table = test_execution_profile(
+            profile_id="fake-v1", model="fake-model", model_revision="fake-r1",
+            context_window_tokens=200, max_input_tokens=100, max_output_tokens=20,
+            pricing_version="synthetic-v1", input_usd_per_million=Decimal("1"),
+            output_usd_per_million=Decimal("2"), pricing_effective_at="2026-10-01T00:00:00Z",
+        )
         profile = ProviderGatewayProfile(
             profile_id="fake-v1",
-            price_table=PriceTable(
-                model="fake-model",
-                version="synthetic-v1",
-                input_usd_per_million=Decimal("1"),
-                output_usd_per_million=Decimal("2"),
-                synthetic=True,
-            ),
+            price_table=price_table,
             upstream_base_url="http://127.0.0.1:9001",
             upstream_api_key="test-only",
             max_input_tokens=100,
             max_output_tokens=20,
             test_only=True,
+            execution_profile=execution_profile,
         )
         with self.assertRaisesRegex(ValueError, "explicit test-mode"):
             profile.validate()

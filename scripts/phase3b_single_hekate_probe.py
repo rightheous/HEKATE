@@ -295,8 +295,8 @@ async def _run(database_url: str, node: str, image: str, archive: Path, artifact
         async with engine.connect() as connection:
             migration_head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres_version = await connection.scalar(text("SHOW server_version"))
-        if migration_head != "0010_p5b_delib_maint":
-            raise ValueError("Phase 3B migration head is not current")
+        if migration_head != "0013_provider_token_measurement":
+            raise ValueError("Phase 3B provider-measurement migration head is not current")
         report["database"] = {"postgres_version": postgres_version, "migration_head": migration_head}
 
         run_scope = f"phase3b:{run_id}"
@@ -325,9 +325,10 @@ async def _run(database_url: str, node: str, image: str, archive: Path, artifact
         (config_dir / "models.yaml").write_text(yaml.safe_dump({"hekate": {
             "profile_id": "phase3b-fake-v1", "model": f"openai-compatible/{p3.FAKE_MODEL}",
             "provider_model": p3.FAKE_MODEL, "max_input_tokens": 32768, "max_output_tokens": 2048,
-            "max_compaction_calls": 1,
+            "max_compaction_calls": 1, "model_revision": "fake-provider-chat-contract-v1",
+            "context_window_tokens": 65536,
         }}), encoding="utf-8")
-        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase3b-synthetic-v1", "prices": {
+        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase3b-synthetic-v1", "effective_at": "2026-10-01T00:00:00Z", "prices": {
             p3.FAKE_MODEL: {"input_usd_per_million": "1", "output_usd_per_million": "2"},
         }}), encoding="utf-8")
 
@@ -339,16 +340,22 @@ async def _run(database_url: str, node: str, image: str, archive: Path, artifact
         sandbox.start_network()
         gateway_port = p3.reserve_port(sandbox.gateway_address)
         private_token = __import__("secrets").token_urlsafe(40)
+        from hekate.infrastructure.letta.token_accounting import test_execution_profile
+        phase3b_execution_profile, phase3b_price_table = test_execution_profile(
+            profile_id="phase3b-fake-v1", model=p3.FAKE_MODEL,
+            model_revision="fake-provider-chat-contract-v1", context_window_tokens=65536,
+            max_input_tokens=32768, max_output_tokens=2048, pricing_version="phase3b-synthetic-v1",
+            input_usd_per_million=__import__("decimal").Decimal("1"),
+            output_usd_per_million=__import__("decimal").Decimal("2"),
+            pricing_effective_at="2026-10-01T00:00:00Z",
+        )
         profile = p3.ProviderGatewayProfile(
             profile_id="phase3b-fake-v1",
-            price_table=p3.PriceTable(
-                model=p3.FAKE_MODEL, version="phase3b-synthetic-v1",
-                input_usd_per_million=__import__("decimal").Decimal("1"),
-                output_usd_per_million=__import__("decimal").Decimal("2"), synthetic=True,
-            ),
+            price_table=phase3b_price_table,
             upstream_base_url=f"http://127.0.0.1:{fake.port}",
             upstream_api_key="isolated-fake-only", max_input_tokens=32768,
             max_output_tokens=2048, test_only=True,
+            execution_profile=phase3b_execution_profile,
         )
         gateway_app = p3.create_provider_gateway(factory, profile, private_token, allow_test_profile=True)
         gateway_server, gateway_task = await p3.start_gateway_server(gateway_app, sandbox.gateway_address, gateway_port)

@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import func, insert, select, update
+from sqlalchemy import func, insert, null, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -215,12 +215,8 @@ class PostgresBudgetRepository:
             raise PolicyDenied("call deadline or permit expiry is invalid")
         if intent.price_table.synthetic != intent.test_only:
             raise PolicyDenied("synthetic profiles are restricted to test-only permits")
-        if not intent.test_only and not (
-            intent.price_table.model_profile_verified
-            and intent.price_table.pricing_verified
-            and intent.price_table.tokenizer_verified
-        ):
-            raise PolicyDenied("model, tokenizer, or pricing profile is unverified")
+        if not intent.test_only:
+            raise PolicyDenied("production provider dispatch is blocked pending structural profile evidence")
         if intent.price_table.model != intent.model:
             raise PolicyDenied("price table model binding changed")
         require_money(intent.price_table.input_usd_per_million)
@@ -310,6 +306,10 @@ class PostgresBudgetRepository:
             conversation_id=intent.binding.conversation_id,
             lease_owner=intent.lease_owner,
             expires_at=intent.permit_expires_at,
+            measurement_status="MEASURED" if intent.measurement is not None else "LEGACY_UNMEASURED",
+            request_digest=intent.measurement.request_digest if intent.measurement is not None else None,
+            profile_digest=intent.measurement.profile_digest if intent.measurement is not None else None,
+            measurement_data=intent.measurement.model_dump(mode="json") if intent.measurement is not None else null(),
             created_at=now,
         ))
         await self.connection.execute(insert(tables.call_permits).values(
@@ -317,6 +317,10 @@ class PostgresBudgetRepository:
             accounting_call_id=intent.accounting_call_id,
             state="ISSUED",
             expires_at=intent.permit_expires_at,
+            measurement_status="MEASURED" if intent.measurement is not None else "LEGACY_UNMEASURED",
+            request_digest=intent.measurement.request_digest if intent.measurement is not None else None,
+            profile_digest=intent.measurement.profile_digest if intent.measurement is not None else None,
+            measurement_data=intent.measurement.model_dump(mode="json") if intent.measurement is not None else null(),
         ))
         for account in accounts:
             await self.connection.execute(insert(tables.call_allocations).values(
@@ -338,6 +342,10 @@ class PostgresBudgetRepository:
             expires_at=intent.permit_expires_at,
             consumed=False,
             test_only=intent.test_only,
+            measurement_status="MEASURED" if intent.measurement is not None else "LEGACY_UNMEASURED",
+            request_digest=intent.measurement.request_digest if intent.measurement is not None else None,
+            profile_digest=intent.measurement.profile_digest if intent.measurement is not None else None,
+            measured_input_tokens=intent.measurement.measured_input_tokens if intent.measurement is not None else None,
         )
 
     @staticmethod
@@ -352,6 +360,10 @@ class PostgresBudgetRepository:
             expires_at=permit["expires_at"],
             consumed=consumed,
             test_only=call["test_only"],
+            measurement_status=call.get("measurement_status", "LEGACY_UNMEASURED"),
+            request_digest=call.get("request_digest"),
+            profile_digest=call.get("profile_digest"),
+            measured_input_tokens=(call.get("measurement_data") or {}).get("measured_input_tokens"),
         )
 
     async def get_call_descriptor(self, accounting_call_id: AccountingCallId):
@@ -374,11 +386,22 @@ class PostgresBudgetRepository:
             tables.provider_calls.c.conversation_id,
             tables.provider_calls.c.expires_at,
             tables.provider_calls.c.pricing_version,
+            tables.provider_calls.c.measurement_status,
+            tables.provider_calls.c.request_digest,
+            tables.provider_calls.c.profile_digest,
+            tables.provider_calls.c.measurement_data,
         ).select_from(tables.provider_calls.join(
             tables.operations, tables.operations.c.id == tables.provider_calls.c.operation_id,
         )).where(tables.provider_calls.c.accounting_call_id == accounting_call_id))).mappings().one_or_none()
 
-    async def consume_call_permit(self, permit_id: PermitId, accounting_call_id: AccountingCallId) -> CallPermit:
+    async def consume_call_permit(
+        self,
+        permit_id: PermitId,
+        accounting_call_id: AccountingCallId,
+        *,
+        expected_request_digest: str | None = None,
+        expected_profile_digest: str | None = None,
+    ) -> CallPermit:
         accounts = await self.lock_call_accounts(accounting_call_id)
         if any(account.spent_amount + account.held_amount > account.limit_amount for account in accounts):
             raise BudgetDenied("budget account is overrun")
@@ -390,6 +413,22 @@ class PostgresBudgetRepository:
         ).with_for_update())).mappings().one_or_none()
         if call is None or permit is None or call["permit_id"] != permit_id:
             raise StaleInput("call permit is unavailable")
+        if call["measurement_status"] == "MEASURED":
+            measurement = call["measurement_data"] or {}
+            if (
+                expected_request_digest is None
+                or expected_profile_digest is None
+                or call["request_digest"] != expected_request_digest
+                or call["profile_digest"] != expected_profile_digest
+                or permit["measurement_status"] != "MEASURED"
+                or permit["request_digest"] != expected_request_digest
+                or permit["profile_digest"] != expected_profile_digest
+                or measurement.get("request_digest") != expected_request_digest
+                or measurement.get("profile_digest") != expected_profile_digest
+            ):
+                raise Conflict("permit measurement binding changed")
+        elif expected_request_digest is not None or expected_profile_digest is not None:
+            raise Conflict("permit has no measured request binding")
         if permit["state"] != "ISSUED" or call["status"] != "ALLOCATED":
             raise UnknownExecution("call permit is single-use and is not forwardable")
         if permit["expires_at"] <= aware_now():
@@ -642,24 +681,33 @@ class PostgresBudgetRepository:
         elif projection["completeness"] == "COMPLETE" and (
             call["test_only"] or (call["model_profile_verified"] and call["pricing_verified"] and call["tokenizer_verified"])
         ):
-            assessment = price_usage(NormalizedUsage(
-                completeness=projection["completeness"],
-                input_tokens=projection["input_tokens"],
-                output_tokens=projection["output_tokens"],
-                cache_tokens=projection["cache_tokens"],
-                reasoning_tokens=projection["reasoning_tokens"],
-                total_tokens=projection["total_tokens"],
-            ), PriceTable(
-                model=call["model"],
-                version=call["pricing_version"],
-                input_usd_per_million=call["input_usd_per_million"],
-                output_usd_per_million=call["output_usd_per_million"],
-                model_profile_verified=call["model_profile_verified"],
-                pricing_verified=call["pricing_verified"],
-                tokenizer_verified=call["tokenizer_verified"],
-                synthetic=call["test_only"],
-            ))
-            cost = assessment.amount
+            measurement = call.get("measurement_data") or {}
+            if (
+                measurement.get("usage_semantics") != "aggregate_input_output_v1"
+                or projection["cache_tokens"] not in (None, 0)
+                or projection["reasoning_tokens"] not in (None, 0)
+            ):
+                reason = "provider usage dimensions are unsupported by the frozen pricing profile"
+            else:
+                assessment = price_usage(NormalizedUsage(
+                    completeness=projection["completeness"],
+                    input_tokens=projection["input_tokens"],
+                    output_tokens=projection["output_tokens"],
+                    cache_tokens=projection["cache_tokens"],
+                    reasoning_tokens=projection["reasoning_tokens"],
+                    total_tokens=projection["total_tokens"],
+                ), PriceTable(
+                    model=call["model"],
+                    version=call["pricing_version"],
+                    input_usd_per_million=call["input_usd_per_million"],
+                    output_usd_per_million=call["output_usd_per_million"],
+                    model_profile_verified=call["model_profile_verified"],
+                    pricing_verified=call["pricing_verified"],
+                    tokenizer_verified=call["tokenizer_verified"],
+                    synthetic=call["test_only"],
+                    usage_semantics=measurement.get("usage_semantics"),
+                ))
+                cost = assessment.amount
         else:
             reason = "pricing or usage semantics are incomplete"
         if cost is None:

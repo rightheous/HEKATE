@@ -20,6 +20,7 @@ from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable
+from dataclasses import replace
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -102,6 +103,7 @@ class FakeProvider:
         self.behaviors: deque[str] = deque()
         self.requests: list[dict[str, object]] = []
         self.response_factory: Callable[[dict[str, object]], str] | None = None
+        self.inspect_test_tokens = False
         self.request_seen = threading.Event()
         self.release_block = threading.Event()
         owner = self
@@ -131,14 +133,15 @@ class FakeProvider:
                     self._reply(404, b'{"error":"not found"}')
                     return
                 try:
-                    request_body = json.loads(self.rfile.read(int(self.headers.get("content-length", "0"))))
+                    raw_request = self.rfile.read(int(self.headers.get("content-length", "0")))
+                    request_body = json.loads(raw_request)
                 except (ValueError, json.JSONDecodeError):
                     self._reply(400, b'{"error":"invalid JSON"}')
                     return
                 with owner.lock:
                     sequence = len(owner.requests) + 1
                     behavior = owner.behaviors.popleft() if owner.behaviors else "normal"
-                    owner.requests.append({
+                    observation = {
                         "sequence": sequence,
                         "response_id": None if behavior == "error" else f"fake-response-{sequence}",
                         "model": request_body.get("model"),
@@ -148,8 +151,12 @@ class FakeProvider:
                         "request_hash": hashlib.sha256(json.dumps(
                             request_body, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
                         ).encode("utf-8")).hexdigest(),
+                        "raw_request_sha256": hashlib.sha256(raw_request).hexdigest(),
                         "behavior": behavior,
-                    })
+                    }
+                    if owner.inspect_test_tokens:
+                        observation["independent_input_tokens"] = independent_fake_chat_token_count(request_body)
+                    owner.requests.append(observation)
                     response_factory = owner.response_factory
                 owner.request_seen.set()
                 if behavior == "block":
@@ -230,6 +237,10 @@ class FakeProvider:
         with self.lock:
             self.response_factory = factory
 
+    def enable_test_token_inspection(self) -> None:
+        with self.lock:
+            self.inspect_test_tokens = True
+
     def count(self) -> int:
         with self.lock:
             return len(self.requests)
@@ -238,6 +249,38 @@ class FakeProvider:
         self.server.shutdown()
         self.server.server_close()
         self.thread.join(timeout=2)
+
+
+def independent_fake_chat_token_count(request_body: dict[str, object]) -> int:
+    """Fake upstream's independent implementation of the declared JSON chat input contract."""
+    from tiktoken.core import Encoding
+    from tiktoken.load import load_tiktoken_bpe
+
+    asset = ROOT / "src/hekate/infrastructure/letta/assets/cl100k_base.tiktoken"
+    expected = "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7"
+    ranks = load_tiktoken_bpe(str(asset), expected_hash=expected)
+    encoding = Encoding(
+        name="fake-provider-independent-cl100k",
+        pat_str=r"'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}++|\p{N}{1,3}+| ?[^\s\p{L}\p{N}]++[\r\n]*+|\s++$|\s*[\r\n]|\s+(?!\S)|\s",
+        mergeable_ranks=ranks,
+        special_tokens={"<|endoftext|>": 100257, "<|fim_prefix|>": 100258, "<|fim_middle|>": 100259,
+                        "<|fim_suffix|>": 100260, "<|endofprompt|>": 100276},
+    )
+    messages = []
+    for source in request_body["messages"]:
+        message = {"role": source["role"], "content": source.get("content")}
+        for key in ("name", "tool_call_id", "refusal"):
+            if key in source:
+                message[key] = source[key]
+        if source.get("tool_calls") is not None:
+            message["tool_calls"] = source["tool_calls"]
+        messages.append(message)
+    document: dict[str, object] = {"format": "hekate.chat-input.v1", "messages": messages}
+    for key in ("tools", "tool_choice", "response_format"):
+        if key in request_body:
+            document[key] = request_body[key]
+    rendered = json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return len(encoding.encode(rendered, disallowed_special=()))
 
 
 class Phase3Sandbox(p1.DockerSandbox):
@@ -477,12 +520,253 @@ async def claim_one(factory, worker: str):
         return jobs[0] if jobs else None
 
 
+async def _token_boundary_probe(factory, engine, runtime, fake, gateway_address: str,
+                                private_token: str, run_id: str) -> dict[str, object]:
+    from hekate.infrastructure.letta.token_accounting import measure_test_request, render_test_chat_input, test_execution_profile
+
+    minimal_body: dict[str, object] = {
+        "model": FAKE_MODEL, "store": False, "stream": False, "max_tokens": 8,
+        "messages": [{"role": "user", "content": "token boundary input"}],
+    }
+    raw_minimal = json.dumps(minimal_body, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    preliminary, _ = test_execution_profile(
+        profile_id="phase6b-boundary-v1", model=FAKE_MODEL, model_revision="fake-provider-chat-contract-v1",
+        context_window_tokens=4096, max_input_tokens=2048, max_output_tokens=10,
+        pricing_version="phase6b-boundary-pricing-v1", input_usd_per_million=Decimal("0"),
+        output_usd_per_million=Decimal("0"), pricing_effective_at="2026-10-01T00:00:00Z",
+    )
+    exact_count = measure_test_request(raw_minimal, minimal_body, preliminary, 8).measured_input_tokens
+    execution_profile, prices = test_execution_profile(
+        profile_id="phase6b-boundary-v1", model=FAKE_MODEL, model_revision="fake-provider-chat-contract-v1",
+        context_window_tokens=exact_count + 8, max_input_tokens=exact_count, max_output_tokens=10,
+        pricing_version="phase6b-boundary-pricing-v1", input_usd_per_million=Decimal("0"),
+        output_usd_per_million=Decimal("0"), pricing_effective_at="2026-10-01T00:00:00Z",
+    )
+    # The extra-context fixture has policy, memory, history, tools, and schema.
+    # Its independent upstream token count must exceed the same small admission cap.
+    full_body = {
+        **minimal_body,
+        "messages": [
+            {"role": "system", "content": "server policy"},
+            {"role": "developer", "content": "core memory: stable position"},
+            {"role": "assistant", "content": "prior conversation history"},
+            {"role": "user", "content": "token boundary input"},
+        ],
+        "tools": [{"type": "function", "function": {
+            "name": "lookup", "description": "schema-bearing tool declaration",
+            "parameters": {"type": "object", "properties": {"key": {"type": "string"}}},
+        }}],
+        "response_format": {"type": "json_schema", "json_schema": {
+            "name": "bounded-output", "strict": True,
+            "schema": {"type": "object", "properties": {"answer": {"type": "string"}}},
+        }},
+    }
+    raw_full = json.dumps(full_body, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    full_count = measure_test_request(raw_full, full_body, preliminary, 8).measured_input_tokens
+    if full_count <= exact_count:
+        raise AssertionError("policy, memory, history, tool, and schema context did not increase token count")
+
+    profile = ProviderGatewayProfile(
+        profile_id=execution_profile.profile_id, price_table=prices,
+        upstream_base_url=f"http://127.0.0.1:{fake.port}", upstream_api_key="isolated-fake-only",
+        max_input_tokens=execution_profile.max_input_tokens,
+        max_output_tokens=execution_profile.max_output_tokens, test_only=True,
+        execution_profile=execution_profile,
+    )
+    boundary_gateway = create_provider_gateway(factory, profile, private_token, allow_test_profile=True)
+    boundary_port = reserve_port(gateway_address)
+    boundary_server, boundary_task = await start_gateway_server(boundary_gateway, gateway_address, boundary_port)
+    context = None
+    try:
+        plan = ProviderCallPlan(
+            profile_id=execution_profile.profile_id, profile_digest=execution_profile.content_digest,
+            model=FAKE_MODEL, pricing_version=prices.version,
+            max_input_tokens=exact_count, max_output_tokens=10, main_turn_calls=5, compaction_calls=0,
+        )
+        context = await seed_agent(
+            factory, runtime, f"{run_id}:token-boundary", WORKER_ID,
+            call_plan=plan, attempt_name="token-boundary", operation_name="token-boundary",
+        )
+        job = await claim_one(factory, WORKER_ID)
+        if job is None:
+            raise RuntimeError("token-boundary admission had no dispatch job")
+        await record_dispatch_send_intent(factory, job, WORKER_ID)
+        operation_id = str(context["request"].envelope.operation_id)
+        binding = context["binding"]
+        requests_before = fake.count()
+        exact_call_id = f"acc:{run_id}:token-boundary-exact"
+        exact_status, _ = await gateway_request(
+            gateway_address, boundary_port, private_token,
+            runtime_headers(binding, operation_id, exact_call_id, "turn", 8), minimal_body,
+        )
+        exact_request = next(
+            item for item in reversed(fake.requests)
+            if item.get("raw_request_sha256") == hashlib.sha256(raw_minimal).hexdigest()
+        ) if fake.count() > requests_before else {}
+        async with engine.connect() as connection:
+            exact_row = (await connection.execute(text("""
+                SELECT c.status, c.measurement_status, c.request_digest, c.profile_digest, c.measurement_data,
+                       p.state AS permit_state, p.request_digest AS permit_request_digest,
+                       p.profile_digest AS permit_profile_digest
+                FROM provider_calls c JOIN call_permits p USING (permit_id)
+                WHERE c.accounting_call_id=:call_id
+            """), {"call_id": exact_call_id})).mappings().one_or_none()
+        exact_data = dict(exact_row) if exact_row else {}
+        exact_measurement = exact_data.get("measurement_data") or {}
+
+        over_input_body = {**minimal_body, "messages": [{"role": "user", "content": "token boundary input + overflow"}]}
+        over_input_call_id = f"acc:{run_id}:token-boundary-over-input"
+        count_before_over = fake.count()
+        over_input_status, _ = await gateway_request(
+            gateway_address, boundary_port, private_token,
+            runtime_headers(binding, operation_id, over_input_call_id, "turn", 8), over_input_body,
+        )
+        async with engine.connect() as connection:
+            over_input_rows = await connection.scalar(text(
+                "SELECT count(*) FROM provider_calls WHERE accounting_call_id=:call_id"
+            ), {"call_id": over_input_call_id})
+
+        context_call_id = f"acc:{run_id}:token-boundary-context"
+        context_body = {**minimal_body, "max_tokens": 9}
+        count_before_context = fake.count()
+        context_status, _ = await gateway_request(
+            gateway_address, boundary_port, private_token,
+            runtime_headers(binding, operation_id, context_call_id, "turn", 9), context_body,
+        )
+        async with engine.connect() as connection:
+            context_rows = await connection.scalar(text(
+                "SELECT count(*) FROM provider_calls WHERE accounting_call_id=:call_id"
+            ), {"call_id": context_call_id})
+
+        full_call_id = f"acc:{run_id}:token-boundary-full-context"
+        count_before_full = fake.count()
+        full_status, _ = await gateway_request(
+            gateway_address, boundary_port, private_token,
+            runtime_headers(binding, operation_id, full_call_id, "turn", 8), full_body,
+        )
+        async with engine.connect() as connection:
+            full_rows = await connection.scalar(text(
+                "SELECT count(*) FROM provider_calls WHERE accounting_call_id=:call_id"
+            ), {"call_id": full_call_id})
+
+        unsupported_call_id = f"acc:{run_id}:token-boundary-unsupported"
+        unsupported_body = {**minimal_body, "audio": {"format": "unknown"}}
+        count_before_unsupported = fake.count()
+        unsupported_status, _ = await gateway_request(
+            gateway_address, boundary_port, private_token,
+            runtime_headers(binding, operation_id, unsupported_call_id, "turn", 8), unsupported_body,
+        )
+        async with engine.connect() as connection:
+            unsupported_rows = await connection.scalar(text(
+                "SELECT count(*) FROM provider_calls WHERE accounting_call_id=:call_id"
+            ), {"call_id": unsupported_call_id})
+
+        # Reusing the successful call identity with changed bytes must not create a second send.
+        async with engine.connect() as connection:
+            replay_call_count_before = await connection.scalar(text(
+                "SELECT count(*) FROM provider_calls WHERE operation_id=:op"
+            ), {"op": operation_id})
+        changed_replay = {**minimal_body, "messages": [{"role": "user", "content": "changed replay body"}]}
+        replay_status, _ = await gateway_request(
+            gateway_address, boundary_port, private_token,
+            runtime_headers(binding, operation_id, exact_call_id, "turn", 8), changed_replay,
+        )
+        async with engine.connect() as connection:
+            replay_call_count_after = await connection.scalar(text(
+                "SELECT count(*) FROM provider_calls WHERE operation_id=:op"
+            ), {"op": operation_id})
+
+        changed_profile, changed_prices = test_execution_profile(
+            profile_id=execution_profile.profile_id, model=FAKE_MODEL,
+            model_revision="fake-provider-chat-contract-v1", context_window_tokens=exact_count + 9,
+            max_input_tokens=exact_count, max_output_tokens=10,
+            pricing_version="phase6b-boundary-pricing-v1", input_usd_per_million=Decimal("0"),
+            output_usd_per_million=Decimal("0"), pricing_effective_at="2026-10-01T00:00:00Z",
+        )
+        changed_gateway_profile = replace(profile, execution_profile=changed_profile)
+        changed_gateway = create_provider_gateway(factory, changed_gateway_profile, private_token, allow_test_profile=True)
+        changed_port = reserve_port(gateway_address)
+        changed_server, changed_task = await start_gateway_server(changed_gateway, gateway_address, changed_port)
+        try:
+            profile_call_id = f"acc:{run_id}:token-boundary-profile-swap"
+            count_before_profile = fake.count()
+            profile_status, _ = await gateway_request(
+                gateway_address, changed_port, private_token,
+                runtime_headers(binding, operation_id, profile_call_id, "turn", 8), minimal_body,
+            )
+            async with engine.connect() as connection:
+                profile_rows = await connection.scalar(text(
+                    "SELECT count(*) FROM provider_calls WHERE accounting_call_id=:call_id"
+                ), {"call_id": profile_call_id})
+        finally:
+            changed_server.should_exit = True
+            await asyncio.gather(changed_task, return_exceptions=True)
+
+        accepted_matches_fake = (
+            exact_status == 200 and exact_request
+            and exact_data.get("measurement_status") == "MEASURED"
+            and exact_measurement.get("measured_input_tokens") == exact_count
+            and exact_data.get("request_digest") == exact_request.get("raw_request_sha256")
+            and exact_data.get("profile_digest") == execution_profile.content_digest
+            and exact_data.get("permit_request_digest") == exact_request.get("raw_request_sha256")
+            and exact_data.get("permit_profile_digest") == execution_profile.content_digest
+            and exact_request.get("independent_input_tokens") == exact_count
+        )
+        blocked_without_effect = all((
+            over_input_status == 402 and over_input_rows == 0 and fake.count() == count_before_over,
+            context_status == 402 and context_rows == 0 and fake.count() == count_before_context,
+            full_status == 402 and full_rows == 0 and fake.count() == count_before_full,
+            unsupported_status == 402 and unsupported_rows == 0 and fake.count() == count_before_unsupported,
+            replay_status == 402 and fake.count() == requests_before + 1 and replay_call_count_after == replay_call_count_before,
+            profile_status == 402 and profile_rows == 0 and fake.count() == count_before_profile,
+        ))
+        return {
+            "passed": bool(accepted_matches_fake and blocked_without_effect),
+            "input_ceiling": exact_count,
+            "context_window": exact_count + 8,
+            "exact_input_and_context_boundary": {
+                "gateway_status": exact_status, "call_id": exact_call_id,
+                "measurement_status": exact_data.get("measurement_status"),
+                "measured_input_tokens": exact_measurement.get("measured_input_tokens"),
+                "request_digest": exact_data.get("request_digest"),
+                "fake_received_digest": exact_request.get("raw_request_sha256"),
+                "fake_independent_input_tokens": exact_request.get("independent_input_tokens"),
+                "permit_state": exact_data.get("permit_state"),
+                "matched": bool(accepted_matches_fake),
+            },
+            "input_overflow": {"status": over_input_status, "call_rows": over_input_rows, "forward_delta": fake.count() - count_before_over},
+            "context_overflow": {"status": context_status, "call_rows": context_rows, "forward_delta": fake.count() - count_before_context},
+            "system_history_memory_schema_overflow": {
+                "status": full_status, "measured_tokens": full_count, "call_rows": full_rows,
+                "full_request_components": ["system", "memory", "history", "tool_schema", "structured_output_schema"],
+                "forward_delta": fake.count() - count_before_full,
+            },
+            "unsupported_input": {"status": unsupported_status, "call_rows": unsupported_rows, "forward_delta": fake.count() - count_before_unsupported},
+            "changed_body_same_accounting_id": {
+                "status": replay_status, "provider_requests_after": fake.count(),
+                "operation_call_rows_before": replay_call_count_before, "after": replay_call_count_after,
+            },
+            "profile_digest_changed_after_admission": {
+                "status": profile_status, "call_rows": profile_rows,
+                "provider_forward_delta": fake.count() - count_before_profile,
+                "original_profile_digest": execution_profile.content_digest,
+                "replacement_profile_digest": changed_profile.content_digest,
+            },
+            "provider_requests_in_scenario": fake.count() - requests_before,
+            "real_provider_calls": 0,
+        }
+    finally:
+        boundary_server.should_exit = True
+        await asyncio.gather(boundary_task, return_exceptions=True)
+
+
 async def fetch_operation(engine, operation_id: str) -> dict[str, object]:
     async with engine.connect() as connection:
         row = (await connection.execute(text("""
             SELECT o.state, o.dispatch_state, o.execution_state, a.status AS attempt_status,
                    h.state AS hold_state, b.status AS call_status, b.accounting_call_id,
                    b.call_kind, b.provider_call_id, cp.permit_id, cp.state AS permit_state,
+                   b.measurement_status, b.request_digest, b.profile_digest, b.measurement_data,
                    u.completeness, u.settlement_state, u.evaluated_cost_usd
             FROM operations o
             LEFT JOIN attempts a ON a.operation_id=o.id
@@ -556,6 +840,7 @@ async def _gateway_task_state_race(
 ) -> dict[str, object]:
     plan = ProviderCallPlan(
         profile_id=profile.profile_id,
+        profile_digest=profile.execution_profile.content_digest,
         model=FAKE_MODEL,
         pricing_version=profile.price_table.version,
         max_input_tokens=128,
@@ -636,6 +921,7 @@ async def _gateway_storage_failure(
 ) -> dict[str, object]:
     plan = ProviderCallPlan(
         profile_id=profile.profile_id,
+        profile_digest=profile.execution_profile.content_digest,
         model=FAKE_MODEL,
         pricing_version=profile.price_table.version,
         max_input_tokens=128,
@@ -691,6 +977,7 @@ async def _gateway_post_forward_record_failure(
 ) -> dict[str, object]:
     plan = ProviderCallPlan(
         profile_id=profile.profile_id,
+        profile_digest=profile.execution_profile.content_digest,
         model=FAKE_MODEL,
         pricing_version=profile.price_table.version,
         max_input_tokens=128,
@@ -841,7 +1128,7 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         "results": {},
         "limitations": [
             "Synthetic profile only; no real provider key or external provider URL was configured.",
-            "G8 full-request tokenization remains unverified; the gateway enforces the admitted conservative input/output plan and does not claim exact input-token measurement.",
+            "The fake chat contract is token-measured at the final gateway request; G8 production remains blocked because no production model/request-framing evidence is configured.",
             "G7 physical provider-call identity depends on the pinned runtime patch; stock SDK capabilities remain false.",
             "No production readiness, API ingress, business loop, Critic lifecycle, same-execution resume, or operator recovery is claimed.",
         ],
@@ -877,11 +1164,12 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         async with engine.connect() as connection:
             migration_head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres_version = await connection.scalar(text("SHOW server_version"))
-        if migration_head != "0010_p5b_delib_maint":
-            raise ValueError("Phase 3 migration is not current")
+        if migration_head != "0013_provider_token_measurement":
+            raise ValueError("Phase 3 provider-measurement migration is not current")
         report["database"] = {"postgres_version": postgres_version, "migration_head": migration_head}
 
         fake = FakeProvider()
+        fake.enable_test_token_inspection()
         fake.start()
         sandbox = Phase3Sandbox(workdir, run_id, image)
         sandbox.start_network()
@@ -889,18 +1177,23 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         private_token = secrets.token_urlsafe(40)
         profile = ProviderGatewayProfile(
             profile_id="phase3-fake-v1",
-            price_table=PriceTable(
-                model=FAKE_MODEL,
-                version="synthetic-v1",
-                input_usd_per_million=Decimal("1"),
-                output_usd_per_million=Decimal("2"),
-                synthetic=True,
-            ),
+            price_table=__import__("hekate.infrastructure.letta.token_accounting", fromlist=["test_execution_profile"]).test_execution_profile(
+                profile_id="phase3-fake-v1", model=FAKE_MODEL, model_revision="fake-provider-chat-contract-v1",
+                context_window_tokens=32768, max_input_tokens=16_384, max_output_tokens=64,
+                pricing_version="synthetic-v1", input_usd_per_million=Decimal("1"),
+                output_usd_per_million=Decimal("2"), pricing_effective_at="2026-10-01T00:00:00Z",
+            )[1],
             upstream_base_url=f"http://127.0.0.1:{fake.port}",
             upstream_api_key="isolated-fake-only",
             max_input_tokens=16_384,
             max_output_tokens=64,
             test_only=True,
+            execution_profile=__import__("hekate.infrastructure.letta.token_accounting", fromlist=["test_execution_profile"]).test_execution_profile(
+                profile_id="phase3-fake-v1", model=FAKE_MODEL, model_revision="fake-provider-chat-contract-v1",
+                context_window_tokens=32768, max_input_tokens=16_384, max_output_tokens=64,
+                pricing_version="synthetic-v1", input_usd_per_million=Decimal("1"),
+                output_usd_per_million=Decimal("2"), pricing_effective_at="2026-10-01T00:00:00Z",
+            )[0],
         )
         gateway_app = create_provider_gateway(factory, profile, private_token, allow_test_profile=True)
 
@@ -924,6 +1217,9 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         runtime = LettaRuntimeAdapter(bridge)
         capabilities = await runtime.verify_compatibility()
         report["bridge_capabilities"] = capabilities
+        report["results"]["T8_phase6b_final_request_token_guards"] = await _token_boundary_probe(
+            factory, engine, runtime, fake, sandbox.gateway_address, private_token, run_id,
+        )
         settings = Settings(
             database_url=database_url,
             node_bin=node,
@@ -939,7 +1235,8 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         container = Container(settings=settings, runtime=runtime, uow_factory=factory, database=engine)
 
         plan_t1 = ProviderCallPlan(
-            profile_id=profile.profile_id, model=FAKE_MODEL, pricing_version=profile.price_table.version,
+            profile_id=profile.profile_id, profile_digest=profile.execution_profile.content_digest,
+            model=FAKE_MODEL, pricing_version=profile.price_table.version,
             max_input_tokens=16_384, max_output_tokens=64, main_turn_calls=1, compaction_calls=0,
         )
         context_t1 = await seed_agent(factory, runtime, f"{run_id}:t1", WORKER_ID, call_plan=plan_t1)
@@ -1075,7 +1372,8 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         }
 
         runtime_compaction_plan = ProviderCallPlan(
-            profile_id=profile.profile_id, model=FAKE_MODEL, pricing_version=profile.price_table.version,
+            profile_id=profile.profile_id, profile_digest=profile.execution_profile.content_digest,
+            model=FAKE_MODEL, pricing_version=profile.price_table.version,
             max_input_tokens=8_192, max_output_tokens=64, main_turn_calls=1, compaction_calls=2,
         )
         runtime_compaction_context = await seed_agent(
@@ -1098,6 +1396,21 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         runtime_compaction_summary = await _db_summary(engine, runtime_compaction_operation)
         runtime_compaction_rows = (await fetch_operation(engine, runtime_compaction_operation))["rows"]
         runtime_call_kinds = {row["call_kind"] for row in runtime_compaction_rows if row["accounting_call_id"]}
+        compaction_fake_requests = fake.requests[before_runtime_compaction:]
+        measured_compaction_rows = [row for row in runtime_compaction_rows if row.get("accounting_call_id")]
+        fake_measurement_pairs = sorted(
+            (item.get("raw_request_sha256"), item.get("independent_input_tokens"))
+            for item in compaction_fake_requests
+        )
+        database_measurement_pairs = sorted(
+            (row.get("request_digest"), (row.get("measurement_data") or {}).get("measured_input_tokens"))
+            for row in measured_compaction_rows
+        )
+        compaction_measurements_match_fake = (
+            len(measured_compaction_rows) == 2
+            and all(row.get("measurement_status") == "MEASURED" for row in measured_compaction_rows)
+            and fake_measurement_pairs == database_measurement_pairs
+        )
         runtime_compaction_summary.update({
             "call_plan": runtime_compaction_plan.model_dump(mode="json"),
             "call_records": runtime_compaction_rows,
@@ -1109,6 +1422,9 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
             "fake_provider_requests": fake.count() - before_runtime_compaction,
             "physical_call_count": len([row for row in runtime_compaction_rows if row["accounting_call_id"]]),
             "call_kinds": sorted(runtime_call_kinds),
+            "all_physical_calls_measured": compaction_measurements_match_fake,
+            "fake_independent_measurement_pairs": fake_measurement_pairs,
+            "database_measurement_pairs": database_measurement_pairs,
             "all_calls_quiescent_and_settled": bool(runtime_compaction_rows) and all(
                 row["call_status"] == "QUIESCENT" and row["completeness"] == "COMPLETE"
                 and row["settlement_state"] == "SETTLED" for row in runtime_compaction_rows
@@ -1122,11 +1438,13 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
             and runtime_compaction_summary["physical_call_count"] == 2
             and runtime_compaction_summary["fake_provider_requests"] == 2
             and runtime_compaction_summary["all_calls_quiescent_and_settled"]
+            and runtime_compaction_summary["all_physical_calls_measured"]
         )
         report["results"]["T2_actual_runtime_compaction"] = runtime_compaction_summary
 
         plan_t2 = ProviderCallPlan(
-            profile_id=profile.profile_id, model=FAKE_MODEL, pricing_version=profile.price_table.version,
+            profile_id=profile.profile_id, profile_digest=profile.execution_profile.content_digest,
+            model=FAKE_MODEL, pricing_version=profile.price_table.version,
             max_input_tokens=128, max_output_tokens=16, main_turn_calls=1, compaction_calls=3,
         )
         context_t2 = await seed_agent(factory, runtime, f"{run_id}:t2", WORKER_ID, call_plan=plan_t2, attempt_name="roles", operation_name="roles")
@@ -1394,7 +1712,8 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
 
         fake.set_next("block")
         plan_t4 = ProviderCallPlan(
-            profile_id=profile.profile_id, model=FAKE_MODEL, pricing_version=profile.price_table.version,
+            profile_id=profile.profile_id, profile_digest=profile.execution_profile.content_digest,
+            model=FAKE_MODEL, pricing_version=profile.price_table.version,
             max_input_tokens=16_384, max_output_tokens=64, main_turn_calls=1, compaction_calls=0,
         )
         context_t4 = await seed_agent(factory, runtime, f"{run_id}:t4", WORKER_ID, call_plan=plan_t4, attempt_name="disconnect", operation_name="disconnect")
@@ -1562,6 +1881,7 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
             "T2_actual_runtime_compaction", "T2_roles_retry_and_compaction_plan", "T3_outbox_claim_fence_and_send_marker",
             "T4_bridge_loss_keeps_unknown_hold", "T5_db_and_permit_failures_do_not_forward",
             "T6_inbox_replay_and_conflict", "T7_private_gateway_fail_closed",
+            "T8_phase6b_final_request_token_guards",
         )]
         report["overall_status"] = "pass" if t1_ok and replay_ok and all(phases) else "blocked"
     except Exception as error:

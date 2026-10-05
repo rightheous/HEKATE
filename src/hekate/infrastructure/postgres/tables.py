@@ -484,6 +484,10 @@ provider_calls = Table(
     Column("conversation_id", Text),
     Column("lease_owner", Text, nullable=False),
     Column("expires_at", instant, nullable=False),
+    Column("measurement_status", String(24), nullable=False, server_default=text("'LEGACY_UNMEASURED'")),
+    Column("request_digest", String(64)),
+    Column("profile_digest", String(64)),
+    Column("measurement_data", JSONB),
     Column("consumed_at", instant),
     Column("dispatched_at", instant),
     Column("provider_call_id", Text),
@@ -492,6 +496,12 @@ provider_calls = Table(
     CheckConstraint("status IN ('ALLOCATED','CONSUMED','DISPATCHED','RUNNING','UNKNOWN','QUIESCENT','EXPIRED','REVOKED')", name="ck_provider_calls_status"),
     CheckConstraint("max_input_tokens >= 0 AND max_output_tokens >= 0 AND input_revision >= 1 AND fence >= 1", name="ck_provider_calls_limits"),
     CheckConstraint("allocation_amount >= 0 AND input_usd_per_million >= 0 AND output_usd_per_million >= 0", name="ck_provider_calls_amounts"),
+    CheckConstraint("measurement_status IN ('LEGACY_UNMEASURED','MEASURED')", name="ck_provider_calls_measurement_status"),
+    CheckConstraint(
+        "(measurement_status = 'LEGACY_UNMEASURED' AND request_digest IS NULL AND profile_digest IS NULL AND measurement_data IS NULL) "
+        "OR (measurement_status = 'MEASURED' AND length(request_digest) = 64 AND length(profile_digest) = 64 AND measurement_data IS NOT NULL)",
+        name="ck_provider_calls_measurement_data",
+    ),
 )
 Index("ix_provider_calls_operation", provider_calls.c.operation_id)
 
@@ -502,9 +512,19 @@ call_permits = Table(
     Column("state", String(12), nullable=False),
     Column("issued_at", instant, nullable=False, server_default=text("now()")),
     Column("expires_at", instant, nullable=False),
+    Column("measurement_status", String(24), nullable=False, server_default=text("'LEGACY_UNMEASURED'")),
+    Column("request_digest", String(64)),
+    Column("profile_digest", String(64)),
+    Column("measurement_data", JSONB),
     Column("consumed_at", instant),
     Column("revoked_at", instant),
     CheckConstraint("state IN ('ISSUED','CONSUMED','REVOKED','EXPIRED')", name="ck_call_permits_state"),
+    CheckConstraint("measurement_status IN ('LEGACY_UNMEASURED','MEASURED')", name="ck_call_permits_measurement_status"),
+    CheckConstraint(
+        "(measurement_status = 'LEGACY_UNMEASURED' AND request_digest IS NULL AND profile_digest IS NULL AND measurement_data IS NULL) "
+        "OR (measurement_status = 'MEASURED' AND length(request_digest) = 64 AND length(profile_digest) = 64 AND measurement_data IS NOT NULL)",
+        name="ck_call_permits_measurement_data",
+    ),
 )
 provider_calls.append_constraint(ForeignKeyConstraint(
     ["permit_id"], ["call_permits.permit_id"], name="fk_provider_calls_permit_id",

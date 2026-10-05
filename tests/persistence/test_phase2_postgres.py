@@ -510,7 +510,8 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         health = await check_database(self.engine)
         self.assertTrue(health.available)
         self.assertTrue((health.postgres_version or "").startswith("PostgreSQL 16"))
-        self.assertEqual(health.migration_head, "0010_p5b_delib_maint")
+        stored_migration_head = await self._scalar("SELECT version_num FROM alembic_version")
+        self.assertEqual(health.migration_head, stored_migration_head)
 
         async with self.factory() as uow:
             await uow.tasks.insert_scope(AuthorizationSnapshot(ScopeId("rolled-back"), PrincipalId("p"), "policy", 1))

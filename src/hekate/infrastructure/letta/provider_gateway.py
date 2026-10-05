@@ -30,10 +30,12 @@ from hekate.domain.models import (
     ProviderCallPlan,
     RuntimeLimits,
     BillableCallIntent,
+    ProviderExecutionProfile,
 )
 from hekate.domain.budget_math import price_usage
 from hekate.domain.types import AccountingCallId, OperationId, PermitId, ProviderCallId
 from hekate.ports.store import UowFactory
+from .token_accounting import measure_test_request, validate_measurement, validate_profile
 
 MAX_REQUEST_BYTES = 2_097_152
 _LOG = logging.getLogger(__name__)
@@ -48,6 +50,7 @@ class ProviderGatewayProfile:
     max_input_tokens: int
     max_output_tokens: int
     test_only: bool
+    execution_profile: ProviderExecutionProfile | None = None
     permit_ttl_seconds: int = 30
 
     def validate(self, *, allow_test_profile: bool = False) -> None:
@@ -67,14 +70,20 @@ class ProviderGatewayProfile:
             raise ValueError("synthetic prices must be test-only")
         if self.test_only and not allow_test_profile:
             raise ValueError("test provider profiles require explicit test-mode construction")
+        if not self.test_only:
+            raise ValueError("production provider dispatch remains blocked pending an approved model profile")
+        if self.execution_profile is None:
+            raise ValueError("provider execution profile is missing")
         if self.max_input_tokens < 0 or self.max_output_tokens < 1 or self.permit_ttl_seconds < 1:
             raise ValueError("provider gateway profile limits are invalid")
-        if not self.test_only and not (
-            self.price_table.model_profile_verified
-            and self.price_table.pricing_verified
-            and self.price_table.tokenizer_verified
+        validate_profile(self.execution_profile, self.price_table, allow_test_profile=allow_test_profile)
+        if (
+            self.execution_profile.profile_id != self.profile_id
+            or self.execution_profile.model != self.price_table.model
+            or self.execution_profile.max_input_tokens != self.max_input_tokens
+            or self.execution_profile.max_output_tokens != self.max_output_tokens
         ):
-            raise ValueError("production provider profile is not verified")
+            raise ValueError("gateway limits or model differ from the immutable execution profile")
 
 
 def _strict_json(payload: bytes) -> object:
@@ -121,7 +130,7 @@ def _claims(request: Request) -> dict[str, str]:
     return values
 
 
-async def _trusted_call(factory: UowFactory, claims: dict[str, str], plan_profile_id: str):
+async def _trusted_call(factory: UowFactory, claims: dict[str, str], plan_profile_id: str, plan_profile_digest: str):
     operation_id = OperationId(claims["operation_id"])
     async with factory() as uow:
         operation = await uow.delivery.lock_operation(operation_id)
@@ -144,7 +153,7 @@ async def _trusted_call(factory: UowFactory, claims: dict[str, str], plan_profil
             raise ValueError("operation dispatch payload is unavailable")
         raw_plan = dispatch["payload"].get("call_plan")
         plan = ProviderCallPlan.model_validate_json(canonical_json(raw_plan), strict=True)
-        if plan.profile_id != plan_profile_id:
+        if plan.profile_id != plan_profile_id or plan.profile_digest != plan_profile_digest:
             raise ValueError("provider profile differs from admitted plan")
         envelope = ExecutionEnvelope.model_validate_json(canonical_json(operation["envelope"]), strict=True)
         lease = await uow.agents.get_lease(binding.agent_registry_id)
@@ -172,6 +181,16 @@ def _usage_from(value: object, source: str) -> dict[str, object] | None:
         "output_tokens": usage.get("completion_tokens", usage.get("output_tokens")),
         "total_tokens": usage.get("total_tokens"),
     }
+    input_details = usage.get("prompt_tokens_details", usage.get("input_tokens_details"))
+    output_details = usage.get("completion_tokens_details", usage.get("output_tokens_details"))
+    if input_details is not None:
+        if not isinstance(input_details, dict) or set(input_details) - {"cached_tokens"}:
+            return None
+        fields["cache_tokens"] = input_details.get("cached_tokens")
+    if output_details is not None:
+        if not isinstance(output_details, dict) or set(output_details) - {"reasoning_tokens"}:
+            return None
+        fields["reasoning_tokens"] = output_details.get("reasoning_tokens")
     if any(item is not None and (type(item) is not int or item < 0) for item in fields.values()):
         return None
     provided = [item is not None for item in fields.values()]
@@ -285,7 +304,11 @@ def create_provider_gateway(
                     raise ValueError(
                         f"provider token limit {output_limit} exceeds runtime metadata ceiling {claims['max_output_tokens']}"
                     )
-            binding, envelope, plan, lease_owner = await _trusted_call(factory, claims, profile.profile_id)
+            if profile.execution_profile is None:
+                raise ValueError("provider execution profile is unavailable")
+            binding, envelope, plan, lease_owner = await _trusted_call(
+                factory, claims, profile.profile_id, profile.execution_profile.content_digest,
+            )
             if (
                 plan.model != model
                 or plan.pricing_version != profile.price_table.version
@@ -295,6 +318,14 @@ def create_provider_gateway(
                 or output_limit > envelope.max_output_tokens
             ):
                 raise ValueError("provider request exceeds the fixed profile or call plan")
+            measurement = measure_test_request(raw_body, body, profile.execution_profile, output_limit)
+            validate_measurement(
+                measurement, profile.execution_profile,
+                plan_max_input=plan.max_input_tokens,
+                envelope_max_input=envelope.max_input_tokens,
+                plan_max_output=plan.max_output_tokens,
+                envelope_max_output=envelope.max_output_tokens,
+            )
             call_kind = claims["call_kind"]
             accounting_id = AccountingCallId(claims["accounting_call_id"])
             permit_id = PermitId(str(uuid5(NAMESPACE_URL, f"hekate:permit:{accounting_id}")))
@@ -325,9 +356,14 @@ def create_provider_gateway(
                 lease_owner=lease_owner,
                 test_only=profile.test_only,
                 reservation_id=envelope.reservation_id,
+                measurement=measurement,
             )
             permit = await authorize_provider_call(factory, intent)
-            await consume_call_permit(factory, binding, lease_owner, permit.permit_id, accounting_id)
+            await consume_call_permit(
+                factory, binding, lease_owner, permit.permit_id, accounting_id,
+                expected_request_digest=measurement.request_digest,
+                expected_profile_digest=measurement.profile_digest,
+            )
         except (ValueError, ValidationError, HekateError, KeyError, TypeError) as error:
             _LOG.warning("provider request denied: %s: %s", type(error).__name__, str(error)[:240])
             return JSONResponse({"error": "provider request denied"}, status_code=402)

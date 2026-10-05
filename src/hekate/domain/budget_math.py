@@ -21,6 +21,12 @@ def estimate_envelope_cost(limits: RuntimeLimits, rates: PriceTable) -> Money:
 
 
 def price_usage(usage: NormalizedUsage, rates: PriceTable) -> CostAssessment:
+    if usage.cache_tokens not in (None, 0):
+        raise BudgetDenied("cache-token pricing is not defined by this price table")
+    if usage.reasoning_tokens not in (None, 0):
+        raise BudgetDenied("reasoning-token pricing is not defined by this price table")
+    if rates.usage_semantics not in (None, "aggregate_input_output_v1"):
+        raise BudgetDenied("provider usage semantics are not supported by this price table")
     if usage.reported_cost_usd is not None:
         if not usage.reported_cost_usd.is_finite() or usage.reported_cost_usd < 0:
             raise ValueError("reported usage cost must be finite and nonnegative")

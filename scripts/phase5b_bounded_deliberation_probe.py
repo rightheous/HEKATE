@@ -640,8 +640,8 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         async with engine.connect() as connection:
             head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres = await connection.scalar(text("SHOW server_version"))
-        if head != "0012_projection_write_guard":
-            raise ValueError("Phase 5B regression probe requires the current migration head 0012")
+        if head != "0013_provider_token_measurement":
+            raise ValueError("Phase 5B regression probe requires the current migration head 0013")
         report["database"] = {"name": make_url(database_url).database, "postgres_version": postgres, "migration_head": head}
 
         scope_text, principal_text = f"phase5b:{run_id}", f"principal:{run_id}"
@@ -679,9 +679,10 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
                 "profile_id": "phase5b-shared-synthetic-v1", "model": f"openai-compatible/{p3.FAKE_MODEL}",
                 "provider_model": p3.FAKE_MODEL, "max_input_tokens": 32768,
                 "max_output_tokens": 2048, "max_compaction_calls": 0,
+                "model_revision": "fake-provider-chat-contract-v1", "context_window_tokens": 65536,
             }
         (config_dir / "models.yaml").write_text(yaml.safe_dump(models), encoding="utf-8")
-        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase5b-synthetic-pricing-v1", "prices": {
+        (config_dir / "pricing.yaml").write_text(yaml.safe_dump({"version": "phase5b-synthetic-pricing-v1", "effective_at": "2026-10-01T00:00:00Z", "prices": {
             p3.FAKE_MODEL: {"input_usd_per_million": "1", "output_usd_per_million": "2"},
         }}), encoding="utf-8")
 
@@ -717,14 +718,14 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         sandbox.start_network()
         gateway_port = p3.reserve_port(sandbox.gateway_address)
         private_token = __import__("secrets").token_urlsafe(40)
+        from hekate.infrastructure.letta.token_accounting import test_profile_and_price_for_config
+        hekate_execution_profile, hekate_price_table = test_profile_and_price_for_config(hekate_config)
         gateway_profile = ProviderGatewayProfile(
             profile_id=hekate_config.profile_id,
-            price_table=p3.PriceTable(
-                model=p3.FAKE_MODEL, version=hekate_config.pricing_version,
-                input_usd_per_million=Decimal("1"), output_usd_per_million=Decimal("2"), synthetic=True,
-            ),
+            price_table=hekate_price_table,
             upstream_base_url=f"http://127.0.0.1:{fake.port}", upstream_api_key="isolated-fake-only",
             max_input_tokens=32768, max_output_tokens=2048, test_only=True,
+            execution_profile=hekate_execution_profile,
         )
         from hekate.infrastructure.letta.provider_gateway import create_provider_gateway
         gateway_app = create_provider_gateway(factory, gateway_profile, private_token, allow_test_profile=True)
@@ -3713,6 +3714,7 @@ async def _maintenance_migration_snapshot(database_url: str) -> dict[str, object
             result: dict[str, object] = {"head": head, **dict(counts)}
             if head in {
                 "0010_p5b_delib_maint", "0011_phase6a_memory_projection", "0012_projection_write_guard",
+                "0013_provider_token_measurement",
             }:
                 progress = (await connection.execute(text("""
                     SELECT count(*) AS steps,
@@ -3744,6 +3746,7 @@ def _verify_legacy_migration_preserves_rows(database_url: str) -> dict[str, obje
         migrated = True
     elif before["head"] not in {
         "0010_p5b_delib_maint", "0011_phase6a_memory_projection", "0012_projection_write_guard",
+        "0013_provider_token_measurement",
     }:
         raise ValueError(f"legacy preservation database must be at 0009 through 0012, found {before['head']}")
     after = asyncio.run(_maintenance_migration_snapshot(database_url))
@@ -3780,29 +3783,34 @@ def _verify_empty_migration_roundtrip(database_url: str) -> dict[str, object]:
     try:
         p3.command.upgrade(cfg, "head")
         upgraded = asyncio.run(_maintenance_migration_snapshot(database_url))
-        if upgraded["head"] != "0012_projection_write_guard" or any(
+        if upgraded["head"] != "0013_provider_token_measurement" or any(
             upgraded[key] != 0 for key in ("tasks", "steps", "operations", "ledger_rows", "unknown_operations", "active_holds")
         ):
-            raise AssertionError(f"fresh migration did not create an empty 0012 database: {upgraded}")
+            raise AssertionError(f"fresh migration did not create an empty 0013 database: {upgraded}")
+        p3.command.downgrade(cfg, "-1")
+        downgraded_0013 = asyncio.run(_maintenance_migration_snapshot(database_url))
+        if downgraded_0013["head"] != "0012_projection_write_guard":
+            raise AssertionError(f"empty 0013 downgrade did not stop at 0012: {downgraded_0013}")
         p3.command.downgrade(cfg, "-1")
         downgraded_0012 = asyncio.run(_maintenance_migration_snapshot(database_url))
         if downgraded_0012["head"] != "0011_phase6a_memory_projection":
             raise AssertionError(f"empty 0012 downgrade did not stop at 0011: {downgraded_0012}")
         p3.command.downgrade(cfg, "-1")
-        downgraded = asyncio.run(_maintenance_migration_snapshot(database_url))
-        if downgraded["head"] != "0010_p5b_delib_maint":
-            raise AssertionError(f"empty 0011 downgrade did not stop at 0010: {downgraded}")
+        downgraded_0011 = asyncio.run(_maintenance_migration_snapshot(database_url))
+        if downgraded_0011["head"] != "0010_p5b_delib_maint":
+            raise AssertionError(f"empty 0011 downgrade did not stop at 0010: {downgraded_0011}")
         p3.command.downgrade(cfg, "-1")
         downgraded = asyncio.run(_maintenance_migration_snapshot(database_url))
         if downgraded["head"] != "0009_p5b_parent_attempt_id":
             raise AssertionError(f"empty 0010 downgrade did not stop at 0009: {downgraded}")
         p3.command.upgrade(cfg, "head")
         reupgraded = asyncio.run(_maintenance_migration_snapshot(database_url))
-        if reupgraded["head"] != "0012_projection_write_guard" or reupgraded["steps"] != 0:
+        if reupgraded["head"] != "0013_provider_token_measurement" or reupgraded["steps"] != 0:
             raise AssertionError(f"empty migration re-upgrade failed: {reupgraded}")
         return {
             "database": make_url(database_url).database,
             "upgrade_head": upgraded["head"],
+            "downgrade_0013_head": downgraded_0013["head"],
             "intermediate_downgrade_head": downgraded_0012["head"],
             "downgrade_head": downgraded["head"],
             "reupgrade_head": reupgraded["head"],
@@ -3863,30 +3871,20 @@ def main() -> int:
     if legacy_migration_check is not None:
         report["legacy_database_migration_check"] = legacy_migration_check
     populated_downgrade_guard: dict[str, object]
-    p3.command.downgrade(cfg, "-1")
-    write_guard_downgrade_head = asyncio.run(_maintenance_migration_snapshot(args.database_url))["head"]
-    if write_guard_downgrade_head != "0011_phase6a_memory_projection":
-        raise AssertionError("empty Phase 6A write-guard state did not permit a downgrade to 0011")
-    p3.command.downgrade(cfg, "-1")
-    projection_downgrade_head = asyncio.run(_maintenance_migration_snapshot(args.database_url))["head"]
-    if projection_downgrade_head != "0010_p5b_delib_maint":
-        raise AssertionError("empty Phase 6A projection progress did not permit a downgrade to 0010")
     try:
         p3.command.downgrade(cfg, "-1")
     except Exception as error:
-        if "refusing to discard persisted deliberation maintenance progress" not in str(error):
+        if "refusing to discard measured provider request history in call_permits" not in str(error):
             raise
         head_after_downgrade_attempt = asyncio.run(_maintenance_migration_snapshot(args.database_url))["head"]
-        if head_after_downgrade_attempt != "0010_p5b_delib_maint":
-            raise AssertionError("refused populated downgrade changed the migration head") from error
+        if head_after_downgrade_attempt != "0013_provider_token_measurement":
+            raise AssertionError("measured-history downgrade refusal changed the migration head") from error
         populated_downgrade_guard = {
             "refused": True, "reason": str(error),
-            "write_guard_downgrade_head": write_guard_downgrade_head,
-            "projection_downgrade_head": projection_downgrade_head,
-            "head_unchanged_after_0010_guard": True,
+            "head_unchanged_after_0013_measurement_guard": True,
         }
     else:
-        raise AssertionError("populated maintenance metadata did not protect migration downgrade")
+        raise AssertionError("measured provider request history did not protect migration downgrade")
     report["migration_safety"] = {
         "legacy_rows_preserved": legacy_migration_check,
         "empty_upgrade_downgrade_reupgrade": empty_migration_check,
