@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import fcntl
 import os
 import re
 import secrets
@@ -12,6 +13,47 @@ from hekate.domain.models import ArtifactRef
 
 
 _REF = re.compile(r"sha256:([0-9a-f]{64})\Z")
+_LOCKS = ".locks"
+
+
+def acquire_lock(root: Path, ref: ArtifactRef) -> int:
+    match = _REF.fullmatch(ref)
+    if match is None:
+        raise ValueError("invalid archive reference")
+    root.mkdir(parents=True, exist_ok=True)
+    root_fd = os.open(root.resolve(strict=True), os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0))
+    try:
+        try:
+            os.mkdir(_LOCKS, mode=0o700, dir_fd=root_fd)
+        except FileExistsError:
+            pass
+        locks_fd = os.open(_LOCKS, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0), dir_fd=root_fd)
+        try:
+            fd = os.open(
+                f"{match.group(1)}.lock",
+                os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0),
+                0o600,
+                dir_fd=locks_fd,
+            )
+        finally:
+            os.close(locks_fd)
+    finally:
+        os.close(root_fd)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise ValueError("archive lock is not a regular file")
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        return fd
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def release_lock(fd: int) -> None:
+    try:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
 
 
 def _directory(root: Path, ref: ArtifactRef, *, create: bool = False) -> tuple[int, int, str]:
@@ -37,6 +79,14 @@ def _directory(root: Path, ref: ArtifactRef, *, create: bool = False) -> tuple[i
 def put(root: Path, content: bytes) -> ArtifactRef:
     digest = hashlib.sha256(content).hexdigest()
     ref = ArtifactRef(f"sha256:{digest}")
+    lock_fd = acquire_lock(root, ref)
+    try:
+        return _put_locked(root, content, ref, digest)
+    finally:
+        release_lock(lock_fd)
+
+
+def _put_locked(root: Path, content: bytes, ref: ArtifactRef, digest: str) -> ArtifactRef:
     root_fd, directory_fd, name = _directory(root, ref, create=True)
     temporary = f".stage-{secrets.token_hex(16)}"
     try:
@@ -105,6 +155,14 @@ def read(root: Path, ref: ArtifactRef, limit: int) -> bytes:
 
 
 def delete(root: Path, ref: ArtifactRef) -> bool:
+    lock_fd = acquire_lock(root, ref)
+    try:
+        return delete_locked(root, ref)
+    finally:
+        release_lock(lock_fd)
+
+
+def delete_locked(root: Path, ref: ArtifactRef) -> bool:
     try:
         root_fd, directory_fd, name = _directory(root, ref)
     except FileNotFoundError:

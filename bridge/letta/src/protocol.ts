@@ -42,7 +42,7 @@ export type Command =
   | (CommandBase & {
       command: "session.prepare";
       binding: RuntimeBinding;
-      output_contract?: "hekate_turn_output_v1" | "position_commit_v1" | null;
+      output_contract?: "hekate_turn_output_v1" | "critic_turn_output_v1" | "position_commit_v1" | null;
     })
   | (CommandBase & {
       command: "session.turn";

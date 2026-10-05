@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from hekate.domain.contracts import canonical_json, canonical_json_hash
 from hekate.domain.errors import Conflict, PolicyDenied, StaleInput, UnknownExecution
+from hekate.application.evidence import manifest_references_current
 from hekate.domain.models import (
     BillableCallIntent,
     BudgetReservation,
@@ -138,6 +139,45 @@ async def _lock_guard(uow, operation, binding: GuardBinding, lease_owner: str):
     return task, attempt, agent
 
 
+async def _validate_provider_context(uow, operation_id: OperationId, task, binding: GuardBinding) -> None:
+    manifest_row = await uow.knowledge.get_context_manifest(operation_id)
+    requires_manifest = task.topic_id is not None or bool(task.evidence_refs)
+    if manifest_row is None:
+        if requires_manifest:
+            raise PolicyDenied("context_manifest_missing")
+        return
+
+    manifest = manifest_row.get("manifest")
+    if (
+        not isinstance(manifest, Mapping)
+        or manifest_row.get("task_id") != binding.task_id
+        or manifest_row.get("input_revision") != binding.input_revision
+        or manifest.get("task_id") != str(binding.task_id)
+        or manifest.get("attempt_id") != str(binding.attempt_id)
+        or manifest.get("registry_id") != str(binding.agent_registry_id)
+        or manifest.get("input_revision") != binding.input_revision
+        or manifest.get("topic_id") != (str(task.topic_id) if task.topic_id is not None else None)
+        or manifest.get("base_position_version") != task.base_position_version
+    ):
+        raise PolicyDenied("context_manifest_binding_mismatch")
+
+    evidence = manifest.get("evidence")
+    if not isinstance(evidence, list) or any(not isinstance(item, Mapping) for item in evidence):
+        raise PolicyDenied("evidence_reference_unavailable")
+    selected = tuple(map(str, task.evidence_refs))
+    manifest_ids = tuple(item.get("id") for item in evidence)
+    if (
+        any(type(value) is not str for value in manifest_ids)
+        or len(set(manifest_ids)) != len(manifest_ids)
+        or set(manifest_ids) != set(selected)
+        or len(manifest_ids) != len(selected)
+        or not await manifest_references_current(
+            uow, binding.scope, binding.authz_epoch, manifest, task.evidence_refs,
+        )
+    ):
+        raise PolicyDenied("evidence_reference_unavailable")
+
+
 async def reserve(factory: UowFactory, request: ReservationRequest) -> BudgetReservation:
     async with factory() as uow:
         operation = await uow.delivery.lock_operation(request.operation_id)
@@ -156,7 +196,7 @@ async def authorize_provider_call(factory: UowFactory, call: BillableCallIntent)
         raise ValueError("call deadlines must be timezone-aware")
     async with factory() as uow:
         operation = await uow.delivery.lock_operation(call.operation_id)
-        _, attempt, _ = await _lock_guard(uow, operation, call.binding, call.lease_owner)
+        task, attempt, _ = await _lock_guard(uow, operation, call.binding, call.lease_owner)
         if call.operation_id != operation["id"]:
             raise Conflict("call operation identity changed")
         if call.binding.conversation_id != operation["binding"].get("conversation_id"):
@@ -200,6 +240,7 @@ async def authorize_provider_call(factory: UowFactory, call: BillableCallIntent)
             envelope,
             canonical_json_hash(call),
         )
+        await _validate_provider_context(uow, call.operation_id, task, call.binding)
         await uow.commit()
         return permit
 
@@ -216,7 +257,7 @@ async def consume_call_permit(
         if descriptor is None:
             raise StaleInput("provider call is unavailable")
         operation = await uow.delivery.lock_operation(OperationId(descriptor["operation_id"]))
-        _, _, _ = await _lock_guard(uow, operation, binding, lease_owner)
+        task, _, _ = await _lock_guard(uow, operation, binding, lease_owner)
         if (
             descriptor["task_id"] != binding.task_id
             or descriptor["attempt_id"] != binding.attempt_id
@@ -233,6 +274,7 @@ async def consume_call_permit(
         if envelope.deadline <= datetime.now(UTC):
             raise PolicyDenied("operation deadline expired")
         permit = await uow.budgets.consume_call_permit(permit_id, accounting_call_id)
+        await _validate_provider_context(uow, OperationId(descriptor["operation_id"]), task, binding)
         await uow.commit()
         return permit
 

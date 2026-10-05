@@ -127,6 +127,46 @@ async def get_task(factory: UowFactory, actor: ActorContext, task_id: TaskId) ->
             raise PolicyDenied("task is outside the actor scope")
         response = await uow.tasks.get_task_response(task_id)
         cost = await uow.tasks.get_task_cost_status(task_id)
+        workflow = await uow.critic_workflows.get(task_id)
+        critic_review = None
+        if workflow is not None:
+            operation_ids = [
+                workflow.create_operation_id, workflow.review_operation_id,
+                workflow.synthesis_operation_id,
+            ]
+            if workflow.delete_operation_id is not None:
+                operation_ids.append(workflow.delete_operation_id)
+            operation_rows = await uow.delivery.get_operation_statuses(operation_ids)
+            reservations = {}
+            for label, reservation_id in (
+                ("review", workflow.review_reservation_id),
+                ("synthesis", workflow.synthesis_reservation_id),
+            ):
+                reservation = await uow.budgets.get_reservation(reservation_id)
+                reservations[label] = ({
+                    "state": reservation["status"],
+                    "reserved_usd": str(reservation["amount"]),
+                    "pricing_version": reservation["pricing_version"],
+                } if reservation else None)
+            critic_agent = await uow.agents.lock_registry(workflow.critic_registry_id)
+            critic_review = {
+                "stage": workflow.stage,
+                "critic_registry_id": str(workflow.critic_registry_id),
+                "critic_agent_state": critic_agent.intended_state,
+                "critic_create": operation_rows.get(str(workflow.create_operation_id)),
+                "review": {
+                    "attempt_id": str(workflow.review_attempt_id),
+                    "operation": operation_rows.get(str(workflow.review_operation_id)),
+                    "reservation": reservations["review"],
+                },
+                "synthesis": {
+                    "attempt_id": str(workflow.synthesis_attempt_id),
+                    "operation": operation_rows.get(str(workflow.synthesis_operation_id)),
+                    "reservation": reservations["synthesis"],
+                },
+                "conclusion_id": str(workflow.critic_conclusion_id) if workflow.critic_conclusion_id else None,
+                "delete_operation": operation_rows.get(str(workflow.delete_operation_id)) if workflow.delete_operation_id else None,
+            }
         await uow.commit()
         response_text = response["response_text"] if response else None
         result_status = "accepted" if response and response["outcome"] != "FAILED" else "failed" if task.status == TaskStatus.FAILED else "pending"
@@ -141,6 +181,7 @@ async def get_task(factory: UowFactory, actor: ActorContext, task_id: TaskId) ->
             "deadline": task.deadline.isoformat(),
             "response": response_text,
             "result_status": result_status,
+            "critic_review": critic_review,
             **cost,
         }
 
@@ -220,14 +261,16 @@ async def cancel(
         }
 
 
-async def converge_task_execution(uow: UnitOfWork, task_id: TaskId, revision: Revision) -> Task | None:
+async def converge_task_execution(
+    uow: UnitOfWork, task_id: TaskId, revision: Revision, *, now: datetime | None = None,
+) -> Task | None:
     operations = await uow.delivery.task_execution_states(task_id)
     if not operations or any(
         operation["execution_state"] != "QUIESCENT" or operation["unconfirmed_calls"]
         for operation in operations
     ):
         return None
-    resolved = await uow.tasks.resolve_task_after_execution(task_id, revision)
+    resolved = await uow.tasks.resolve_task_after_execution(task_id, revision, now=now)
     if resolved is not None:
         await uow.delivery.append_audit({
             "owner_scope": str(resolved.scope), "task_id": str(task_id),
@@ -262,6 +305,7 @@ async def complete(
     response: Mapping[str, object],
     *,
     successful: bool,
+    accepted_at: datetime | None = None,
 ) -> bool:
     """Persist a scoped response and terminal Task state in the caller's UoW."""
     authorization = await uow.tasks.lock_scope(actor.scope)
@@ -277,5 +321,5 @@ async def complete(
     if task.input_revision != expected_revision:
         return False
     return await uow.tasks.finalize_task_response(
-        task_id, expected_revision, response, successful=successful,
+        task_id, expected_revision, response, successful=successful, accepted_at=accepted_at,
     )

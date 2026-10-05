@@ -6,7 +6,8 @@ from pydantic import TypeAdapter
 
 from .contracts import MAX_CONTRACT_BYTES, check_json_payload
 from .models import (
-    Attempt, ConclusionCapsule, DissentExcerpt, EvidenceExcerpt, EvidenceInput, EvidenceView, PositionView, TaskData,
+    Attempt, ConclusionCapsule, CriticReviewTarget, CriticSynthesisContext, CriticTurnOutput,
+    DissentExcerpt, EvidenceExcerpt, EvidenceInput, EvidenceView, PositionView, TaskData,
     ExpectedOutput, HekateProposal, HekateTurnOutput, JsonSchema, PositionCommitRequest, RuntimeBinding, TaskCapsule,
     RuntimeLimitsCapsule, TargetPosition,
     TaskSnapshot,
@@ -17,7 +18,11 @@ from .types import Revision
 def build_task_capsule(
     snapshot: TaskSnapshot, attempt: Attempt, evidence: Sequence[EvidenceView], *,
     target_position: PositionView | None = None, dissent: Sequence[DissentExcerpt] = (),
-    max_output_tokens: int | None = None,
+    max_output_tokens: int | None = None, reasoning_role: str = "hekate",
+    mode: str | None = None, review_target: CriticReviewTarget | None = None,
+    synthesis_context: CriticSynthesisContext | None = None,
+    expected_output_schema: str | None = None,
+    constraints: Sequence[str] = (),
 ) -> TaskCapsule:
     if attempt.task_id != snapshot.task.id or attempt.input_revision != snapshot.task.input_revision:
         raise ValueError("Task Capsule snapshot and attempt do not match")
@@ -51,11 +56,13 @@ def build_task_capsule(
         topic_id=snapshot.task.topic_id,
         base_position_version=snapshot.task.base_position_version,
         objective=snapshot.task.question,
-        reasoning_role="hekate",
-        mode="targeted_review" if target_position else "independent_exploration",
+        reasoning_role=reasoning_role,
+        mode=mode or ("targeted_review" if target_position else "independent_exploration"),
         premises=(),
         evidence_refs=tuple(item.id for item in evidence),
         task_data=TaskData(evidence=tuple(excerpts), dissent=tuple(dissent)),
+        review_target=review_target,
+        synthesis_context=synthesis_context,
         target_position=(TargetPosition(
             topic_id=target_position.topic_id,
             version=target_position.version,
@@ -71,8 +78,8 @@ def build_task_capsule(
                 "created_at": target_position.created_at,
             },
         ) if target_position else None),
-        constraints=(),
-        expected_output=ExpectedOutput(schema="hekate_turn_output_v1"),
+        constraints=tuple(constraints),
+        expected_output=ExpectedOutput(schema=expected_output_schema or "hekate_turn_output_v1"),
         runtime_limits=RuntimeLimitsCapsule(
             max_output_tokens=max_output_tokens,
             deadline_at=snapshot.task.deadline.isoformat(),
@@ -87,6 +94,10 @@ def parse_conclusion(payload: bytes) -> ConclusionCapsule:
 
 def parse_hekate_turn_output(payload: bytes) -> HekateTurnOutput:
     return HekateTurnOutput.model_validate_json(check_json_payload(payload), strict=True)
+
+
+def parse_critic_turn_output(payload: bytes) -> CriticTurnOutput:
+    return CriticTurnOutput.model_validate_json(check_json_payload(payload), strict=True)
 
 
 def parse_task_capsule(payload: bytes) -> TaskCapsule:
@@ -127,6 +138,7 @@ def export_schemas() -> Mapping[str, JsonSchema]:
     models = {
         "task-capsule.v1.schema.json": TaskCapsule,
         "conclusion-capsule.v1.schema.json": ConclusionCapsule,
+        "critic-turn-output.v1.schema.json": CriticTurnOutput,
         "hekate-proposal.v1.schema.json": TypeAdapter(HekateProposal),
         "position-commit.v1.schema.json": PositionCommitRequest,
         "hekate-turn-output.v1.schema.json": HekateTurnOutput,

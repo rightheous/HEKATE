@@ -6,7 +6,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from hekate.application.budgets import _restore_binding
 from hekate.application.evidence import manifest_references_current
-from hekate.domain.errors import Conflict, PolicyDenied, StaleInput, UnknownExecution
+from hekate.domain.errors import Conflict, EvidenceUnavailable, PolicyDenied, StaleInput, UnknownExecution
 from hekate.domain.models import AdmissionReceipt, AdmissionRequest, Attempt, ExecutionObservation, OutboxJob, ProviderCallPlan, RuntimeBinding
 from hekate.domain.types import AccountingCallId, AttemptEvent, AttemptId, AttemptStatus, TaskStatus
 from hekate.domain.contracts import canonical_json, canonical_json_hash
@@ -38,6 +38,8 @@ def _request_hash(request: AdmissionRequest) -> str:
         "parent_attempt_id": request.parent_attempt_id,
         "payload": request.payload,
         "context_manifest": request.context_manifest,
+        "workflow_stage": request.workflow_stage,
+        "workflow_stage_hash": request.workflow_stage_hash,
     })
 
 
@@ -81,6 +83,10 @@ def _validate_request(request: AdmissionRequest) -> None:
             raise Conflict("provider call plan exceeds the persisted envelope")
     if envelope.deadline.tzinfo is None or envelope.deadline.utcoffset() is None:
         raise ValueError("execution deadline must be timezone-aware")
+    if request.attempt_kind in {"critic_review", "synthesis"} and (
+        request.workflow_stage is None or request.workflow_stage_hash is None
+    ):
+        raise PolicyDenied("Critic and synthesis admissions require a durable workflow step")
 
 
 async def prepare_runtime_session(
@@ -97,6 +103,8 @@ async def prepare_runtime_session(
         await uow.agents.assert_current_lease(binding.agent_registry_id, lease_owner, binding.fence)
         if await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True) is not None:
             raise UnknownExecution("unresolved execution blocks session preparation")
+        if agent.intended_state == "BUSY":
+            raise UnknownExecution("agent is temporarily busy with another Task")
         if agent.intended_state != "READY":
             raise PolicyDenied("agent is not ready for session preparation")
         await uow.commit()
@@ -133,6 +141,7 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
             request_hash,
             _binding(request),
             _envelope(request),
+            request.workflow_stage_hash,
         )
         if claim.state in {"ADMITTED", "COMPLETED", "FAILED"}:
             receipt = claim.receipt
@@ -172,6 +181,20 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
             raise PolicyDenied("context_manifest_missing")
         if task.status in {TaskStatus.STOPPING, TaskStatus.CANCELLED, TaskStatus.COMPLETED, TaskStatus.FAILED}:
             raise PolicyDenied("task cancellation or terminal state blocks dispatch")
+        if task.status == TaskStatus.WAITING and request.workflow_stage is None:
+            raise PolicyDenied("waiting Task admits only its approved workflow step")
+        if request.workflow_stage is not None:
+            workflow = await uow.critic_workflows.authorize_admission(
+                task_id=binding.task_id, scope=binding.scope, stage=request.workflow_stage,
+                attempt_id=binding.attempt_id, operation_id=envelope.operation_id,
+                registry_id=binding.agent_registry_id,
+            )
+            if (
+                workflow.input_revision != binding.input_revision
+                or request.parent_attempt_id != workflow.parent_attempt_id
+                or request.workflow_stage_hash != workflow.stage_hash(request.workflow_stage)
+            ):
+                raise PolicyDenied("workflow admission binding changed")
         if task.deadline <= now or envelope.deadline > task.deadline or envelope.deadline <= now:
             raise PolicyDenied("task or operation deadline expired")
         if await uow.tasks.attempt_exists(binding.attempt_id):
@@ -181,17 +204,30 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
             raise Conflict("registry and provider-agent binding mismatch")
         if agent.policy_version != binding.policy_version:
             raise PolicyDenied("agent policy changed")
+        if request.workflow_stage == "critic_review" and (
+            agent.kind != "critic" or agent.persistence != "ephemeral" or agent.task_id != task.id
+        ):
+            raise PolicyDenied("review admission requires the Task's ephemeral Critic registry")
+        if request.workflow_stage == "synthesis":
+            planning_attempt = await uow.tasks.get_attempt(workflow.parent_attempt_id)
+            if (
+                agent.kind != "hekate" or agent.persistence != "persistent" or agent.task_id is not None
+                or agent.registry_id != planning_attempt.agent_registry_id
+            ):
+                raise PolicyDenied("synthesis must use the persistent HEKATE bound to planning")
         if request.context_manifest is not None:
             if request.context_manifest.get("task_id") != str(binding.task_id) or request.context_manifest.get("input_revision") != binding.input_revision:
                 raise Conflict("context manifest differs from the trusted Task binding")
             if not await manifest_references_current(
                 uow, binding.scope, binding.authz_epoch, request.context_manifest,
             ):
-                raise PolicyDenied("evidence_reference_unavailable")
+                raise EvidenceUnavailable("evidence_reference_unavailable")
         await uow.agents.assert_current_lease(binding.agent_registry_id, request.lease_owner, binding.fence)
         active = await uow.agents.active_execution_hold(binding.agent_registry_id, lock=True)
         if active is not None:
             raise UnknownExecution("agent has an unresolved execution")
+        if agent.intended_state == "BUSY":
+            raise UnknownExecution("agent is temporarily busy with another Task")
         if agent.intended_state != "READY":
             raise PolicyDenied("agent is not ready under the current policy")
 
@@ -237,6 +273,14 @@ async def admit_operation(factory: UowFactory, request: AdmissionRequest) -> Adm
             status="PENDING",
         ))
         await uow.delivery.complete_admission(receipt)
+        if request.workflow_stage == "critic_review":
+            await uow.critic_workflows.transition(
+                binding.task_id, ("CRITIC_READY",), "REVIEW_ADMITTED",
+            )
+        elif request.workflow_stage == "synthesis":
+            await uow.critic_workflows.transition(
+                binding.task_id, ("SYNTHESIS_PENDING",), "SYNTHESIS_ADMITTED",
+            )
         await uow.delivery.append_audit({
             "owner_scope": str(binding.scope),
             "task_id": str(binding.task_id),
@@ -341,7 +385,7 @@ async def apply_execution_observation(uow, observation: ExecutionObservation) ->
     if operation["binding"] != _json_value(binding):
         raise Conflict("execution observation binding mismatch")
     await uow.tasks.lock_scope(binding.scope)
-    await uow.tasks.lock_task(binding.task_id)
+    task_before = await uow.tasks.lock_task(binding.task_id)
     attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
     agent = await uow.agents.lock_registry(binding.agent_registry_id)
     if agent.provider_id != binding.provider_agent_id or agent.owner_scope != binding.scope:
@@ -391,8 +435,39 @@ async def apply_execution_observation(uow, observation: ExecutionObservation) ->
 
         await converge_task_execution(uow, binding.task_id, binding.input_revision)
         if observation.source == "pre_dispatch_policy":
-            if not await uow.tasks.fail_policy_task(binding.task_id, binding.input_revision):
-                raise StaleInput("Task changed before policy rejection was finalized")
+            current_task = await uow.tasks.lock_task(binding.task_id)
+            if (
+                task_before.input_revision == binding.input_revision
+                and task_before.status == TaskStatus.RUNNING
+                and task_before.cancel_requested_at is None
+                and task_before.deadline > observation.observed_at
+                and current_task.input_revision == binding.input_revision
+                and current_task.status == TaskStatus.RUNNING
+                and current_task.cancel_requested_at is None
+            ):
+                if not await uow.tasks.fail_policy_task(binding.task_id, binding.input_revision):
+                    raise StaleInput("Task changed before policy rejection was finalized")
+            else:
+                # Cancellation, deadline, or a newer revision owns Task
+                # convergence; a stale child dispatch cannot fail it again.
+                await uow.delivery.append_audit({
+                    "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+                    "attempt_id": str(binding.attempt_id), "operation_id": str(observation.operation_id),
+                    "registry_id": str(binding.agent_registry_id),
+                    "event_kind": "dispatch.rejected_after_task_change",
+                    "safe_payload": {"reason": observation.reason, "current_revision": current_task.input_revision},
+                })
+            if current_task.status in {TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED}:
+                workflow = await uow.critic_workflows.get(binding.task_id, lock=True)
+                if workflow is not None and workflow.stage in {
+                    "REVIEW_ADMITTED", "SYNTHESIS_PENDING", "SYNTHESIS_ADMITTED", "FAILED",
+                }:
+                    from hekate.application.lifecycle import _queue_retirement_in_uow
+
+                    try:
+                        await _queue_retirement_in_uow(uow, workflow)
+                    except (PolicyDenied, UnknownExecution):
+                        pass
             await uow.delivery.append_audit({
                 "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
                 "attempt_id": str(binding.attempt_id), "operation_id": str(observation.operation_id),

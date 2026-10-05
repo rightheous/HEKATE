@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
 from hekate.domain.contracts import canonical_json_hash
-from hekate.domain.errors import Conflict, PolicyDenied
+from hekate.domain.errors import AuthorizationChanged, Conflict, EvidenceUnavailable, PolicyDenied
 from hekate.domain.models import EvidenceInput, EvidenceRecord, EvidenceView, ReadLimits, ReferenceValidation
 from hekate.domain.types import ActorContext, EvidenceId, ScopeId
 from hekate.infrastructure import archive
@@ -16,6 +17,7 @@ from hekate.ports.store import UowFactory
 
 
 MAX_EVIDENCE_BYTES = 1_048_576
+_LOG = logging.getLogger(__name__)
 
 
 async def _authorized_scope(uow, actor: ActorContext):
@@ -23,7 +25,7 @@ async def _authorized_scope(uow, actor: ActorContext):
     if (authorization.principal_id, authorization.policy_version, authorization.authz_epoch) != (
         actor.principal_id, actor.policy_version, actor.authz_epoch,
     ):
-        raise PolicyDenied("authorization snapshot changed")
+        raise AuthorizationChanged("authorization snapshot changed")
     return authorization
 
 
@@ -33,7 +35,7 @@ async def _root_sources(uow, actor: ActorContext, source: EvidenceInput) -> tupl
         raise ValueError("Evidence cannot derive from itself")
     records = await uow.knowledge.lock_accessible_references(actor.scope, parents, actor.authz_epoch)
     if len(records) != len(parents):
-        raise PolicyDenied("Evidence reference is unavailable")
+        raise EvidenceUnavailable("Evidence reference is unavailable")
     roots = tuple(sorted({root for record in records for root in record.root_source_ids}))
     expected = roots or (source.id,)
     if source.root_source_ids and tuple(sorted(set(source.root_source_ids))) != expected:
@@ -127,7 +129,7 @@ async def register(
                 if len(existing) != 1 or not _same_registration(existing[0], candidate):
                     raise Conflict("Evidence ID is already bound to different registration content")
                 if existing[0].availability not in {"STAGED", "AVAILABLE"}:
-                    raise PolicyDenied("expired or unavailable Evidence cannot be restored")
+                    raise EvidenceUnavailable("expired or unavailable Evidence cannot be restored")
                 record = existing[0]
             else:
                 await uow.knowledge.stage_artifact(artifact_ref, digest, len(content), source.retention_class)
@@ -148,7 +150,7 @@ async def register(
         await _authorized_scope(uow, actor)
         rows = await uow.knowledge.get_evidence([record.id], lock=True)
         if len(rows) != 1 or rows[0].content_hash != digest or rows[0].access_epoch != actor.authz_epoch:
-            raise PolicyDenied("Evidence registration changed during archive write")
+            raise EvidenceUnavailable("Evidence registration changed during archive write")
         await uow.knowledge.mark_artifact_available(stored_ref)
         updated = await uow.knowledge.get_evidence([record.id])
         await uow.commit()
@@ -165,12 +167,12 @@ async def read_scoped(
         await _authorized_scope(uow, actor)
         rows = await uow.knowledge.get_evidence([evidence_id])
         if len(rows) != 1 or rows[0].scope != actor.scope:
-            raise PolicyDenied("Evidence is unavailable")
+            raise EvidenceUnavailable("Evidence is unavailable")
         record = rows[0]
         if record.access_epoch != actor.authz_epoch or record.availability != "AVAILABLE" or (
             record.expiry_at is not None and record.expiry_at <= datetime.now(UTC)
         ):
-            raise PolicyDenied("Evidence is unavailable")
+            raise EvidenceUnavailable("Evidence is unavailable")
         artifact = await uow.knowledge.get_artifact(record.artifact_ref) if record.artifact_ref else None
         await uow.commit()
     content: bytes | None = None
@@ -185,7 +187,7 @@ async def read_scoped(
         if len(current) != 1 or current[0] != record or (
             record.expiry_at is not None and record.expiry_at <= datetime.now(UTC)
         ):
-            raise PolicyDenied("Evidence changed while it was being read")
+            raise EvidenceUnavailable("Evidence changed while it was being read")
         await uow.commit()
     return EvidenceView(
         id=record.id, kind=record.kind, source_uri=record.source_uri, locator=record.locator,
@@ -215,7 +217,7 @@ async def read_many_scoped(
             or (row.expiry_at is not None and row.expiry_at <= datetime.now(UTC))
             for row in records
         ):
-            raise PolicyDenied("Evidence reference is unavailable")
+            raise EvidenceUnavailable("Evidence reference is unavailable")
         artifacts = {row.artifact_ref: await uow.knowledge.get_artifact(row.artifact_ref) for row in records if row.artifact_ref}
         await uow.commit()
     if any(
@@ -223,7 +225,7 @@ async def read_many_scoped(
         or artifacts[row.artifact_ref]["storage_state"] != "AVAILABLE"
         for row in records
     ):
-        raise PolicyDenied("Evidence archive content is unavailable")
+        raise EvidenceUnavailable("Evidence archive content is unavailable")
     views = []
     remaining = max_total_bytes
     for row in records:
@@ -255,7 +257,7 @@ async def read_many_scoped(
             before.id != after.id or before.content_version != after.content_version or before.access_epoch != after.access_epoch
             for before, after in zip(records, current, strict=True)
         ):
-            raise PolicyDenied("Evidence reference changed while preparing the Task")
+            raise EvidenceUnavailable("Evidence reference changed while preparing the Task")
         await uow.commit()
     return tuple(views)
 
@@ -302,6 +304,56 @@ async def manifest_references_current(uow, scope: ScopeId, access_epoch: int, ma
     return True
 
 
+async def _delete_pending_artifact(
+    factory: UowFactory, archive_root: Path, ref: str, cancel_requested: asyncio.Event,
+) -> str:
+    """Own the archive lock until every filesystem and DB effect has finished."""
+    lock_fd = await asyncio.to_thread(archive.acquire_lock, archive_root, ref)
+    try:
+        if cancel_requested.is_set():
+            return "cancelled_before_delete"
+        async with factory() as uow:
+            eligible = await uow.knowledge.archive_delete_is_pending(ref)
+            await uow.commit()
+        if not eligible or cancel_requested.is_set():
+            return "skipped"
+        try:
+            await asyncio.to_thread(archive.delete_locked, archive_root, ref)
+        except (OSError, ValueError):
+            async with factory() as uow:
+                await uow.knowledge.finish_archive_delete(ref, deleted=False)
+                await uow.commit()
+            return "failed"
+        async with factory() as uow:
+            await uow.knowledge.finish_archive_delete(ref, deleted=True)
+            await uow.commit()
+        return "deleted"
+    finally:
+        await asyncio.to_thread(archive.release_lock, lock_fd)
+
+
+async def _wait_for_archive_delete(operation: asyncio.Task[str], cancel_requested: asyncio.Event) -> str:
+    try:
+        return await asyncio.shield(operation)
+    except asyncio.CancelledError:
+        # The child owns the descriptor and lock. Keep that owner alive until an
+        # in-flight flock/delete/close thread and its durable DB result are done.
+        cancel_requested.set()
+        while not operation.done():
+            try:
+                await asyncio.shield(operation)
+            except asyncio.CancelledError:
+                cancel_requested.set()
+            except Exception:
+                break
+        try:
+            operation.result()
+        except Exception as error:
+            # A failed result write leaves the durable delete intent pending.
+            _LOG.error("archive cleanup did not finish for its pending intent: %s: %s", type(error).__name__, str(error)[:240])
+        raise
+
+
 async def expire(
     factory: UowFactory, archive_root: Path, now: datetime, limit: int,
 ) -> dict[str, object]:
@@ -315,18 +367,16 @@ async def expire(
         await uow.commit()
     deleted, failed = [], []
     for item in pending:
-        try:
-            await asyncio.to_thread(archive.delete, archive_root, item["artifact_ref"])
-        except (OSError, ValueError):
-            async with factory() as uow:
-                await uow.knowledge.finish_archive_delete(item["artifact_ref"], deleted=False)
-                await uow.commit()
-            failed.append(item["artifact_ref"])
-        else:
-            async with factory() as uow:
-                await uow.knowledge.finish_archive_delete(item["artifact_ref"], deleted=True)
-                await uow.commit()
-            deleted.append(item["artifact_ref"])
+        ref = item["artifact_ref"]
+        cancel_requested = asyncio.Event()
+        operation = asyncio.create_task(_delete_pending_artifact(
+            factory, archive_root, ref, cancel_requested,
+        ))
+        outcome = await _wait_for_archive_delete(operation, cancel_requested)
+        if outcome == "deleted":
+            deleted.append(ref)
+        elif outcome == "failed":
+            failed.append(ref)
     return {"expired_evidence": len(expired), "deleted_artifacts": deleted, "failed_artifacts": failed}
 
 

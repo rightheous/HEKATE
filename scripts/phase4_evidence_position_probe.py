@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import threading
 import traceback
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -28,11 +29,12 @@ import phase3b_single_hekate_probe as p3b
 
 from hekate.application import evidence as evidence_app, positions, results as result_app, tasks as task_app
 from hekate.application.results import process_pending_results
+from hekate.application.operations import record_dispatch_send_intent
 from hekate.application.turns import prepare_queued_tasks
 from hekate.domain.contracts import canonical_json_hash
 from hekate.domain.errors import Conflict, PolicyDenied
 from hekate.domain.models import (
-    AuthorizationSnapshot, Confidence, ConclusionCapsule, EvidenceInput, InputChange, PositionBody,
+    AuthorizationSnapshot, Confidence, ConclusionCapsule, EvidenceInput, GuardBinding, InputChange, PositionBody,
     PositionCommitRequest, PositionVersionRecord, ReadLimits, UserMessage, VersionCursor,
 )
 from hekate.domain.types import (
@@ -41,10 +43,13 @@ from hekate.domain.types import (
 )
 from hekate.infrastructure.letta.adapter import LettaRuntimeAdapter
 from hekate.infrastructure.letta.bridge_protocol import BridgeClient
+from hekate.infrastructure.letta import provider_gateway as gateway_implementation
 from hekate.infrastructure.letta.provider_gateway import ProviderGatewayProfile
+from hekate.infrastructure import archive as archive_store
 from hekate.infrastructure.postgres.database import create_engine, create_uow_factory
 from hekate.settings import configured_local_actor, configured_task_execution, load_settings
-from hekate.worker.service import dispatch_job, run_worker
+from hekate.worker import service as worker_implementation
+from hekate.worker.service import dispatch_job, run_evidence_maintenance_tick, run_worker
 
 
 def _strings(value: object):
@@ -88,7 +93,12 @@ def _commit_output(
         raise ValueError("provider request schema differs from the generated contract")
     policy = prompt.split("\n\nServer output policy:\n", 1)[1].split("\n\nTrusted runtime binding:", 1)[0]
     allowed_actions = ["answer", "request_information", "abstain", "commit"]
-    if any(action not in policy for action in allowed_actions) or "spawn" in policy or "continue" in policy:
+    if (
+        any(action not in policy for action in allowed_actions)
+        or "Planning may instead submit a" not in policy
+        or "spawn proposal with role critic" not in policy
+        or "continue" in policy
+    ):
         raise ValueError("provider request output policy has an incorrect action boundary")
     match = re.search(
         r"Trusted runtime binding: task_id=([^;]+); attempt_id=([^;]+); agent_registry_id=([^;]+); input_revision=(\d+)\.",
@@ -184,6 +194,13 @@ def _commit_output(
         "allowed_actions": allowed_actions,
         "prompt_utf8_bytes": len(prompt.encode("utf-8")),
     })
+    tools = request.get("tools")
+    if isinstance(tools, list) and any(
+        isinstance(tool, dict) and isinstance(tool.get("function"), dict)
+        and tool["function"].get("name") == "StructuredOutput"
+        for tool in tools
+    ):
+        return output
     return json.dumps(output, ensure_ascii=False, separators=(",", ":"))
 
 
@@ -206,6 +223,22 @@ async def _run_worker_until(container, factory, actor, task_id: TaskId) -> dict[
     finally:
         stop.set()
         await asyncio.wait_for(task, 20)
+
+
+async def _run_worker_after_maintenance_failure(container, factory, actor, task_id: TaskId):
+    original_tick = worker_implementation.run_evidence_maintenance_tick
+    state = {"calls": 0, "injected_failure": False}
+
+    async def fail_once(uow_factory, archive_root, *, now=None):
+        state["calls"] += 1
+        if state["calls"] == 1:
+            state["injected_failure"] = True
+            raise OSError("injected maintenance failure before dispatch")
+        return await original_tick(uow_factory, archive_root, now=now)
+
+    with patch.object(worker_implementation, "run_evidence_maintenance_tick", new=fail_once):
+        view = await _run_worker_until(container, factory, actor, task_id)
+    return view, state
 
 
 async def _manual_prepare(factory, container, actor, config, env, worker: str, key: str, topic: str, evidence_ids: tuple[str, ...]):
@@ -239,6 +272,766 @@ async def _manual_dispatch(factory, container, actor, config, env, worker: str, 
         ), {"operation": str(operation_id)})
         await uow.commit()
     return task_id, operation_id, lease
+
+
+async def _set_evidence_availability(engine, evidence_ids: tuple[str, ...], *, available: bool) -> None:
+    async with engine.begin() as connection:
+        for evidence_id in sorted(set(evidence_ids)):
+            if available:
+                await connection.execute(text(
+                    "UPDATE evidence SET availability='AVAILABLE', expiry_at=now()+interval '1 day' WHERE id=:id"
+                ), {"id": evidence_id})
+            else:
+                await connection.execute(text(
+                    "UPDATE evidence SET availability='EXPIRED', expiry_at=now()-interval '1 second' WHERE id=:id"
+                ), {"id": evidence_id})
+
+
+async def _deadline_after_position_effect(
+    factory, engine, container, actor, config, env, worker: str, run_id: str,
+    evidence_ids: tuple[str, ...], fake,
+) -> dict[str, object]:
+    topic = f"deadline-after-effect-{run_id}"
+    task_id, operation_id, lease = await _manual_dispatch(
+        factory, container, actor, config, env, worker,
+        f"phase4-{run_id}-deadline-after-effect", topic, evidence_ids,
+    )
+    deadline = datetime.now(UTC) + timedelta(seconds=90)
+    async with engine.begin() as connection:
+        await connection.execute(text("UPDATE tasks SET deadline=:deadline WHERE id=:task"), {
+            "deadline": deadline, "task": str(task_id),
+        })
+        inbox_id = await connection.scalar(text(
+            "SELECT inbox_id FROM turn_results WHERE operation_id=:operation"
+        ), {"operation": str(operation_id)})
+        await connection.execute(text("UPDATE turn_results SET next_attempt_at=now() WHERE inbox_id=:inbox"), {
+            "inbox": inbox_id,
+        })
+    if inbox_id is None:
+        raise AssertionError("deadline probe runtime did not persist a business result")
+    clock_trace: list[str] = []
+
+    def step_clock() -> datetime:
+        clock_trace.append("before_deadline" if len(clock_trace) < 2 else "after_deadline")
+        return deadline - timedelta(microseconds=1) if len(clock_trace) <= 2 else deadline + timedelta(microseconds=1)
+
+    provider_count_before = fake.count()
+    accounting_before = await p3b._accounting_effects(engine, task_id)
+    result = await result_app.apply_turn_result(factory, str(inbox_id), clock=step_clock)
+    counts_after = await _position_counts(engine, topic)
+    task_view = await task_app.get_task(factory, actor, task_id)
+    async with engine.connect() as connection:
+        position_state = (await connection.execute(text("""
+            SELECT COALESCE((SELECT current_version FROM position_topics WHERE scope=:scope AND topic_id=:topic),0) AS current_version,
+                   (SELECT count(*) FROM position_versions WHERE scope=:scope AND topic_id=:topic) AS versions,
+                   (SELECT count(*) FROM position_commit_receipts WHERE operation_id=:commit_op) AS receipts,
+                   (SELECT count(*) FROM memory_projections WHERE scope=:scope AND topic_id=:topic) AS projections,
+                   (SELECT count(*) FROM outbox WHERE kind='position_projection' AND operation_id=:operation) AS projection_intents,
+                   (SELECT count(*) FROM task_responses WHERE task_id=:task AND outcome<>'FAILED') AS success_responses,
+                   (SELECT processing_state FROM turn_results WHERE inbox_id=:inbox) AS result_state,
+                   (SELECT eligible FROM conclusions WHERE id=(SELECT conclusion_id FROM turn_results WHERE inbox_id=:inbox)) AS conclusion_eligible,
+                   (SELECT stop_reason FROM tasks WHERE id=:task) AS stop_reason
+        """), {
+            "scope": str(actor.scope), "topic": topic,
+            "commit_op": f"{operation_id}:position.commit", "operation": str(operation_id),
+            "task": str(task_id), "inbox": str(inbox_id),
+        })).mappings().one()
+    replay = await result_app.apply_turn_result(factory, str(inbox_id), clock=step_clock)
+    accounting_after = await p3b._accounting_effects(engine, task_id)
+    provider_count_after = fake.count()
+    await _release(factory, lease)
+    state = dict(position_state)
+    return {
+        "task_id": str(task_id), "operation_id": str(operation_id), "topic_id": topic,
+        "deadline": deadline.isoformat(), "clock_trace": clock_trace,
+        "initial_apply": result, "replay": replay, "task_state": task_view["state"],
+        "position_effects_after_late": state, "position_counts": counts_after,
+        "provider_requests_before_after_replay": [provider_count_before, provider_count_after],
+        "accounting_before_after_replay": [accounting_before, accounting_after],
+        "passed": result.get("state") == "LATE" and replay.get("state") == "LATE"
+        and task_view["state"] == "FAILED" and state["stop_reason"] == StopReason.DEADLINE.value
+        and state["current_version"] == 0 and state["versions"] == 0 and state["receipts"] == 0
+        and state["projections"] == 0 and state["projection_intents"] == 0
+        and state["success_responses"] == 0 and state["result_state"] == "LATE"
+        and state["conclusion_eligible"] is False
+        and provider_count_before == provider_count_after and accounting_before == accounting_after,
+    }
+
+
+async def _task_adoption_failure_rolls_back_position(
+    factory, engine, container, actor, config, env, worker: str, run_id: str,
+    evidence_ids: tuple[str, ...], fake,
+) -> dict[str, object]:
+    topic = f"adoption-failure-{run_id}"
+    task_id, operation_id, lease = await _manual_dispatch(
+        factory, container, actor, config, env, worker,
+        f"phase4-{run_id}-adoption-failure", topic, evidence_ids,
+    )
+    async with engine.connect() as connection:
+        inbox_id = await connection.scalar(text(
+            "SELECT inbox_id FROM turn_results WHERE operation_id=:operation"
+        ), {"operation": str(operation_id)})
+    if inbox_id is None:
+        raise AssertionError("adoption failure probe runtime did not persist a business result")
+    from hekate.application.tasks import complete as persist_complete_task
+
+    async def persist_then_fail(*args, **kwargs):
+        accepted = await persist_complete_task(*args, **kwargs)
+        if accepted:
+            raise RuntimeError("injected failure after final Task response write")
+        return accepted
+
+    failure_observed = False
+    try:
+        with patch.object(result_app, "complete_task", new=persist_then_fail):
+            await result_app.apply_turn_result(factory, str(inbox_id))
+    except RuntimeError as error:
+        failure_observed = "after final Task response write" in str(error)
+    async with engine.connect() as connection:
+        before_retry = (await connection.execute(text("""
+            SELECT t.status,
+                   (SELECT current_version FROM position_topics WHERE scope=t.owner_scope AND topic_id=t.topic_id) AS current_version,
+                   (SELECT count(*) FROM position_versions WHERE scope=t.owner_scope AND topic_id=t.topic_id) AS versions,
+                   (SELECT count(*) FROM position_commit_receipts WHERE operation_id=:commit_op) AS receipts,
+                   (SELECT count(*) FROM memory_projections WHERE scope=t.owner_scope AND topic_id=t.topic_id) AS projections,
+                   (SELECT count(*) FROM outbox WHERE kind='position_projection' AND operation_id=:operation) AS projection_intents,
+                   (SELECT count(*) FROM task_responses WHERE task_id=:task) AS responses,
+                   (SELECT processing_state FROM turn_results WHERE inbox_id=:inbox) AS result_state
+            FROM tasks t WHERE t.id=:task
+        """), {
+            "commit_op": f"{operation_id}:position.commit", "operation": str(operation_id),
+            "task": str(task_id), "inbox": str(inbox_id),
+        })).mappings().one()
+    accounting_before_retry = await p3b._accounting_effects(engine, task_id)
+    retry = await result_app.apply_turn_result(factory, str(inbox_id))
+    after_retry = await _position_counts(engine, topic)
+    replay = await result_app.apply_turn_result(factory, str(inbox_id))
+    after_replay = await _position_counts(engine, topic)
+    accounting_after_replay = await p3b._accounting_effects(engine, task_id)
+    task_view = await task_app.get_task(factory, actor, task_id)
+    await _release(factory, lease)
+    before = dict(before_retry)
+    return {
+        "task_id": str(task_id), "operation_id": str(operation_id), "topic_id": topic,
+        "injected_failure_after_task_response_write": failure_observed,
+        "state_after_rollback_before_retry": before,
+        "retry": retry, "replay": replay, "position_counts_after_retry": after_retry,
+        "position_counts_after_replay": after_replay, "task_state_after_retry": task_view["state"],
+        "accounting_before_retry_after_replay": [accounting_before_retry, accounting_after_replay],
+        "passed": failure_observed and before["status"] == "RUNNING"
+        and before["current_version"] is None and before["versions"] == 0 and before["receipts"] == 0
+        and before["projections"] == 0 and before["projection_intents"] == 0
+        and before["responses"] == 0 and before["result_state"] == "WAITING_EXECUTION"
+        and retry.get("state") == "ACCEPTED" and replay.get("state") == "ACCEPTED"
+        and task_view["state"] == "COMPLETED"
+        and after_retry == after_replay and after_retry == {"versions": 1, "receipts": 1, "responses": 1}
+        and accounting_before_retry == accounting_after_replay,
+    }
+
+
+async def _permit_evidence_boundaries(
+    factory, engine, container, actor, config, env, worker: str, run_id: str,
+    evidence_ids: tuple[str, ...], gateway_address: str, gateway_port: int,
+    private_token: str, gateway_app, fake,
+) -> dict[str, object]:
+    topic = f"permit-evidence-{run_id}"
+    task_id, operation_id, lease, job = await _manual_prepare(
+        factory, container, actor, config, env, worker,
+        f"phase4-{run_id}-permit-evidence", topic, evidence_ids,
+    )
+    await record_dispatch_send_intent(factory, job, worker)
+    binding = GuardBinding(**job.payload["binding"])
+    operation_text = str(operation_id)
+    forward_start = gateway_app.state.metrics["upstream_forward_attempts"]
+    fake_start = fake.count()
+    original_authorize = gateway_implementation.authorize_provider_call
+
+    async def request(kind: str, call_suffix: str) -> tuple[int, bytes]:
+        call_id = f"phase4:{run_id}:{call_suffix}"
+        return await p3.gateway_request(
+            gateway_address, gateway_port, private_token,
+            p3.runtime_headers(binding, operation_text, call_id, kind, 16),
+            {"model": p3.FAKE_MODEL, "stream": False, "max_tokens": 16,
+             "messages": [{"role": "user", "content": "isolated permit boundary check"}]},
+        )
+
+    async def expire_before_authorize(uow_factory, intent):
+        await _set_evidence_availability(engine, (evidence_ids[0],), available=False)
+        return await original_authorize(uow_factory, intent)
+
+    with patch.object(gateway_implementation, "authorize_provider_call", new=expire_before_authorize):
+        issue_status, _ = await request("turn", "issue-expired")
+    issue_rows = await p3.fetch_operation(engine, operation_text)
+    issue_call_rows = [row for row in issue_rows["rows"] if row.get("accounting_call_id")]
+
+    await _set_evidence_availability(engine, evidence_ids, available=True)
+    permit_observed: dict[str, object] = {}
+
+    async def authorize_then_expire(uow_factory, intent):
+        permit = await original_authorize(uow_factory, intent)
+        permit_observed["permit_id"] = str(permit.permit_id)
+        await _set_evidence_availability(engine, (evidence_ids[0],), available=False)
+        return permit
+
+    with patch.object(gateway_implementation, "authorize_provider_call", new=authorize_then_expire):
+        consume_status, _ = await request("turn", "consume-expired")
+    consume_rows = await p3.fetch_operation(engine, operation_text)
+    consume_row = next((row for row in consume_rows["rows"] if row.get("accounting_call_id") == f"phase4:{run_id}:consume-expired"), {})
+
+    await _set_evidence_availability(engine, evidence_ids, available=True)
+    async def expire_compaction_before_authorize(uow_factory, intent):
+        await _set_evidence_availability(engine, (evidence_ids[0],), available=False)
+        return await original_authorize(uow_factory, intent)
+
+    with patch.object(gateway_implementation, "authorize_provider_call", new=expire_compaction_before_authorize):
+        compaction_status, _ = await request("compaction", "compaction-expired")
+    compaction_rows = await p3.fetch_operation(engine, operation_text)
+    compaction_row = next((row for row in compaction_rows["rows"] if row.get("accounting_call_id") == f"phase4:{run_id}:compaction-expired"), {})
+
+    await _set_evidence_availability(engine, evidence_ids, available=True)
+    await _release(factory, lease)
+    forward_end = gateway_app.state.metrics["upstream_forward_attempts"]
+    fake_end = fake.count()
+    return {
+        "task_id": str(task_id), "operation_id": operation_text,
+        "send_intent_recorded": True,
+        "issue_boundary": {"gateway_status": issue_status, "provider_rows": issue_call_rows},
+        "consume_boundary": {
+            "gateway_status": consume_status, "permit_id_issued": permit_observed.get("permit_id"),
+            "call_status": consume_row.get("call_status"), "permit_state": consume_row.get("permit_state"),
+        },
+        "compaction_boundary": {
+            "gateway_status": compaction_status, "provider_row": compaction_row,
+            "planned_compaction_calls": job.payload.get("payload", {}).get("call_plan", {}).get("compaction_calls"),
+        },
+        "upstream_forward_attempts_before_after": [forward_start, forward_end],
+        "fake_provider_requests_before_after": [fake_start, fake_end],
+        "passed": issue_status == 402 and not issue_call_rows
+        and consume_status == 402 and bool(permit_observed.get("permit_id"))
+        and consume_row.get("call_status") == "ALLOCATED" and consume_row.get("permit_state") == "ISSUED"
+        and compaction_status == 402 and not compaction_row
+        and job.payload.get("payload", {}).get("call_plan", {}).get("compaction_calls", 0) >= 1
+        and forward_start == forward_end and fake_start == fake_end,
+    }
+
+
+async def _register_fixture_evidence(factory, actor, path: Path, archive_root: Path, content: bytes, request_key: str):
+    path.write_bytes(content)
+    now = datetime.now(UTC)
+    digest = hashlib.sha256(content).hexdigest()
+    return await evidence_app.register(
+        factory, actor,
+        EvidenceInput(
+            id=EvidenceId(str(uuid.uuid4())), kind="document", source_uri=path.resolve().as_uri(),
+            retrieved_at=now, content_hash=digest, access_scope="probe-untrusted-claim",
+            retention_class="fixture-retained", expiry_at=now + timedelta(days=2),
+        ),
+        content, archive_root, request_key=request_key,
+    )
+
+
+async def _yield_event_loop_once() -> None:
+    loop = asyncio.get_running_loop()
+    checkpoint = loop.create_future()
+    loop.call_soon(checkpoint.set_result, None)
+    await checkpoint
+
+
+async def _maintenance_contention_scenarios(
+    factory, engine, actor, archive_root: Path, state_path: Path, run_id: str,
+) -> dict[str, object]:
+    competing_content = f"competing archive cleanup {run_id}\n".encode()
+    competing_path = state_path / f"competing-{run_id}.txt"
+    competing = await _register_fixture_evidence(
+        factory, actor, competing_path, archive_root, competing_content, f"phase4-{run_id}-competing",
+    )
+    async with engine.begin() as connection:
+        await connection.execute(text("UPDATE evidence SET expiry_at=now()-interval '1 second' WHERE id=:id"), {
+            "id": str(competing.id),
+        })
+
+    acquire = archive_store.acquire_lock
+    delete = archive_store.delete_locked
+    delete_unlinked = threading.Event()
+    second_waiting = threading.Event()
+    finish_delete = threading.Event()
+    counter_lock = threading.Lock()
+    lock_calls = 0
+    delete_calls = 0
+
+    def tracked_acquire(root: Path, ref: str):
+        nonlocal lock_calls
+        with counter_lock:
+            lock_calls += 1
+            if lock_calls == 2:
+                second_waiting.set()
+        return acquire(root, ref)
+
+    def unlink_then_pause(root: Path, ref: str):
+        nonlocal delete_calls
+        with counter_lock:
+            delete_calls += 1
+        result = delete(root, ref)
+        delete_unlinked.set()
+        if not finish_delete.wait(15):
+            raise TimeoutError("archive cleanup race probe did not release its deterministic barrier")
+        return result
+
+    with patch.object(archive_store, "acquire_lock", new=tracked_acquire), patch.object(
+        archive_store, "delete_locked", new=unlink_then_pause,
+    ):
+        first = asyncio.create_task(run_evidence_maintenance_tick(factory, archive_root))
+        if not await asyncio.to_thread(delete_unlinked.wait, 15):
+            finish_delete.set()
+            await asyncio.gather(first, return_exceptions=True)
+            raise AssertionError("first maintenance tick did not reach archive unlink")
+        second = asyncio.create_task(run_evidence_maintenance_tick(factory, archive_root))
+        if not await asyncio.to_thread(second_waiting.wait, 15):
+            finish_delete.set()
+            await asyncio.gather(first, second, return_exceptions=True)
+            raise AssertionError("second maintenance tick did not contend for the same artifact lock")
+        finish_delete.set()
+        first_result, second_result = await asyncio.gather(first, second)
+    async with engine.connect() as connection:
+        competing_state = await connection.scalar(text(
+            "SELECT storage_state FROM artifacts WHERE artifact_ref=:ref"
+        ), {"ref": competing.artifact_ref})
+    competing_file_missing = False
+    try:
+        archive_store.read(archive_root, competing.artifact_ref, len(competing_content) + 1)
+    except FileNotFoundError:
+        competing_file_missing = True
+
+    stale_content = f"stale cleaner cannot delete re-registered artifact {run_id}\n".encode()
+    stale_path = state_path / f"stale-{run_id}.txt"
+    stale = await _register_fixture_evidence(
+        factory, actor, stale_path, archive_root, stale_content, f"phase4-{run_id}-stale-old",
+    )
+    async with engine.begin() as connection:
+        await connection.execute(text("UPDATE evidence SET expiry_at=now()-interval '1 second' WHERE id=:id"), {
+            "id": str(stale.id),
+        })
+
+    delayed_waiting = threading.Event()
+    release_delayed = threading.Event()
+    acquire_count = 0
+    delayed_lock = threading.Lock()
+
+    def delay_first_acquire(root: Path, ref: str):
+        nonlocal acquire_count
+        with delayed_lock:
+            acquire_count += 1
+            first_call = acquire_count == 1
+        if first_call:
+            delayed_waiting.set()
+            if not release_delayed.wait(15):
+                raise TimeoutError("stale cleanup barrier was not released")
+        return acquire(root, ref)
+
+    with patch.object(archive_store, "acquire_lock", new=delay_first_acquire):
+        stale_cleaner = asyncio.create_task(run_evidence_maintenance_tick(factory, archive_root))
+        if not await asyncio.to_thread(delayed_waiting.wait, 15):
+            release_delayed.set()
+            await asyncio.gather(stale_cleaner, return_exceptions=True)
+            raise AssertionError("stale maintenance tick did not reach its pre-lock barrier")
+        fresh_cleaner = await run_evidence_maintenance_tick(factory, archive_root)
+        restored = await _register_fixture_evidence(
+            factory, actor, stale_path, archive_root, stale_content, f"phase4-{run_id}-stale-new",
+        )
+        release_delayed.set()
+        stale_result = await stale_cleaner
+    async with engine.connect() as connection:
+        stale_artifact_state = await connection.scalar(text(
+            "SELECT storage_state FROM artifacts WHERE artifact_ref=:ref"
+        ), {"ref": stale.artifact_ref})
+        restored_state = await connection.scalar(text(
+            "SELECT availability FROM evidence WHERE id=:id"
+        ), {"id": str(restored.id)})
+    restored_bytes = archive_store.read(archive_root, stale.artifact_ref, len(stale_content) + 1)
+
+    acquire_cancel_content = f"cancel while acquiring archive lock {run_id}\n".encode()
+    acquire_cancel_path = state_path / f"cancel-acquire-{run_id}.txt"
+    acquire_cancel_evidence = await _register_fixture_evidence(
+        factory, actor, acquire_cancel_path, archive_root, acquire_cancel_content,
+        f"phase4-{run_id}-cancel-acquire",
+    )
+    async with engine.begin() as connection:
+        await connection.execute(text("UPDATE evidence SET expiry_at=now()-interval '1 second' WHERE id=:id"), {
+            "id": str(acquire_cancel_evidence.id),
+        })
+
+    acquire = archive_store.acquire_lock
+    release = archive_store.release_lock
+    acquire_waiting = threading.Event()
+    acquire_returned = threading.Event()
+    acquired_fds: list[int] = []
+    released_fds: list[int] = []
+    fd_lock = threading.Lock()
+    owner_fd = await asyncio.to_thread(acquire, archive_root, acquire_cancel_evidence.artifact_ref)
+
+    def tracked_acquire(root: Path, ref: str):
+        acquire_waiting.set()
+        fd = acquire(root, ref)
+        with fd_lock:
+            acquired_fds.append(fd)
+        acquire_returned.set()
+        return fd
+
+    def tracked_release(fd: int):
+        with fd_lock:
+            released_fds.append(fd)
+        return release(fd)
+
+    acquisition_task = None
+    owner_released = False
+    acquisition_cancel_received = False
+    child_release_count = 0
+    acquisition_error = None
+    cancel_waited_for_owner = False
+    fd_closed_before_repair = False
+    try:
+        with patch.object(archive_store, "acquire_lock", new=tracked_acquire), patch.object(
+            archive_store, "release_lock", new=tracked_release,
+        ):
+            acquisition_task = asyncio.create_task(run_evidence_maintenance_tick(factory, archive_root))
+            if not await asyncio.to_thread(acquire_waiting.wait, 15):
+                raise TimeoutError("cancelled cleanup did not reach the blocked archive lock")
+            acquisition_task.cancel()
+            await _yield_event_loop_once()
+            cancel_waited_for_owner = not acquisition_task.done()
+            await asyncio.to_thread(release, owner_fd)
+            owner_released = True
+            try:
+                await asyncio.wait_for(acquisition_task, 15)
+            except asyncio.CancelledError:
+                acquisition_cancel_received = True
+            except Exception as error:
+                acquisition_error = f"{type(error).__name__}: {error}"
+            if not await asyncio.to_thread(acquire_returned.wait, 15):
+                raise TimeoutError("archive lock acquisition thread did not return after unlock")
+            with fd_lock:
+                child_fd = acquired_fds[0] if acquired_fds else None
+                child_release_count = released_fds.count(child_fd) if child_fd is not None else 0
+            if child_fd is not None:
+                try:
+                    os.fstat(child_fd)
+                except OSError:
+                    fd_closed_before_repair = True
+                if not fd_closed_before_repair:
+                    # Keep a regression run from leaking a real descriptor/lock.
+                    await asyncio.to_thread(release, child_fd)
+    finally:
+        if not owner_released:
+            await asyncio.to_thread(release, owner_fd)
+        if acquisition_task is not None and not acquisition_task.done():
+            try:
+                await asyncio.wait_for(acquisition_task, 15)
+            except BaseException:
+                pass
+
+    lock_reacquirable = False
+    if acquired_fds and not fd_closed_before_repair:
+        # A pre-fix run may have lost this descriptor; close it before probing
+        # the actual flock path so the diagnostic itself cannot hang.
+        try:
+            await asyncio.to_thread(release, acquired_fds[0])
+        except OSError:
+            pass
+    probe_fd = await asyncio.wait_for(
+        asyncio.to_thread(acquire, archive_root, acquire_cancel_evidence.artifact_ref), 15,
+    )
+    lock_reacquirable = True
+    await asyncio.to_thread(release, probe_fd)
+    acquisition_cleanup = await run_evidence_maintenance_tick(factory, archive_root)
+
+    delete_cancel_content = f"cancel during archive deletion {run_id}\n".encode()
+    delete_cancel_path = state_path / f"cancel-delete-{run_id}.txt"
+    delete_cancel_evidence = await _register_fixture_evidence(
+        factory, actor, delete_cancel_path, archive_root, delete_cancel_content,
+        f"phase4-{run_id}-cancel-delete-old",
+    )
+    async with engine.begin() as connection:
+        await connection.execute(text("UPDATE evidence SET expiry_at=now()-interval '1 second' WHERE id=:id"), {
+            "id": str(delete_cancel_evidence.id),
+        })
+
+    real_delete = archive_store.delete_locked
+    first_delete_entered = threading.Event()
+    second_lock_waiting = threading.Event()
+    allow_first_delete = threading.Event()
+    first_delete_finished = threading.Event()
+    lock_call_count = 0
+    delete_call_count = 0
+    race_lock = threading.Lock()
+
+    def tracked_race_acquire(root: Path, ref: str):
+        nonlocal lock_call_count
+        with race_lock:
+            lock_call_count += 1
+            if lock_call_count == 2:
+                second_lock_waiting.set()
+        return acquire(root, ref)
+
+    def pause_first_delete(root: Path, ref: str):
+        nonlocal delete_call_count
+        with race_lock:
+            delete_call_count += 1
+            call = delete_call_count
+        if call == 1:
+            first_delete_entered.set()
+            if not allow_first_delete.wait(15):
+                raise TimeoutError("cancelled archive deletion barrier was not released")
+        result = real_delete(root, ref)
+        if call == 1:
+            first_delete_finished.set()
+        return result
+
+    first = second = None
+    cancellation_received = False
+    first_cancel_deferred = False
+    repeated_cancel_deferred = False
+    second_blocked = False
+    second_result = None
+    pending_reregister_denied = False
+    premature_reregister = None
+    active_file_deleted_by_old_cleanup = False
+    final_reregister = None
+    first_delete_observed = False
+    try:
+        with patch.object(archive_store, "acquire_lock", new=tracked_race_acquire), patch.object(
+            archive_store, "delete_locked", new=pause_first_delete,
+        ):
+            first = asyncio.create_task(run_evidence_maintenance_tick(factory, archive_root))
+            if not await asyncio.to_thread(first_delete_entered.wait, 15):
+                raise TimeoutError("first cleanup did not reach the pre-unlink barrier")
+            second = asyncio.create_task(run_evidence_maintenance_tick(factory, archive_root))
+            if not await asyncio.to_thread(second_lock_waiting.wait, 15):
+                raise TimeoutError("second cleanup did not wait on the same artifact lock")
+            first.cancel()
+            await _yield_event_loop_once()
+            first_cancel_deferred = not first.done()
+            second_blocked = not second.done()
+            first.cancel()
+            await _yield_event_loop_once()
+            repeated_cancel_deferred = not first.done()
+            pending_path = state_path / f"cancel-delete-pending-reregister-{run_id}.txt"
+            pending_path.write_bytes(delete_cancel_content)
+            try:
+                premature_reregister = await evidence_app.register(
+                    factory, actor,
+                    EvidenceInput(
+                        id=EvidenceId(str(uuid.uuid4())), kind="document",
+                        source_uri=pending_path.resolve().as_uri(), retrieved_at=datetime.now(UTC),
+                        content_hash=hashlib.sha256(delete_cancel_content).hexdigest(),
+                        access_scope="ignored-client-scope", retention_class="fixture-retained",
+                        expiry_at=datetime.now(UTC) + timedelta(days=2),
+                    ),
+                    delete_cancel_content, archive_root,
+                    request_key=f"phase4-{run_id}-cancel-delete-pending-reregister",
+                )
+            except Conflict:
+                pending_reregister_denied = True
+            allow_first_delete.set()
+            if not await asyncio.to_thread(first_delete_finished.wait, 15):
+                raise TimeoutError("first archive delete did not finish after releasing its barrier")
+            try:
+                await asyncio.wait_for(first, 15)
+            except asyncio.CancelledError:
+                cancellation_received = True
+            second_result = await asyncio.wait_for(second, 15)
+            first_delete_observed = True
+            if premature_reregister is not None:
+                try:
+                    archive_store.read(archive_root, delete_cancel_evidence.artifact_ref, len(delete_cancel_content) + 1)
+                except FileNotFoundError:
+                    active_file_deleted_by_old_cleanup = True
+            final_reregister = await _register_fixture_evidence(
+                factory, actor, delete_cancel_path, archive_root, delete_cancel_content,
+                f"phase4-{run_id}-cancel-delete-new",
+            )
+    finally:
+        allow_first_delete.set()
+        for task in (first, second):
+            if task is not None and not task.done():
+                try:
+                    await asyncio.wait_for(task, 15)
+                except BaseException:
+                    pass
+
+    async with engine.connect() as connection:
+        acquisition_state = await connection.scalar(text(
+            "SELECT storage_state FROM artifacts WHERE artifact_ref=:ref"
+        ), {"ref": acquire_cancel_evidence.artifact_ref})
+        deletion_rows = (await connection.execute(text(
+            "SELECT availability FROM evidence WHERE artifact_ref=:ref ORDER BY registered_at"
+        ), {"ref": delete_cancel_evidence.artifact_ref})).scalars().all()
+        deletion_state = await connection.scalar(text(
+            "SELECT storage_state FROM artifacts WHERE artifact_ref=:ref"
+        ), {"ref": delete_cancel_evidence.artifact_ref})
+    final_bytes = archive_store.read(archive_root, delete_cancel_evidence.artifact_ref, len(delete_cancel_content) + 1)
+    cancellation = {
+        "lock_acquisition": {
+            "waiter_reached_real_flock": acquire_waiting.is_set(),
+            "cancel_waited_for_owner_unlock": cancel_waited_for_owner,
+            "cancel_delivered": acquisition_cancel_received,
+            "fd_closed_before_repair": fd_closed_before_repair,
+            "release_calls_for_acquired_fd": child_release_count if acquired_fds else 0,
+            "lock_reacquirable_after_cancel": lock_reacquirable,
+            "cleanup_retry": acquisition_cleanup,
+            "artifact_state_after_retry": acquisition_state,
+            "cleanup_error": acquisition_error,
+            "passed": acquire_waiting.is_set() and cancel_waited_for_owner and acquisition_cancel_received
+            and fd_closed_before_repair and child_release_count == 1 and lock_reacquirable
+            and acquisition_state == "DELETED" and not acquisition_error,
+        },
+        "delete_cancel_and_reregister": {
+            "delete_entered_before_unlink": first_delete_entered.is_set(),
+            "second_cleaner_waited_for_lock": second_lock_waiting.is_set(),
+            "first_cancel_deferred": first_cancel_deferred,
+            "repeated_cancel_deferred": repeated_cancel_deferred,
+            "second_cleaner_blocked_until_delete_finished": second_blocked,
+            "reregister_rejected_while_delete_pending": pending_reregister_denied,
+            "premature_reregister_succeeded": premature_reregister is not None,
+            "old_cleanup_deleted_premature_active_file": active_file_deleted_by_old_cleanup,
+            "cancel_delivered_after_delete_and_unlock": cancellation_received,
+            "first_delete_finished": first_delete_observed,
+            "physical_delete_calls": delete_call_count,
+            "second_cleanup_result": second_result,
+            "old_evidence_state": deletion_rows[0] if deletion_rows else None,
+            "new_evidence_state": deletion_rows[-1] if final_reregister is not None and deletion_rows else None,
+            "artifact_state": deletion_state,
+            "active_file_present": final_bytes == delete_cancel_content,
+            "digest_matches": hashlib.sha256(final_bytes).hexdigest() == str(delete_cancel_evidence.content_hash),
+            "source_input_retained": delete_cancel_path.exists(),
+            "passed": first_delete_entered.is_set() and second_lock_waiting.is_set()
+            and first_cancel_deferred and repeated_cancel_deferred and second_blocked
+            and pending_reregister_denied and cancellation_received and first_delete_observed
+            and premature_reregister is None and not active_file_deleted_by_old_cleanup
+            and second_result is not None and not second_result["deleted_artifacts"]
+            and delete_call_count == 1 and deletion_rows == ["EXPIRED", "AVAILABLE"]
+            and deletion_state == "AVAILABLE" and final_bytes == delete_cancel_content
+            and hashlib.sha256(final_bytes).hexdigest() == str(delete_cancel_evidence.content_hash)
+            and delete_cancel_path.exists(),
+        },
+    }
+    return {
+        "same_intent_contention": {
+            "first_tick": first_result, "second_tick": second_result,
+            "filesystem_delete_calls": delete_calls, "artifact_state": competing_state,
+            "archive_file_missing": competing_file_missing,
+            "source_input_retained": competing_path.exists(),
+            "passed": delete_calls == 1 and competing_state == "DELETED" and competing_file_missing
+            and competing_path.exists() and not second_result["deleted_artifacts"],
+        },
+        "stale_cleaner_after_reregistration": {
+            "fresh_cleanup": fresh_cleaner, "stale_cleanup": stale_result,
+            "old_evidence_id": str(stale.id), "new_evidence_id": str(restored.id),
+            "artifact_state": stale_artifact_state, "new_evidence_state": restored_state,
+            "content_hash_matches": hashlib.sha256(restored_bytes).hexdigest() == str(stale.content_hash),
+            "source_input_retained": stale_path.exists(),
+            "passed": stale_artifact_state == "AVAILABLE" and restored_state == "AVAILABLE"
+            and restored_bytes == stale_content and hashlib.sha256(restored_bytes).hexdigest() == str(stale.content_hash)
+            and stale_path.exists() and not stale_result["deleted_artifacts"],
+        },
+        "cancellation_safety": cancellation,
+    }
+
+
+async def _hardening_maintenance_checks(
+    factory, engine, actor, archive_root: Path, state_path: Path, run_id: str,
+    primary_id: str, derived_id: str, evidence_file: Path, evidence_text: str,
+    history_topic: str,
+) -> dict[str, object]:
+    shared = await _register_fixture_evidence(
+        factory, actor, state_path / f"shared-{run_id}.txt", archive_root,
+        evidence_file.read_bytes(), f"phase4-{run_id}-shared-maintenance",
+    )
+    async with engine.begin() as connection:
+        await connection.execute(text("UPDATE evidence SET expiry_at=now()-interval '1 second' WHERE id=:id"), {
+            "id": str(shared.id),
+        })
+    shared_tick = await run_evidence_maintenance_tick(factory, archive_root)
+    async with engine.connect() as connection:
+        shared_state = await connection.scalar(text("SELECT storage_state FROM artifacts WHERE artifact_ref=:ref"), {
+            "ref": shared.artifact_ref,
+        })
+        primary_state = await connection.scalar(text("SELECT availability FROM evidence WHERE id=:id"), {
+            "id": primary_id,
+        })
+
+    failed_content = f"retry archive deletion {run_id}\n".encode()
+    failed_path = state_path / f"delete-retry-{run_id}.txt"
+    failed_evidence = await _register_fixture_evidence(
+        factory, actor, failed_path, archive_root, failed_content, f"phase4-{run_id}-delete-retry",
+    )
+    async with engine.begin() as connection:
+        await connection.execute(text("UPDATE evidence SET expiry_at=now()-interval '1 second' WHERE id=:id"), {
+            "id": str(failed_evidence.id),
+        })
+    with patch.object(archive_store, "delete_locked", side_effect=OSError("injected archive delete failure")):
+        failure_tick = await run_evidence_maintenance_tick(factory, archive_root)
+    async with engine.connect() as connection:
+        failed_storage_state = await connection.scalar(text("SELECT storage_state FROM artifacts WHERE artifact_ref=:ref"), {
+            "ref": failed_evidence.artifact_ref,
+        })
+    retry_tick = await run_evidence_maintenance_tick(factory, archive_root)
+    archive_after_retry_missing = False
+    try:
+        archive_store.read(archive_root, failed_evidence.artifact_ref, len(failed_content) + 1)
+    except FileNotFoundError:
+        archive_after_retry_missing = True
+
+    contention = await _maintenance_contention_scenarios(factory, engine, actor, archive_root, state_path, run_id)
+
+    async with engine.begin() as connection:
+        for evidence_id in (primary_id, derived_id):
+            await connection.execute(text(
+                "UPDATE evidence SET expiry_at=now()-interval '1 second', availability='AVAILABLE' WHERE id=:id"
+            ), {"id": evidence_id})
+    position_expiry_tick = await run_evidence_maintenance_tick(factory, archive_root)
+    history = await positions.read_history(
+        factory, actor, TopicId(history_topic), VersionCursor(after_version=0, limit=50),
+    )
+    async with engine.connect() as connection:
+        tombstones = (await connection.execute(text(
+            "SELECT id,availability FROM evidence WHERE id IN (:primary,:derived) ORDER BY id"
+        ), {"primary": primary_id, "derived": derived_id})).mappings().all()
+    inputs_retained = evidence_file.exists() and failed_path.exists()
+    result = {
+        "tick_interval_seconds": 60, "batch_limit": 100,
+        "shared_artifact": {
+            "tick": shared_tick, "artifact_state": shared_state, "other_reference_state": primary_state,
+            "source_input_retained": (state_path / f"shared-{run_id}.txt").exists(),
+            "passed": shared_state == "AVAILABLE" and primary_state == "AVAILABLE",
+        },
+        "delete_failure_and_retry": {
+            "failure_tick": failure_tick, "state_after_failure": failed_storage_state,
+            "retry_tick": retry_tick, "state_after_retry": "DELETED" if archive_after_retry_missing else "present",
+            "source_input_retained": failed_path.exists(),
+            "passed": failed_evidence.artifact_ref in failure_tick["failed_artifacts"]
+            and failed_storage_state == "DELETE_FAILED"
+            and failed_evidence.artifact_ref in retry_tick["deleted_artifacts"]
+            and archive_after_retry_missing and failed_path.exists(),
+        },
+        "concurrent_cleanup": contention,
+        "expired_position_evidence": {
+            "tick": position_expiry_tick, "tombstones": [dict(row) for row in tombstones],
+            "position_history_versions": [item.version for item in history.items],
+            "source_inputs_retained": inputs_retained,
+            "passed": {str(row["id"]): row["availability"] for row in tombstones}
+            == {primary_id: "EXPIRED", derived_id: "EXPIRED"}
+            and bool(history.items) and inputs_retained,
+        },
+    }
+    result["passed"] = (
+        result["shared_artifact"]["passed"] and result["delete_failure_and_retry"]["passed"]
+        and contention["same_intent_contention"]["passed"]
+        and contention["stale_cleaner_after_reregistration"]["passed"]
+        and contention["cancellation_safety"]["lock_acquisition"]["passed"]
+        and contention["cancellation_safety"]["delete_cancel_and_reregister"]["passed"]
+        and result["expired_position_evidence"]["passed"]
+    )
+    return result
 
 
 async def _release(factory, lease) -> None:
@@ -365,7 +1158,10 @@ async def _code_identity() -> str:
     return digest.hexdigest()
 
 
-async def _run(database_url: str, node: str, image: str, node_archive: Path, artifact: Path, run_id: str) -> dict[str, object]:
+async def _run(
+    database_url: str, node: str, image: str, node_archive: Path,
+    artifact: Path, run_id: str, *, hardening_only: bool = False,
+) -> dict[str, object]:
     if not artifact.is_absolute():
         artifact = ROOT / artifact
     branch = p3.p1.run(["git", "branch", "--show-current"])
@@ -377,7 +1173,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         "code_fingerprint_sha256": await _code_identity(), "branch": branch,
         "real_provider_calls": 0, "fake_provider_requests": 0,
         "execution": {
-            "command": "uv run python scripts/phase4_evidence_position_probe.py",
+            "command": "uv run python scripts/phase4_evidence_position_probe.py" + (" --hardening-only" if hardening_only else ""),
             "environment_variables": ["HEKATE_TEST_DATABASE_URL", "HEKATE_NODE_BIN", "HEKATE_NODE_ARCHIVE"],
             "result": "running",
         },
@@ -405,7 +1201,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         async with engine.connect() as connection:
             head_value = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             pg_version = await connection.scalar(text("SHOW server_version"))
-        if head_value != "0006_phase4_knowledge":
+        if head_value != "0007_phase5a_critic_workflows":
             raise ValueError("Phase 4 database migration head is not current")
         report["database"] = {"database_name": make_url(database_url).database, "postgres_version": pg_version, "migration_head": head_value}
 
@@ -549,6 +1345,76 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         }
 
         evidence_ids = (evidence_id, str(derived_id))
+        if hardening_only:
+            baseline_key = f"phase4-{run_id}-hardening-baseline"
+            baseline = await _ask(env, baseline_key, f"hardening-baseline-{run_id}", evidence_ids)
+            baseline_task = TaskId(str(baseline["receipt"]["task_id"]))
+            baseline_view, maintenance_failover = await _run_worker_after_maintenance_failure(
+                container, factory, actor, baseline_task,
+            )
+            baseline_position = await positions.read_current(factory, actor, TopicId(f"hardening-baseline-{run_id}"))
+            baseline_passed = baseline_view["state"] == "COMPLETED" and baseline_position.current_version == 1 and maintenance_failover["injected_failure"]
+            report["results"]["hardening_baseline_commit"] = {
+                "task_id": str(baseline_task), "position_version": baseline_position.current_version,
+                "task_state": baseline_view["state"], "worker_after_maintenance_failure": maintenance_failover,
+                "passed": baseline_passed,
+            }
+            deadline_result = await _deadline_after_position_effect(
+                factory, engine, container, actor, execution_config, env, worker, run_id, evidence_ids, fake,
+            )
+            report["results"]["deadline_after_position_effect"] = deadline_result
+            adoption_result = await _task_adoption_failure_rolls_back_position(
+                factory, engine, container, actor, execution_config, env, worker,
+                run_id, evidence_ids, fake,
+            )
+            report["results"]["task_adoption_failure_rolls_back_position"] = adoption_result
+            permit_result = await _permit_evidence_boundaries(
+                factory, engine, container, actor, execution_config, env, worker, run_id,
+                evidence_ids, sandbox.gateway_address, gateway_port, private_token, gateway_app, fake,
+            )
+            report["results"]["provider_permit_evidence_revalidation"] = permit_result
+            maintenance_result = await _hardening_maintenance_checks(
+                factory, engine, actor, evidence_archive, state_path, run_id,
+                evidence_id, str(derived_id), evidence_file, evidence_text,
+                f"hardening-baseline-{run_id}",
+            )
+            report["results"]["worker_evidence_maintenance"] = maintenance_result
+            async with engine.connect() as connection:
+                pending_projections = int(await connection.scalar(text(
+                    "SELECT count(*) FROM outbox WHERE kind='position_projection' AND status='PENDING'"
+                )))
+                unresolved = int(await connection.scalar(text("""
+                    SELECT count(*) FROM provider_calls p LEFT JOIN usage_projections u USING (accounting_call_id)
+                    WHERE p.status<>'QUIESCENT' OR u.settlement_state IS DISTINCT FROM 'SETTLED'
+                """)))
+            focus_names = [
+                "hardening_baseline_commit", "deadline_after_position_effect",
+                "task_adoption_failure_rolls_back_position",
+                "provider_permit_evidence_revalidation", "worker_evidence_maintenance",
+            ]
+            all_passed = all(bool(report["results"][name].get("passed")) for name in focus_names)
+            report["position_projection"] = {
+                "pending_projection_outbox_rows": pending_projections,
+                "applied_watermark": 0, "projection_calls": 0,
+                "passed": pending_projections > 0,
+            }
+            report["accounting"] = {
+                "unresolved_or_unsettled_provider_calls": unresolved,
+                "note": "The permit-consumption race intentionally leaves one issued, unconsumed fixture allocation; it was not normalized or settled without execution evidence.",
+            }
+            report["fake_provider"] = {
+                "http_requests": fake.count(), "task_turn_requests": len(turn_observations),
+                "real_provider_calls": 0, "gateway_route": "isolated-local-fake-only",
+                "turn_observations": turn_observations,
+            }
+            report["overall_status"] = "pass" if all_passed and report["position_projection"]["passed"] else "failed"
+            report["summary"] = {
+                "required_scenarios": focus_names,
+                "passed_count": sum(bool(report["results"][name].get("passed")) for name in focus_names),
+                "failed_scenarios": [name for name in focus_names if not report["results"][name].get("passed")],
+            }
+            return report
+
         main_key = f"phase4-{run_id}-task-main"
         duplicate = await _ask(env, main_key, "main-topic", evidence_ids)
         duplicate_again = await _ask(env, main_key, "main-topic", evidence_ids)
@@ -568,7 +1434,9 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         except RuntimeError:
             different_evidence_conflict = True
 
-        first_view = await _run_worker_until(container, factory, actor, main_task)
+        first_view, maintenance_failover = await _run_worker_after_maintenance_failure(
+            container, factory, actor, main_task,
+        )
         fake_after_first = fake.count()
         first_position = await p3b._cli(env, "position", "show", "main-topic")
         first_history = await p3b._cli(env, "position", "history", "main-topic", "--after-version", "0", "--limit", "50")
@@ -591,6 +1459,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "position_version": first_position["current_version"],
             "history_versions": [item["version"] for item in first_history["items"]],
             "task_response": first_view["response"], "duplicate_submission_same_task": duplicate_again["receipt"]["task_id"] == str(main_task),
+            "worker_after_injected_maintenance_failure": maintenance_failover,
             "different_topic_same_key_conflicts": different_topic_conflict,
             "different_evidence_same_key_conflicts": different_evidence_conflict,
             "commit_receipt_replay": replayed_commit, "inbox_replay": inbox_replay,
@@ -602,6 +1471,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "task_request_replay_same_task": task_replay["receipt"]["task_id"] == str(main_task),
             "commit_receipt_inserted_once": commit_counts_before == commit_counts_after,
             "passed": first_view["state"] == "COMPLETED" and first_position["current_version"] == 1
+            and maintenance_failover["injected_failure"]
             and [item["version"] for item in first_history["items"]] == [1]
             and duplicate_again["receipt"]["task_id"] == str(main_task) and different_topic_conflict and different_evidence_conflict
             and replayed_commit.get("replayed") is True and inbox_replay.get("state") == "ACCEPTED"
@@ -792,6 +1662,17 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "passed": all(item["passed"] for item in (cancellation, revision, deadline)),
         }
 
+        deadline_after_effect = await _deadline_after_position_effect(
+            factory, engine, container, actor, execution_config, env, worker,
+            run_id, evidence_ids, fake,
+        )
+        report["results"]["deadline_after_position_effect"] = deadline_after_effect
+        adoption_after_effect = await _task_adoption_failure_rolls_back_position(
+            factory, engine, container, actor, execution_config, env, worker,
+            run_id, evidence_ids, fake,
+        )
+        report["results"]["task_adoption_failure_rolls_back_position"] = adoption_after_effect
+
         conflict_topic = f"conflict-{run_id}"
         conflict_task, conflict_operation, conflict_lease = await _manual_dispatch(
             factory, container, actor, execution_config, env, worker,
@@ -875,7 +1756,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         shared_id = EvidenceId(str(shared["id"]))
         async with engine.begin() as connection:
             await connection.execute(text("UPDATE evidence SET expiry_at=now()-interval '1 second' WHERE id=:id"), {"id": str(shared_id)})
-        first_expire = await evidence_app.expire(factory, evidence_archive, datetime.now(UTC), 10)
+        first_expire = await run_evidence_maintenance_tick(factory, evidence_archive)
         async with engine.connect() as connection:
             shared_artifact_state = await connection.scalar(text("SELECT storage_state FROM artifacts WHERE artifact_ref=:ref"), {"ref": imported["artifact_ref"]})
         commit_topic = f"expired-commit-{run_id}"
@@ -892,8 +1773,8 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             await connection.execute(text(
                 "UPDATE evidence SET expiry_at=now()-interval '1 second' WHERE id IN (:primary,:derived)"
             ), {"primary": evidence_id, "derived": str(derived_id)})
-        with patch("hekate.application.evidence.archive.delete", side_effect=OSError("injected archive delete failure")):
-            expiry_failure = await evidence_app.expire(factory, evidence_archive, datetime.now(UTC), 10)
+        with patch.object(archive_store, "delete_locked", side_effect=OSError("injected archive delete failure")):
+            expiry_failure = await run_evidence_maintenance_tick(factory, evidence_archive)
         expired_result_processed = await process_pending_results(factory)
         expired_result_view = await task_app.get_task(factory, actor, expired_result_task)
         expired_result_counts = await _position_counts(engine, commit_topic)
@@ -905,7 +1786,7 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
         await dispatch_job(container, stale_job, worker)
         expired_task_view = await task_app.get_task(factory, actor, stale_task)
         await _release(factory, stale_lease)
-        expiry_retry = await evidence_app.expire(factory, evidence_archive, datetime.now(UTC), 10)
+        expiry_retry = await run_evidence_maintenance_tick(factory, evidence_archive)
         deleted_read_denied = False
         try:
             await evidence_app.read_scoped(factory, actor, EvidenceId(evidence_id), ReadLimits(), evidence_archive)
@@ -918,12 +1799,16 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             derived_state = await connection.scalar(text("SELECT availability FROM evidence WHERE id=:id"), {"id": str(derived_id)})
             expired_position_refs = await connection.scalar(text("SELECT count(*) FROM position_evidence WHERE evidence_id=:id"), {"id": evidence_id})
             stale_operation_calls = await connection.scalar(text("SELECT count(*) FROM provider_calls WHERE operation_id=:operation"), {"operation": str(stale_operation)})
+        maintenance_races = await _maintenance_contention_scenarios(
+            factory, engine, actor, evidence_archive, state_path, run_id,
+        )
         report["results"]["expiry_reference_and_archive_retry"] = {
             "expired_shared_evidence_id": str(shared_id), "shared_artifact_state_while_primary_active": shared_artifact_state,
             "expired_shared_run": first_expire, "delete_failure_run": expiry_failure,
             "retry_run": expiry_retry, "archive_state_after_retry": archive_state,
             "evidence_tombstone_state": metadata_state, "derived_evidence_tombstone_state": derived_state,
             "position_reference_count_after_expiry": expired_position_refs,
+            "maintenance_contention": maintenance_races,
             "expired_result_commit": {
                 "task_id": str(expired_result_task), "operation_id": str(expired_result_operation),
                 "task_state": expired_result_view["state"], "stop_reason": expired_result_view["stop_reason"],
@@ -937,15 +1822,32 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "expired_read_denied": deleted_read_denied,
             "passed": first_expire["expired_evidence"] == 1 and shared_artifact_state == "AVAILABLE"
             and expiry_failure["expired_evidence"] == 2 and expiry_failure["failed_artifacts"] and expiry_retry["deleted_artifacts"]
-            and archive_state == "DELETED" and metadata_state == derived_state == "EXPIRED" and expired_position_refs == 3
+            and archive_state == "DELETED" and metadata_state == derived_state == "EXPIRED" and expired_position_refs == 4
             and expired_result_view["state"] == "FAILED" and expired_result_view["stop_reason"] == "POLICY"
             and expired_result_state == "REJECTED" and expired_result_processed >= 1
             and expired_result_counts["versions"] == expired_result_counts["receipts"] == 0
             and expired_result_counts["responses"] == 1
             and expired_task_view["state"] == "FAILED" and expired_task_view["stop_reason"] == "POLICY"
             and fake.count() == provider_before_expired_dispatch and stale_operation_calls == 0
-            and [item.version for item in main_history_after_expiry.items] == [1, 2] and deleted_read_denied,
+            and [item.version for item in main_history_after_expiry.items] == [1, 2] and deleted_read_denied
+            and maintenance_races["same_intent_contention"]["passed"]
+            and maintenance_races["stale_cleaner_after_reregistration"]["passed"]
+            and maintenance_races["cancellation_safety"]["lock_acquisition"]["passed"]
+            and maintenance_races["cancellation_safety"]["delete_cancel_and_reregister"]["passed"],
         }
+
+        permit_file = state_path / f"permit-evidence-{run_id}.txt"
+        permit_content = f"Permit boundary evidence {run_id}.".encode("utf-8")
+        permit_evidence = await _register_fixture_evidence(
+            factory, actor, permit_file, evidence_archive, permit_content,
+            f"phase4-{run_id}-permit-evidence",
+        )
+        permit_boundaries = await _permit_evidence_boundaries(
+            factory, engine, container, actor, execution_config, env, worker, run_id,
+            (str(permit_evidence.id),), sandbox.gateway_address, gateway_port,
+            private_token, gateway_app, fake,
+        )
+        report["results"]["provider_permit_evidence_revalidation"] = permit_boundaries
 
         async with factory() as uow:
             pending_claim = await uow.delivery.claim_jobs(worker, 20, 30)
@@ -957,8 +1859,8 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             receipt_count = await connection.scalar(text("SELECT count(*) FROM position_commit_receipts"))
             position_count = await connection.scalar(text("SELECT count(*) FROM position_versions"))
             unresolved = await connection.execute(text("""
-                SELECT count(*) FROM provider_calls p JOIN usage_projections u USING (accounting_call_id)
-                WHERE p.status<>'QUIESCENT' OR u.settlement_state<>'SETTLED'
+                SELECT count(*) FROM provider_calls p LEFT JOIN usage_projections u USING (accounting_call_id)
+                WHERE p.status<>'QUIESCENT' OR u.settlement_state IS DISTINCT FROM 'SETTLED'
             """))
             unresolved_count = int(unresolved.scalar_one())
             provider_count_db = int(await connection.scalar(text("SELECT count(*) FROM provider_calls")))
@@ -977,16 +1879,18 @@ async def _run(database_url: str, node: str, image: str, node_archive: Path, art
             "unresolved_or_unsettled_provider_calls": unresolved_count,
             "total_provider_calls_db": provider_count_db,
             "position_commit_rows": int(position_count), "position_commit_receipts": int(receipt_count),
-            "pending_settlement_note": "Report preserves the observed count; no UNKNOWN or unsettled rows were normalized.",
+            "pending_settlement_note": "The permit-consumption boundary probe intentionally leaves one ISSUED/ALLOCATED fixture call without execution evidence. The report preserves it; no UNKNOWN or unsettled row was normalized.",
         }
         named_results = [
             "evidence_registration_and_scope", "position_v1_and_replay", "restart_position_reuse_and_history",
             "position_history_immutable", "postgres_base_version_race", "position_task_atomic_rollback",
-            "cancel_revision_deadline_prevent_commit", "version_conflict_closes_for_user",
-            "authorization_change_blocks_provider", "expiry_reference_and_archive_retry",
+            "cancel_revision_deadline_prevent_commit", "deadline_after_position_effect",
+            "task_adoption_failure_rolls_back_position",
+            "version_conflict_closes_for_user", "authorization_change_blocks_provider",
+            "expiry_reference_and_archive_retry", "provider_permit_evidence_revalidation",
         ]
         passed = all(bool(report["results"].get(name, {}).get("passed")) for name in named_results)
-        passed = passed and bool(report["position_projection"]["passed"]) and len(turn_observations) == 8 and fake.count() >= len(turn_observations)
+        passed = passed and bool(report["position_projection"]["passed"]) and len(turn_observations) == 10 and fake.count() >= len(turn_observations)
         report["overall_status"] = "pass" if passed else "failed"
         report["summary"] = {
             "required_scenarios": named_results,
@@ -1049,6 +1953,7 @@ def main() -> int:
     parser.add_argument("--node-archive", type=Path, default=Path(os.environ.get("HEKATE_NODE_ARCHIVE", "/tmp/hekate-node-v22.19.0-linux-x64.tar.xz")))
     parser.add_argument("--image", default=f"hekate/letta-code-p1:{p3.p1.LOCK['app_server']['source_commit'][:8]}-{p3.p1.LOCK['patches'][0]['sha256'][:8]}")
     parser.add_argument("--artifact", type=Path)
+    parser.add_argument("--hardening-only", action="store_true", help="run only the three Phase 4 hardening boundaries through PostgreSQL and the pinned fake-provider runtime")
     args = parser.parse_args()
     if not args.database_url or not args.node_bin:
         parser.error("set HEKATE_TEST_DATABASE_URL and HEKATE_NODE_BIN")
@@ -1062,8 +1967,12 @@ def main() -> int:
     cfg.set_main_option("sqlalchemy.url", args.database_url.replace("%", "%%"))
     os.environ["HEKATE_DATABASE_URL"] = args.database_url
     p3.command.upgrade(cfg, "head")
-    report = asyncio.run(_run(args.database_url, args.node_bin, args.image, args.node_archive, artifact, run_id))
-    print(json.dumps({"artifact": str(artifact.relative_to(ROOT)), "status": report["overall_status"], "fake_provider_requests": report.get("fake_provider_requests", 0), "real_provider_calls": 0}, sort_keys=True))
+    report = asyncio.run(_run(
+        args.database_url, args.node_bin, args.image, args.node_archive, artifact, run_id,
+        hardening_only=args.hardening_only,
+    ))
+    artifact_path = artifact if artifact.is_absolute() else ROOT / artifact
+    print(json.dumps({"artifact": str(artifact_path.relative_to(ROOT)), "status": report["overall_status"], "fake_provider_requests": report.get("fake_provider_requests", 0), "real_provider_calls": 0}, sort_keys=True))
     return 0 if report["overall_status"] == "pass" else 1
 
 

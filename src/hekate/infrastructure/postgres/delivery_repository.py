@@ -28,7 +28,7 @@ class PostgresDeliveryRepository:
 
     async def claim_lifecycle_operation(self, operation_id: OperationId, owner_scope: ScopeId, kind: str, request_hash: str):
         now = aware_now()
-        await self.connection.execute(pg_insert(tables.operations).values(
+        inserted = await self.connection.execute(pg_insert(tables.operations).values(
             id=operation_id,
             owner_scope=owner_scope,
             task_id=None,
@@ -42,13 +42,55 @@ class PostgresDeliveryRepository:
             observation={},
             created_at=now,
             updated_at=now,
-        ).on_conflict_do_nothing(index_elements=[tables.operations.c.id]))
+        ).on_conflict_do_nothing(index_elements=[tables.operations.c.id]).returning(tables.operations.c.id))
+        created_now = inserted.scalar_one_or_none() is not None
         row = (await self.connection.execute(select(tables.operations).where(
             tables.operations.c.id == operation_id,
         ).with_for_update())).mappings().one_or_none()
         if row is None or row["owner_scope"] != owner_scope or row["kind"] != kind or row["request_hash"] != request_hash:
             raise Conflict("lifecycle operation identity changed")
-        return row
+        result = dict(row)
+        result["created_now"] = created_now
+        return result
+
+    async def mark_lifecycle_started(self, operation_id: OperationId, kind: str) -> bool:
+        row = (await self.connection.execute(select(tables.operations).where(
+            tables.operations.c.id == operation_id,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None or row["kind"] != kind:
+            raise Conflict("lifecycle operation binding changed")
+        observation = dict(row["observation"] or {})
+        if observation.get("external_call_started") is True:
+            return False
+        observation["external_call_started"] = True
+        await self.connection.execute(update(tables.operations).where(
+            tables.operations.c.id == operation_id,
+        ).values(observation=observation, updated_at=aware_now()))
+        return True
+
+    async def complete_lifecycle_operation(self, operation_id: OperationId, observation: Mapping[str, object]) -> None:
+        result = await self.connection.execute(update(tables.operations).where(
+            tables.operations.c.id == operation_id,
+            tables.operations.c.state.in_(["CLAIMED", "UNKNOWN", "COMPLETED"]),
+        ).values(
+            state="COMPLETED", dispatch_state="QUIESCENT", execution_state="QUIESCENT",
+            observation=json_value(observation), last_error=None, updated_at=aware_now(),
+        ))
+        if result.rowcount != 1:
+            raise StaleInput("lifecycle operation cannot be confirmed")
+
+    async def mark_lifecycle_unknown(self, operation_id: OperationId, reason: str) -> None:
+        row = (await self.connection.execute(select(tables.operations).where(
+            tables.operations.c.id == operation_id,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None:
+            raise StaleInput("lifecycle operation is unavailable")
+        observation = dict(row["observation"] or {})
+        observation["external_call_started"] = True
+        await self.connection.execute(update(tables.operations).where(
+            tables.operations.c.id == operation_id,
+        ).values(state="UNKNOWN", dispatch_state="UNKNOWN", execution_state="UNKNOWN",
+                 observation=observation, last_error=reason[:240], updated_at=aware_now()))
 
     async def claim_operation(
         self,
@@ -59,6 +101,7 @@ class PostgresDeliveryRepository:
         request_hash: str,
         binding: Mapping[str, object],
         envelope: Mapping[str, object],
+        workflow_stage_hash: str | None = None,
     ) -> OperationClaim:
         now = aware_now()
         await self.connection.execute(pg_insert(tables.operations).values(
@@ -81,6 +124,32 @@ class PostgresDeliveryRepository:
         ).with_for_update())).mappings().one_or_none()
         if row is None:
             raise Conflict("operation claim could not be acquired")
+        deferred_hash = (row["observation"] or {}).get("deferred_stage_hash")
+        deferred_task_id = (row["observation"] or {}).get("deferred_task_id")
+        if (
+            workflow_stage_hash is not None
+            and deferred_hash == workflow_stage_hash
+            and deferred_task_id == str(task_id)
+            and row["state"] == "CLAIMED"
+            and row["binding"] == {} and row["envelope"] == {}
+            and row["task_id"] in {None, task_id} and row["kind"] == kind
+        ):
+            await self.connection.execute(update(tables.operations).where(
+                tables.operations.c.id == operation_id,
+                tables.operations.c.state == "CLAIMED",
+                tables.operations.c.binding == {},
+                tables.operations.c.envelope == {},
+            ).values(
+                task_id=task_id,
+                request_hash=request_hash,
+                binding=json_value(binding),
+                envelope=json_value(envelope),
+                observation={"workflow_stage_hash": workflow_stage_hash},
+                updated_at=now,
+            ))
+            row = (await self.connection.execute(select(tables.operations).where(
+                tables.operations.c.id == operation_id,
+            ).with_for_update())).mappings().one()
         if (
             row["owner_scope"] != owner_scope
             or row["task_id"] != task_id
@@ -97,6 +166,66 @@ class PostgresDeliveryRepository:
             state=row["state"],
             receipt=receipt,
         )
+
+    async def claim_deferred_operation(
+        self, operation_id: OperationId, owner_scope: ScopeId, task_id: TaskId,
+        kind: str, stage_hash: str,
+    ) -> None:
+        now = aware_now()
+        await self.connection.execute(pg_insert(tables.operations).values(
+            id=operation_id, owner_scope=owner_scope, task_id=None, kind=kind,
+            request_hash=stage_hash, state="CLAIMED", dispatch_state="NOT_STARTED",
+            execution_state="PENDING", binding={}, envelope={}, receipt=None,
+            observation={"deferred_stage_hash": stage_hash, "deferred_task_id": str(task_id)}, created_at=now, updated_at=now,
+        ).on_conflict_do_nothing(index_elements=[tables.operations.c.id]))
+        row = (await self.connection.execute(select(tables.operations).where(
+            tables.operations.c.id == operation_id,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None or (
+            row["owner_scope"] != owner_scope or row["task_id"] is not None
+            or row["kind"] != kind or row["observation"].get("deferred_stage_hash") != stage_hash
+            or row["observation"].get("deferred_task_id") != str(task_id)
+            or row["binding"] != {} or row["envelope"] != {}
+        ):
+            raise Conflict("deferred operation identity changed")
+
+    async def reject_deferred_operation(
+        self, operation_id: OperationId, task_id: TaskId, stage_hash: str, reason: str,
+    ) -> bool:
+        """Seal a workflow step only while its durable claim proves no admission occurred."""
+        row = (await self.connection.execute(select(tables.operations).where(
+            tables.operations.c.id == operation_id,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None:
+            raise StaleInput("deferred workflow operation is unavailable")
+        observation = dict(row["observation"] or {})
+        if (
+            row["state"] == "FAILED"
+            and observation.get("rejected_before_admission") == reason
+            and observation.get("deferred_task_id") == str(task_id)
+            and observation.get("deferred_stage_hash") == stage_hash
+        ):
+            return False
+        if (
+            row["state"] != "CLAIMED" or row["execution_state"] != "PENDING"
+            or row["dispatch_state"] != "NOT_STARTED" or row["task_id"] is not None
+            or row["binding"] != {} or row["envelope"] != {}
+            or observation.get("deferred_task_id") != str(task_id)
+            or observation.get("deferred_stage_hash") != stage_hash
+            or observation.get("external_call_started") is True
+        ):
+            raise UnknownExecution("workflow operation is no longer an unadmitted deferred step")
+        observation["rejected_before_admission"] = reason
+        await self.connection.execute(update(tables.operations).where(
+            tables.operations.c.id == operation_id,
+            tables.operations.c.state == "CLAIMED",
+            tables.operations.c.execution_state == "PENDING",
+            tables.operations.c.dispatch_state == "NOT_STARTED",
+        ).values(
+            state="FAILED", dispatch_state="QUIESCENT", execution_state="QUIESCENT",
+            observation=json_value(observation), last_error=reason[:240], updated_at=aware_now(),
+        ))
+        return True
 
     @staticmethod
     def _receipt(value: Mapping[str, object]) -> AdmissionReceipt:
@@ -136,6 +265,17 @@ class PostgresDeliveryRepository:
         if request_hash is not None and row["request_hash"] != request_hash:
             raise Conflict("operation request hash mismatch")
         return row
+
+    async def get_operation_statuses(self, operation_ids: Sequence[OperationId]) -> Mapping[str, Mapping[str, object]]:
+        ids = tuple(sorted(set(operation_ids)))
+        if not ids:
+            return {}
+        rows = (await self.connection.execute(select(
+            tables.operations.c.id, tables.operations.c.kind, tables.operations.c.state,
+            tables.operations.c.dispatch_state, tables.operations.c.execution_state,
+            tables.operations.c.last_error,
+        ).where(tables.operations.c.id.in_(ids)).order_by(tables.operations.c.id))).mappings().all()
+        return {row["id"]: dict(row) for row in rows}
 
     async def lock_task_operations(self, task_id: TaskId):
         return (await self.connection.execute(select(tables.operations).where(
@@ -215,6 +355,32 @@ class PostgresDeliveryRepository:
             ))
         return jobs
 
+    async def claim_lifecycle_jobs(self, worker: str, limit: int, lease: float) -> Sequence[OutboxJob]:
+        if limit < 1 or lease <= 0:
+            raise ValueError("job limit and lease must be positive")
+        now = aware_now()
+        rows = (await self.connection.execute(select(tables.outbox).where(
+            tables.outbox.c.kind.in_(["critic_create", "critic_delete"]),
+            ((tables.outbox.c.status == "PENDING") | (
+                (tables.outbox.c.status == "CLAIMED") & (tables.outbox.c.claim_expires_at <= now)
+            )),
+            tables.outbox.c.available_at <= now,
+            tables.outbox.c.send_intent_at.is_(None),
+        ).order_by(tables.outbox.c.available_at, tables.outbox.c.id).limit(limit).with_for_update(skip_locked=True))).mappings().all()
+        jobs = []
+        for row in rows:
+            fence = (row["claim_fence"] or 0) + 1
+            await self.connection.execute(update(tables.outbox).where(tables.outbox.c.id == row["id"]).values(
+                status="CLAIMED", claim_owner=worker, claim_fence=fence,
+                claim_expires_at=now + timedelta(seconds=lease),
+            ))
+            jobs.append(OutboxJob(
+                id=row["id"], operation_id=OperationId(row["operation_id"]), kind=row["kind"],
+                generation=row["generation"], payload=row["payload"], status="CLAIMED",
+                claim_owner=worker, claim_fence=fence, claim_expires_at=now + timedelta(seconds=lease),
+            ))
+        return jobs
+
     async def get_dispatch_payload(self, operation_id: OperationId):
         return (await self.connection.execute(select(tables.outbox.c.payload).where(
             tables.outbox.c.operation_id == operation_id,
@@ -277,6 +443,18 @@ class PostgresDeliveryRepository:
         ).values(status="ACKED", acked_at=aware_now()))
         if result.rowcount != 1:
             raise StaleInput("outbox claim is stale")
+
+    async def assert_job_claim(self, job: OutboxJob, worker: str, fence: int) -> None:
+        row = (await self.connection.execute(select(tables.outbox).where(
+            tables.outbox.c.id == job.id,
+            tables.outbox.c.status == "CLAIMED",
+            tables.outbox.c.claim_owner == worker,
+            tables.outbox.c.claim_fence == fence,
+            tables.outbox.c.claim_expires_at > aware_now(),
+            tables.outbox.c.send_intent_at.is_(None),
+        ).with_for_update())).mappings().one_or_none()
+        if row is None or row["operation_id"] != job.operation_id or row["kind"] != job.kind:
+            raise StaleInput("lifecycle outbox claim is stale")
 
     async def reschedule_job(self, job: OutboxJob, worker: str, fence: int, error: str, delay: float) -> None:
         if delay < 0:

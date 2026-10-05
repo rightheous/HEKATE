@@ -98,12 +98,17 @@ class PostgresAgentRepository:
         )
 
     async def lock_registry(self, registry_id: RegistryId) -> AgentRecord:
-        row = (await self.connection.execute(select(tables.agent_registry).where(
-            tables.agent_registry.c.id == registry_id,
-        ).with_for_update())).mappings().one_or_none()
-        if row is None:
+        record = await self.get_registry(registry_id, lock=True)
+        if record is None:
             raise StaleInput("agent registry entry is unavailable")
-        return self._record(row)
+        return record
+
+    async def get_registry(self, registry_id: RegistryId, *, lock: bool = False) -> AgentRecord | None:
+        query = select(tables.agent_registry).where(tables.agent_registry.c.id == registry_id)
+        if lock:
+            query = query.with_for_update()
+        row = (await self.connection.execute(query)).mappings().one_or_none()
+        return self._record(row) if row else None
 
     async def bind_provider(self, registry_id: RegistryId, provider_id: ProviderAgentId) -> None:
         record = await self.lock_registry(registry_id)
@@ -229,3 +234,25 @@ class PostgresAgentRepository:
         ).values(intended_state=AgentState.READY.value, active_attempt_id=None))
         if result.rowcount != 1:
             raise Conflict("agent state changed before execution became quiescent")
+
+    async def set_registry_deleting(self, registry_id: RegistryId) -> None:
+        result = await self.connection.execute(update(tables.agent_registry).where(
+            tables.agent_registry.c.id == registry_id,
+            tables.agent_registry.c.role == "critic",
+            tables.agent_registry.c.persistence == "ephemeral",
+            tables.agent_registry.c.intended_state.in_(["CREATING", "READY", "BUSY", "DELETE_PENDING"]),
+        ).values(intended_state="DELETE_PENDING"))
+        if result.rowcount != 1:
+            raise PolicyDenied("Critic registry cannot enter deletion state")
+
+    async def mark_registry_deleted(self, registry_id: RegistryId) -> None:
+        result = await self.connection.execute(update(tables.agent_registry).where(
+            tables.agent_registry.c.id == registry_id,
+            tables.agent_registry.c.role == "critic",
+            tables.agent_registry.c.persistence == "ephemeral",
+        ).values(
+            intended_state="DELETED", observed_state="ABSENT", observed_at=aware_now(),
+            active_attempt_id=None,
+        ))
+        if result.rowcount != 1:
+            raise StaleInput("Critic registry disappeared before deletion was confirmed")

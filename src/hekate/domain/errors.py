@@ -19,6 +19,14 @@ class PolicyDenied(HekateError):
     pass
 
 
+class AuthorizationChanged(PolicyDenied):
+    """The authorization snapshot used to approve work is no longer current."""
+
+
+class EvidenceUnavailable(PolicyDenied):
+    """A selected Evidence reference is no longer usable for new work."""
+
+
 class BudgetDenied(HekateError):
     pass
 

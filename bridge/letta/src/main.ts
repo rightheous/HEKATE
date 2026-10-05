@@ -33,7 +33,7 @@ interface SessionEntry {
   turnState: "IDLE" | "RUNNING" | "COMPLETE" | "FAILED" | "UNKNOWN";
   events: BridgeEvent[];
   toolStats: { executorCalls: number; blockedAttempts: number };
-  outputContract?: "hekate_turn_output_v1" | "position_commit_v1" | null;
+  outputContract?: "hekate_turn_output_v1" | "critic_turn_output_v1" | "position_commit_v1" | null;
   turnTask?: Promise<void>;
 }
 
@@ -59,12 +59,39 @@ const positionCommitSchema = JSON.parse(
 const hekateTurnOutputSchema = JSON.parse(
   readFileSync(resolve(import.meta.dirname, "../../../contracts/generated/hekate-turn-output.v1.schema.json"), "utf8"),
 );
-const validateHekateTurnOutput = new Ajv2020({ allErrors: true, strict: false }).compile(hekateTurnOutputSchema);
+const criticTurnOutputSchema = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, "../../../contracts/generated/critic-turn-output.v1.schema.json"), "utf8"),
+);
+const outputValidator = new Ajv2020({ allErrors: true, strict: false });
+const validateHekateTurnOutput = outputValidator.compile(hekateTurnOutputSchema);
+const validateCriticTurnOutput = outputValidator.compile(criticTurnOutputSchema);
+
+function sdkOutputSchema(schema: Record<string, unknown>): Record<string, unknown> {
+  // SDK 0.8.25 compiles its outputFormat with draft-07 Ajv. The generated
+  // contract is draft 2020-12, but this schema uses the shared subset; remove
+  // dialect metadata only in the SDK copy. The bridge still validates against
+  // the original generated schema with Ajv2020 before accepting the result.
+  const compatible = { ...schema };
+  delete compatible.$schema;
+  delete compatible.$id;
+  return compatible;
+}
 
 function parseHekateTurnOutput(raw: string): Record<string, unknown> | undefined {
   try {
     const value: unknown = JSON.parse(raw);
     return value && typeof value === "object" && !Array.isArray(value) && validateHekateTurnOutput(value)
+      ? value as Record<string, unknown>
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseCriticTurnOutput(raw: string): Record<string, unknown> | undefined {
+  try {
+    const value: unknown = JSON.parse(raw);
+    return value && typeof value === "object" && !Array.isArray(value) && validateCriticTurnOutput(value)
       ? value as Record<string, unknown>
       : undefined;
   } catch {
@@ -184,6 +211,9 @@ async function runTurn(
         conversation_id: entry.conversationId,
       };
       const event = summarizeSdkMessage(message, command.operation_id, binding, index++);
+      if (message.type === "result" && message.errorCode === "structured_output_error") {
+        process.stderr.write(`structured output rejected: ${(message.errorDetail ?? "unknown validation error").slice(0, 500)}\\n`);
+      }
       if (message.type === "assistant") captureOutput(message.content);
       if (message.type === "tool_call") resetOutput();
       const callId = event.usage.accounting_call_id;
@@ -222,11 +252,17 @@ async function runTurn(
         // SDK 0.8.25 emits trailing usage before result, or after its 100 ms
         // grace timeout when the App Server never sends usage.
         resultSeen = true;
-        if (entry.outputContract === "hekate_turn_output_v1") {
+        if (entry.outputContract === "hekate_turn_output_v1" || entry.outputContract === "critic_turn_output_v1") {
+          if (message.success && message.structuredOutput !== undefined) {
+            // Portable StructuredOutput returns a validated value on the SDK result;
+            // its tool call is not assistant prose and must become the bounded wire payload.
+            resetOutput();
+            captureOutput(JSON.stringify(message.structuredOutput));
+          }
           const outputDigest = outputHash.digest("hex");
-          const structured = entry.outputContract === "hekate_turn_output_v1"
-            ? parseHekateTurnOutput(finalAssistantOutput)
-            : message.structuredOutput;
+          const structured = entry.outputContract === "critic_turn_output_v1"
+            ? parseCriticTurnOutput(finalAssistantOutput)
+            : parseHekateTurnOutput(finalAssistantOutput);
           const structuredObject = structured && typeof structured === "object" && !Array.isArray(structured)
             ? structured as Record<string, unknown>
             : undefined;
@@ -393,6 +429,9 @@ export async function routeCommand(
         creation_tag: Array.isArray(agent.tags)
           ? agent.tags.find((tag) => tag.startsWith("hekate-creation:"))?.slice("hekate-creation:".length) ?? null
           : null,
+        role: Array.isArray(agent.tags)
+          ? agent.tags.find((tag) => tag.startsWith("hekate-role:"))?.slice("hekate-role:".length) ?? null
+          : null,
         tools: Array.isArray(agent.tools) ? agent.tools.map((tool) => tool.name) : [],
         model: agent.model ?? null,
         model_settings: agent.model_settings ?? {},
@@ -407,8 +446,21 @@ export async function routeCommand(
           (command.creation_tag === undefined || command.creation_tag === null ||
             matchesTag(agent.tags, `hekate-creation:${command.creation_tag}`)),
         )
-        .map((agent) => agent.id);
-      return reply(command, "CONFIRMED", { kind: "agents", provider_agent_ids: ids });
+        .map((agent) => ({
+          provider_agent_id: agent.id,
+          owner: command.owner,
+          creation_tag: Array.isArray(agent.tags)
+            ? agent.tags.find((tag) => tag.startsWith("hekate-creation:"))?.slice("hekate-creation:".length) ?? null
+            : null,
+          role: Array.isArray(agent.tags)
+            ? agent.tags.find((tag) => tag.startsWith("hekate-role:"))?.slice("hekate-role:".length) ?? null
+            : null,
+        }));
+      return reply(command, "CONFIRMED", {
+        kind: "agents",
+        agents: ids,
+        provider_agent_ids: ids.map((agent) => agent.provider_agent_id),
+      });
     }
 
     case "agent.delete": {
@@ -454,18 +506,25 @@ export async function routeCommand(
       }
       previous?.session.close();
       const toolStats = { executorCalls: 0, blockedAttempts: 0 };
-      const selectedOutputSchema = command.output_contract === "position_commit_v1" || (structuredOutputProbe && !command.output_contract)
-          ? positionCommitSchema
-          : undefined;
+      const selectedOutputSchema = command.output_contract === "position_commit_v1"
+        ? positionCommitSchema
+        : command.output_contract === "critic_turn_output_v1"
+          ? criticTurnOutputSchema
+          : command.output_contract === "hekate_turn_output_v1"
+            ? hekateTurnOutputSchema
+            : structuredOutputProbe && !command.output_contract
+              ? positionCommitSchema
+              : undefined;
+      const sdkSchema = selectedOutputSchema ? sdkOutputSchema(selectedOutputSchema) : undefined;
       const session = client.createSession(command.binding.provider_agent_id, {
         allowedTools: [],
         toolset: { base: "none" as const },
         tools: [],
-        ...(selectedOutputSchema
+        ...(sdkSchema
           ? {
               outputFormat: {
                 type: "json_schema" as const,
-                schema: selectedOutputSchema,
+                schema: sdkSchema,
                 maxRetries: 0,
               },
             }

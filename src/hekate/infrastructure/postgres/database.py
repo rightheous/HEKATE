@@ -21,6 +21,7 @@ from .budget_repository import PostgresBudgetRepository
 from .delivery_repository import PostgresDeliveryRepository
 from .knowledge_repository import PostgresKnowledgeRepository
 from .task_repository import PostgresTaskRepository
+from .critic_workflow_repository import PostgresCriticWorkflowRepository
 
 
 def create_engine(settings: Settings | str) -> AsyncEngine:
@@ -40,6 +41,7 @@ class PostgresUnitOfWork:
         self.budgets: PostgresBudgetRepository
         self.delivery: PostgresDeliveryRepository
         self.knowledge: PostgresKnowledgeRepository
+        self.critic_workflows: PostgresCriticWorkflowRepository
 
     async def __aenter__(self) -> PostgresUnitOfWork:
         if self._entered:
@@ -51,6 +53,7 @@ class PostgresUnitOfWork:
         self.budgets = PostgresBudgetRepository(self.session)
         self.delivery = PostgresDeliveryRepository(self.session)
         self.knowledge = PostgresKnowledgeRepository(self.session)
+        self.critic_workflows = PostgresCriticWorkflowRepository(self.session)
         return self
 
     async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:

@@ -269,7 +269,8 @@ class PostgresTaskRepository:
         }
 
     async def finalize_task_response(
-        self, task_id: TaskId, revision: int, response: Mapping[str, object], *, successful: bool,
+        self, task_id: TaskId, revision: int, response: Mapping[str, object], *,
+        successful: bool, accepted_at: datetime | None = None,
     ) -> bool:
         task = await self.lock_task(task_id)
         existing = await self.get_task_response(task_id)
@@ -287,7 +288,7 @@ class PostgresTaskRepository:
             tables.tasks.c.input_revision == revision,
             tables.tasks.c.status == TaskStatus.RUNNING.value,
             tables.tasks.c.cancel_requested_at.is_(None),
-            tables.tasks.c.deadline > datetime.now(timezone.utc),
+            tables.tasks.c.deadline > (accepted_at or datetime.now(timezone.utc)),
         )
         changed = await self.connection.execute(query.values(**values))
         if changed.rowcount != 1:
@@ -306,7 +307,9 @@ class PostgresTaskRepository:
         ))
         return True
 
-    async def resolve_task_after_execution(self, task_id: TaskId, revision: int) -> Task | None:
+    async def resolve_task_after_execution(
+        self, task_id: TaskId, revision: int, *, now: datetime | None = None,
+    ) -> Task | None:
         task = await self.lock_task(task_id)
         if task.input_revision != revision or task.status not in {
             TaskStatus.RUNNING, TaskStatus.WAITING, TaskStatus.STOPPING,
@@ -317,7 +320,7 @@ class PostgresTaskRepository:
                 return None
             status, outcome = transition_task(task.status, TaskEvent.CANCEL), "CANCELLED"
             stop_reason = task.stop_reason or StopReason.USER_CANCELLED.value
-        elif task.deadline <= aware_now():
+        elif task.deadline <= (now or aware_now()):
             status, outcome = transition_task(task.status, TaskEvent.FAIL), "FAILED"
             stop_reason = StopReason.DEADLINE.value
         else:
@@ -444,7 +447,7 @@ class PostgresTaskRepository:
             raise PolicyDenied("task does not admit new attempts")
         increments: dict[str, int] = {}
         if attempt_kind == "critic_review":
-            if task.counters.review_rounds >= 2:
+            if task.counters.review_rounds >= 1:
                 raise PolicyDenied("task review-round cap reached")
             increments["review_rounds"] = 1
         elif attempt_kind == "schema_repair":
@@ -460,6 +463,23 @@ class PostgresTaskRepository:
         await self.connection.execute(update(tables.tasks).where(
             tables.tasks.c.id == task.id,
         ).values(**values))
+
+    async def mark_waiting_for_workflow(self, task_id: TaskId, revision: int) -> bool:
+        task = await self.lock_task(task_id)
+        if task.input_revision != revision or task.cancel_requested_at is not None:
+            return False
+        if task.status == TaskStatus.WAITING:
+            return True
+        if task.status != TaskStatus.RUNNING or task.deadline <= aware_now():
+            return False
+        changed = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == TaskStatus.RUNNING.value,
+            tables.tasks.c.cancel_requested_at.is_(None),
+            tables.tasks.c.deadline > aware_now(),
+        ).values(status=TaskStatus.WAITING.value))
+        return changed.rowcount == 1
 
     async def revise_input(
         self,
@@ -512,6 +532,50 @@ class PostgresTaskRepository:
             tables.tasks.c.deadline > aware_now(),
         ).values(status=TaskStatus.FAILED.value, outcome="FAILED", stop_reason=StopReason.POLICY.value))
         return result.rowcount == 1
+
+    async def fail_waiting_task_with_response(
+        self, task_id: TaskId, revision: int, response: Mapping[str, object],
+    ) -> bool:
+        """Fail the current workflow revision and persist its server response atomically."""
+        task = await self.lock_task(task_id)
+        existing = await self.get_task_response(task_id)
+        if existing is not None:
+            return (
+                existing["input_revision"] == revision
+                and existing["source_inbox_id"] == response["source_inbox_id"]
+                and existing["stop_reason"] == StopReason.POLICY.value
+            )
+        now = aware_now()
+        if (
+            task.input_revision != revision or task.status != TaskStatus.WAITING
+            or task.cancel_requested_at is not None or task.deadline <= now
+        ):
+            return False
+        failed = transition_task(task.status, TaskEvent.FAIL)
+        changed = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == TaskStatus.WAITING.value,
+            tables.tasks.c.cancel_requested_at.is_(None),
+            tables.tasks.c.deadline > now,
+        ).values(
+            status=failed.value, outcome="FAILED", stop_reason=StopReason.POLICY.value,
+        ))
+        if changed.rowcount != 1:
+            return False
+        await self.connection.execute(insert(tables.task_responses).values(
+            task_id=task_id,
+            input_revision=revision,
+            operation_id=response["operation_id"],
+            attempt_id=response["attempt_id"],
+            registry_id=response["registry_id"],
+            source_inbox_id=response["source_inbox_id"],
+            proposal=json_value(response["proposal"]),
+            response_text=response["response_text"],
+            outcome="FAILED",
+            stop_reason=StopReason.POLICY.value,
+        ))
+        return True
 
     async def request_cancel(self, task_id: TaskId, reason: StopReason) -> Task:
         task = await self.lock_task(task_id)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+from dataclasses import replace
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -108,6 +109,87 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
         max_input_tokens=integer_value(profile.get("max_input_tokens"), "max_input_tokens"),
         max_output_tokens=integer_value(profile.get("max_output_tokens"), "max_output_tokens"),
         max_compaction_calls=nonnegative_integer(profile.get("max_compaction_calls"), "max_compaction_calls"),
+    )
+
+
+def configured_critic_execution(settings: Settings) -> TaskExecutionConfig | None:
+    policy = settings.policy.get("critic")
+    if not isinstance(policy, dict) or policy.get("enabled") is not True:
+        return None
+    required_caps = {
+        "max_agents_per_task": 1,
+        "max_review_rounds": 1,
+        "max_syntheses_per_task": 1,
+    }
+    if any(policy.get(key) != value or type(policy.get(key)) is not int for key, value in required_caps.items()):
+        raise ValueError("Phase 5A Critic limits must be explicitly fixed at one")
+    profile = settings.models.get("critic")
+    if not isinstance(profile, dict):
+        raise ValueError("Critic is enabled without a fixed Critic model profile")
+    profile_settings = replace(settings, models={"hekate": profile})
+    return configured_task_execution(profile_settings)
+
+
+_EXECUTION_CONFIG_FIELDS = frozenset({
+    "task_budget_usd", "system_daily_budget_usd", "deadline_seconds", "profile_id",
+    "letta_model", "model", "pricing_version", "input_usd_per_million",
+    "output_usd_per_million", "max_input_tokens", "max_output_tokens",
+    "max_compaction_calls",
+})
+
+
+def execution_config_snapshot(config: TaskExecutionConfig) -> dict[str, object]:
+    """Persist the trusted, bounded profile that authorized a durable workflow step."""
+    return {
+        "task_budget_usd": str(config.task_budget_usd),
+        "system_daily_budget_usd": str(config.system_daily_budget_usd),
+        "deadline_seconds": config.deadline_seconds,
+        "profile_id": config.profile_id,
+        "letta_model": config.letta_model,
+        "model": config.model,
+        "pricing_version": config.pricing_version,
+        "input_usd_per_million": str(config.input_usd_per_million),
+        "output_usd_per_million": str(config.output_usd_per_million),
+        "max_input_tokens": config.max_input_tokens,
+        "max_output_tokens": config.max_output_tokens,
+        "max_compaction_calls": config.max_compaction_calls,
+    }
+
+
+def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig:
+    """Rebuild only a complete persisted server profile; never read model routing from output."""
+    if set(value) != _EXECUTION_CONFIG_FIELDS:
+        raise ValueError("persisted workflow execution profile is incomplete or contains unknown fields")
+    decimal_names = {
+        "task_budget_usd", "system_daily_budget_usd",
+        "input_usd_per_million", "output_usd_per_million",
+    }
+    string_names = {"profile_id", "letta_model", "model", "pricing_version"}
+    integer_names = {"deadline_seconds", "max_input_tokens", "max_output_tokens", "max_compaction_calls"}
+    if any(not isinstance(value.get(name), str) or not value[name] for name in string_names):
+        raise ValueError("persisted workflow execution profile has an invalid identity")
+    if any(type(value.get(name)) is not int for name in integer_names):
+        raise ValueError("persisted workflow execution profile has an invalid limit")
+    if any(not isinstance(value.get(name), str) for name in decimal_names):
+        raise ValueError("persisted workflow execution profile has an invalid price")
+    try:
+        decimals = {name: Decimal(value[name]) for name in decimal_names}
+    except InvalidOperation as error:
+        raise ValueError("persisted workflow execution profile has an invalid price") from error
+    if any(not number.is_finite() or number < 0 for number in decimals.values()):
+        raise ValueError("persisted workflow execution profile has an invalid price")
+    limits = [value[name] for name in integer_names]
+    if any(number < 0 for number in limits) or value["deadline_seconds"] < 1 \
+            or value["max_input_tokens"] < 1 or value["max_output_tokens"] < 1:
+        raise ValueError("persisted workflow execution profile has invalid limits")
+    return TaskExecutionConfig(
+        **decimals,
+        deadline_seconds=value["deadline_seconds"],
+        profile_id=value["profile_id"], letta_model=value["letta_model"],
+        model=value["model"], pricing_version=value["pricing_version"],
+        max_input_tokens=value["max_input_tokens"],
+        max_output_tokens=value["max_output_tokens"],
+        max_compaction_calls=value["max_compaction_calls"],
     )
 
 

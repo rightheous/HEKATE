@@ -7,7 +7,7 @@ from typing import Annotated, Literal, Mapping, TypeAlias, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .contracts import MAX_CONTRACT_ITEMS
+from .contracts import MAX_CONTRACT_ITEMS, canonical_json_hash
 from .types import (
     AccountingCallId, AttemptId, AttemptStatus, DomainId, EvidenceId, OperationId, PermitId, ProviderAgentId,
     PrincipalId, ProviderCallId, RegistryId, ReservationId, Revision, ScopeId,
@@ -220,6 +220,12 @@ class ConclusionCapsule(ContractModel):
     position_recommendation: PositionRecommendation
 
 
+class CriticTurnOutput(ContractModel):
+    """Critic's only output: a bound Conclusion Capsule, with no executable proposal."""
+    schema_version: Literal["1"]
+    conclusion: ConclusionCapsule
+
+
 class Premise(ContractModel):
     id: str
     text: str
@@ -272,6 +278,23 @@ class TaskData(ContractModel):
     )
 
 
+class CriticReviewTarget(ContractModel):
+    purpose: str
+    target_uncertainty: str
+    expected_decision_impact: str
+    candidate_conclusion: ConclusionCapsule
+
+
+class CriticSynthesisContext(ContractModel):
+    purpose: str
+    target_uncertainty: str
+    expected_decision_impact: str
+    candidate_conclusion: ConclusionCapsule
+    critic_conclusion: ConclusionCapsule
+    critic_conclusion_id: DomainId
+    dissent: tuple[DissentExcerpt, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
+
+
 class ExpectedOutput(ContractModel):
     schema_id: str = Field(alias="schema")
 
@@ -295,6 +318,8 @@ class TaskCapsule(ContractModel):
     premises: tuple[Premise, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
     evidence_refs: tuple[EvidenceId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
     task_data: TaskData = Field(default_factory=TaskData)
+    review_target: CriticReviewTarget | None = None
+    synthesis_context: CriticSynthesisContext | None = None
     target_position: TargetPosition | None = None
     constraints: tuple[str, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
     expected_output: ExpectedOutput
@@ -392,6 +417,10 @@ class ProviderObservation(ContractModel):
     state: ObservationState
     evidence: str | None = None
     observed_at: datetime
+    provider_agent_id: ProviderAgentId | None = None
+    owner: str | None = None
+    creation_tag: str | None = None
+    role: str | None = None
 
 
 class RuntimeEvent(ContractModel):
@@ -510,6 +539,8 @@ class AdmissionRequest:
     lease_owner: str
     task_preparation_owner: str | None = None
     context_manifest: Mapping[str, object] | None = None
+    workflow_stage: str | None = None
+    workflow_stage_hash: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -527,6 +558,44 @@ class OperationClaim:
     request_hash: str
     state: str
     receipt: AdmissionReceipt | None = None
+
+
+class CriticWorkflow(ContractModel):
+    task_id: TaskId
+    owner_scope: ScopeId
+    input_revision: Revision
+    stage: str
+    spawn_request_hash: str
+    proposal: SpawnProposal
+    critic_profile: Mapping[str, object]
+    hekate_profile: Mapping[str, object]
+    parent_attempt_id: AttemptId
+    planning_operation_id: OperationId
+    planning_conclusion_id: DomainId
+    critic_registry_id: RegistryId
+    create_operation_id: OperationId
+    review_attempt_id: AttemptId
+    review_operation_id: OperationId
+    review_reservation_id: ReservationId
+    synthesis_attempt_id: AttemptId
+    synthesis_operation_id: OperationId
+    synthesis_reservation_id: ReservationId
+    critic_conclusion_id: DomainId | None = None
+    delete_operation_id: OperationId | None = None
+    updated_at: datetime | None = None
+
+    def stage_hash(self, stage: str) -> str:
+        return canonical_json_hash({
+            "task_id": str(self.task_id), "owner_scope": str(self.owner_scope),
+            "input_revision": self.input_revision, "stage": stage,
+            "parent_attempt_id": str(self.parent_attempt_id),
+            "planning_operation_id": str(self.planning_operation_id),
+            "critic_registry_id": str(self.critic_registry_id),
+            "review_attempt_id": str(self.review_attempt_id),
+            "review_operation_id": str(self.review_operation_id),
+            "synthesis_attempt_id": str(self.synthesis_attempt_id),
+            "synthesis_operation_id": str(self.synthesis_operation_id),
+        })
 
 
 @dataclass(frozen=True, slots=True)
@@ -892,6 +961,8 @@ AuditEvent: TypeAlias = Mapping[str, object]
 RuntimeCapabilities: TypeAlias = Mapping[str, object]
 CapabilityReport: TypeAlias = Mapping[str, object]
 AgentSpec: TypeAlias = Mapping[str, object]
+
+
 ProviderAgent: TypeAlias = Mapping[str, object]
 DispatchObservation: TypeAlias = Mapping[str, object]
 CancelObservation: TypeAlias = Mapping[str, object]
