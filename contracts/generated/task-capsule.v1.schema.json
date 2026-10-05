@@ -1,6 +1,119 @@
 {
   "$comment": "Parser enforces a 1048576-byte UTF-8 JSON payload limit.",
   "$defs": {
+    "Assessment": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "confidence"
+      ],
+      "title": "Assessment",
+      "type": "object"
+    },
+    "ConclusionCapsule": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "title": "Agent Id",
+          "type": "string"
+        },
+        "assessment": {
+          "$ref": "#/$defs/Assessment"
+        },
+        "assumptions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Assumptions",
+          "type": "array"
+        },
+        "attempt_id": {
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "evidence_used": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Evidence Used",
+          "type": "array"
+        },
+        "input_revision": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Revision"
+        },
+        "objections": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Objection"
+          },
+          "maxItems": 1000,
+          "title": "Objections",
+          "type": "array"
+        },
+        "position_recommendation": {
+          "$ref": "#/$defs/PositionRecommendation"
+        },
+        "recommended_next_step": {
+          "$ref": "#/$defs/RecommendedNextStep"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        },
+        "unresolved": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Unresolved",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "attempt_id",
+        "agent_id",
+        "status",
+        "assessment",
+        "recommended_next_step",
+        "position_recommendation"
+      ],
+      "title": "ConclusionCapsule",
+      "type": "object"
+    },
     "Confidence": {
       "additionalProperties": false,
       "properties": {
@@ -31,6 +144,184 @@
         "basis"
       ],
       "title": "Confidence",
+      "type": "object"
+    },
+    "CriticReviewSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "conclusion": {
+          "$ref": "#/$defs/ConclusionCapsule"
+        },
+        "conclusion_id": {
+          "title": "Conclusion Id",
+          "type": "string"
+        },
+        "dissent": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DissentExcerpt"
+          },
+          "maxItems": 1000,
+          "title": "Dissent",
+          "type": "array"
+        },
+        "review_round": {
+          "maximum": 2,
+          "minimum": 1,
+          "title": "Review Round",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "review_round",
+        "conclusion_id",
+        "conclusion"
+      ],
+      "title": "CriticReviewSummary",
+      "type": "object"
+    },
+    "CriticReviewTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_conclusion": {
+          "$ref": "#/$defs/ConclusionCapsule"
+        },
+        "expected_decision_impact": {
+          "title": "Expected Decision Impact",
+          "type": "string"
+        },
+        "prior_reviews": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CriticReviewSummary"
+          },
+          "maxItems": 2,
+          "title": "Prior Reviews",
+          "type": "array"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string"
+        },
+        "target_uncertainty": {
+          "title": "Target Uncertainty",
+          "type": "string"
+        }
+      },
+      "required": [
+        "purpose",
+        "target_uncertainty",
+        "expected_decision_impact",
+        "candidate_conclusion"
+      ],
+      "title": "CriticReviewTarget",
+      "type": "object"
+    },
+    "CriticSynthesisContext": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_conclusion": {
+          "$ref": "#/$defs/ConclusionCapsule"
+        },
+        "critic_conclusion": {
+          "$ref": "#/$defs/ConclusionCapsule"
+        },
+        "critic_conclusion_id": {
+          "title": "Critic Conclusion Id",
+          "type": "string"
+        },
+        "dissent": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DissentExcerpt"
+          },
+          "maxItems": 1000,
+          "title": "Dissent",
+          "type": "array"
+        },
+        "expected_decision_impact": {
+          "title": "Expected Decision Impact",
+          "type": "string"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string"
+        },
+        "review_history": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CriticReviewSummary"
+          },
+          "maxItems": 2,
+          "title": "Review History",
+          "type": "array"
+        },
+        "target_uncertainty": {
+          "title": "Target Uncertainty",
+          "type": "string"
+        }
+      },
+      "required": [
+        "purpose",
+        "target_uncertainty",
+        "expected_decision_impact",
+        "candidate_conclusion",
+        "critic_conclusion",
+        "critic_conclusion_id"
+      ],
+      "title": "CriticSynthesisContext",
+      "type": "object"
+    },
+    "DeliberationContext": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_impact": {
+          "title": "Decision Impact",
+          "type": "string"
+        },
+        "expected_information_gain": {
+          "title": "Expected Information Gain",
+          "type": "string"
+        },
+        "next_action": {
+          "enum": [
+            "hekate_reasoning",
+            "critic_review"
+          ],
+          "title": "Next Action",
+          "type": "string"
+        },
+        "review_history": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CriticReviewSummary"
+          },
+          "maxItems": 2,
+          "title": "Review History",
+          "type": "array"
+        },
+        "step_kind": {
+          "enum": [
+            "hekate_reasoning",
+            "critic_review",
+            "synthesis"
+          ],
+          "title": "Step Kind",
+          "type": "string"
+        },
+        "unresolved_issue": {
+          "title": "Unresolved Issue",
+          "type": "string"
+        }
+      },
+      "required": [
+        "step_kind",
+        "unresolved_issue",
+        "next_action",
+        "expected_information_gain",
+        "decision_impact"
+      ],
+      "title": "DeliberationContext",
       "type": "object"
     },
     "DissentExcerpt": {
@@ -302,6 +593,25 @@
       "title": "PositionProvenance",
       "type": "object"
     },
+    "PositionRecommendation": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "summary"
+      ],
+      "title": "PositionRecommendation",
+      "type": "object"
+    },
     "Premise": {
       "additionalProperties": false,
       "properties": {
@@ -324,6 +634,20 @@
         "kind"
       ],
       "title": "Premise",
+      "type": "object"
+    },
+    "RecommendedNextStep": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "RecommendedNextStep",
       "type": "object"
     },
     "RuntimeLimitsCapsule": {
@@ -472,6 +796,17 @@
       "title": "Constraints",
       "type": "array"
     },
+    "deliberation_context": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DeliberationContext"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "evidence_refs": {
       "default": [],
       "items": {
@@ -509,6 +844,17 @@
       "title": "Reasoning Role",
       "type": "string"
     },
+    "review_target": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CriticReviewTarget"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "runtime_limits": {
       "$ref": "#/$defs/RuntimeLimitsCapsule"
     },
@@ -516,6 +862,17 @@
       "const": "1",
       "title": "Schema Version",
       "type": "string"
+    },
+    "synthesis_context": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CriticSynthesisContext"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "target_position": {
       "anyOf": [

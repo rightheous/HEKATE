@@ -59,7 +59,7 @@ class AgentDeleteCommand(BridgeCommandBase):
 class SessionPrepareCommand(BridgeCommandBase):
     command: Literal["session.prepare"]
     binding: BridgeBinding
-    output_contract: Literal["hekate_turn_output_v1", "position_commit_v1"] | None = None
+    output_contract: Literal["hekate_turn_output_v1", "critic_turn_output_v1", "position_commit_v1"] | None = None
 
 
 class SessionTurnCommand(BridgeCommandBase):
@@ -112,14 +112,23 @@ class AgentResult(ContractModel):
     present: bool
     owner: str | None = None
     creation_tag: str | None = None
+    role: str | None = None
     tools: tuple[str, ...] = ()
     model: str | None = None
     model_settings: dict[str, object] = Field(default_factory=dict)
 
 
+class AgentListItem(ContractModel):
+    provider_agent_id: str
+    owner: str
+    creation_tag: str | None = None
+    role: str | None = None
+
+
 class AgentListResult(ContractModel):
     kind: Literal["agents"]
-    provider_agent_ids: tuple[str, ...]
+    agents: tuple[AgentListItem, ...] = ()
+    provider_agent_ids: tuple[str, ...] = ()
 
 
 class SessionResult(ContractModel):

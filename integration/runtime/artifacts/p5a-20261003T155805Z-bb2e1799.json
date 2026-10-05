@@ -1,0 +1,113 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5a-critic-synthesis",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "46464dfa7617b5b4d86d66e239b6a0d1b4027926c936f5f477ae60160db08e5f",
+  "database": {
+    "migration_head": "0007_phase5a_critic_workflows",
+    "name": "hekate_phase5a_test",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "executed_at": "2026-10-03T15:58:05.758041Z",
+  "execution": {
+    "command": "uv run python scripts/phase5a_critic_synthesis_probe.py",
+    "result": "failed"
+  },
+  "failure": {
+    "message": "CLI task exited with status 2: usage: hekate [-h]\n              {worker,ask,task,cancel,evidence,position,serve,reconcile,doctor}\n              ...\nhekate: error: unrecognized arguments: a62f81d8-6e6e-4f7b-9362-65154ad3cc64\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/scripts/phase5a_critic_synthesis_probe.py\", line 551, in _run\n    task_view = await p3b._cli(env, \"task\", \"show\", task_id)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/scripts/phase3b_single_hekate_probe.py\", line 230, in _cli\n    raise RuntimeError(f\"CLI {args[0]} exited with status {process.returncode}: {stderr.decode(errors='replace')[-300:]}\")\nRuntimeError: CLI task exited with status 2: usage: hekate [-h]\n              {worker,ask,task,cancel,evidence,position,serve,reconcile,doctor}\n              ...\nhekate: error: unrecognized arguments: a62f81d8-6e6e-4f7b-9362-65154ad3cc64\n\n",
+    "type": "RuntimeError"
+  },
+  "fake_provider_requests": 3,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review is limited to one initial review; continuation, repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5a-critic-synthesis",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5a-shared-synthetic-v1",
+    "hekate": "phase5a-shared-synthetic-v1",
+    "pricing": "phase5a-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "3b706801-b1c8-545e-920d-5a83ffb53a37",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "fc148ade-0f74-46b7-a71d-0d091039f257"
+      ],
+      "prompt_sha256": "35bdd637131757df7d143e37248cefc6cbd28eea406b1bac1e4824ec2e8dedc9",
+      "reasoning_role": "hekate",
+      "registry_id": "2e69b4bc-1e95-549d-b021-71da73e30caf",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "a62f81d8-6e6e-4f7b-9362-65154ad3cc64",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "158860ca-8782-5351-a558-27f729f75fdd",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "fc148ade-0f74-46b7-a71d-0d091039f257"
+      ],
+      "prompt_sha256": "2ddce63754b3488a810a9ea5151cc7b976950396ac3d7e04b47c93d3983798f3",
+      "reasoning_role": "critic",
+      "registry_id": "fc6ef736-407d-50fd-a884-bb3a751a57dd",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review",
+      "task_id": "a62f81d8-6e6e-4f7b-9362-65154ad3cc64",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "08f54bd2-00d2-57f4-9ab1-e9fb853b5774",
+      "context_checked": true,
+      "critic_conclusion_received": true,
+      "dissent_ids": [
+        "e50d9846-68aa-5918-ac6a-a492f5468591"
+      ],
+      "evidence_ids": [
+        "fc148ade-0f74-46b7-a71d-0d091039f257"
+      ],
+      "prompt_sha256": "d40ceea647b0aac8316e35dec71fd0ffcb4c4c66cad18527355e3a9b5f3a4171",
+      "reasoning_role": "hekate",
+      "registry_id": "2e69b4bc-1e95-549d-b021-71da73e30caf",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis",
+      "task_id": "a62f81d8-6e6e-4f7b-9362-65154ad3cc64",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5a-20261003T155805Z-bb2e1799",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

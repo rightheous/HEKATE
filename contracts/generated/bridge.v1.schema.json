@@ -235,15 +235,67 @@
       "title": "AgentListCommand",
       "type": "object"
     },
+    "AgentListItem": {
+      "additionalProperties": false,
+      "properties": {
+        "creation_tag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Creation Tag"
+        },
+        "owner": {
+          "title": "Owner",
+          "type": "string"
+        },
+        "provider_agent_id": {
+          "title": "Provider Agent Id",
+          "type": "string"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        }
+      },
+      "required": [
+        "provider_agent_id",
+        "owner"
+      ],
+      "title": "AgentListItem",
+      "type": "object"
+    },
     "AgentListResult": {
       "additionalProperties": false,
       "properties": {
+        "agents": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AgentListItem"
+          },
+          "title": "Agents",
+          "type": "array"
+        },
         "kind": {
           "const": "agents",
           "title": "Kind",
           "type": "string"
         },
         "provider_agent_ids": {
+          "default": [],
           "items": {
             "type": "string"
           },
@@ -252,8 +304,7 @@
         }
       },
       "required": [
-        "kind",
-        "provider_agent_ids"
+        "kind"
       ],
       "title": "AgentListResult",
       "type": "object"
@@ -314,6 +365,18 @@
         "provider_agent_id": {
           "title": "Provider Agent Id",
           "type": "string"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
         },
         "tools": {
           "default": [],
@@ -1037,6 +1100,7 @@
             {
               "enum": [
                 "hekate_turn_output_v1",
+                "critic_turn_output_v1",
                 "position_commit_v1"
               ],
               "type": "string"

@@ -1,0 +1,54 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5b-bounded-deliberation",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "a12cae11cb75b44999561a43969904a4514ec5295ddb1674c64b5f370138b8cc",
+  "dispatch_safety": {
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-04T09:57:40.404955Z",
+  "execution": {
+    "command": "IFS= read -r HEKATE_TEST_DATABASE_URL < /tmp/hekate-phase5a-dsn; export HEKATE_TEST_DATABASE_URL HEKATE_NODE_BIN=/tmp/node-v22.19.0/bin/node; uv run --locked python scripts/phase5a_critic_synthesis_probe.py",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "failed"
+  },
+  "failure": {
+    "message": "npm failed (127): sh: 1: tsc: not found",
+    "traceback": "Traceback (most recent call last):\n  File \"scripts/phase5b_bounded_deliberation_probe.py\", line 450, in _run\n    p3.p1.build_bridge(node)\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/scripts/integration_probe.py\", line 883, in build_bridge\n    run([npm, \"--prefix\", \"bridge/letta\", \"run\", \"build\"], timeout=120)\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/scripts/integration_probe.py\", line 59, in run\n    raise ProbeError(f\"{Path(command[0]).name} failed ({completed.returncode}): {detail}\")\nintegration_probe.ProbeError: npm failed (127): sh: 1: tsc: not found\n",
+    "type": "ProbeError"
+  },
+  "fake_provider_requests": 0,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review and synthesis are bounded at two each; HEKATE-only continuation is bounded at one. Repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5b-bounded-deliberation",
+  "provider_fixture_errors": [],
+  "provider_observations": [],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5b-20261004T095740Z-582da30f",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

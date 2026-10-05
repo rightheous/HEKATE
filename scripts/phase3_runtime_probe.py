@@ -164,24 +164,46 @@ class FakeProvider:
                 except Exception:
                     self._reply(500, b'{"error":{"message":"isolated fake fixture rejected the request"}}')
                     return
+                tools = request_body.get("tools")
+                structured_tool = isinstance(tools, list) and any(
+                    isinstance(tool, dict) and isinstance(tool.get("function"), dict)
+                    and tool["function"].get("name") == "StructuredOutput"
+                    for tool in tools
+                )
+                structured_call = structured_tool and isinstance(assistant_content, dict)
+                call_id = f"fake-structured-call-{sequence}"
                 if request_body.get("stream") is True:
-                    chunks = [
-                        {"id": response_id, "object": "chat.completion.chunk", "created": 1,
-                         "model": request_body.get("model"), "choices": [{"index": 0, "delta": {"role": "assistant", "content": assistant_content}, "finish_reason": None}]},
-                        {"id": response_id, "object": "chat.completion.chunk", "created": 1,
-                         "model": request_body.get("model"), "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]},
-                        {"id": response_id, "object": "chat.completion.chunk", "created": 1,
-                         "model": request_body.get("model"), "choices": [], "usage": usage},
-                    ]
+                    if structured_call:
+                        chunks = [
+                            {"id": response_id, "object": "chat.completion.chunk", "created": 1,
+                             "model": request_body.get("model"), "choices": [{"index": 0, "delta": {"role": "assistant", "tool_calls": [{"index": 0, "id": call_id, "type": "function", "function": {"name": "StructuredOutput", "arguments": json.dumps(assistant_content, ensure_ascii=False, separators=(",", ":"))}}]}, "finish_reason": None}]},
+                            {"id": response_id, "object": "chat.completion.chunk", "created": 1,
+                             "model": request_body.get("model"), "choices": [{"index": 0, "delta": {}, "finish_reason": "tool_calls"}]},
+                            {"id": response_id, "object": "chat.completion.chunk", "created": 1,
+                             "model": request_body.get("model"), "choices": [], "usage": usage},
+                        ]
+                    else:
+                        chunks = [
+                            {"id": response_id, "object": "chat.completion.chunk", "created": 1,
+                             "model": request_body.get("model"), "choices": [{"index": 0, "delta": {"role": "assistant", "content": assistant_content}, "finish_reason": None}]},
+                            {"id": response_id, "object": "chat.completion.chunk", "created": 1,
+                             "model": request_body.get("model"), "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]},
+                            {"id": response_id, "object": "chat.completion.chunk", "created": 1,
+                             "model": request_body.get("model"), "choices": [], "usage": usage},
+                        ]
                     body = b"".join(b"data: " + json.dumps(item, separators=(",", ":")).encode() + b"\n\n" for item in chunks)
                     body += b"data: [DONE]\n\n"
                     self._reply(200, body, "text/event-stream")
                 else:
+                    message = {"role": "assistant", "content": None, "tool_calls": [{
+                        "id": call_id, "type": "function",
+                        "function": {"name": "StructuredOutput", "arguments": json.dumps(assistant_content, ensure_ascii=False, separators=(",", ":"))},
+                    }]} if structured_call else {"role": "assistant", "content": assistant_content}
                     body = json.dumps({
                         "id": response_id,
                         "object": "chat.completion",
                         "model": request_body.get("model"),
-                        "choices": [{"index": 0, "message": {"role": "assistant", "content": assistant_content}, "finish_reason": "stop"}],
+                        "choices": [{"index": 0, "message": message, "finish_reason": "tool_calls" if structured_call else "stop"}],
                         "usage": usage,
                     }, separators=(",", ":")).encode()
                     self._reply(200, body)
@@ -854,7 +876,7 @@ async def _run_probe(database_url: str, node: str, image: str, archive: Path, ar
         async with engine.connect() as connection:
             migration_head = await connection.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
             postgres_version = await connection.scalar(text("SHOW server_version"))
-        if migration_head != "0006_phase4_knowledge":
+        if migration_head != "0010_p5b_delib_maint":
             raise ValueError("Phase 3 migration is not current")
         report["database"] = {"postgres_version": postgres_version, "migration_head": migration_head}
 

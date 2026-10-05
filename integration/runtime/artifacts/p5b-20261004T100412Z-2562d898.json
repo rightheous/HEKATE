@@ -1,0 +1,86 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5b-bounded-deliberation",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "ae398b6f660febd682c30888854e4ff44e6f51b3d7f67409921da354386006b2",
+  "database": {
+    "migration_head": "0008_phase5b_deliberation_steps",
+    "name": "hekate_phase5b_delib_20261004",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "dispatch_safety": {
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-04T10:04:12.434339Z",
+  "execution": {
+    "command": "IFS= read -r HEKATE_TEST_DATABASE_URL < /tmp/hekate-phase5a-dsn; export HEKATE_TEST_DATABASE_URL HEKATE_NODE_BIN=/tmp/node-v22.19.0/bin/node; uv run --locked python scripts/phase5a_critic_synthesis_probe.py",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "failed"
+  },
+  "failure": {
+    "message": "",
+    "traceback": "Traceback (most recent call last):\n  File \"/usr/lib/python3.12/asyncio/tasks.py\", line 520, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/usr/lib/python3.12/asyncio/locks.py\", line 212, in wait\n    await fut\nasyncio.exceptions.CancelledError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"scripts/phase5b_bounded_deliberation_probe.py\", line 857, in _run\n    await asyncio.wait_for(paused_at_synthesis.wait(), 120)\n  File \"/usr/lib/python3.12/asyncio/tasks.py\", line 519, in wait_for\n    async with timeouts.timeout(timeout):\n  File \"/usr/lib/python3.12/asyncio/timeouts.py\", line 115, in __aexit__\n    raise TimeoutError from exc_val\nTimeoutError\n",
+    "type": "TimeoutError"
+  },
+  "fake_provider_requests": 2,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review and synthesis are bounded at two each; HEKATE-only continuation is bounded at one. Repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5b-bounded-deliberation",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5b-shared-synthetic-v1",
+    "hekate": "phase5b-shared-synthetic-v1",
+    "pricing": "phase5b-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [
+    "ValueError: additional Critic review did not receive the persisted first review"
+  ],
+  "provider_observations": [
+    {
+      "attempt_id": "d92eb1f7-e98e-5664-84eb-245cc21862b9",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "b5e0cce0-1170-4ae9-bd53-eec9b3683fa6"
+      ],
+      "prompt_sha256": "7bc034dcea21c0f44efaf8fb3eb988cb6dc5e9562abdfebfd7509d765796c5f2",
+      "reasoning_role": "hekate",
+      "registry_id": "17e33d94-13b9-5177-8fd6-bdbfb0f106bc",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "2fb73368-bbc6-4535-a16c-5899a67b8041",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5b-20261004T100412Z-2562d898",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

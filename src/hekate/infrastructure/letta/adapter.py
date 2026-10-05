@@ -70,14 +70,19 @@ class LettaRuntimeAdapter(AgentRuntime):
         )
         if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "agents":
             raise RuntimeError("Letta agent list was not confirmed")
-        return tuple({"provider_agent_id": item} for item in reply.result.provider_agent_ids)
+        return tuple(item.model_dump(mode="json") for item in reply.result.agents)
 
     async def observe_agent(self, provider_id: ProviderAgentId) -> ProviderObservation:
         reply = await self._request(f"agent-get:{provider_id}", "agent.get", provider_agent_id=str(provider_id))
         if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "agent":
             raise RuntimeError("Letta agent observation was not confirmed")
         state = ObservationState.PRESENT if reply.result.present else ObservationState.ABSENT
-        return ProviderObservation(state=state, evidence="agent.get", observed_at=datetime.now(UTC))
+        return ProviderObservation(
+            state=state, evidence="agent.get", observed_at=datetime.now(UTC),
+            provider_agent_id=ProviderAgentId(reply.result.provider_agent_id),
+            owner=reply.result.owner, creation_tag=reply.result.creation_tag,
+            role=reply.result.role,
+        )
 
     async def prepare_session(
         self, binding: RuntimeBinding, output_contract: str | None = None,
@@ -93,7 +98,8 @@ class LettaRuntimeAdapter(AgentRuntime):
             **({"output_contract": output_contract} if output_contract else {}),
         )
         if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "session":
-            raise RuntimeError("Letta session preparation was not confirmed")
+            detail = reply.error or "missing session result"
+            raise RuntimeError(f"Letta session preparation was not confirmed ({reply.status}: {detail})")
         session = reply.result
         trusted = binding.model_copy(update={"conversation_id": session.conversation_id})
         return trusted, session.model_dump(mode="json")

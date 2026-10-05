@@ -1,0 +1,2485 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "bounded_path_scenarios": {
+    "combined_with_one_hekate_continuation": 6,
+    "hekate_solo_continuation": {
+      "critic_review_operations": [],
+      "critic_state": null,
+      "dissent_rows": 0,
+      "evidence_id": "c4e45d68-9167-4f52-bf6e-336aefaf142e",
+      "observed_stages": [
+        "planning_continue",
+        "hekate_reasoning_answer"
+      ],
+      "passed": true,
+      "position_receipts": 0,
+      "position_versions": 0,
+      "provider_call_rows": 2,
+      "provider_requests": 2,
+      "steps": [
+        {
+          "attempt_id": "b36d4181-f109-5959-be57-ae1d5b5cfae2",
+          "conclusion_id": "3af94083-1d36-5742-8bac-41483a041820",
+          "conversation_id": "local-conv-15",
+          "execution_state": "QUIESCENT",
+          "operation_id": "7c31484a-04a6-56d0-9aa8-592ee24b30dc",
+          "operation_state": "COMPLETED",
+          "provider_agent_id": "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a",
+          "reservation_id": "3456a3f6-82ef-5119-b2d5-9eb3f13def26",
+          "review_round": 0,
+          "state": "COMPLETE",
+          "step_kind": "hekate_reasoning",
+          "step_slot": "hekate_reasoning_1"
+        }
+      ],
+      "task_id": "0cddd994-695f-4614-9948-370b2259d1ed",
+      "task_state": {
+        "critic_agents": 0,
+        "hekate_continuations": 1,
+        "outcome": "PROVISIONAL_ANSWER",
+        "responses": 1,
+        "review_rounds": 0,
+        "status": "COMPLETED",
+        "stop_reason": "COMPLETED",
+        "workflow_stage": null
+      },
+      "topic_id": "p5b-solo-continuation"
+    },
+    "inference_counts": {
+      "combined": 6,
+      "compaction_calls": 0,
+      "hekate_solo_continuation": 2,
+      "second_critic_review_and_synthesis": 5
+    },
+    "second_critic_review_and_synthesis": {
+      "critic_review_operations": [
+        {
+          "attempt_id": "1fd87920-08fb-5af1-8a21-14f91026dd4a",
+          "conversation_id": "local-conv-18",
+          "id": "d3be6977-858a-561a-8d5e-cd37c38d04d6",
+          "provider_agent_id": "agent-local-748ec69f-8e33-4366-99f2-74c74201c1cd",
+          "registry_id": "62d3349f-d198-5bb3-a209-d5fab7e74ba0"
+        },
+        {
+          "attempt_id": "10e781a4-1e8b-592d-8f48-029bd1ab4683",
+          "conversation_id": "local-conv-20",
+          "id": "1e3178ef-f3db-51a0-a325-06c88f31c3d6",
+          "provider_agent_id": "agent-local-748ec69f-8e33-4366-99f2-74c74201c1cd",
+          "registry_id": "62d3349f-d198-5bb3-a209-d5fab7e74ba0"
+        }
+      ],
+      "critic_state": "DELETED",
+      "dissent_rows": 2,
+      "evidence_id": "ab71dbc9-6424-456a-bce6-8d65a5602749",
+      "observed_stages": [
+        "planning",
+        "critic_review_1",
+        "synthesis_1_review_continue",
+        "critic_review_2",
+        "synthesis_2"
+      ],
+      "passed": true,
+      "position_receipts": 1,
+      "position_versions": 1,
+      "provider_call_rows": 5,
+      "provider_requests": 5,
+      "steps": [
+        {
+          "attempt_id": "10e781a4-1e8b-592d-8f48-029bd1ab4683",
+          "conclusion_id": "362aa911-8108-598f-ad13-76422302c292",
+          "conversation_id": "local-conv-20",
+          "execution_state": "QUIESCENT",
+          "operation_id": "1e3178ef-f3db-51a0-a325-06c88f31c3d6",
+          "operation_state": "COMPLETED",
+          "provider_agent_id": "agent-local-748ec69f-8e33-4366-99f2-74c74201c1cd",
+          "reservation_id": "67686a48-298b-5e48-ab60-8075676f27c1",
+          "review_round": 2,
+          "state": "RESULT_ACCEPTED",
+          "step_kind": "critic_review",
+          "step_slot": "critic_review_2"
+        },
+        {
+          "attempt_id": "3ed6231d-44f9-5edc-bd1b-bdad598481a9",
+          "conclusion_id": "2d473c56-7c0d-5df7-a4fe-85cab4ef548f",
+          "conversation_id": "local-conv-21",
+          "execution_state": "QUIESCENT",
+          "operation_id": "67792a47-9d8c-5833-93d2-6ed26db0bd11",
+          "operation_state": "COMPLETED",
+          "provider_agent_id": "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a",
+          "reservation_id": "4e903c01-2db4-5dee-86ed-6f5444a6eeb5",
+          "review_round": 2,
+          "state": "COMPLETE",
+          "step_kind": "synthesis",
+          "step_slot": "synthesis_2"
+        }
+      ],
+      "task_id": "28eeafcd-643b-47cd-a8f4-2c7f5de0f2ad",
+      "task_state": {
+        "critic_agents": 1,
+        "hekate_continuations": 0,
+        "outcome": "POSITION_COMMITTED",
+        "responses": 1,
+        "review_rounds": 2,
+        "status": "COMPLETED",
+        "stop_reason": "COMPLETED",
+        "workflow_stage": "COMPLETE"
+      },
+      "topic_id": "p5b-review-round-two"
+    }
+  },
+  "bounded_stop_scenarios": {
+    "duplicate_continuation_request": {
+      "critic_state": "DELETED",
+      "deliberation_steps": [
+        {
+          "state": "COMPLETE",
+          "step_slot": "hekate_reasoning_1",
+          "stop_reason": "NO_NEW_WORK"
+        }
+      ],
+      "hekate_continuations": 1,
+      "marker": "PHASE5B_DUPLICATE_REASONING",
+      "passed": true,
+      "position_versions": 0,
+      "provider_requests": 4,
+      "review_rounds": 1,
+      "task_id": "596fd997-7645-4732-a93c-3940cfe5678e",
+      "task_state": {
+        "critic_agents": 1,
+        "hekate_continuations": 1,
+        "outcome": "PROVISIONAL_ANSWER",
+        "responses": 1,
+        "review_rounds": 1,
+        "status": "COMPLETED",
+        "stop_reason": "NO_NEW_WORK",
+        "workflow_stage": "COMPLETE"
+      }
+    },
+    "second_hekate_reasoning_request": {
+      "critic_state": "DELETED",
+      "deliberation_steps": [
+        {
+          "state": "COMPLETE",
+          "step_slot": "hekate_reasoning_1",
+          "stop_reason": "ROUND_LIMIT"
+        }
+      ],
+      "hekate_continuations": 1,
+      "marker": "PHASE5B_REASONING_CAP",
+      "passed": true,
+      "position_versions": 0,
+      "provider_requests": 4,
+      "review_rounds": 1,
+      "task_id": "f115f221-171e-4c0d-af10-982bf2aa380f",
+      "task_state": {
+        "critic_agents": 1,
+        "hekate_continuations": 1,
+        "outcome": "PROVISIONAL_ANSWER",
+        "responses": 1,
+        "review_rounds": 1,
+        "status": "COMPLETED",
+        "stop_reason": "ROUND_LIMIT",
+        "workflow_stage": "COMPLETE"
+      }
+    },
+    "third_critic_review_request": {
+      "critic_state": "DELETED",
+      "deliberation_steps": [
+        {
+          "state": "RESULT_ACCEPTED",
+          "step_slot": "critic_review_2",
+          "stop_reason": null
+        },
+        {
+          "state": "COMPLETE",
+          "step_slot": "synthesis_2",
+          "stop_reason": "ROUND_LIMIT"
+        }
+      ],
+      "hekate_continuations": 0,
+      "marker": "PHASE5B_REVIEW_CAP",
+      "passed": true,
+      "position_versions": 0,
+      "provider_requests": 5,
+      "review_rounds": 2,
+      "task_id": "04cad3a1-cdd9-412a-8a6a-3d4663602809",
+      "task_state": {
+        "critic_agents": 1,
+        "hekate_continuations": 0,
+        "outcome": "PROVISIONAL_ANSWER",
+        "responses": 1,
+        "review_rounds": 2,
+        "status": "COMPLETED",
+        "stop_reason": "ROUND_LIMIT",
+        "workflow_stage": "COMPLETE"
+      }
+    }
+  },
+  "branch": "phase5b-bounded-deliberation",
+  "bridge_stderr_tail": "",
+  "budget_denial_scenario": {
+    "available_task_budget_before_spawn": "0.001000",
+    "child_reservations": 0,
+    "critic_agent_counter": 0,
+    "critic_create_intents": 0,
+    "critic_registries": 0,
+    "critic_workflows": 0,
+    "passed": true,
+    "planning_result_inbox_id": "93afa1ad-0903-450f-8b5b-7d22b9f1765b",
+    "position_versions": 0,
+    "provider_calls_for_scenario": 1,
+    "provider_requests_for_scenario": 1,
+    "rejection_reason": "budget_critic_and_synthesis_unavailable",
+    "required_critic_envelope": "0.036864",
+    "result_state": "REJECTED",
+    "review_round_counter": 0,
+    "task_id": "a97c21a3-2895-40bc-ae1c-a8ce62f5a7b1",
+    "task_responses": 1,
+    "task_status": "FAILED"
+  },
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "c826e9822f5cf3a05228275b44190dafc1d15f0fda6e9dd83cae0d7f78627d45",
+  "database": {
+    "migration_head": "0010_p5b_delib_maint",
+    "name": "hekate_phase5b_maint_20261004_935308df",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "dispatch_safety": {
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-04T15:41:30.264979Z",
+  "execution": {
+    "command": "uv run --locked python scripts/phase5b_bounded_deliberation_probe.py --database-url <fresh-isolated-db> --legacy-database-url <existing-phase5b-db> --empty-migration-database-url <fresh-empty-db> --node-bin /tmp/node-v22.19.0/bin/node",
+    "environment_variables": [
+      "isolated Phase 5B database URLs (redacted)",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "failed"
+  },
+  "failure": {
+    "message": "small maintenance batch selected an unexpected prefix: ['e45a016c-059f-59a3-b54f-92c36707111d']",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/scripts/phase5b_bounded_deliberation_probe.py\", line 3198, in _run\n    raise AssertionError(f\"small maintenance batch selected an unexpected prefix: {tick_one_ids}\")\nAssertionError: small maintenance batch selected an unexpected prefix: ['e45a016c-059f-59a3-b54f-92c36707111d']\n",
+    "type": "AssertionError"
+  },
+  "fake_provider_requests": 61,
+  "legacy_database_migration_check": {
+    "after": {
+      "active_holds": 2,
+      "head": "0010_p5b_delib_maint",
+      "held": "0.221184",
+      "ledger_rows": 302,
+      "maintenance_progress": {
+        "deferred": 0,
+        "steps": 23,
+        "unmarked": 23
+      },
+      "operations": 114,
+      "spent": "0.005220",
+      "steps": 23,
+      "tasks": 22,
+      "unknown_operations": 2
+    },
+    "before": {
+      "active_holds": 2,
+      "head": "0009_p5b_parent_attempt_id",
+      "held": "0.221184",
+      "ledger_rows": 302,
+      "operations": 114,
+      "spent": "0.005220",
+      "steps": 23,
+      "tasks": 22,
+      "unknown_operations": 2
+    },
+    "database": "hekate_phase5b_delib_20261004",
+    "migrated_from_0009": true,
+    "rows_and_accounting_preserved": true
+  },
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review and synthesis are bounded at two each; HEKATE-only continuation is bounded at one. Repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "migration_safety": {
+    "empty_upgrade_downgrade_reupgrade": {
+      "database": "hekate_phase5b_migration_20261004_68d2a19c",
+      "downgrade_head": "0009_p5b_parent_attempt_id",
+      "passed": true,
+      "reupgrade_head": "0010_p5b_delib_maint",
+      "rows_preserved": true,
+      "upgrade_head": "0010_p5b_delib_maint"
+    },
+    "legacy_rows_preserved": {
+      "after": {
+        "active_holds": 2,
+        "head": "0010_p5b_delib_maint",
+        "held": "0.221184",
+        "ledger_rows": 302,
+        "maintenance_progress": {
+          "deferred": 0,
+          "steps": 23,
+          "unmarked": 23
+        },
+        "operations": 114,
+        "spent": "0.005220",
+        "steps": 23,
+        "tasks": 22,
+        "unknown_operations": 2
+      },
+      "before": {
+        "active_holds": 2,
+        "head": "0009_p5b_parent_attempt_id",
+        "held": "0.221184",
+        "ledger_rows": 302,
+        "operations": 114,
+        "spent": "0.005220",
+        "steps": 23,
+        "tasks": 22,
+        "unknown_operations": 2
+      },
+      "database": "hekate_phase5b_delib_20261004",
+      "migrated_from_0009": true,
+      "rows_and_accounting_preserved": true
+    },
+    "populated_downgrade_guard": {
+      "head_unchanged": true,
+      "reason": "refusing to discard persisted deliberation maintenance progress",
+      "refused": true
+    }
+  },
+  "normal_path": {
+    "concurrent_spawn_receipts": [
+      {
+        "create_operation_id": "44e23f0d-a9e3-5dd8-b604-48b6db05484b",
+        "critic_conclusion_id": null,
+        "critic_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5b-synthetic-pricing-v1",
+          "profile_id": "phase5b-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "critic_registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+        "delete_operation_id": null,
+        "hekate_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5b-synthetic-pricing-v1",
+          "profile_id": "phase5b-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "input_revision": 1,
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd",
+        "parent_attempt_id": "c0151b93-202b-5c6e-ba6f-ca25d6076ff0",
+        "planning_conclusion_id": "db903bfa-a1dc-51f6-9cee-00e93386860c",
+        "planning_operation_id": "ef7483b5-57f3-595b-88b8-1f7b6447349e",
+        "proposal": {
+          "action": "spawn",
+          "expected_decision_impact": "A stale source would change the applicability of the Position",
+          "purpose": "Check source freshness",
+          "role": "critic",
+          "schema_version": "1",
+          "target_uncertainty": "The source could be stale",
+          "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e"
+        },
+        "review_attempt_id": "f64cd6e8-11f0-578f-986d-abb3c3ef9da0",
+        "review_operation_id": "10352e40-4180-59cc-93c3-a1cd1ecf5ede",
+        "review_reservation_id": "3496a71d-4884-5750-94cb-34b950895709",
+        "spawn_request_hash": "7531b62bff3dafae92c5a9e68756e761dcce889b8ac6f05608e62d836d375b81",
+        "stage": "CREATE_PENDING",
+        "synthesis_attempt_id": "6aeb3e81-9cce-54c5-a874-5b5292ec9546",
+        "synthesis_operation_id": "98524187-bac3-59cb-919a-6299b007e298",
+        "synthesis_reservation_id": "23cdb47b-0cb0-503d-abb3-80686659767b",
+        "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+        "updated_at": "2026-10-04T15:41:41.297779Z"
+      },
+      {
+        "create_operation_id": "44e23f0d-a9e3-5dd8-b604-48b6db05484b",
+        "critic_conclusion_id": null,
+        "critic_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5b-synthetic-pricing-v1",
+          "profile_id": "phase5b-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "critic_registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+        "delete_operation_id": null,
+        "hekate_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5b-synthetic-pricing-v1",
+          "profile_id": "phase5b-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "input_revision": 1,
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd",
+        "parent_attempt_id": "c0151b93-202b-5c6e-ba6f-ca25d6076ff0",
+        "planning_conclusion_id": "db903bfa-a1dc-51f6-9cee-00e93386860c",
+        "planning_operation_id": "ef7483b5-57f3-595b-88b8-1f7b6447349e",
+        "proposal": {
+          "action": "spawn",
+          "expected_decision_impact": "A stale source would change the applicability of the Position",
+          "purpose": "Check source freshness",
+          "role": "critic",
+          "schema_version": "1",
+          "target_uncertainty": "The source could be stale",
+          "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e"
+        },
+        "review_attempt_id": "f64cd6e8-11f0-578f-986d-abb3c3ef9da0",
+        "review_operation_id": "10352e40-4180-59cc-93c3-a1cd1ecf5ede",
+        "review_reservation_id": "3496a71d-4884-5750-94cb-34b950895709",
+        "spawn_request_hash": "7531b62bff3dafae92c5a9e68756e761dcce889b8ac6f05608e62d836d375b81",
+        "stage": "CREATE_PENDING",
+        "synthesis_attempt_id": "6aeb3e81-9cce-54c5-a874-5b5292ec9546",
+        "synthesis_operation_id": "98524187-bac3-59cb-919a-6299b007e298",
+        "synthesis_reservation_id": "23cdb47b-0cb0-503d-abb3-80686659767b",
+        "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+        "updated_at": "2026-10-04T15:41:41.297779Z"
+      }
+    ],
+    "concurrent_spawn_replay_no_new_effects": true,
+    "continuation_output_boundaries": {
+      "allowed_next_actions": [
+        "hekate_reasoning",
+        "critic_review"
+      ],
+      "blank_purpose_rejected_by_control_plane": true,
+      "unknown_next_action_rejected_by_control_plane": true
+    },
+    "continuation_restart_boundaries": {
+      "actual_runtime_session_preparations": [
+        {
+          "attempt_id": "f64cd6e8-11f0-578f-986d-abb3c3ef9da0",
+          "conversation_id": "local-conv-4",
+          "output_contract": "critic_turn_output_v1",
+          "provider_agent_id": "agent-local-1e5d1eb7-2a1f-4a62-99fd-36fa6b328074",
+          "registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+          "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e"
+        },
+        {
+          "attempt_id": "e837ec06-0d52-5c13-a1ed-ff515e8a76d0",
+          "conversation_id": "local-conv-7",
+          "output_contract": "critic_turn_output_v1",
+          "provider_agent_id": "agent-local-1e5d1eb7-2a1f-4a62-99fd-36fa6b328074",
+          "registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+          "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e"
+        }
+      ],
+      "distinct_critic_attempt_operation_and_conversation": true,
+      "hekate_reasoning_approved_before_admission": {
+        "attempt_id": "6e95c825-8c8b-5cde-8fe3-7d423b59d46f",
+        "id": "6ca11bba-06b3-5be2-ad8f-aa6732972865",
+        "operation_id": "98de11bf-0995-572e-86d9-a878a5f224ed",
+        "provider_requests_at_approval": 3,
+        "request_hash": "44ffe12c6b87d7c4e45bad77f6e4cf8c5cb78f773987970100d2b9e4c8ab909f",
+        "reservation_id": "448b74b0-a2cf-5a28-bb5b-0c761369416f",
+        "state": "READY"
+      },
+      "passed": true,
+      "same_critic_registry_and_provider": true,
+      "synthesis_2_ready_after_review_2_restart": {
+        "attempt_id": "c64b7670-8627-5624-b609-055130f2ed7c",
+        "binding": {},
+        "conclusion_id": null,
+        "dissent_count": 2,
+        "id": "89e0bc30-c5c1-5b34-a510-de41c3d0cf5f",
+        "operation_id": "205f609f-38e7-5ac0-bb36-f6559a92d96d",
+        "parent_conclusion_id": "19246e24-7091-5c11-8c1e-3d86b934299e",
+        "prior_conclusion_id": "19246e24-7091-5c11-8c1e-3d86b934299e",
+        "prior_review_state": "RESULT_ACCEPTED",
+        "provider_requests_at_ready": 5,
+        "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+        "reservation_id": "ffaccb27-da17-5f54-bb19-2007fbe17302",
+        "review_bindings": [
+          {
+            "attempt_id": "f64cd6e8-11f0-578f-986d-abb3c3ef9da0",
+            "binding": {
+              "agent_registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+              "attempt_id": "f64cd6e8-11f0-578f-986d-abb3c3ef9da0",
+              "authz_epoch": 1,
+              "conversation_id": "local-conv-4",
+              "fence": 1,
+              "input_revision": 1,
+              "policy_version": "phase5b-synthetic-policy-v1",
+              "principal_id": "principal:p5b-20261004T154130Z-b90395dd",
+              "provider_agent_id": "agent-local-1e5d1eb7-2a1f-4a62-99fd-36fa6b328074",
+              "scope": "phase5b:p5b-20261004T154130Z-b90395dd",
+              "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e"
+            },
+            "operation_id": "10352e40-4180-59cc-93c3-a1cd1ecf5ede",
+            "registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+            "review_round": 1
+          },
+          {
+            "attempt_id": "e837ec06-0d52-5c13-a1ed-ff515e8a76d0",
+            "binding": {
+              "agent_registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+              "attempt_id": "e837ec06-0d52-5c13-a1ed-ff515e8a76d0",
+              "authz_epoch": 1,
+              "conversation_id": "local-conv-7",
+              "fence": 2,
+              "input_revision": 1,
+              "policy_version": "phase5b-synthetic-policy-v1",
+              "principal_id": "principal:p5b-20261004T154130Z-b90395dd",
+              "provider_agent_id": "agent-local-1e5d1eb7-2a1f-4a62-99fd-36fa6b328074",
+              "scope": "phase5b:p5b-20261004T154130Z-b90395dd",
+              "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e"
+            },
+            "operation_id": "775b5498-835b-5d37-aff3-e317a9b61f74",
+            "registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+            "review_round": 2
+          }
+        ],
+        "state": "READY"
+      }
+    },
+    "create_response_lost_then_owned_tag_recovered": true,
+    "critic_create_calls": 1,
+    "critic_delete_calls": 2,
+    "critic_output_boundaries": {
+      "critic_cannot_claim_unprovided_evidence": true,
+      "critic_cannot_impersonate_persistent_hekate": true,
+      "critic_output_schema_rejects_executable_proposal": true,
+      "stored_critic_output_validates_against_trusted_binding": true
+    },
+    "db_effect_counts": {
+      "commit_receipts": 1,
+      "dispatch_rows": 6,
+      "dissent_rows": 2,
+      "position_versions": 1,
+      "provider_calls": 6,
+      "responses": 1
+    },
+    "delete_failure_retried_after_restart": true,
+    "effects_after_critic_replay": {
+      "calls": 6,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 2,
+      "outbox": 9,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 6,
+      "responses": 1,
+      "review_rounds": 2,
+      "workflows": 1
+    },
+    "effects_after_replay": {
+      "calls": 6,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 2,
+      "outbox": 9,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 6,
+      "responses": 1,
+      "review_rounds": 2,
+      "workflows": 1
+    },
+    "effects_before_replay": {
+      "calls": 6,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 2,
+      "outbox": 9,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 6,
+      "responses": 1,
+      "review_rounds": 2,
+      "workflows": 1
+    },
+    "inbox_replay": {
+      "critic_result": {
+        "inbox_id": "5f272c5b-daff-4fee-b6a2-ee47b8e1a184",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "planning_spawn": {
+        "inbox_id": "ab5a57dc-9c34-4ad1-90e2-e14efa895afc",
+        "processed": true,
+        "state": "ACCEPTED"
+      }
+    },
+    "lifecycle_operations": [
+      {
+        "execution_state": "QUIESCENT",
+        "id": "10352e40-4180-59cc-93c3-a1cd1ecf5ede",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "98524187-bac3-59cb-919a-6299b007e298",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "775b5498-835b-5d37-aff3-e317a9b61f74",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "205f609f-38e7-5ac0-bb36-f6559a92d96d",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      }
+    ],
+    "one_critic_after_postgres_race": true,
+    "operations_and_reservations": [
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "ef7483b5-57f3-595b-88b8-1f7b6447349e",
+        "kind": "hekate.turn",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "10352e40-4180-59cc-93c3-a1cd1ecf5ede",
+        "kind": "critic.review",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "98524187-bac3-59cb-919a-6299b007e298",
+        "kind": "hekate.synthesis",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "98de11bf-0995-572e-86d9-a878a5f224ed",
+        "kind": "hekate.reasoning",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "775b5498-835b-5d37-aff3-e317a9b61f74",
+        "kind": "critic.review",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "205f609f-38e7-5ac0-bb36-f6559a92d96d",
+        "kind": "hekate.synthesis",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      }
+    ],
+    "passed": true,
+    "persistent_hekate_retained": true,
+    "postgres_concurrent_continuation_adoption": {
+      "after": {
+        "continue_result_state": "ACCEPTED",
+        "step_count": 1,
+        "step_operation_count": 1,
+        "step_reservation_count": 1,
+        "steps": [
+          {
+            "operation_id": "98de11bf-0995-572e-86d9-a878a5f224ed",
+            "reservation_id": "448b74b0-a2cf-5a28-bb5b-0c761369416f",
+            "state": "READY",
+            "step_kind": "hekate_reasoning",
+            "step_slot": "hekate_reasoning_1"
+          }
+        ],
+        "task": {
+          "hekate_continuations": 1,
+          "input_revision": 1,
+          "review_rounds": 1,
+          "status": "WAITING"
+        }
+      },
+      "before": {
+        "continue_result_state": "WAITING_EXECUTION",
+        "step_count": 0,
+        "step_operation_count": 0,
+        "step_reservation_count": 0,
+        "steps": [],
+        "task": {
+          "hekate_continuations": 0,
+          "input_revision": 1,
+          "review_rounds": 1,
+          "status": "RUNNING"
+        }
+      },
+      "competing_result": {
+        "inbox_id": "81c89d13-4e46-447e-90b9-203fa268e36a",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "inbox_id": "81c89d13-4e46-447e-90b9-203fa268e36a",
+      "provider_requests_at_approval": 3,
+      "row_lock_contenders": 2,
+      "single_approved_reasoning_step": true
+    },
+    "postgres_concurrent_spawn_replay": {
+      "competing_approvals_returned_same_registry": true,
+      "competing_operation_lock_attempts": 2,
+      "create_outbox_intent_inserted_once": true,
+      "critic_and_synthesis_holds_reserved_once": true,
+      "one_durable_workflow_and_create_intent": true,
+      "planning_result_accepted": true,
+      "postgres_spawn_approval_replay_contenders": 2,
+      "replay_effects_unchanged": true
+    },
+    "projection": {
+      "applied_version": 0,
+      "desired_version": 1,
+      "pending_reason": "memory_projection_not_implemented",
+      "state": "PENDING_UNSUPPORTED"
+    },
+    "provider_requests": 6,
+    "replay_no_new_effects": true,
+    "requests": [
+      {
+        "attempt_id": "c0151b93-202b-5c6e-ba6f-ca25d6076ff0",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+        ],
+        "prompt_sha256": "1ca5b50b0032238e493894634be2c161d250f166285a20c1beb84f6efc9ea837",
+        "reasoning_role": "hekate",
+        "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "planning",
+        "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "f64cd6e8-11f0-578f-986d-abb3c3ef9da0",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+        ],
+        "prompt_sha256": "a2d8e7006737e0288d1d0a66f8646aea6b32d9fad617869a071b3cd26b24fc3d",
+        "reasoning_role": "critic",
+        "registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+        "schema": "critic-turn-output.v1.schema.json",
+        "stage": "critic_review_1",
+        "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "6aeb3e81-9cce-54c5-a874-5b5292ec9546",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [
+          "46146cf3-16c6-5adb-8814-824ede618226"
+        ],
+        "evidence_ids": [
+          "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+        ],
+        "prompt_sha256": "82c19913bdd2ec1407eabdb3881d8471d23812cd73ec4fea89361bdc6ec34ea2",
+        "reasoning_role": "hekate",
+        "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "synthesis_1_continue",
+        "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "6e95c825-8c8b-5cde-8fe3-7d423b59d46f",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+        ],
+        "prompt_sha256": "b45752043e196fb7c3ff81af83379cd85ee012d427d2a4b99c06b0b031aba89b",
+        "reasoning_role": "hekate",
+        "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "hekate_reasoning",
+        "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "e837ec06-0d52-5c13-a1ed-ff515e8a76d0",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+        ],
+        "prompt_sha256": "5039931b79965a0c196eb5df44f9d1985e817d34899637848a56f3391e2acab5",
+        "reasoning_role": "critic",
+        "registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+        "schema": "critic-turn-output.v1.schema.json",
+        "stage": "critic_review_2",
+        "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "c64b7670-8627-5624-b609-055130f2ed7c",
+        "context_checked": true,
+        "critic_conclusion_received": true,
+        "dissent_ids": [
+          "46146cf3-16c6-5adb-8814-824ede618226",
+          "c15fc6fd-9ea9-5825-b07f-7627873fac7e"
+        ],
+        "evidence_ids": [
+          "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+        ],
+        "prompt_sha256": "40e80ad2290b9c6d562ba9f2f792c57f8311100bea2325100489e2c9ffc19133",
+        "reasoning_role": "hekate",
+        "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "synthesis_2",
+        "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      }
+    ],
+    "spawn_effect_counts_after_replay": {
+      "calls": 1,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 0,
+      "outbox": 2,
+      "positions": 0,
+      "receipts": 0,
+      "reservations": 3,
+      "responses": 0,
+      "review_rounds": 0,
+      "workflows": 1
+    },
+    "spawn_effect_counts_before_replay": {
+      "calls": 1,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 0,
+      "outbox": 2,
+      "positions": 0,
+      "receipts": 0,
+      "reservations": 3,
+      "responses": 0,
+      "review_rounds": 0,
+      "workflows": 1
+    }
+  },
+  "overall_status": "blocked",
+  "persistent_hekate_create_journal": {
+    "binding_journal_transaction_rollback": {
+      "failure_injected_after_binding_before_completion": true,
+      "new_create_calls_during_recovery": 0,
+      "recovered_state": {
+        "active_attempt_id": null,
+        "creation_operation_id": "ef0fe94d-6146-5b06-a8d4-adf7fc6cdd6c",
+        "dispatch_state": "QUIESCENT",
+        "execution_state": "QUIESCENT",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "confirmation": "agent.list",
+          "creation_tag": "ef0fe94d-6146-5b06-a8d4-adf7fc6cdd6c",
+          "external_call_started": true,
+          "owner": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:binding-journal-rollback",
+          "present": true,
+          "provider_agent_id": "agent-local-6258105d-28ac-443d-afa0-3458a5231dbd",
+          "registry_id": "7b852e71-046e-5586-9c1d-4d1e023b6708",
+          "role": "hekate"
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:binding-journal-rollback",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-6258105d-28ac-443d-afa0-3458a5231dbd",
+        "provider_calls": 0,
+        "registry_id": "7b852e71-046e-5586-9c1d-4d1e023b6708",
+        "request_hash": "28c6c145ac332a5f51d4fda9a478608ff67c486596f8205e6aa147e871e2419c",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "COMPLETED",
+        "updated_at": "2026-10-04T15:42:02.370068+00:00"
+      },
+      "rolled_back_state": {
+        "active_attempt_id": null,
+        "creation_operation_id": "ef0fe94d-6146-5b06-a8d4-adf7fc6cdd6c",
+        "dispatch_state": "NOT_STARTED",
+        "execution_state": "PENDING",
+        "intended_state": "CREATING",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "external_call_started": true
+        },
+        "observed_state": "UNKNOWN",
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:binding-journal-rollback",
+        "persistence": "persistent",
+        "provider_agent_id": null,
+        "provider_calls": 0,
+        "registry_id": "7b852e71-046e-5586-9c1d-4d1e023b6708",
+        "request_hash": "28c6c145ac332a5f51d4fda9a478608ff67c486596f8205e6aa147e871e2419c",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "CLAIMED",
+        "updated_at": "2026-10-04T15:42:01.868086+00:00"
+      }
+    },
+    "busy_registry_preserved": {
+      "active_execution_hold_unchanged": true,
+      "ensure_waited": true,
+      "journal_completed": true,
+      "lease_expiry_unchanged": true,
+      "lease_fence": 1,
+      "lease_owner": "phase5a-busy-p5b-20261004T154130Z-b90395dd",
+      "provider_agent_id_unchanged": true,
+      "registry_state": "BUSY"
+    },
+    "completed_replay": {
+      "new_create_calls": 0,
+      "new_owner_list_calls": 0,
+      "provider_agent_id": "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a",
+      "same_completion_timestamp": true,
+      "same_journal_observation": true
+    },
+    "create_operations_have_no_provider_calls_or_budget_reservations": true,
+    "create_response_lost": {
+      "actual_owner_tag_query": true,
+      "after_recovery": {
+        "active_attempt_id": null,
+        "creation_operation_id": "1e97ea16-1c50-5763-8fbb-7df50de003ef",
+        "dispatch_state": "QUIESCENT",
+        "execution_state": "QUIESCENT",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "confirmation": "agent.list",
+          "creation_tag": "1e97ea16-1c50-5763-8fbb-7df50de003ef",
+          "external_call_started": true,
+          "owner": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:create-response-lost",
+          "present": true,
+          "provider_agent_id": "agent-local-60477b1d-bba4-44f3-961b-1fedce9b6155",
+          "registry_id": "2927e685-b527-5e25-99c7-80c530a0337d",
+          "role": "hekate"
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:create-response-lost",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-60477b1d-bba4-44f3-961b-1fedce9b6155",
+        "provider_calls": 0,
+        "registry_id": "2927e685-b527-5e25-99c7-80c530a0337d",
+        "request_hash": "cd4aea0187ee2311a0ef3c2ea0185029448da6baa4e5f9e493c8a751f3890926",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "COMPLETED",
+        "updated_at": "2026-10-04T15:42:02.872816+00:00"
+      },
+      "before_recovery": {
+        "active_attempt_id": null,
+        "creation_operation_id": "1e97ea16-1c50-5763-8fbb-7df50de003ef",
+        "dispatch_state": "UNKNOWN",
+        "execution_state": "UNKNOWN",
+        "intended_state": "CREATING",
+        "kind": "agent.create",
+        "last_error": "ConnectionError",
+        "ledger_rows": 0,
+        "observation": {
+          "external_call_started": true
+        },
+        "observed_state": "UNKNOWN",
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:create-response-lost",
+        "persistence": "persistent",
+        "provider_agent_id": null,
+        "provider_calls": 0,
+        "registry_id": "2927e685-b527-5e25-99c7-80c530a0337d",
+        "request_hash": "cd4aea0187ee2311a0ef3c2ea0185029448da6baa4e5f9e493c8a751f3890926",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "UNKNOWN",
+        "updated_at": "2026-10-04T15:42:02.832860+00:00"
+      },
+      "create_invocation_delta_for_scenario": 1
+    },
+    "legacy_incomplete_journal": {
+      "after": {
+        "active_attempt_id": null,
+        "creation_operation_id": "ba3f9104-a9c6-51d7-b113-c488c45e9db8",
+        "dispatch_state": "QUIESCENT",
+        "execution_state": "QUIESCENT",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "confirmation": "agent.list",
+          "creation_tag": "ba3f9104-a9c6-51d7-b113-c488c45e9db8",
+          "external_call_started": true,
+          "owner": "phase5b:p5b-20261004T154130Z-b90395dd",
+          "present": true,
+          "provider_agent_id": "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a",
+          "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+          "role": "hekate"
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a",
+        "provider_calls": 0,
+        "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+        "request_hash": "ed24cc6b557e53f8c364385f79236632c7b5b1ccef892f454cf1b7d41d277d1f",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "COMPLETED",
+        "updated_at": "2026-10-04T15:42:01.286848+00:00"
+      },
+      "before": {
+        "active_attempt_id": null,
+        "creation_operation_id": "ba3f9104-a9c6-51d7-b113-c488c45e9db8",
+        "dispatch_state": "NOT_STARTED",
+        "execution_state": "PENDING",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {},
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a",
+        "provider_calls": 0,
+        "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+        "request_hash": "ed24cc6b557e53f8c364385f79236632c7b5b1ccef892f454cf1b7d41d277d1f",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "CLAIMED",
+        "updated_at": "2026-10-04T15:41:38.279717+00:00"
+      },
+      "new_create_calls": 0,
+      "replay_unchanged": true,
+      "runtime_owner_tag_list_calls": 1
+    },
+    "normal_generation": {
+      "active_attempt_id": null,
+      "creation_operation_id": "ba3f9104-a9c6-51d7-b113-c488c45e9db8",
+      "dispatch_state": "QUIESCENT",
+      "execution_state": "QUIESCENT",
+      "intended_state": "READY",
+      "kind": "agent.create",
+      "last_error": null,
+      "ledger_rows": 0,
+      "observation": {
+        "confirmation": "agent.get",
+        "creation_tag": "ba3f9104-a9c6-51d7-b113-c488c45e9db8",
+        "external_call_started": true,
+        "owner": "phase5b:p5b-20261004T154130Z-b90395dd",
+        "present": true,
+        "provider_agent_id": "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a",
+        "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+        "role": "hekate"
+      },
+      "observed_state": "PRESENT",
+      "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd",
+      "persistence": "persistent",
+      "provider_agent_id": "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a",
+      "provider_calls": 0,
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "request_hash": "ed24cc6b557e53f8c364385f79236632c7b5b1ccef892f454cf1b7d41d277d1f",
+      "reservations": 0,
+      "role": "hekate",
+      "state": "COMPLETED",
+      "updated_at": "2026-10-04T15:41:38.279717+00:00"
+    },
+    "owner_scoped_agent_list_calls": {
+      "phase5b:p5b-20261004T154130Z-b90395dd": 4,
+      "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:binding-journal-rollback": 1,
+      "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:busy-registry": 1,
+      "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:concurrent-ensure": 2,
+      "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:create-response-lost": 1,
+      "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:provider-binding-mismatch": 4
+    },
+    "passed": true,
+    "postgres_concurrent_ensure": {
+      "competing_call_unknown_while_first_create_waited": true,
+      "confirmed_owned_agent_count": 1,
+      "new_create_calls": 1,
+      "same_created_registry_provider_id": "agent-local-498343f7-183e-4c25-82cd-568e7da755ea",
+      "started_marker_prevented_second_create": true
+    },
+    "provider_binding_mismatch": {
+      "owned_agent_query_response_lost": {
+        "after_failure": {
+          "active_attempt_id": null,
+          "creation_operation_id": "d0327d4f-cca6-5314-b0ee-0c3ff0115209",
+          "dispatch_state": "UNKNOWN",
+          "execution_state": "UNKNOWN",
+          "intended_state": "READY",
+          "kind": "agent.create",
+          "last_error": "ConnectionError",
+          "ledger_rows": 0,
+          "observation": {
+            "external_call_started": true
+          },
+          "observed_state": "PRESENT",
+          "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:provider-binding-mismatch",
+          "persistence": "persistent",
+          "provider_agent_id": "agent-local-af6e1bab-05e1-4110-b6f7-f8dbf20770db",
+          "provider_calls": 0,
+          "registry_id": "c517e117-69b4-5918-853d-0dc591fa8db7",
+          "request_hash": "c008fc99cfd283554696c426845cdc15393852059a025181fd03399d70f0c6a3",
+          "reservations": 0,
+          "role": "hekate",
+          "state": "UNKNOWN",
+          "updated_at": "2026-10-04T15:42:03.867119+00:00"
+        },
+        "after_later_confirmed_query": {
+          "active_attempt_id": null,
+          "creation_operation_id": "d0327d4f-cca6-5314-b0ee-0c3ff0115209",
+          "dispatch_state": "QUIESCENT",
+          "execution_state": "QUIESCENT",
+          "intended_state": "READY",
+          "kind": "agent.create",
+          "last_error": null,
+          "ledger_rows": 0,
+          "observation": {
+            "confirmation": "agent.list",
+            "creation_tag": "d0327d4f-cca6-5314-b0ee-0c3ff0115209",
+            "external_call_started": true,
+            "owner": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:provider-binding-mismatch",
+            "present": true,
+            "provider_agent_id": "agent-local-af6e1bab-05e1-4110-b6f7-f8dbf20770db",
+            "registry_id": "c517e117-69b4-5918-853d-0dc591fa8db7",
+            "role": "hekate"
+          },
+          "observed_state": "PRESENT",
+          "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:provider-binding-mismatch",
+          "persistence": "persistent",
+          "provider_agent_id": "agent-local-af6e1bab-05e1-4110-b6f7-f8dbf20770db",
+          "provider_calls": 0,
+          "registry_id": "c517e117-69b4-5918-853d-0dc591fa8db7",
+          "request_hash": "c008fc99cfd283554696c426845cdc15393852059a025181fd03399d70f0c6a3",
+          "reservations": 0,
+          "role": "hekate",
+          "state": "COMPLETED",
+          "updated_at": "2026-10-04T15:42:03.889109+00:00"
+        },
+        "rejected_as_unconfirmed": true
+      },
+      "recovered_after_fixture_restore": {
+        "active_attempt_id": null,
+        "creation_operation_id": "d0327d4f-cca6-5314-b0ee-0c3ff0115209",
+        "dispatch_state": "QUIESCENT",
+        "execution_state": "QUIESCENT",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": null,
+        "ledger_rows": 0,
+        "observation": {
+          "confirmation": "agent.list",
+          "creation_tag": "d0327d4f-cca6-5314-b0ee-0c3ff0115209",
+          "external_call_started": true,
+          "owner": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:provider-binding-mismatch",
+          "present": true,
+          "provider_agent_id": "agent-local-af6e1bab-05e1-4110-b6f7-f8dbf20770db",
+          "registry_id": "c517e117-69b4-5918-853d-0dc591fa8db7",
+          "role": "hekate"
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:provider-binding-mismatch",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-af6e1bab-05e1-4110-b6f7-f8dbf20770db",
+        "provider_calls": 0,
+        "registry_id": "c517e117-69b4-5918-853d-0dc591fa8db7",
+        "request_hash": "c008fc99cfd283554696c426845cdc15393852059a025181fd03399d70f0c6a3",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "COMPLETED",
+        "updated_at": "2026-10-04T15:42:03.835953+00:00"
+      },
+      "rejected": true,
+      "rejected_state": {
+        "active_attempt_id": null,
+        "creation_operation_id": "d0327d4f-cca6-5314-b0ee-0c3ff0115209",
+        "dispatch_state": "UNKNOWN",
+        "execution_state": "UNKNOWN",
+        "intended_state": "READY",
+        "kind": "agent.create",
+        "last_error": "runtime ownership or provider binding mismatch",
+        "ledger_rows": 0,
+        "observation": {
+          "external_call_started": true
+        },
+        "observed_state": "PRESENT",
+        "owner_scope": "phase5b:p5b-20261004T154130Z-b90395dd:create-journal:provider-binding-mismatch",
+        "persistence": "persistent",
+        "provider_agent_id": "provider-mismatch:p5b-20261004T154130Z-b90395dd",
+        "provider_calls": 0,
+        "registry_id": "c517e117-69b4-5918-853d-0dc591fa8db7",
+        "request_hash": "c008fc99cfd283554696c426845cdc15393852059a025181fd03399d70f0c6a3",
+        "reservations": 0,
+        "role": "hekate",
+        "state": "UNKNOWN",
+        "updated_at": "2026-10-04T15:42:03.805890+00:00"
+      }
+    },
+    "provider_inference_requests_added": 0,
+    "real_pinned_runtime_create_calls": 6,
+    "restart_replay": {
+      "journal_unchanged": true,
+      "new_create_calls": 0,
+      "new_owner_list_calls": 0,
+      "same_provider_agent_id": true
+    },
+    "targeted_agent_get_calls": {
+      "agent-local-498343f7-183e-4c25-82cd-568e7da755ea": 1,
+      "agent-local-58a91775-2caa-4dc7-957d-4ae0b4a79472": 1,
+      "agent-local-6258105d-28ac-443d-afa0-3458a5231dbd": 1,
+      "agent-local-af6e1bab-05e1-4110-b6f7-f8dbf20770db": 1,
+      "agent-local-c434a6a3-355b-4d1b-ba75-946aa7f6df4a": 1
+    }
+  },
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5b-bounded-deliberation",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5b-shared-synthetic-v1",
+    "hekate": "phase5b-shared-synthetic-v1",
+    "pricing": "phase5b-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "c0151b93-202b-5c6e-ba6f-ca25d6076ff0",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+      ],
+      "prompt_sha256": "1ca5b50b0032238e493894634be2c161d250f166285a20c1beb84f6efc9ea837",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "f64cd6e8-11f0-578f-986d-abb3c3ef9da0",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+      ],
+      "prompt_sha256": "a2d8e7006737e0288d1d0a66f8646aea6b32d9fad617869a071b3cd26b24fc3d",
+      "reasoning_role": "critic",
+      "registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "6aeb3e81-9cce-54c5-a874-5b5292ec9546",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "46146cf3-16c6-5adb-8814-824ede618226"
+      ],
+      "evidence_ids": [
+        "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+      ],
+      "prompt_sha256": "82c19913bdd2ec1407eabdb3881d8471d23812cd73ec4fea89361bdc6ec34ea2",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_continue",
+      "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "6e95c825-8c8b-5cde-8fe3-7d423b59d46f",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+      ],
+      "prompt_sha256": "b45752043e196fb7c3ff81af83379cd85ee012d427d2a4b99c06b0b031aba89b",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "hekate_reasoning",
+      "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "e837ec06-0d52-5c13-a1ed-ff515e8a76d0",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+      ],
+      "prompt_sha256": "5039931b79965a0c196eb5df44f9d1985e817d34899637848a56f3391e2acab5",
+      "reasoning_role": "critic",
+      "registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "c64b7670-8627-5624-b609-055130f2ed7c",
+      "context_checked": true,
+      "critic_conclusion_received": true,
+      "dissent_ids": [
+        "46146cf3-16c6-5adb-8814-824ede618226",
+        "c15fc6fd-9ea9-5825-b07f-7627873fac7e"
+      ],
+      "evidence_ids": [
+        "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+      ],
+      "prompt_sha256": "40e80ad2290b9c6d562ba9f2f792c57f8311100bea2325100489e2c9ffc19133",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_2",
+      "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "03382b04-a5e7-5d43-8ef6-5077a57feb47",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "c4e45d68-9167-4f52-bf6e-336aefaf142e"
+      ],
+      "prompt_sha256": "2156986a51682908cf5a84f767a68e62dbd920efdda87fd9072fc9e4e5062479",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning_continue",
+      "task_id": "0cddd994-695f-4614-9948-370b2259d1ed",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "b36d4181-f109-5959-be57-ae1d5b5cfae2",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "c4e45d68-9167-4f52-bf6e-336aefaf142e"
+      ],
+      "prompt_sha256": "73673f0dda6420bd9186a9e04d4f8687653e2deb4b9a8c778480e25326c93b86",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "hekate_reasoning_answer",
+      "task_id": "0cddd994-695f-4614-9948-370b2259d1ed",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "406bf156-de5d-5f78-ae55-676ce9b42c75",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "ab71dbc9-6424-456a-bce6-8d65a5602749"
+      ],
+      "prompt_sha256": "1c2d1686a102d9c97dac84dcbc61cf1c58d32d3183b17c79522a49dd58073636",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "28eeafcd-643b-47cd-a8f4-2c7f5de0f2ad",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "1fd87920-08fb-5af1-8a21-14f91026dd4a",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "ab71dbc9-6424-456a-bce6-8d65a5602749"
+      ],
+      "prompt_sha256": "0f9463c7331a8a2bfd4c6545f96423655711a3660aa6c6ad79590e5f5d5419d8",
+      "reasoning_role": "critic",
+      "registry_id": "62d3349f-d198-5bb3-a209-d5fab7e74ba0",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "28eeafcd-643b-47cd-a8f4-2c7f5de0f2ad",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "9dd168d9-72b9-5fb3-88be-d1862bf32f44",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "014dfa8a-13a3-5a0a-a027-321a139909c7"
+      ],
+      "evidence_ids": [
+        "ab71dbc9-6424-456a-bce6-8d65a5602749"
+      ],
+      "prompt_sha256": "34a9cf5ed6ecf5c35fdcc0d8bf76e8188c46e1d5fda1a9d933d828b6f2876340",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_review_continue",
+      "task_id": "28eeafcd-643b-47cd-a8f4-2c7f5de0f2ad",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "10e781a4-1e8b-592d-8f48-029bd1ab4683",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "ab71dbc9-6424-456a-bce6-8d65a5602749"
+      ],
+      "prompt_sha256": "1ee10eadc915102e312769efc19cdf15830a95e6753c19fc092b91221d1ea12c",
+      "reasoning_role": "critic",
+      "registry_id": "62d3349f-d198-5bb3-a209-d5fab7e74ba0",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "28eeafcd-643b-47cd-a8f4-2c7f5de0f2ad",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "3ed6231d-44f9-5edc-bd1b-bdad598481a9",
+      "context_checked": true,
+      "critic_conclusion_received": true,
+      "dissent_ids": [
+        "014dfa8a-13a3-5a0a-a027-321a139909c7",
+        "80c743d4-6251-5eb1-9756-0e2ba50071cd"
+      ],
+      "evidence_ids": [
+        "ab71dbc9-6424-456a-bce6-8d65a5602749"
+      ],
+      "prompt_sha256": "6f1e8b87a52ec867dc5493e2ee96a0e5ae9f62c4cdec2798c9ceed5a42606e46",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_2",
+      "task_id": "28eeafcd-643b-47cd-a8f4-2c7f5de0f2ad",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "80153ffe-c8b0-5abf-a7df-b56adcda917e",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "72e12745-ebb1-4ebc-ad74-9bfb283ad854"
+      ],
+      "prompt_sha256": "898eaeff18602364a385209a334141df43cb7d060450d28e01b546cade401ca7",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "a97c21a3-2895-40bc-ae1c-a8ce62f5a7b1",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "1d4f4816-dcfe-5ba9-8171-ed0b209b4be0",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "05a459fe-077e-49c0-acbb-11b184549d9e"
+      ],
+      "prompt_sha256": "432bcb0007aec3d3b453e39f706fe0dfb42d88cfe066fe769490839cedc9f67f",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "04cad3a1-cdd9-412a-8a6a-3d4663602809",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "e7d04500-8393-53a2-a3c0-147ba5124a6e",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "05a459fe-077e-49c0-acbb-11b184549d9e"
+      ],
+      "prompt_sha256": "4f5860ce5b84c73c784ec73625dfd4f047774242a278bd488265e676b5635cda",
+      "reasoning_role": "critic",
+      "registry_id": "76e9bdfc-1800-59aa-9849-a10f811f2637",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "04cad3a1-cdd9-412a-8a6a-3d4663602809",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "7f64c623-8095-5dc6-b32b-10763aedad6e",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "bbc3bff7-5cb2-5574-90a2-47d79dddd9fd"
+      ],
+      "evidence_ids": [
+        "05a459fe-077e-49c0-acbb-11b184549d9e"
+      ],
+      "prompt_sha256": "dfa4bc898f967d3d04683066e49526588a238f92178bf499d7819328c778fdf8",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_review_continue",
+      "task_id": "04cad3a1-cdd9-412a-8a6a-3d4663602809",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "0e4fab72-1cb4-5a34-aaf9-72732991b5f6",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "05a459fe-077e-49c0-acbb-11b184549d9e"
+      ],
+      "prompt_sha256": "29d84ee25241c879361820722fe713acb341ef3dd519f2a0dc3b014f46089c42",
+      "reasoning_role": "critic",
+      "registry_id": "76e9bdfc-1800-59aa-9849-a10f811f2637",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "04cad3a1-cdd9-412a-8a6a-3d4663602809",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "7120303c-8a8a-5085-9eea-953ffc0abeb7",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "941efe06-1a10-544b-bd64-a96f6c7ccdfc",
+        "bbc3bff7-5cb2-5574-90a2-47d79dddd9fd"
+      ],
+      "evidence_ids": [
+        "05a459fe-077e-49c0-acbb-11b184549d9e"
+      ],
+      "prompt_sha256": "ca401266afd601eefb020f2af7f0463817391d9a43676f2ef6d478523bb2f69f",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_2_cap_request",
+      "task_id": "04cad3a1-cdd9-412a-8a6a-3d4663602809",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "2a2fd0e5-4966-50d8-8d4c-f4254ea43e58",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "35b215e9-2a7b-4bdb-b41d-723b92869b67"
+      ],
+      "prompt_sha256": "bf962903a400514f8ba88a1db4ce5d49e6d1681c7ebe68b1c83406412b29552c",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "f115f221-171e-4c0d-af10-982bf2aa380f",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "f4b4173a-b62b-5ea4-8e2b-0d230b9d0ed5",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "35b215e9-2a7b-4bdb-b41d-723b92869b67"
+      ],
+      "prompt_sha256": "cbd49aef6eb4785de2d48f729cea1d64e071f0c2b1247036fe3c625b4700cf7b",
+      "reasoning_role": "critic",
+      "registry_id": "0619bffc-2ecd-5248-9883-6f5d0a553692",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "f115f221-171e-4c0d-af10-982bf2aa380f",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "9816060d-f1d1-5ef7-9f6c-507866c209bf",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "208aabc2-940e-5baf-b4d7-d1ab742dc291"
+      ],
+      "evidence_ids": [
+        "35b215e9-2a7b-4bdb-b41d-723b92869b67"
+      ],
+      "prompt_sha256": "a5479e87d0a491e880d7311e51c4f3772b29256a099d1a43cdf015eacb2f92c2",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_continue",
+      "task_id": "f115f221-171e-4c0d-af10-982bf2aa380f",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "90ce224c-771f-5418-b9d5-3289a39c32f4",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "35b215e9-2a7b-4bdb-b41d-723b92869b67"
+      ],
+      "prompt_sha256": "5b3a0d4ad7512d66a5fcf306b58e795c80acbda271dd38f45680221b20920e0a",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "hekate_reasoning_cap_request",
+      "task_id": "f115f221-171e-4c0d-af10-982bf2aa380f",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "73f902de-d838-5b72-a3c8-c77d17f9811d",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "80d9ad01-96da-4187-8e5c-b735ac02a275"
+      ],
+      "prompt_sha256": "bda70df677cf3c5b41341bc3c3e8f70dc6e74431ddcadc66eeff318861c09187",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "596fd997-7645-4732-a93c-3940cfe5678e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "00c69de7-8e50-54b4-a6cd-206a229fda57",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "80d9ad01-96da-4187-8e5c-b735ac02a275"
+      ],
+      "prompt_sha256": "21f8417962258af6d3841659cda0f4fd089069b0b38267f310efd27b787fd8cd",
+      "reasoning_role": "critic",
+      "registry_id": "330f8f7c-a33d-541e-98de-feeee43152ab",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "596fd997-7645-4732-a93c-3940cfe5678e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "87cedaec-5cb2-5bca-a7c2-1250156cb422",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "17b587b9-d082-5346-8d01-08edc63354d8"
+      ],
+      "evidence_ids": [
+        "80d9ad01-96da-4187-8e5c-b735ac02a275"
+      ],
+      "prompt_sha256": "12870329468abe4b13528976734b7f8f5a9131b924831a29faa1b2b52f765325",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_continue",
+      "task_id": "596fd997-7645-4732-a93c-3940cfe5678e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "89905a14-5323-5302-9463-a374535abaac",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "80d9ad01-96da-4187-8e5c-b735ac02a275"
+      ],
+      "prompt_sha256": "bd8bbcdb162ef50167aa1a1e4404846177a937a5ef8de7b583e2a819a5cc2658",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "hekate_reasoning_duplicate_request",
+      "task_id": "596fd997-7645-4732-a93c-3940cfe5678e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "57446afb-8bca-5210-8234-7f2d4a3e62ac",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "fef2950d-0242-4250-87d9-40e81bb32e47"
+      ],
+      "prompt_sha256": "278f60f4143c220ef5864dde3d0fe6322040eea633bf73d423c8dd9f19331cf9",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "c6e28e1b-dae5-451f-a8df-9d4a4137e08b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "f5cae57f-919f-5925-adf1-201394c5ff0c",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "fef2950d-0242-4250-87d9-40e81bb32e47"
+      ],
+      "prompt_sha256": "ea99177aba1cc081dfa8586f2b8ed23e535c253dbba748579c0bbf2c8cc8b566",
+      "reasoning_role": "critic",
+      "registry_id": "2cbc0bcf-8dbc-58c1-b9c6-dc59865c337a",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "c6e28e1b-dae5-451f-a8df-9d4a4137e08b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "603b2856-c6e9-511a-a6c9-a6ae6ca98693",
+      "context_checked": true,
+      "critic_conclusion_received": true,
+      "dissent_ids": [
+        "8874a988-bbfd-59e9-a450-76d11af628b7"
+      ],
+      "evidence_ids": [
+        "fef2950d-0242-4250-87d9-40e81bb32e47"
+      ],
+      "prompt_sha256": "31bd1ae9ffd1de384af5767162158551206270ced5ecbf5c5eec7cf1408d90ba",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis",
+      "task_id": "c6e28e1b-dae5-451f-a8df-9d4a4137e08b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "41dc7596-7215-59bc-9f76-5f90f664297e",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "178f9767-5e7b-4321-9dc2-0ff714e6906b"
+      ],
+      "prompt_sha256": "86c747323679c9518a9e57f6d143a458e22f2f3a47d6877151c4776561d06c21",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "942b20a2-e061-451a-9af2-5be7e9dc3ddc",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "acc3f3da-b1ad-526c-94b0-6a9f2b0001e0",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "64ec978e-1a2f-4794-9c76-9fca48aa59e6"
+      ],
+      "prompt_sha256": "1208d0fdf81d5a82fbf9f2560f848921c9d987fbab42938260e9a23c65dbbccb",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "7ec67354-03b7-441c-9f33-4d3f4053956b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "2fa46493-3024-5f30-acb7-1337e770b8c7",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "4fb47047-eda1-4677-8f58-5a06fee0ec26"
+      ],
+      "prompt_sha256": "795a45fa98a95aa193d8f5e9bf974bd58efe08891eeaa81d5052ccfd775d62ad",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "0a084111-a3e8-4ac7-8dd2-986f18439362",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "4e53cc98-5937-5498-8c08-e5590fb3eb12",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "e6cc26f1-942f-4210-9311-2d045429b1bd"
+      ],
+      "prompt_sha256": "33961cca907745d363d4d6e73d48ab5d8a8fc5e065af0426a5cf8d406644b87b",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning_continue",
+      "task_id": "94534154-5177-41cf-9105-958ce6cd43f8",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "3ad2a8c8-c28b-59b3-931f-4e8e7e1ad952",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "f1a5f37e-92f8-48d2-91bc-00ee4bd7c8b5"
+      ],
+      "prompt_sha256": "63d579d091b958b695660a4abdafa3fc1492f4303cbf3e8b4def3fd934cc78f0",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning_continue",
+      "task_id": "51d93a6e-a53d-49a9-a8da-71eb4f2e7c9b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "4c514752-04e2-55bb-a02b-13878c0d15fc",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "7797025a-9307-496b-8323-d37a5f846f42"
+      ],
+      "prompt_sha256": "c9547bd797fa4636b46c8d298d4e6b4f28cb6ecd089e0a1baa143a49ab602174",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning_continue",
+      "task_id": "32ed00f7-4f1d-411e-92b5-58c023e00a12",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "d9d63140-b895-5403-98c7-c5a4eeb46a26",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "6ac5baed-6997-4201-a319-b10d4d3be5fa"
+      ],
+      "prompt_sha256": "01e4cb46124766b1e986622eae15a19e80a161863163e9983f9c677b80b455cd",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "5bb9abf4-6c37-468d-8cfa-a3cc72486ef7",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "7b68852c-5663-590b-b19e-f8f127f55a5f",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "6ac5baed-6997-4201-a319-b10d4d3be5fa"
+      ],
+      "prompt_sha256": "5c00ab9a36c5e605a2fe9cb3089afcaa70cb467e326138123c03ac5bd25acbf3",
+      "reasoning_role": "critic",
+      "registry_id": "76d63b7e-0c6d-5b78-9603-6f236e4d9f60",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "5bb9abf4-6c37-468d-8cfa-a3cc72486ef7",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "28faab34-3be7-51d3-a336-fe99759c769c",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "5ae9efbc-d59b-5c07-8b8c-7f94cf1fc14a"
+      ],
+      "evidence_ids": [
+        "6ac5baed-6997-4201-a319-b10d4d3be5fa"
+      ],
+      "prompt_sha256": "3b08367dd7875f7c0c806230de292f80d212ccd7b51a89d9a70efa09d6b7aa38",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_continue",
+      "task_id": "5bb9abf4-6c37-468d-8cfa-a3cc72486ef7",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "66744a68-5008-510f-a27f-466b4ffc9d1e",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "6ac5baed-6997-4201-a319-b10d4d3be5fa"
+      ],
+      "prompt_sha256": "e62feaa40011eed3c75fafa7639982421a4b71e7f43e8553b2479f7cd2c66833",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "hekate_reasoning",
+      "task_id": "5bb9abf4-6c37-468d-8cfa-a3cc72486ef7",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "1ba2be86-68ce-5ba9-ba49-92f8aaa3eba4",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "6ac5baed-6997-4201-a319-b10d4d3be5fa"
+      ],
+      "prompt_sha256": "f8a5b00b857bcb6eb93fa6886e440877d25ae6e1d8fd7fbdbc91a6c3facd624e",
+      "reasoning_role": "critic",
+      "registry_id": "76d63b7e-0c6d-5b78-9603-6f236e4d9f60",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "5bb9abf4-6c37-468d-8cfa-a3cc72486ef7",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "7c28793b-302f-5f0a-839b-1e92cfa15462",
+      "context_checked": true,
+      "critic_conclusion_received": true,
+      "dissent_ids": [
+        "5ae9efbc-d59b-5c07-8b8c-7f94cf1fc14a",
+        "be187fc5-cd9c-5762-a7b0-e95340385a1c"
+      ],
+      "evidence_ids": [
+        "6ac5baed-6997-4201-a319-b10d4d3be5fa"
+      ],
+      "prompt_sha256": "bcacc0c0cbcbfae3e27471b2ba794b75eac8e6c64f4bc63536ab351c1ff4d739",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_2",
+      "task_id": "5bb9abf4-6c37-468d-8cfa-a3cc72486ef7",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "92c59c67-05df-54ab-ac6e-4b4480a78216",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "6ffc6512-178a-44da-af3c-96dcae04e94f"
+      ],
+      "prompt_sha256": "ca3e3b9c4279dde54463bb619a4639be6c18abd122c19f64988595fcd6ecd996",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "3f578071-a2c8-4ef9-803e-a28685f6cb5c",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "bbd582b3-561e-5ea9-9eb2-98470b1ef709",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "9d05d68d-2884-4947-89c8-42e0f1d2cd80"
+      ],
+      "prompt_sha256": "b21b77718a4959d10eedcc1d3e44aab51d39f5495f2bd6dac1e05549275c25c5",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "602e75b8-f533-42da-a49f-4876257e98cf",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "04f58c13-21cd-5648-ace1-d3aa17f1b834",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "9d05d68d-2884-4947-89c8-42e0f1d2cd80"
+      ],
+      "prompt_sha256": "f896faf660d5f3e2764e1ee8cc866691c4a63741b44ce19bd5ed1abc930e1a19",
+      "reasoning_role": "critic",
+      "registry_id": "ab044c1a-9110-588c-90ee-1f58a2fe0233",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "602e75b8-f533-42da-a49f-4876257e98cf",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "b1992d9c-256d-54f1-9e2f-3fb916f4379b",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "d21bd0dc-7c9b-462e-8588-062952b93ea9"
+      ],
+      "prompt_sha256": "f86dcbd7d4a758b03de90a948063867d259bf53b3fbaf296a0721fc3aea8a849",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "e83bb2e3-24dc-40e1-847f-cc04abc19d74",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "63ed1dbb-cd2c-5686-811a-eb3bdf3bd777",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "52aac426-6c55-4a8c-92aa-060d4b110e1b"
+      ],
+      "prompt_sha256": "c8e55ad9f439d8e00949808cc5543a45fa4b2d8dd9478aff04c6ef26b69b39f6",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "d389359f-3286-4c52-afca-4007694ca37e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "b03f0ca1-c70a-5ac1-9ad3-9cadf581302c",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "52aac426-6c55-4a8c-92aa-060d4b110e1b"
+      ],
+      "prompt_sha256": "65816123a8607f387775d07971e4283ec4a8555348753408a9ea84edf436662e",
+      "reasoning_role": "critic",
+      "registry_id": "85b34ef4-9866-5fc3-abd3-e0fd23a69b3b",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "d389359f-3286-4c52-afca-4007694ca37e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "631b7c6b-6b84-5145-99f4-dc3179b4d3d0",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "db23430f-1b29-556e-9f8f-54e9642c79a6"
+      ],
+      "evidence_ids": [
+        "52aac426-6c55-4a8c-92aa-060d4b110e1b"
+      ],
+      "prompt_sha256": "dda8917a04092ac1ba565e2ac1dcb2f05e0504ad528a74f694a34338b5107ddf",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_review_continue",
+      "task_id": "d389359f-3286-4c52-afca-4007694ca37e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "62a2b8b8-a2e6-56da-8b65-cc2b49a32adb",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "d9262599-9aee-4e34-a1ea-d705555e6876"
+      ],
+      "prompt_sha256": "3cc295b11f89501ba6d3c63242d1f3b82a0858038315a02725b839b5c5f4229d",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "60112a9d-7b20-4cb6-ba38-37d98c6c0806",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "da48be26-e387-593c-a4cb-8c5c2a5645e6",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "d9262599-9aee-4e34-a1ea-d705555e6876"
+      ],
+      "prompt_sha256": "e3db150cec2ecd810c81da5982e463bcdf3c127f8df9300832ef01fde9fd6e95",
+      "reasoning_role": "critic",
+      "registry_id": "acf5fbb9-f3f8-5991-a5bf-9f989f1951e2",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "60112a9d-7b20-4cb6-ba38-37d98c6c0806",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "989460b1-60f4-5790-b568-dc8fc34039e8",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "40f3da57-86be-59b4-bbae-844139185102"
+      ],
+      "evidence_ids": [
+        "d9262599-9aee-4e34-a1ea-d705555e6876"
+      ],
+      "prompt_sha256": "7b7f8c665c870a9acbc81b39889b37beee8c48b15cf72e5d32000e7b198c35c3",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_review_continue",
+      "task_id": "60112a9d-7b20-4cb6-ba38-37d98c6c0806",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "ea677eef-942d-5fc1-92c3-a28deeac9e35",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "d9262599-9aee-4e34-a1ea-d705555e6876"
+      ],
+      "prompt_sha256": "828d6f8754c72257643510397e018878cab869775a6a656d338277aeefc93a34",
+      "reasoning_role": "critic",
+      "registry_id": "acf5fbb9-f3f8-5991-a5bf-9f989f1951e2",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "60112a9d-7b20-4cb6-ba38-37d98c6c0806",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "a8432257-a7ae-5a0c-b1c2-6c5d4b0539ae",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "15d885ea-26be-4068-bd07-ea908b7fa3ab"
+      ],
+      "prompt_sha256": "770552765ad96164df884d0c688673db95499cfd5fd650ef553c7d8adbfe24e8",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "66081009-f4ec-4f6d-859f-b7c0255d50f3",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "a51ea639-13d7-5f6b-a7d9-0ff7e69d5432",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "15d885ea-26be-4068-bd07-ea908b7fa3ab"
+      ],
+      "prompt_sha256": "ebea26aba2dc59b12b321f63daa60b0ed824bf4c14397f3062918c9bd71b8363",
+      "reasoning_role": "critic",
+      "registry_id": "e02d5b4b-0bdc-5d4e-af3c-40ff105dfa7f",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "66081009-f4ec-4f6d-859f-b7c0255d50f3",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "46926365-4e88-5cdf-987b-ecc27a6bd326",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "fc350e8e-aed1-52da-a0be-6092fbbb6993"
+      ],
+      "evidence_ids": [
+        "15d885ea-26be-4068-bd07-ea908b7fa3ab"
+      ],
+      "prompt_sha256": "ac6f190a996cb50a4a6700db74a39e6361fdfcd689ab71c854d1df8496cba083",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_review_continue",
+      "task_id": "66081009-f4ec-4f6d-859f-b7c0255d50f3",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "31774df8-b23a-5b07-9242-76473b185701",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "15d885ea-26be-4068-bd07-ea908b7fa3ab"
+      ],
+      "prompt_sha256": "1afc486f0bce55de9da356fcdd66849588c3cb9ef9fd2afc1c5a2adb3fafb26c",
+      "reasoning_role": "critic",
+      "registry_id": "e02d5b4b-0bdc-5d4e-af3c-40ff105dfa7f",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "66081009-f4ec-4f6d-859f-b7c0255d50f3",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "9c789087-6849-54da-a135-3bb6a9636333",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "79fdf7f1-c671-4348-97ae-8b69d899cb79"
+      ],
+      "prompt_sha256": "f23163cf8ea814a98be21c5fcfee03df1f7b609a235aadd18aae519bc4a6beb8",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning_continue",
+      "task_id": "b1f5243b-afb0-4f84-990e-e6e4945f9de4",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "daa3fd27-7e7b-51f8-8e5f-9295f0b39b2a",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "bbfe1a9d-004a-42ab-a442-b517f38d3984"
+      ],
+      "prompt_sha256": "40db00eee8f6fc152be0b78a75dc4d512f43cc88503422c3582c2c306a17710b",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning_continue",
+      "task_id": "1dc11bc5-fc7d-4acc-b786-3fdfe56ff6d6",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "81e91046-9d42-5032-a25b-e8c3cfe30769",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "5f217091-6ab8-4aec-b6ca-c09b27f29f46"
+      ],
+      "prompt_sha256": "b35cf4762a8fe94fd868603fc5802014c209db243ba652921e83c8538dcb0329",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning_continue",
+      "task_id": "e38d378a-481d-48e8-9b0a-f932272f7467",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "2600f478-8064-5249-8dba-f61d2c50eccc",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "5fcca24d-16df-4df2-b367-549c3af9183e"
+      ],
+      "prompt_sha256": "aa4146b4139a7abedcb1f9485d37cf34d40e4bad4f64b76b8582e07ced6f6567",
+      "reasoning_role": "hekate",
+      "registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning_continue",
+      "task_id": "b3e5a624-45a5-4c23-9f17-8717822017e0",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5b-20261004T154130Z-b90395dd",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "workflow": {
+    "create_operation_id": "44e23f0d-a9e3-5dd8-b604-48b6db05484b",
+    "critic_conclusion_id": "8bea9bd1-e3a7-56b9-b8de-6bdb8460a3b8",
+    "critic_registry_id": "679f61e8-ddd0-5b3c-a698-8de332260c0b",
+    "critic_registry_state": "DELETED",
+    "delete_operation_id": "2a98c5a7-9fed-5cf4-b6a1-2d1818c1a3c5",
+    "dissent_ids": [
+      "46146cf3-16c6-5adb-8814-824ede618226",
+      "c15fc6fd-9ea9-5825-b07f-7627873fac7e"
+    ],
+    "hekate_registry_id": "b5bde384-e81e-591f-9271-68a45f77739e",
+    "input_revision": 1,
+    "planning_attempt_id": "c0151b93-202b-5c6e-ba6f-ca25d6076ff0",
+    "planning_operation_id": "ef7483b5-57f3-595b-88b8-1f7b6447349e",
+    "position_projection": "PENDING_UNSUPPORTED",
+    "position_projection_pending_reason": "memory_projection_not_implemented",
+    "position_statement": "The copper seal remains usable with jurisdiction and freshness qualifications.",
+    "position_version": 1,
+    "review_attempt_id": "f64cd6e8-11f0-578f-986d-abb3c3ef9da0",
+    "review_operation_id": "10352e40-4180-59cc-93c3-a1cd1ecf5ede",
+    "spawn_request_hash": "7531b62bff3dafae92c5a9e68756e761dcce889b8ac6f05608e62d836d375b81",
+    "synthesis_attempt_id": "6aeb3e81-9cce-54c5-a874-5b5292ec9546",
+    "synthesis_operation_id": "98524187-bac3-59cb-919a-6299b007e298",
+    "task_id": "b5553003-3a40-4dc9-9bb5-f555b6dc9b4e",
+    "task_response": "Position saved for phase5a-main-topic as version 1: The copper seal remains usable with jurisdiction and freshness qualifications.",
+    "task_status": "COMPLETED"
+  }
+}

@@ -101,6 +101,7 @@ class PostgresTaskRepository:
             **({"created_at": task.created_at} if task.created_at is not None else {}),
             critic_agents=counters.critic_agents,
             review_rounds=counters.review_rounds,
+            hekate_continuations=counters.hekate_continuations,
             schema_repairs=counters.schema_repairs,
             transient_retries=counters.transient_retries,
             tool_calls=counters.tool_calls,
@@ -241,17 +242,37 @@ class PostgresTaskRepository:
             tables.usage_projections.c.settlement_state,
         ).select_from(
             tables.operations.outerjoin(
-                tables.attempts, tables.attempts.c.operation_id == tables.operations.c.id,
-            ).outerjoin(
                 tables.budget_reservations,
-                tables.budget_reservations.c.id == tables.attempts.c.reservation_id,
+                tables.budget_reservations.c.operation_id == tables.operations.c.id,
             ).outerjoin(
                 tables.provider_calls, tables.provider_calls.c.operation_id == tables.operations.c.id,
             ).outerjoin(
                 tables.usage_projections,
                 tables.usage_projections.c.accounting_call_id == tables.provider_calls.c.accounting_call_id,
             )
-        ).where(tables.operations.c.task_id == task_id))).mappings().all()
+        ).where(or_(
+            tables.operations.c.task_id == task_id,
+            exists(select(1).where(
+                tables.deliberation_steps.c.task_id == task_id,
+                tables.deliberation_steps.c.operation_id == tables.operations.c.id,
+            )),
+            exists(select(1).where(
+                tables.critic_workflows.c.task_id == task_id,
+                tables.critic_workflows.c.create_operation_id == tables.operations.c.id,
+            )),
+            exists(select(1).where(
+                tables.critic_workflows.c.task_id == task_id,
+                tables.critic_workflows.c.review_operation_id == tables.operations.c.id,
+            )),
+            exists(select(1).where(
+                tables.critic_workflows.c.task_id == task_id,
+                tables.critic_workflows.c.synthesis_operation_id == tables.operations.c.id,
+            )),
+            exists(select(1).where(
+                tables.critic_workflows.c.task_id == task_id,
+                tables.critic_workflows.c.delete_operation_id == tables.operations.c.id,
+            )),
+        )))).mappings().all()
         operations = {row["operation_id"]: row["reservation_state"] for row in rows}
         billable = [row for row in rows if row["call_state"] not in {None, "EXPIRED", "REVOKED"}]
         pending_calls = sum(
@@ -269,7 +290,8 @@ class PostgresTaskRepository:
         }
 
     async def finalize_task_response(
-        self, task_id: TaskId, revision: int, response: Mapping[str, object], *, successful: bool,
+        self, task_id: TaskId, revision: int, response: Mapping[str, object], *,
+        successful: bool, accepted_at: datetime | None = None,
     ) -> bool:
         task = await self.lock_task(task_id)
         existing = await self.get_task_response(task_id)
@@ -287,7 +309,7 @@ class PostgresTaskRepository:
             tables.tasks.c.input_revision == revision,
             tables.tasks.c.status == TaskStatus.RUNNING.value,
             tables.tasks.c.cancel_requested_at.is_(None),
-            tables.tasks.c.deadline > datetime.now(timezone.utc),
+            tables.tasks.c.deadline > (accepted_at or datetime.now(timezone.utc)),
         )
         changed = await self.connection.execute(query.values(**values))
         if changed.rowcount != 1:
@@ -306,7 +328,9 @@ class PostgresTaskRepository:
         ))
         return True
 
-    async def resolve_task_after_execution(self, task_id: TaskId, revision: int) -> Task | None:
+    async def resolve_task_after_execution(
+        self, task_id: TaskId, revision: int, *, now: datetime | None = None,
+    ) -> Task | None:
         task = await self.lock_task(task_id)
         if task.input_revision != revision or task.status not in {
             TaskStatus.RUNNING, TaskStatus.WAITING, TaskStatus.STOPPING,
@@ -317,7 +341,7 @@ class PostgresTaskRepository:
                 return None
             status, outcome = transition_task(task.status, TaskEvent.CANCEL), "CANCELLED"
             stop_reason = task.stop_reason or StopReason.USER_CANCELLED.value
-        elif task.deadline <= aware_now():
+        elif task.deadline <= (now or aware_now()):
             status, outcome = transition_task(task.status, TaskEvent.FAIL), "FAILED"
             stop_reason = StopReason.DEADLINE.value
         else:
@@ -357,6 +381,7 @@ class PostgresTaskRepository:
             counters=TaskCounters(
                 critic_agents=row["critic_agents"],
                 review_rounds=row["review_rounds"],
+                hekate_continuations=row["hekate_continuations"],
                 schema_repairs=row["schema_repairs"],
                 transient_retries=row["transient_retries"],
                 tool_calls=row["tool_calls"],
@@ -461,6 +486,23 @@ class PostgresTaskRepository:
             tables.tasks.c.id == task.id,
         ).values(**values))
 
+    async def mark_waiting_for_workflow(self, task_id: TaskId, revision: int) -> bool:
+        task = await self.lock_task(task_id)
+        if task.input_revision != revision or task.cancel_requested_at is not None:
+            return False
+        if task.status == TaskStatus.WAITING:
+            return True
+        if task.status != TaskStatus.RUNNING or task.deadline <= aware_now():
+            return False
+        changed = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == TaskStatus.RUNNING.value,
+            tables.tasks.c.cancel_requested_at.is_(None),
+            tables.tasks.c.deadline > aware_now(),
+        ).values(status=TaskStatus.WAITING.value))
+        return changed.rowcount == 1
+
     async def revise_input(
         self,
         task_id: TaskId,
@@ -513,6 +555,72 @@ class PostgresTaskRepository:
         ).values(status=TaskStatus.FAILED.value, outcome="FAILED", stop_reason=StopReason.POLICY.value))
         return result.rowcount == 1
 
+    async def fail_waiting_task_with_response(
+        self, task_id: TaskId, revision: int, response: Mapping[str, object],
+    ) -> bool:
+        """Fail the current workflow revision and persist its server response atomically."""
+        if response.get("stop_reason") != StopReason.POLICY.value:
+            raise ValueError("policy failure response must carry POLICY stop reason")
+        return await self.resolve_waiting_task_with_response(
+            task_id, revision, response, successful=False,
+        )
+
+    async def resolve_waiting_task_with_response(
+        self, task_id: TaskId, revision: int, response: Mapping[str, object], *, successful: bool,
+    ) -> bool:
+        """Finish a WAITING Task with a server response in the caller's transaction."""
+        if response.get("stop_reason") not in {item.value for item in StopReason}:
+            raise ValueError("waiting response has an unsupported stop reason")
+        expected_outcome = str(response["outcome"])
+        task = await self.lock_task(task_id)
+        existing = await self.get_task_response(task_id)
+        if existing is not None:
+            return (
+                existing["input_revision"] == revision
+                and existing["operation_id"] == response["operation_id"]
+                and existing["attempt_id"] == response["attempt_id"]
+                and existing["registry_id"] == response["registry_id"]
+                and existing["source_inbox_id"] == response["source_inbox_id"]
+                and existing["proposal"] == json_value(response["proposal"])
+                and existing["response_text"] == response["response_text"]
+                and existing["stop_reason"] == response["stop_reason"]
+                and existing["outcome"] == expected_outcome
+            )
+        now = aware_now()
+        if (
+            task.input_revision != revision or task.status != TaskStatus.WAITING
+            or task.cancel_requested_at is not None or task.deadline <= now
+        ):
+            return False
+        terminal = transition_task(
+            task.status, TaskEvent.COMPLETE if successful else TaskEvent.FAIL,
+        )
+        changed = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == TaskStatus.WAITING.value,
+            tables.tasks.c.cancel_requested_at.is_(None),
+            tables.tasks.c.deadline > now,
+        ).values(
+            status=terminal.value, outcome=expected_outcome,
+            stop_reason=response["stop_reason"],
+        ))
+        if changed.rowcount != 1:
+            return False
+        await self.connection.execute(insert(tables.task_responses).values(
+            task_id=task_id,
+            input_revision=revision,
+            operation_id=response["operation_id"],
+            attempt_id=response["attempt_id"],
+            registry_id=response["registry_id"],
+            source_inbox_id=response["source_inbox_id"],
+            proposal=json_value(response["proposal"]),
+            response_text=response["response_text"],
+            outcome=expected_outcome,
+            stop_reason=response["stop_reason"],
+        ))
+        return True
+
     async def request_cancel(self, task_id: TaskId, reason: StopReason) -> Task:
         task = await self.lock_task(task_id)
         if task.status in {TaskStatus.STOPPING, TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED}:
@@ -532,7 +640,7 @@ class PostgresTaskRepository:
         })
 
     async def increment_counter_if_below(self, task_id: TaskId, counter: str, cap: int) -> bool:
-        allowed = {"critic_agents", "review_rounds", "schema_repairs", "transient_retries", "tool_calls", "provider_calls"}
+        allowed = {"critic_agents", "review_rounds", "hekate_continuations", "schema_repairs", "transient_retries", "tool_calls", "provider_calls"}
         if counter not in allowed:
             raise ValueError("unknown task counter")
         result = await self.connection.execute(update(tables.tasks).where(

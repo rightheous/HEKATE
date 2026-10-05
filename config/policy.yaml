@@ -1,7 +1,8 @@
 version: "v0.1"
 limits:
   critic_agents_per_task: 1
-  review_rounds: 2
+  review_rounds: 1
+  max_syntheses_per_task: 1
   schema_repairs: 1
   transient_retries: 1
   task_budget_usd: null # Required before dispatch.
@@ -10,3 +11,14 @@ limits:
 tool_grants: []
 allowed_actions: []
 retention: {}
+critic:
+  enabled: false
+  max_agents_per_task: 1
+  max_review_rounds: 1
+  max_syntheses_per_task: 1
+deliberation:
+  enabled: false
+  max_critic_agents: 1
+  max_review_rounds: 2
+  max_hekate_continuations: 1
+  max_syntheses_per_task: 2

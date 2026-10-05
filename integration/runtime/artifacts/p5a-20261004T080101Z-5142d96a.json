@@ -1,0 +1,485 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5a-critic-synthesis",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "d1d34f493d5d383ebf6cde288e4291b7bc1e9f6cf9c21529b7f3aca2ef1b88a3",
+  "database": {
+    "migration_head": "0007_phase5a_critic_workflows",
+    "name": "hekate_phase5a_test",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "dispatch_safety": {
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-04T08:01:01.212557Z",
+  "execution": {
+    "command": "IFS= read -r HEKATE_TEST_DATABASE_URL < /tmp/hekate-phase5a-dsn; export HEKATE_TEST_DATABASE_URL HEKATE_NODE_BIN=/tmp/node-v22.19.0/bin/node; uv run --locked python scripts/phase5a_critic_synthesis_probe.py",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "failed"
+  },
+  "failure": {
+    "message": "(sqlalchemy.exc.InvalidRequestError) A value is required for bind parameter 'true'\n[SQL: \n                UPDATE operations SET state='CLAIMED', dispatch_state='NOT_STARTED', execution_state='PENDING',\n                    observation='{\"external_call_started\"%(true)s}'::jsonb, last_error=NULL\n                WHERE id=%(operation)s\n            ]\n[parameters: [{'operation': 'cf69064f-5e03-545a-8fc7-93977f45726f'}]]\n(Background on this error at: https://sqlalche.me/e/21/cd3x)",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1791, in _execute_context\n    context = constructor(\n              ^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py\", line 1658, in _init_compiled\n    compiled.construct_params(\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/sql/compiler.py\", line 2007, in construct_params\n    raise exc.InvalidRequestError(\nsqlalchemy.exc.InvalidRequestError: A value is required for bind parameter 'true' (Background on this error at: https://sqlalche.me/e/21/cd3x)\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/scripts/phase5a_critic_synthesis_probe.py\", line 1214, in _run\n    await connection.execute(text(\"\"\"\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py\", line 668, in execute\n    result = await greenlet_spawn(\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py\", line 199, in greenlet_spawn\n    result = context.switch(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1448, in execute\n    return meth(\n           ^^^^^\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py\", line 533, in _execute_on_connection\n    return connection._execute_clauseelement(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1668, in _execute_clauseelement\n    ret = self._execute_context(\n          ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1797, in _execute_context\n    self._handle_dbapi_exception(\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 2332, in _handle_dbapi_exception\n    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1791, in _execute_context\n    context = constructor(\n              ^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py\", line 1658, in _init_compiled\n    compiled.construct_params(\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/.venv/lib/python3.12/site-packages/sqlalchemy/sql/compiler.py\", line 2007, in construct_params\n    raise exc.InvalidRequestError(\nsqlalchemy.exc.StatementError: (sqlalchemy.exc.InvalidRequestError) A value is required for bind parameter 'true'\n[SQL: \n                UPDATE operations SET state='CLAIMED', dispatch_state='NOT_STARTED', execution_state='PENDING',\n                    observation='{\"external_call_started\"%(true)s}'::jsonb, last_error=NULL\n                WHERE id=%(operation)s\n            ]\n[parameters: [{'operation': 'cf69064f-5e03-545a-8fc7-93977f45726f'}]]\n(Background on this error at: https://sqlalche.me/e/21/cd3x)\n",
+    "type": "StatementError"
+  },
+  "fake_provider_requests": 3,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review is limited to one initial review; continuation, repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "normal_path": {
+    "concurrent_spawn_receipts": [
+      {
+        "create_operation_id": "3a229908-db08-54ba-8078-0cfc6b66f379",
+        "critic_conclusion_id": null,
+        "critic_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5a-synthetic-pricing-v1",
+          "profile_id": "phase5a-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "critic_registry_id": "d2a92188-19a9-56bd-b1f8-a8d2a06d9c7d",
+        "delete_operation_id": null,
+        "hekate_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5a-synthetic-pricing-v1",
+          "profile_id": "phase5a-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "input_revision": 1,
+        "owner_scope": "phase5a:p5a-20261004T080101Z-5142d96a",
+        "parent_attempt_id": "35992698-d6d4-53c1-94ca-075c6cb8ba62",
+        "planning_conclusion_id": "1a929be7-2ad8-5ddc-b4c6-6dce2e38a220",
+        "planning_operation_id": "393c2e5e-7752-589c-ae2f-2f7697f5718a",
+        "proposal": {
+          "action": "spawn",
+          "expected_decision_impact": "A stale source would change the applicability of the Position",
+          "purpose": "Check source freshness",
+          "role": "critic",
+          "schema_version": "1",
+          "target_uncertainty": "The source could be stale",
+          "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234"
+        },
+        "review_attempt_id": "80780083-a85c-5581-9066-ebd915a665ce",
+        "review_operation_id": "00959464-fce4-58cb-9871-bb9133542aaf",
+        "review_reservation_id": "30871fae-a34f-56bc-812b-432f1e61ede2",
+        "spawn_request_hash": "c25a4a3f352fb0985fffb843f4fe1177363c01a1c283ae507902ea24d462fbfb",
+        "stage": "CREATE_PENDING",
+        "synthesis_attempt_id": "6b7630c8-fbe2-5871-a9fb-763e922befdd",
+        "synthesis_operation_id": "b9cc1b9d-45b6-511e-839e-853c8f9f531b",
+        "synthesis_reservation_id": "45dbf0ad-4961-5daa-8211-ff4337a1dcd1",
+        "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+        "updated_at": "2026-10-04T08:01:12.068200Z"
+      },
+      {
+        "create_operation_id": "3a229908-db08-54ba-8078-0cfc6b66f379",
+        "critic_conclusion_id": null,
+        "critic_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5a-synthetic-pricing-v1",
+          "profile_id": "phase5a-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "critic_registry_id": "d2a92188-19a9-56bd-b1f8-a8d2a06d9c7d",
+        "delete_operation_id": null,
+        "hekate_profile": {
+          "deadline_seconds": 240,
+          "input_usd_per_million": "1",
+          "letta_model": "openai-compatible/hekate-fake-model",
+          "max_compaction_calls": 0,
+          "max_input_tokens": 32768,
+          "max_output_tokens": 2048,
+          "model": "hekate-fake-model",
+          "output_usd_per_million": "2",
+          "pricing_version": "phase5a-synthetic-pricing-v1",
+          "profile_id": "phase5a-shared-synthetic-v1",
+          "system_daily_budget_usd": "25.00",
+          "task_budget_usd": "5.00"
+        },
+        "input_revision": 1,
+        "owner_scope": "phase5a:p5a-20261004T080101Z-5142d96a",
+        "parent_attempt_id": "35992698-d6d4-53c1-94ca-075c6cb8ba62",
+        "planning_conclusion_id": "1a929be7-2ad8-5ddc-b4c6-6dce2e38a220",
+        "planning_operation_id": "393c2e5e-7752-589c-ae2f-2f7697f5718a",
+        "proposal": {
+          "action": "spawn",
+          "expected_decision_impact": "A stale source would change the applicability of the Position",
+          "purpose": "Check source freshness",
+          "role": "critic",
+          "schema_version": "1",
+          "target_uncertainty": "The source could be stale",
+          "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234"
+        },
+        "review_attempt_id": "80780083-a85c-5581-9066-ebd915a665ce",
+        "review_operation_id": "00959464-fce4-58cb-9871-bb9133542aaf",
+        "review_reservation_id": "30871fae-a34f-56bc-812b-432f1e61ede2",
+        "spawn_request_hash": "c25a4a3f352fb0985fffb843f4fe1177363c01a1c283ae507902ea24d462fbfb",
+        "stage": "CREATE_PENDING",
+        "synthesis_attempt_id": "6b7630c8-fbe2-5871-a9fb-763e922befdd",
+        "synthesis_operation_id": "b9cc1b9d-45b6-511e-839e-853c8f9f531b",
+        "synthesis_reservation_id": "45dbf0ad-4961-5daa-8211-ff4337a1dcd1",
+        "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+        "updated_at": "2026-10-04T08:01:12.068200Z"
+      }
+    ],
+    "concurrent_spawn_replay_no_new_effects": true,
+    "create_response_lost_then_owned_tag_recovered": true,
+    "critic_create_calls": 1,
+    "critic_delete_calls": 2,
+    "critic_output_boundaries": {
+      "critic_cannot_claim_unprovided_evidence": true,
+      "critic_cannot_impersonate_persistent_hekate": true,
+      "critic_output_schema_rejects_executable_proposal": true,
+      "stored_critic_output_validates_against_trusted_binding": true
+    },
+    "db_effect_counts": {
+      "commit_receipts": 1,
+      "dispatch_rows": 3,
+      "dissent_rows": 1,
+      "position_versions": 1,
+      "provider_calls": 3,
+      "responses": 1
+    },
+    "delete_failure_retried_after_restart": true,
+    "effects_after_critic_replay": {
+      "calls": 3,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 1,
+      "outbox": 6,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 3,
+      "responses": 1,
+      "review_rounds": 1,
+      "workflows": 1
+    },
+    "effects_after_replay": {
+      "calls": 3,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 1,
+      "outbox": 6,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 3,
+      "responses": 1,
+      "review_rounds": 1,
+      "workflows": 1
+    },
+    "effects_before_replay": {
+      "calls": 3,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 1,
+      "outbox": 6,
+      "positions": 1,
+      "receipts": 1,
+      "reservations": 3,
+      "responses": 1,
+      "review_rounds": 1,
+      "workflows": 1
+    },
+    "inbox_replay": {
+      "critic_result": {
+        "inbox_id": "7a506817-8c10-4ba9-8d05-941313b282e0",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "planning_spawn": {
+        "inbox_id": "9930c9b7-dfd4-4fd0-8879-c3fd28ac13bc",
+        "processed": true,
+        "state": "ACCEPTED"
+      }
+    },
+    "lifecycle_operations": [
+      {
+        "execution_state": "QUIESCENT",
+        "id": "00959464-fce4-58cb-9871-bb9133542aaf",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "execution_state": "QUIESCENT",
+        "id": "b9cc1b9d-45b6-511e-839e-853c8f9f531b",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      }
+    ],
+    "one_critic_after_postgres_race": true,
+    "operations_and_reservations": [
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "393c2e5e-7752-589c-ae2f-2f7697f5718a",
+        "kind": "hekate.turn",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "00959464-fce4-58cb-9871-bb9133542aaf",
+        "kind": "critic.review",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      },
+      {
+        "attempt_status": "SUCCEEDED",
+        "execution_state": "QUIESCENT",
+        "id": "b9cc1b9d-45b6-511e-839e-853c8f9f531b",
+        "kind": "hekate.synthesis",
+        "reservation_status": "SETTLED",
+        "reserved_amount": "0.036864",
+        "state": "COMPLETED"
+      }
+    ],
+    "passed": true,
+    "persistent_hekate_retained": true,
+    "postgres_primary_and_competing_approval_race": {
+      "competing_approvals_returned_same_registry": true,
+      "competing_operation_lock_attempts": 2,
+      "create_outbox_intent_inserted_once": true,
+      "critic_and_synthesis_holds_reserved_once": true,
+      "one_durable_workflow_and_create_intent": true,
+      "planning_result_accepted": true,
+      "primary_transaction_paused_before_workflow_insert": true
+    },
+    "projection": {
+      "applied_version": 0,
+      "desired_version": 1,
+      "pending_reason": "memory_projection_not_implemented",
+      "state": "PENDING_UNSUPPORTED"
+    },
+    "provider_requests": 3,
+    "replay_no_new_effects": true,
+    "requests": [
+      {
+        "attempt_id": "35992698-d6d4-53c1-94ca-075c6cb8ba62",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "5c3858a1-13e1-4e16-992e-62d8415ae4aa"
+        ],
+        "prompt_sha256": "628393fc18176b202ce8e24666638baef746d15a66a96ae4cbcfaf78b3642a7e",
+        "reasoning_role": "hekate",
+        "registry_id": "4629faca-4bd6-57c2-acae-5eda9c6bb2b0",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "planning",
+        "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "80780083-a85c-5581-9066-ebd915a665ce",
+        "context_checked": true,
+        "critic_conclusion_received": false,
+        "dissent_ids": [],
+        "evidence_ids": [
+          "5c3858a1-13e1-4e16-992e-62d8415ae4aa"
+        ],
+        "prompt_sha256": "869c0ba83a1fc0a08df4942556feb8634630135e238c2787d513a3ade45ec2c7",
+        "reasoning_role": "critic",
+        "registry_id": "d2a92188-19a9-56bd-b1f8-a8d2a06d9c7d",
+        "schema": "critic-turn-output.v1.schema.json",
+        "stage": "critic_review",
+        "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      },
+      {
+        "attempt_id": "6b7630c8-fbe2-5871-a9fb-763e922befdd",
+        "context_checked": true,
+        "critic_conclusion_received": true,
+        "dissent_ids": [
+          "95e4084b-6531-58d7-b9da-a13b969bd752"
+        ],
+        "evidence_ids": [
+          "5c3858a1-13e1-4e16-992e-62d8415ae4aa"
+        ],
+        "prompt_sha256": "48ee03232932c148cd216b6751e87e4119daa4d155e98a7a17e72421de3f09ab",
+        "reasoning_role": "hekate",
+        "registry_id": "4629faca-4bd6-57c2-acae-5eda9c6bb2b0",
+        "schema": "hekate-turn-output.v1.schema.json",
+        "stage": "synthesis",
+        "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+        "upstream_tool_names": [
+          "StructuredOutput"
+        ]
+      }
+    ],
+    "spawn_effect_counts_after_replay": {
+      "calls": 1,
+      "critic_agents": 1,
+      "critics": 1,
+      "dissent": 0,
+      "outbox": 2,
+      "positions": 0,
+      "receipts": 0,
+      "reservations": 3,
+      "responses": 0,
+      "review_rounds": 0,
+      "workflows": 1
+    },
+    "spawn_effect_counts_before_replay": {
+      "calls": 1,
+      "critic_agents": 0,
+      "critics": 0,
+      "dissent": 0,
+      "outbox": 1,
+      "positions": 0,
+      "receipts": 0,
+      "reservations": 1,
+      "responses": 0,
+      "review_rounds": 0,
+      "workflows": 0
+    }
+  },
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5a-critic-synthesis",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5a-shared-synthetic-v1",
+    "hekate": "phase5a-shared-synthetic-v1",
+    "pricing": "phase5a-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "35992698-d6d4-53c1-94ca-075c6cb8ba62",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "5c3858a1-13e1-4e16-992e-62d8415ae4aa"
+      ],
+      "prompt_sha256": "628393fc18176b202ce8e24666638baef746d15a66a96ae4cbcfaf78b3642a7e",
+      "reasoning_role": "hekate",
+      "registry_id": "4629faca-4bd6-57c2-acae-5eda9c6bb2b0",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "80780083-a85c-5581-9066-ebd915a665ce",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "5c3858a1-13e1-4e16-992e-62d8415ae4aa"
+      ],
+      "prompt_sha256": "869c0ba83a1fc0a08df4942556feb8634630135e238c2787d513a3ade45ec2c7",
+      "reasoning_role": "critic",
+      "registry_id": "d2a92188-19a9-56bd-b1f8-a8d2a06d9c7d",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review",
+      "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "6b7630c8-fbe2-5871-a9fb-763e922befdd",
+      "context_checked": true,
+      "critic_conclusion_received": true,
+      "dissent_ids": [
+        "95e4084b-6531-58d7-b9da-a13b969bd752"
+      ],
+      "evidence_ids": [
+        "5c3858a1-13e1-4e16-992e-62d8415ae4aa"
+      ],
+      "prompt_sha256": "48ee03232932c148cd216b6751e87e4119daa4d155e98a7a17e72421de3f09ab",
+      "reasoning_role": "hekate",
+      "registry_id": "4629faca-4bd6-57c2-acae-5eda9c6bb2b0",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis",
+      "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5a-20261004T080101Z-5142d96a",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "workflow": {
+    "create_operation_id": "3a229908-db08-54ba-8078-0cfc6b66f379",
+    "critic_conclusion_id": "3df08264-9839-5f79-8577-c48d285ee5f7",
+    "critic_registry_id": "d2a92188-19a9-56bd-b1f8-a8d2a06d9c7d",
+    "critic_registry_state": "DELETED",
+    "delete_operation_id": "aa9ddcf7-b2e0-5db4-a46f-0a155f25a593",
+    "dissent_ids": [
+      "95e4084b-6531-58d7-b9da-a13b969bd752"
+    ],
+    "hekate_registry_id": "4629faca-4bd6-57c2-acae-5eda9c6bb2b0",
+    "input_revision": 1,
+    "planning_attempt_id": "35992698-d6d4-53c1-94ca-075c6cb8ba62",
+    "planning_operation_id": "393c2e5e-7752-589c-ae2f-2f7697f5718a",
+    "position_projection": "PENDING_UNSUPPORTED",
+    "position_projection_pending_reason": "memory_projection_not_implemented",
+    "position_statement": "The copper seal remains valid, with source freshness subject to verification.",
+    "position_version": 1,
+    "review_attempt_id": "80780083-a85c-5581-9066-ebd915a665ce",
+    "review_operation_id": "00959464-fce4-58cb-9871-bb9133542aaf",
+    "spawn_request_hash": "c25a4a3f352fb0985fffb843f4fe1177363c01a1c283ae507902ea24d462fbfb",
+    "synthesis_attempt_id": "6b7630c8-fbe2-5871-a9fb-763e922befdd",
+    "synthesis_operation_id": "b9cc1b9d-45b6-511e-839e-853c8f9f531b",
+    "task_id": "7330e5b5-4a92-4478-bfe9-7d4985b86234",
+    "task_response": "Position saved for phase5a-main-topic as version 1: The copper seal remains valid, with source freshness subject to verification.",
+    "task_status": "COMPLETED"
+  }
+}

@@ -115,9 +115,6 @@ with TemporaryDirectory() as temp:
     migration_env = {"HEKATE_DATABASE_URL": phase3_database}
     run("migration_upgrade", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head", [python, "-m", "alembic", "upgrade", "head"], migration_env)
     run("migration_check", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check", [python, "-m", "alembic", "check"], migration_env)
-    run("migration_downgrade", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic downgrade 0004_terminal_inbox", [python, "-m", "alembic", "downgrade", "0004_terminal_inbox"], migration_env)
-    run("migration_reupgrade", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head", [python, "-m", "alembic", "upgrade", "head"], migration_env)
-    run("migration_check_after_reupgrade", "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check", [python, "-m", "alembic", "check"], migration_env)
     run("diff_check", "git diff --check", ["git", "diff", "--check"])
 
     probe_env = {

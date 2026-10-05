@@ -143,6 +143,8 @@ class StopReason(StrEnum):
     COMPLETED = "COMPLETED"
     NEEDS_USER_INPUT = "NEEDS_USER_INPUT"
     ERROR = "ERROR"
+    ROUND_LIMIT = "ROUND_LIMIT"
+    NO_NEW_WORK = "NO_NEW_WORK"
 
 
 def new_id(kind: IdKind) -> DomainId:

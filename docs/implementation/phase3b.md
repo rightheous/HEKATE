@@ -80,7 +80,7 @@ uv run --locked python -m hekate cancel TASK_ID
 
 ## Fake-only verification
 
-The pinned integration probe uses dedicated loopback PostgreSQL databases, the locked Letta runtime, and an isolated loopback fake provider. It truncates only `hekate_phase2_test` and `hekate_phase3_test`; never point these URLs at a shared database. It makes zero real provider calls. The full verifier runs the boundary tests, Phase 2 persistence tests, bridge build/tests, schema reproducibility, migration upgrade/check/downgrade/re-upgrade, and both runtime probes:
+The pinned integration probe uses dedicated loopback PostgreSQL databases, the locked Letta runtime, and an isolated loopback fake provider. It truncates only `hekate_phase2_test` and `hekate_phase3_test`; never point these URLs at a shared database. It makes zero real provider calls. The full verifier runs the boundary tests, Phase 2 persistence tests, bridge build/tests, schema reproducibility, migration upgrade/check, and both runtime probes. Destructive migration round-trip tests use a separate empty database through the Phase 5B probe:
 
 ```sh
 export HEKATE_PHASE2_TEST_DATABASE_URL='postgresql+psycopg://USER:PASSWORD@127.0.0.1:55432/hekate_phase2_test'
@@ -92,4 +92,4 @@ uv run --locked python scripts/phase3_verify.py
 
 `scripts/phase3b_single_hekate_probe.py` can be run alone with `HEKATE_TEST_DATABASE_URL`, `HEKATE_NODE_BIN`, and `HEKATE_NODE_ARCHIVE` set. Its JSON artifact records runtime pins, the migration head, scenario results, database identity links, synthetic provider request counts, and cost/hold totals. When run through `phase3_verify.py`, the artifact also records the verifier's commands and results. Synthetic costs are ledger test data, not provider charges.
 
-The latest full verification is recorded in [`p3-20261002T053719Z-9e6c468f.json`](../../integration/runtime/artifacts/p3-20261002T053719Z-9e6c468f.json) and [`p3b-20261002T053735Z-85ecad6a.json`](../../integration/runtime/artifacts/p3b-20261002T053735Z-85ecad6a.json). All 14 verifier commands, 9 Phase 3A scenarios, and 8 Phase 3B scenarios passed with zero real provider calls. The captured provider requests contained the generated schema and matching server schema hash; cancellation and post-execution deadline outcomes survived replay/restart without new inference or accounting effects.
+The latest current-head runtime run is recorded in [`p3-20261004T180726Z-b5af8b70.json`](../../integration/runtime/artifacts/p3-20261004T180726Z-b5af8b70.json) and [`p3b-20261004T180742Z-cd3ec2a4.json`](../../integration/runtime/artifacts/p3b-20261004T180742Z-cd3ec2a4.json). All 9 Phase 3A and 8 Phase 3B scenarios passed on PostgreSQL 16.15 at migration head `0010_p5b_delib_maint`, with zero real provider calls. The updated verifier passed 11/11 commands and leaves the destructive migration round-trip to the isolated Phase 5B migration fixture.

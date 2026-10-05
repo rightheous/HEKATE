@@ -1,0 +1,179 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5b-bounded-deliberation",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "78edcff4582493a28bd7caa2c54989cb1e5f693691ec33b82b6fcd3894f57c9b",
+  "database": {
+    "migration_head": "0009_p5b_parent_attempt_id",
+    "name": "hekate_phase5b_delib_20261004",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "dispatch_safety": {
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-04T10:36:22.869801Z",
+  "execution": {
+    "command": "uv run --locked python scripts/phase5b_bounded_deliberation_probe.py --database-url <isolated-loopback-db> --node-bin /tmp/node-v22.19.0/bin/node",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL (isolated DB; redacted)",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "failed"
+  },
+  "failure": {
+    "message": "post-restart synthesis did not consume durable Critic dissent",
+    "traceback": "Traceback (most recent call last):\n  File \"scripts/phase5b_bounded_deliberation_probe.py\", line 968, in _run\n    raise AssertionError(\"post-restart synthesis did not consume durable Critic dissent\")\nAssertionError: post-restart synthesis did not consume durable Critic dissent\n",
+    "type": "AssertionError"
+  },
+  "fake_provider_requests": 6,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review and synthesis are bounded at two each; HEKATE-only continuation is bounded at one. Repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5b-bounded-deliberation",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5b-shared-synthetic-v1",
+    "hekate": "phase5b-shared-synthetic-v1",
+    "pricing": "phase5b-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "74eaf3f8-d1c4-511f-a3b2-9ec6cd7d0245",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "c2431751-4459-4c93-979c-5afc390b55da"
+      ],
+      "prompt_sha256": "86e5bf0798cfdf57069e7d95b930bec42605151bb75fc34d7f5599a95be5bcc4",
+      "reasoning_role": "hekate",
+      "registry_id": "b05987b5-637e-5d4d-b368-e55d990fa1c0",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "0ce79cd7-a4f5-4ea1-8287-4ee522409e9b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "35544e78-b513-5912-82ab-e60e6219e6be",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "c2431751-4459-4c93-979c-5afc390b55da"
+      ],
+      "prompt_sha256": "e0b25e8f0197108632087117a837c71188f8772e1d2472c193529764f4b738d7",
+      "reasoning_role": "critic",
+      "registry_id": "a8fd7684-91ca-58fd-8145-f495c5ab09e5",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "0ce79cd7-a4f5-4ea1-8287-4ee522409e9b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "fec9b682-f781-597c-87fa-07b077de18c7",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "dcffabd1-a930-546e-849e-3bd820f090b2"
+      ],
+      "evidence_ids": [
+        "c2431751-4459-4c93-979c-5afc390b55da"
+      ],
+      "prompt_sha256": "04776cab736b1fc92f893c09f5abd5ef2dbb1c5375305aaa0372150c9ddbda1f",
+      "reasoning_role": "hekate",
+      "registry_id": "b05987b5-637e-5d4d-b368-e55d990fa1c0",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_continue",
+      "task_id": "0ce79cd7-a4f5-4ea1-8287-4ee522409e9b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "08de8d90-f52b-52a6-ac3f-f97de33c407c",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "c2431751-4459-4c93-979c-5afc390b55da"
+      ],
+      "prompt_sha256": "ad5c12294e061ef67c28a223fbc6bdeefe563aa249d8d47421dc503d0f83dcef",
+      "reasoning_role": "hekate",
+      "registry_id": "b05987b5-637e-5d4d-b368-e55d990fa1c0",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "hekate_reasoning",
+      "task_id": "0ce79cd7-a4f5-4ea1-8287-4ee522409e9b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "50d1e829-96dd-56ad-9814-e20b52547190",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "c2431751-4459-4c93-979c-5afc390b55da"
+      ],
+      "prompt_sha256": "75499ed28f578c84b95cf0169254f6c63d6e98279ed48ae3b9133c0b6701832b",
+      "reasoning_role": "critic",
+      "registry_id": "a8fd7684-91ca-58fd-8145-f495c5ab09e5",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "0ce79cd7-a4f5-4ea1-8287-4ee522409e9b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "5a742947-cd19-5e01-915b-899466d71bb6",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "095671da-c02a-5cc0-b3c1-f7148156ba7a",
+        "dcffabd1-a930-546e-849e-3bd820f090b2"
+      ],
+      "evidence_ids": [
+        "c2431751-4459-4c93-979c-5afc390b55da"
+      ],
+      "prompt_sha256": "a9e482d963bb8cc18d67f8cf4436acaf251ba8c21f2e2613ec48ce1bbc6f9903",
+      "reasoning_role": "hekate",
+      "registry_id": "b05987b5-637e-5d4d-b368-e55d990fa1c0",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_2",
+      "task_id": "0ce79cd7-a4f5-4ea1-8287-4ee522409e9b",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5b-20261004T103622Z-faa5e7b2",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

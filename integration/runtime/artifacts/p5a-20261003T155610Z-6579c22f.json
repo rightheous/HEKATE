@@ -1,0 +1,113 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5a-critic-synthesis",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "0484e95dec4d8abd77f64d49deb9be444bc36811611d444e3dabbcb02f4b8995",
+  "database": {
+    "migration_head": "0007_phase5a_critic_workflows",
+    "name": "hekate_phase5a_test",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "executed_at": "2026-10-03T15:56:10.063735Z",
+  "execution": {
+    "command": "uv run python scripts/phase5a_critic_synthesis_probe.py",
+    "result": "failed"
+  },
+  "failure": {
+    "message": "operation critic.delete did not reach UNKNOWN",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/scripts/phase5a_critic_synthesis_probe.py\", line 535, in _run\n    await _wait_for_operation(engine, str(task_id), \"critic.delete\", \"UNKNOWN\", 45)\n  File \"/home/hekate/hekate-phase5a-critic-synthesis/scripts/phase5a_critic_synthesis_probe.py\", line 701, in _wait_for_operation\n    raise TimeoutError(f\"operation {kind} did not reach {state}\")\nTimeoutError: operation critic.delete did not reach UNKNOWN\n",
+    "type": "TimeoutError"
+  },
+  "fake_provider_requests": 3,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review is limited to one initial review; continuation, repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5a-critic-synthesis",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5a-shared-synthetic-v1",
+    "hekate": "phase5a-shared-synthetic-v1",
+    "pricing": "phase5a-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "7d1e86df-e9be-587d-9927-cbd9e4548de2",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "cdb44387-e4ea-41dd-a087-1dc330678519"
+      ],
+      "prompt_sha256": "9bf604a3cb55eb1139f7a901500a3b43ffb27e53224e93cd31327e449efe3a18",
+      "reasoning_role": "hekate",
+      "registry_id": "b76da4ea-e384-59ac-a464-6112b31b07e6",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "4620b73d-410a-404e-b7ac-c22c7fc6591e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "52def1fe-8216-56f9-a010-312102b0a445",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "cdb44387-e4ea-41dd-a087-1dc330678519"
+      ],
+      "prompt_sha256": "bc97726ea02999c01fa6b2b324da4a7bcebb7053576d95744093070b80f9a1e3",
+      "reasoning_role": "critic",
+      "registry_id": "b597410f-5dc0-5580-aaa7-b2de767983dc",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review",
+      "task_id": "4620b73d-410a-404e-b7ac-c22c7fc6591e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "ee43f2b7-68e3-5542-a36f-bbe839f80d10",
+      "context_checked": true,
+      "critic_conclusion_received": true,
+      "dissent_ids": [
+        "4a2d77d1-05ad-54cd-ab76-133c3ce19764"
+      ],
+      "evidence_ids": [
+        "cdb44387-e4ea-41dd-a087-1dc330678519"
+      ],
+      "prompt_sha256": "f5ba7640fa80cbbccb5ee956764e592004ba34801f9cdc47fa81a610b4ea62ee",
+      "reasoning_role": "hekate",
+      "registry_id": "b76da4ea-e384-59ac-a464-6112b31b07e6",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis",
+      "task_id": "4620b73d-410a-404e-b7ac-c22c7fc6591e",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5a-20261003T155610Z-6579c22f",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

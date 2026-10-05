@@ -1,0 +1,122 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5b-bounded-deliberation",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "ecc0b544273fe72ff41f88eed9164ff645f6698a14e1b6c03cee628b9da3bf1e",
+  "database": {
+    "migration_head": "0009_p5b_parent_attempt_id",
+    "name": "hekate_phase5b_delib_20261004",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "dispatch_safety": {
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-04T11:51:10.583987Z",
+  "execution": {
+    "command": "uv run --locked python scripts/phase5b_bounded_deliberation_probe.py --database-url <isolated-loopback-db> --node-bin /tmp/node-v22.19.0/bin/node",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL (isolated DB; redacted)",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "failed"
+  },
+  "failure": {
+    "message": "PostgreSQL concurrent continuation adoption duplicated or lost effects: {'active': False, 'attempts': 3, 'inbox_id': 'd943ee0c-45c1-4ce4-9165-d21a3733b81e', 'first_locked': <asyncio.locks.Event object at 0x70ae2195f680 [set]>, 'second_entered': <asyncio.locks.Event object at 0x70ae2195f710 [set]>, 'release_first': <asyncio.locks.Event object at 0x70ae2195f740 [set]>, 'before': {'task': {'status': 'RUNNING', 'input_revision': 1, 'review_rounds': 1, 'hekate_continuations': 0}, 'steps': [], 'step_c",
+    "traceback": "Traceback (most recent call last):\n  File \"scripts/phase5b_bounded_deliberation_probe.py\", line 1172, in _run\n    raise AssertionError(\nAssertionError: PostgreSQL concurrent continuation adoption duplicated or lost effects: {'active': False, 'attempts': 3, 'inbox_id': 'd943ee0c-45c1-4ce4-9165-d21a3733b81e', 'first_locked': <asyncio.locks.Event object at 0x70ae2195f680 [set]>, 'second_entered': <asyncio.locks.Event object at 0x70ae2195f710 [set]>, 'release_first': <asyncio.locks.Event object at 0x70ae2195f740 [set]>, 'before': {'task': {'status': 'RUNNING', 'input_revision': 1, 'review_rounds': 1, 'hekate_continuations': 0}, 'steps': [], 'step_count': 0, 'step_operation_count': 0, 'step_reservation_count': 0, 'continue_result_state': 'WAITING_EXECUTION'}, 'after': {'task': {'status': 'WAITING', 'input_revision': 1, 'review_rounds': 1, 'hekate_continuations': 1}, 'steps': [{'step_slot': 'hekate_reasoning_1', 'step_kind': 'hekate_reasoning', 'state': 'READY', 'operation_id': 'f6a110d2-4b97-5497-98dc-cd142b63ce34', 'reservation_id': '3d0dac15-4357-58d8-929a-065f160534f1'}], 'step_count': 1, 'step_operation_count': 1, 'step_reservation_count': 1, 'continue_result_state': 'ACCEPTED'}, 'first_result': None, 'competing_result': {'inbox_id': 'd943ee0c-45c1-4ce4-9165-d21a3733b81e', 'processed': False, 'pending': True}}\n",
+    "type": "AssertionError"
+  },
+  "fake_provider_requests": 3,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review and synthesis are bounded at two each; HEKATE-only continuation is bounded at one. Repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5b-bounded-deliberation",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5b-shared-synthetic-v1",
+    "hekate": "phase5b-shared-synthetic-v1",
+    "pricing": "phase5b-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "05e5914c-4d64-55de-a4a7-c93a622a2721",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "9b7e6c99-505a-47af-83c1-b4112a7d0179"
+      ],
+      "prompt_sha256": "7af76e46025b3e2824c0f475b8aeb52c9a5a70411d90aef756a98660185c330b",
+      "reasoning_role": "hekate",
+      "registry_id": "f10ab169-2c47-5c65-83f5-93007a0d32cb",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "058f509a-a8c0-4371-b9d3-35c2345d5021",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "444fc31b-dfba-502d-9f41-1cec563196b4",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "9b7e6c99-505a-47af-83c1-b4112a7d0179"
+      ],
+      "prompt_sha256": "c213ecd7c33724bfce3d4331b7445e9e3dcfc1540f7c7ffeb7358af9ea27a7e6",
+      "reasoning_role": "critic",
+      "registry_id": "25f4070c-677b-5176-8fdc-25a5f1a69a69",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "058f509a-a8c0-4371-b9d3-35c2345d5021",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "2dc4c9d3-d7ad-5e58-985f-0a1f6efe013b",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "0fc157d5-668d-554e-831d-af0cf8c23be3"
+      ],
+      "evidence_ids": [
+        "9b7e6c99-505a-47af-83c1-b4112a7d0179"
+      ],
+      "prompt_sha256": "f9663c189eb332e0af2bf55c55458f2022c245d05069dca116addfa35f7775f9",
+      "reasoning_role": "hekate",
+      "registry_id": "f10ab169-2c47-5c65-83f5-93007a0d32cb",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_continue",
+      "task_id": "058f509a-a8c0-4371-b9d3-35c2345d5021",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5b-20261004T115110Z-974556b8",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

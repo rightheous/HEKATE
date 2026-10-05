@@ -1,0 +1,158 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5b-bounded-deliberation",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "3d73104f1d262b5c3a5a3e998ab69ffa4d88d0c9f1d21181aac6b4ad8d67e373",
+  "database": {
+    "migration_head": "0009_p5b_parent_attempt_id",
+    "name": "hekate_phase5b_delib_20261004",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "dispatch_safety": {
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-04T10:53:21.978072Z",
+  "execution": {
+    "command": "uv run --locked python scripts/phase5b_bounded_deliberation_probe.py --database-url <isolated-loopback-db> --node-bin /tmp/node-v22.19.0/bin/node",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL (isolated DB; redacted)",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "failed"
+  },
+  "failure": {
+    "message": "(psycopg.errors.UndefinedColumn) column o.attempt_id does not exist\nLINE 3:                    , o.attempt_id, o.id AS operation_id\n                             ^\nHINT:  Perhaps you meant to reference the column \"d.attempt_id\".\n[SQL: \n            SELECT d.review_round, d.registry_id, o.binding\n                   , o.attempt_id, o.id AS operation_id\n            FROM deliberation_steps d JOIN operations o ON o.id=d.operation_id\n                WHERE d.task_id=%(task)s AND d.step_kind='critic_revie",
+    "traceback": "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py\", line 668, in execute\n    result = await greenlet_spawn(\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py\", line 210, in greenlet_spawn\n    result = context.throw(*sys.exc_info())\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1448, in execute\n    return meth(\n           ^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py\", line 533, in _execute_on_connection\n    return connection._execute_clauseelement(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1668, in _execute_clauseelement\n    ret = self._execute_context(\n          ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1822, in _execute_context\n    return self._exec_single_context(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1962, in _exec_single_context\n    self._handle_dbapi_exception(\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 2332, in _handle_dbapi_exception\n    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 1943, in _exec_single_context\n    self.dialect.do_execute(\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py\", line 1180, in do_execute\n    cursor.execute(statement, parameters)\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py\", line 258, in execute\n    self._adapt_connection._handle_exception(error)\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py\", line 412, in _handle_exception\n    self._handle_exception_no_connection(self.dbapi, error)\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py\", line 409, in _handle_exception_no_connection\n    raise error.with_traceback(exc_info[2])\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py\", line 256, in execute\n    return await_(self._execute_async(operation, parameters))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py\", line 167, in await_\n    return current.parent.switch(awaitable)  # type: ignore[no-any-return]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py\", line 205, in greenlet_spawn\n    value = await result\n            ^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/psycopg.py\", line 630, in _execute_async\n    result = await self._cursor.execute(operation, parameters)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase5b-bounded-deliberation/.venv/lib/python3.12/site-packages/psycopg/cursor_async.py\", line 117, in execute\n    raise ex.with_traceback(None)\nsqlalchemy.exc.ProgrammingError: (psycopg.errors.UndefinedColumn) column o.attempt_id does not exist\nLINE 3:                    , o.attempt_id, o.id AS operation_id\n                             ^\nHINT:  Perhaps you meant to reference the column \"d.attempt_id\".\n[SQL: \n            SELECT d.review_round, d.registry_id, o.binding\n                   , o.attempt_id, o.id AS operation_id\n            FROM deliberation_steps d JOIN operations o ON o.id=d.operation_id\n                WHERE d.task_id=%(task)s AND d.step_kind='critic_review'\n                UNION ALL\n            SELECT 1 AS review_round, w.critic_registry_id AS registry_id, o.binding,\n                   o.attempt_id, o.id AS operation_id\n                FROM critic_workflows w JOIN operations o ON o.id=w.review_operation_id\n                WHERE w.task_id=%(task)s\n                ORDER BY review_round\n            ]\n[parameters: {'task': '65f384df-16b7-4d26-98e8-ffc3abab7901'}]\n(Background on this error at: https://sqlalche.me/e/21/f405)\n",
+    "type": "ProgrammingError"
+  },
+  "fake_provider_requests": 5,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review and synthesis are bounded at two each; HEKATE-only continuation is bounded at one. Repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5b-bounded-deliberation",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5b-shared-synthetic-v1",
+    "hekate": "phase5b-shared-synthetic-v1",
+    "pricing": "phase5b-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "597a81ea-b468-5af3-bdf9-9c8260a8441a",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "58683312-c981-4533-a347-d61146287830"
+      ],
+      "prompt_sha256": "4d575a31948931656bc1aee4722eeb0a92c0a6c42ee15035b5e3afdaf236c4ae",
+      "reasoning_role": "hekate",
+      "registry_id": "1960c06e-49b4-5ad4-bbff-ab8afd20bd91",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "65f384df-16b7-4d26-98e8-ffc3abab7901",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "115898f1-08ef-5dde-8f16-4f6fe477964a",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "58683312-c981-4533-a347-d61146287830"
+      ],
+      "prompt_sha256": "1ab40cd38a0e7a0c1de247cca20496f6e85a54611052779429b7aad59def8448",
+      "reasoning_role": "critic",
+      "registry_id": "b873d8bb-f21b-5392-b1cb-5c6a607ccbd3",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "65f384df-16b7-4d26-98e8-ffc3abab7901",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "202c454c-3dff-5f39-bcc2-29220705ef3f",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "cb056b92-df8d-5283-b8ff-28ff5fdc29b5"
+      ],
+      "evidence_ids": [
+        "58683312-c981-4533-a347-d61146287830"
+      ],
+      "prompt_sha256": "21faea7401d3e904c9806901beb6112bfe614eff1bf0604c38ef610621a59fa1",
+      "reasoning_role": "hekate",
+      "registry_id": "1960c06e-49b4-5ad4-bbff-ab8afd20bd91",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_continue",
+      "task_id": "65f384df-16b7-4d26-98e8-ffc3abab7901",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "d1692432-75b1-5979-b0a5-9826f69dc394",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "58683312-c981-4533-a347-d61146287830"
+      ],
+      "prompt_sha256": "318f792083dccbacf56d0d9984e52d5fcaa16a38999e9b2f9b6f19d9f7171c0a",
+      "reasoning_role": "hekate",
+      "registry_id": "1960c06e-49b4-5ad4-bbff-ab8afd20bd91",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "hekate_reasoning",
+      "task_id": "65f384df-16b7-4d26-98e8-ffc3abab7901",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "6a4e2cec-f115-526a-9625-c45fc0d542ba",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "58683312-c981-4533-a347-d61146287830"
+      ],
+      "prompt_sha256": "f422fdf565508b023b494238f9e3af015cf19bc2062d672cc81ba5877bd8d4a3",
+      "reasoning_role": "critic",
+      "registry_id": "b873d8bb-f21b-5392-b1cb-5c6a607ccbd3",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "65f384df-16b7-4d26-98e8-ffc3abab7901",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5b-20261004T105321Z-4f3fc24c",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

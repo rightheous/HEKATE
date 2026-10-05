@@ -1,0 +1,1238 @@
+{
+  "artifact": "integration/runtime/artifacts/p3b-20261004T171800Z-09a16445.json",
+  "base_commit": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5b-bounded-deliberation",
+  "budget_summary": {
+    "ledger_effect_counts": [
+      {
+        "count": 14,
+        "effect_type": "HOLD"
+      },
+      {
+        "count": 12,
+        "effect_type": "RELEASE"
+      },
+      {
+        "count": 12,
+        "effect_type": "SETTLE"
+      }
+    ],
+    "note": "TASK and SYSTEM accounts are separate ledger scopes; their totals are not additive.",
+    "synthetic": true,
+    "totals_by_account_kind": [
+      {
+        "accounts": 1,
+        "held_amount": "0.073728",
+        "limit_amount": "10.00",
+        "scope_kind": "SYSTEM",
+        "spent_amount": "0.000270"
+      },
+      {
+        "accounts": 11,
+        "held_amount": "0.073728",
+        "limit_amount": "10.000001",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000270"
+      }
+    ]
+  },
+  "database": {
+    "migration_head": "0010_p5b_delib_maint",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "database_counts_after_run": {
+    "agents": 1,
+    "conclusions": 6,
+    "consumed_permits": 6,
+    "pending_inbox": 0,
+    "provider_calls": 6,
+    "responses": 2,
+    "tasks": 11,
+    "unknown_holds": 1
+  },
+  "executed_at": "2026-10-04T17:18:01.043915Z",
+  "executed_at_finished": "2026-10-04T17:18:29.018546Z",
+  "limitations": [
+    "The provider route is an isolated synthetic loopback fake; no production provider was configured.",
+    "Production dispatch remains closed because no verified real model, full-request tokenizer, pricing, or production route was configured.",
+    "G7 same-execution resume and G8 exact full-request tokenization remain unresolved.",
+    "Successful contract validation is not a claim of factual correctness; answers are provisional.",
+    "HekateTurnOutput schema and policy are carried in the forwarded turn message; SDK-native structured output is not used or claimed."
+  ],
+  "overall_status": "pass",
+  "probe": "phase3b-single-hekate",
+  "provider": {
+    "forwarded_requests": 6,
+    "mode": "isolated_loopback_fake_only",
+    "real_provider_calls": 0,
+    "request_metadata": [
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "3bcc940abee86502fa0b92475af66eb33d5bb01e27c9bc1ea6f8df84dfe67678",
+        "response_id": "fake-response-1",
+        "sequence": 1,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "e5321fe60a59d18de5cad678cd10bcb0a8f89db90d468e7a46f173a0eaa37038",
+        "response_id": "fake-response-2",
+        "sequence": 2,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "f0a2708ea90bba647ba2c34b37e9a14eeb7147e639f214bca88ea4ac40fc8d22",
+        "response_id": "fake-response-3",
+        "sequence": 3,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "8e0564884cc0b46caeff7cda879dd67ffccb570513797a69a5d18259c985a4f1",
+        "response_id": "fake-response-4",
+        "sequence": 4,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "8e3ba885eb3cff1019ecc95a70696401c9ffd5aa7c5036326fbcc539f0762b51",
+        "response_id": "fake-response-5",
+        "sequence": 5,
+        "stream": true
+      },
+      {
+        "behavior": "normal",
+        "max_completion_tokens": 2048,
+        "max_tokens": null,
+        "model": "hekate-fake-model",
+        "request_hash": "5c1cda1eaf15bb31650e9c08eede5a0def0bacbecfe6de5d5e4dd57af8bdc43e",
+        "response_id": "fake-response-6",
+        "sequence": 6,
+        "stream": true
+      }
+    ],
+    "turn_contract_observations": [
+      {
+        "agent_registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+        "attempt_id": "ac1a5f22-245b-5766-a5ba-6dd0ab987759",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "8331d72e613cd529346b66613bed27cf7e97e5013f538871dbba3d5da886ab08",
+        "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "request_hash": "3bcc940abee86502fa0b92475af66eb33d5bb01e27c9bc1ea6f8df84dfe67678",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash_matches_server": true,
+        "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+        "server_policy_present": true,
+        "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "supported_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "task_id": "e50ea459-974a-495f-88b9-bfa2bedf48bd",
+        "unicode_prompt_bytes": 9991,
+        "unicode_prompt_characters": 9991
+      },
+      {
+        "agent_registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+        "attempt_id": "3f4e3ca5-414c-5975-ad15-6bd5371d009b",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "6d76bea115e685613640747455257258fff1f9885934989495db3fd50077f0b6",
+        "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "request_hash": "e5321fe60a59d18de5cad678cd10bcb0a8f89db90d468e7a46f173a0eaa37038",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash_matches_server": true,
+        "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+        "server_policy_present": true,
+        "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "supported_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "task_id": "88788a14-562a-43b2-b8f2-ca2c049773e1",
+        "unicode_prompt_bytes": 9992,
+        "unicode_prompt_characters": 9992
+      },
+      {
+        "agent_registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+        "attempt_id": "1fe854b6-77b9-5f53-812b-a1b91a398e71",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "1044a2e436032cfa46f41d14ac448371478560e812c8226875d8e80e69693ec2",
+        "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "request_hash": "f0a2708ea90bba647ba2c34b37e9a14eeb7147e639f214bca88ea4ac40fc8d22",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash_matches_server": true,
+        "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+        "server_policy_present": true,
+        "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "supported_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "task_id": "98a67ba0-2d13-4bd7-a773-60e07c6d6ba7",
+        "unicode_prompt_bytes": 9986,
+        "unicode_prompt_characters": 9986
+      },
+      {
+        "agent_registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+        "attempt_id": "a15d4be0-4ee8-53e5-8f49-d0d3dba8fc83",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "a2a5f0397037767327fd33732cba6a7df006ad1b797ae78306dbc79c7e3959fa",
+        "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "request_hash": "8e0564884cc0b46caeff7cda879dd67ffccb570513797a69a5d18259c985a4f1",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash_matches_server": true,
+        "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+        "server_policy_present": true,
+        "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "supported_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "task_id": "353e717d-712d-45b1-915f-1915f0ff8b3e",
+        "unicode_prompt_bytes": 10002,
+        "unicode_prompt_characters": 10002
+      },
+      {
+        "agent_registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+        "attempt_id": "d1eab1d6-5083-52a8-9b65-be218819e0f6",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "f3acbd1f29fb699953cb73546b546eae0bde0800c9cabef245b0cae9e304737a",
+        "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "request_hash": "8e3ba885eb3cff1019ecc95a70696401c9ffd5aa7c5036326fbcc539f0762b51",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash_matches_server": true,
+        "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+        "server_policy_present": true,
+        "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "supported_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "task_id": "d8a8cd0d-48c0-407d-8f0d-4b33a748ec2c",
+        "unicode_prompt_bytes": 9986,
+        "unicode_prompt_characters": 9986
+      },
+      {
+        "agent_registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+        "attempt_id": "4ad48fa4-90c9-5333-8a74-de41d519158c",
+        "definition_count": 12,
+        "input_revision": 1,
+        "prompt_hash": "f7b527f66bf6e7a4be42c70a57623728cc887c31efe68327bfa1259442d0b47b",
+        "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "request_hash": "5c1cda1eaf15bb31650e9c08eede5a0def0bacbecfe6de5d5e4dd57af8bdc43e",
+        "required_outer_fields": [
+          "conclusion",
+          "proposal",
+          "schema_version"
+        ],
+        "resolved_local_refs": [
+          "#/$defs/AnswerProposal",
+          "#/$defs/Assessment",
+          "#/$defs/CommitProposal",
+          "#/$defs/ConclusionCapsule",
+          "#/$defs/Confidence",
+          "#/$defs/ContinuationProposal",
+          "#/$defs/Objection",
+          "#/$defs/PositionBody",
+          "#/$defs/PositionRecommendation",
+          "#/$defs/RecommendedNextStep",
+          "#/$defs/SimpleProposal",
+          "#/$defs/SpawnProposal"
+        ],
+        "schema_hash_matches_server": true,
+        "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+        "server_policy_present": true,
+        "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "supported_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "task_id": "cf402bb9-0101-43b8-b09f-30916ecedb11",
+        "unicode_prompt_bytes": 10016,
+        "unicode_prompt_characters": 10016
+      }
+    ]
+  },
+  "real_provider_calls": 0,
+  "results": {
+    "C1_oversized_turn_rejected_before_admission": {
+      "bridge_frame_byte_limit_including_newline": 1048576,
+      "cost_status": "NOT_DISPATCHED",
+      "final_message_character_limit": 65536,
+      "message_character_cap_rejected": true,
+      "operations_provider_calls_and_permits": {
+        "operations": 0,
+        "permits": 0,
+        "provider_calls": 0
+      },
+      "passed": true,
+      "prepared_leases": 0,
+      "provider_calls_after": 2,
+      "provider_calls_before": 2,
+      "question_utf8_byte_limit": 65536,
+      "question_utf8_bytes": 65536,
+      "stop_reason": "ERROR",
+      "task_id": "23b382f6-d1b2-4dbe-8e53-61e60e84bac5",
+      "task_state": "FAILED"
+    },
+    "C3_deadline_after_execution_restart": {
+      "accounting_after_replay": {
+        "consumed_permits": 1,
+        "ledger_entries": 6,
+        "permits": 1,
+        "provider_calls": 1
+      },
+      "accounting_after_restart": {
+        "consumed_permits": 1,
+        "ledger_entries": 6,
+        "permits": 1,
+        "provider_calls": 1
+      },
+      "accounting_before_restart": {
+        "consumed_permits": 1,
+        "ledger_entries": 6,
+        "permits": 1,
+        "provider_calls": 1
+      },
+      "accounting_delta_after_replay": {
+        "consumed_permits": 0,
+        "ledger_entries": 0,
+        "permits": 0,
+        "provider_calls": 0
+      },
+      "accounting_delta_after_restart": {
+        "consumed_permits": 0,
+        "ledger_entries": 0,
+        "permits": 0,
+        "provider_calls": 0
+      },
+      "audit_counts_after_replay": {
+        "business_result.late": 1,
+        "task.execution_deadline_failed": 1
+      },
+      "audit_counts_before_replay": {
+        "business_result.late": 1,
+        "task.execution_deadline_failed": 1
+      },
+      "conclusion_eligible": false,
+      "conclusion_eligible_after_replay": false,
+      "cost_state_after_replay": {
+        "cost_status": "SETTLED",
+        "pending_provider_calls": 0,
+        "pending_reservations": 0
+      },
+      "cost_state_after_restart": {
+        "cost_status": "SETTLED",
+        "pending_provider_calls": 0,
+        "pending_reservations": 0
+      },
+      "cost_state_before_restart": {
+        "cost_status": "SETTLED",
+        "pending_provider_calls": 0,
+        "pending_reservations": 0
+      },
+      "execution_state_before_restart": "QUIESCENT",
+      "passed": true,
+      "pending_execution_replay_count": 0,
+      "pending_result_replay_count": 0,
+      "provider_call_delta_after_replay": 0,
+      "provider_call_delta_after_restart": 0,
+      "provider_calls_after_dispatch": 6,
+      "provider_calls_after_replay": 6,
+      "provider_calls_after_restart": 6,
+      "response_count": 0,
+      "response_count_after_replay": 0,
+      "result_provenance": {
+        "attempt_id": "4ad48fa4-90c9-5333-8a74-de41d519158c",
+        "inbox_id": "4452ca41-9221-4558-ae33-60c1e3e57a02",
+        "input_revision": 1,
+        "late_audit_matches_output_hash_and_reason": true,
+        "operation_id": "9d6360a9-0fa5-5abe-a532-9b58c1c2b4c1",
+        "output_hash": "5f4ddff865b70f2da61f01e4e789a773e7480fcbe17b66b943177cf9364d9d01",
+        "raw_output_hash_matches": true,
+        "registry_id": "63959920-2e01-5439-a52a-5efffb438770"
+      },
+      "result_rejection_reason": "deadline_elapsed",
+      "result_rejection_reason_after_replay": "deadline_elapsed",
+      "result_replay": {
+        "inbox_id": "4452ca41-9221-4558-ae33-60c1e3e57a02",
+        "processed": true,
+        "state": "LATE"
+      },
+      "result_state": "LATE",
+      "result_state_after_replay": "LATE",
+      "sequence": [
+        "task_submitted",
+        "provider_turn_dispatched_and_business_result_saved",
+        "operation_execution_quiescent",
+        "deadline_expired_by_test_injection",
+        "new_worker_started",
+        "pending_execution_and_result_processed",
+        "late_result_replayed",
+        "pending_scans_replayed_noop"
+      ],
+      "stored_state_before_restart": "WAITING_EXECUTION",
+      "task_id": "cf402bb9-0101-43b8-b09f-30916ecedb11",
+      "task_outcome": "FAILED",
+      "task_state_after_replay": "FAILED",
+      "task_state_after_restart": "FAILED",
+      "task_stop_reason": "DEADLINE"
+    },
+    "R2_single_persistent_hekate": {
+      "accepted_responses_read_from_cli_and_db": true,
+      "accepted_result_chain": [
+        {
+          "accounting_call_id": "4f360dfb-c6e1-4738-845e-956e5c55a840",
+          "attempt_id": "3f4e3ca5-414c-5975-ad15-6bd5371d009b",
+          "call_state": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "conclusion_hash": "eb7c33618c4a884d0d5ebf9a526eb5f67888c8b0fff1499e688e7cc8b2eadbc9",
+          "conclusion_id": "db390458-512b-5a17-835b-2adc3c73f7a6",
+          "eligible": true,
+          "evaluated_cost_usd": "0.000045",
+          "input_revision": 1,
+          "operation_id": "bd9f4af0-23cf-55a0-92f5-d0e8576998bf",
+          "outcome": "PROVISIONAL_ANSWER",
+          "output_hash": "ccd902ddf47dd1c7b6d2a8fb811ad8dbe8730ffcb41db40d09be39c8e9d71bd7",
+          "permit_id": "2cb8aef6-bf10-5702-afde-952ad0e8cc08",
+          "permit_state": "CONSUMED",
+          "processing_state": "ACCEPTED",
+          "provider_agent_id": "agent-local-3c5b4ab0-8a8a-40d4-a300-ec2ed21652dd",
+          "registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+          "response_ref": "ce054b51-c439-4050-9996-e0dd4e3038a5",
+          "settlement_state": "SETTLED",
+          "stop_reason": "COMPLETED",
+          "task_id": "88788a14-562a-43b2-b8f2-ca2c049773e1",
+          "validation_status": "VALIDATED"
+        },
+        {
+          "accounting_call_id": "808f314b-9a0e-4add-aabd-621ae5903dfa",
+          "attempt_id": "ac1a5f22-245b-5766-a5ba-6dd0ab987759",
+          "call_state": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "conclusion_hash": "46d03ffb7824096dffb3ea14208850a42059d56d00be6a45f7bc5a46a803462c",
+          "conclusion_id": "29e6140f-7529-5bd3-a8d4-ba51ee8374df",
+          "eligible": true,
+          "evaluated_cost_usd": "0.000045",
+          "input_revision": 1,
+          "operation_id": "a358ba22-b480-5924-9338-ebd590dfe00d",
+          "outcome": "PROVISIONAL_ANSWER",
+          "output_hash": "b28f8a4884ba0c19219552d2801e0ef73e2a28e584587b724c16dbe064675668",
+          "permit_id": "12979ba3-f95c-5abc-92f2-708611d5542e",
+          "permit_state": "CONSUMED",
+          "processing_state": "ACCEPTED",
+          "provider_agent_id": "agent-local-3c5b4ab0-8a8a-40d4-a300-ec2ed21652dd",
+          "registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+          "response_ref": "0b969b59-4d8e-4665-ba74-50173e684919",
+          "settlement_state": "SETTLED",
+          "stop_reason": "COMPLETED",
+          "task_id": "e50ea459-974a-495f-88b9-bfa2bedf48bd",
+          "validation_status": "VALIDATED"
+        }
+      ],
+      "database_counts": {
+        "accepted_results": 2,
+        "compaction_provider_calls": 0,
+        "consumed_permits": 2,
+        "eligible_conclusions": 2,
+        "main_provider_calls": 2,
+        "provider_calls": 2,
+        "submissions": 2,
+        "tasks": 2
+      },
+      "first_task_state": "COMPLETED",
+      "input_output_token_caps": {
+        "compaction_call_cap": 1,
+        "max_input_tokens": 32768,
+        "max_output_tokens": 2048
+      },
+      "one_main_call_each": true,
+      "output_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+      "passed": true,
+      "provider_request_contracts": {
+        "88788a14-562a-43b2-b8f2-ca2c049773e1": {
+          "agent_registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+          "attempt_id": "3f4e3ca5-414c-5975-ad15-6bd5371d009b",
+          "definition_count": 12,
+          "input_revision": 1,
+          "prompt_hash": "6d76bea115e685613640747455257258fff1f9885934989495db3fd50077f0b6",
+          "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+          "request_hash": "e5321fe60a59d18de5cad678cd10bcb0a8f89db90d468e7a46f173a0eaa37038",
+          "required_outer_fields": [
+            "conclusion",
+            "proposal",
+            "schema_version"
+          ],
+          "resolved_local_refs": [
+            "#/$defs/AnswerProposal",
+            "#/$defs/Assessment",
+            "#/$defs/CommitProposal",
+            "#/$defs/ConclusionCapsule",
+            "#/$defs/Confidence",
+            "#/$defs/ContinuationProposal",
+            "#/$defs/Objection",
+            "#/$defs/PositionBody",
+            "#/$defs/PositionRecommendation",
+            "#/$defs/RecommendedNextStep",
+            "#/$defs/SimpleProposal",
+            "#/$defs/SpawnProposal"
+          ],
+          "schema_hash_matches_server": true,
+          "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+          "server_policy_present": true,
+          "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+          "supported_actions": [
+            "answer",
+            "request_information",
+            "abstain",
+            "commit"
+          ],
+          "task_id": "88788a14-562a-43b2-b8f2-ca2c049773e1",
+          "unicode_prompt_bytes": 9992,
+          "unicode_prompt_characters": 9992
+        },
+        "e50ea459-974a-495f-88b9-bfa2bedf48bd": {
+          "agent_registry_id": "63959920-2e01-5439-a52a-5efffb438770",
+          "attempt_id": "ac1a5f22-245b-5766-a5ba-6dd0ab987759",
+          "definition_count": 12,
+          "input_revision": 1,
+          "prompt_hash": "8331d72e613cd529346b66613bed27cf7e97e5013f538871dbba3d5da886ab08",
+          "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+          "request_hash": "3bcc940abee86502fa0b92475af66eb33d5bb01e27c9bc1ea6f8df84dfe67678",
+          "required_outer_fields": [
+            "conclusion",
+            "proposal",
+            "schema_version"
+          ],
+          "resolved_local_refs": [
+            "#/$defs/AnswerProposal",
+            "#/$defs/Assessment",
+            "#/$defs/CommitProposal",
+            "#/$defs/ConclusionCapsule",
+            "#/$defs/Confidence",
+            "#/$defs/ContinuationProposal",
+            "#/$defs/Objection",
+            "#/$defs/PositionBody",
+            "#/$defs/PositionRecommendation",
+            "#/$defs/RecommendedNextStep",
+            "#/$defs/SimpleProposal",
+            "#/$defs/SpawnProposal"
+          ],
+          "schema_hash_matches_server": true,
+          "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+          "server_policy_present": true,
+          "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+          "supported_actions": [
+            "answer",
+            "request_information",
+            "abstain",
+            "commit"
+          ],
+          "task_id": "e50ea459-974a-495f-88b9-bfa2bedf48bd",
+          "unicode_prompt_bytes": 9991,
+          "unicode_prompt_characters": 9991
+        }
+      },
+      "provider_request_hashes_match_fake_upstream_capture": true,
+      "registry_provider_counts": {
+        "attempts": 2,
+        "operations": 2,
+        "providers": 1,
+        "registries": 1,
+        "responses": 2
+      },
+      "request_key_hashes": [
+        "40b9974ade610fc934c0b8ffb078125659751e83c8369df4a6118abc4d857455",
+        "804397a3481237528471ca01a1f22c25b98da1a5590b529ada53e0e68e87640e"
+      ],
+      "second_task_state": "COMPLETED",
+      "submission_hashes": [
+        {
+          "request_hash": "f7dc852fbc5372ddd1148576880e9cb3b9767b7c5338fba1932e7ba95a395c16",
+          "task_id": "88788a14-562a-43b2-b8f2-ca2c049773e1"
+        },
+        {
+          "request_hash": "82d8714811a6223e8b75d0747fecc1c7c2689d03eccb303e597aa81330e09958",
+          "task_id": "e50ea459-974a-495f-88b9-bfa2bedf48bd"
+        }
+      ],
+      "task_cost_statuses": [
+        "SETTLED",
+        "SETTLED"
+      ],
+      "task_ids": [
+        "e50ea459-974a-495f-88b9-bfa2bedf48bd",
+        "88788a14-562a-43b2-b8f2-ca2c049773e1"
+      ],
+      "two_task_requests_included_generated_schema_and_policy": true
+    },
+    "R3_submission_idempotency_and_scope": {
+      "completed_replay_provider_call_count_unchanged": true,
+      "completed_replay_same_task": true,
+      "concurrent_same_key_same_task": true,
+      "other_scope_lookup_denied": true,
+      "passed": true,
+      "same_key_different_question_conflict": true,
+      "task_submission_count_for_scope": 2
+    },
+    "R5_cancel_and_revision_gate": {
+      "cancel": {
+        "accounting_after_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_after_result_replay": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_acceptance": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_delta_from_cancel": {
+          "consumed_permits": 0,
+          "ledger_entries": 0,
+          "permits": 0,
+          "provider_calls": 0
+        },
+        "accounting_delta_from_result_replay": {
+          "consumed_permits": 0,
+          "ledger_entries": 0,
+          "permits": 0,
+          "provider_calls": 0
+        },
+        "application_result": {
+          "inbox_id": "20985baa-2e96-426f-b813-fc78034231a9",
+          "processed": true,
+          "state": "LATE"
+        },
+        "audit_counts_after_replay": {
+          "business_result.late": 1,
+          "task.cancel_requested": 1,
+          "task.execution_cancelled": 1
+        },
+        "audit_counts_before_replay": {
+          "business_result.late": 1,
+          "task.cancel_requested": 1,
+          "task.execution_cancelled": 1
+        },
+        "cancel_audits": 1,
+        "cancel_replay": {
+          "state": "CANCELLED",
+          "stop_reason": "USER_CANCELLED",
+          "task_id": "98a67ba0-2d13-4bd7-a773-60e07c6d6ba7"
+        },
+        "conclusion_eligible": false,
+        "cost_status_after_cancel": "SETTLED",
+        "cost_status_before_cancel": "SETTLED",
+        "execution_state_after_terminal": "QUIESCENT",
+        "execution_state_before_cancel": "QUIESCENT",
+        "input_revision": 1,
+        "late_audit_has_output_hash": true,
+        "passed": true,
+        "pending_execution_replay_count": 0,
+        "pending_provider_calls_after_cancel": 0,
+        "pending_provider_calls_before_cancel": 0,
+        "pending_reservations_after_cancel": 0,
+        "pending_reservations_before_cancel": 0,
+        "pending_result_replay_count": 0,
+        "provider_request_delta_after_replay": 0,
+        "provider_requests_after_replay": 3,
+        "provider_requests_before_acceptance": 3,
+        "response_count": 0,
+        "result_rejection_reason": "task_cancelled",
+        "result_replay": {
+          "inbox_id": "20985baa-2e96-426f-b813-fc78034231a9",
+          "processed": true,
+          "state": "LATE"
+        },
+        "result_state_after_mutation": "LATE",
+        "saved_state_before_mutation": "WAITING_EXECUTION",
+        "sequence": [
+          "task_submitted",
+          "turn_dispatched_and_business_result_saved",
+          "execution_terminal_confirmed",
+          "cancel_requested",
+          "cancel_replayed",
+          "business_result_applied",
+          "pending_terminal_scans_replayed_noop",
+          "business_result_replayed"
+        ],
+        "task_id": "98a67ba0-2d13-4bd7-a773-60e07c6d6ba7",
+        "task_outcome": "CANCELLED",
+        "task_state": "CANCELLED",
+        "task_state_immediately_after_cancel": "CANCELLED",
+        "task_stop_reason": "USER_CANCELLED",
+        "terminal_audits": 1
+      },
+      "cancel_before_terminal": {
+        "accounting_after_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 4,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_after_result_replay": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_acceptance": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 4,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_delta_from_cancel": {
+          "consumed_permits": 0,
+          "ledger_entries": 0,
+          "permits": 0,
+          "provider_calls": 0
+        },
+        "accounting_delta_from_result_replay": {
+          "consumed_permits": 0,
+          "ledger_entries": 0,
+          "permits": 0,
+          "provider_calls": 0
+        },
+        "application_result": {
+          "inbox_id": "cc7601de-3dea-4a05-b2e0-75655cbe6f80",
+          "processed": true,
+          "state": "LATE"
+        },
+        "audit_counts_after_replay": {
+          "business_result.late": 1,
+          "task.cancel_requested": 1,
+          "task.execution_cancelled": 1
+        },
+        "audit_counts_before_replay": {
+          "business_result.late": 1,
+          "task.cancel_requested": 1,
+          "task.execution_cancelled": 1
+        },
+        "cancel_audits": 1,
+        "cancel_replay": {
+          "state": "CANCELLED",
+          "stop_reason": "USER_CANCELLED",
+          "task_id": "353e717d-712d-45b1-915f-1915f0ff8b3e"
+        },
+        "conclusion_eligible": false,
+        "cost_status_after_cancel": "PENDING_SETTLEMENT",
+        "cost_status_before_cancel": "PENDING_SETTLEMENT",
+        "execution_state_after_terminal": "QUIESCENT",
+        "execution_state_before_cancel": "RUNNING",
+        "input_revision": 1,
+        "late_audit_has_output_hash": true,
+        "passed": true,
+        "pending_execution_replay_count": 0,
+        "pending_provider_calls_after_cancel": 0,
+        "pending_provider_calls_before_cancel": 0,
+        "pending_reservations_after_cancel": 1,
+        "pending_reservations_before_cancel": 1,
+        "pending_result_replay_count": 0,
+        "provider_request_delta_after_replay": 0,
+        "provider_requests_after_replay": 4,
+        "provider_requests_before_acceptance": 4,
+        "response_count": 0,
+        "result_rejection_reason": "task_cancelled",
+        "result_replay": {
+          "inbox_id": "cc7601de-3dea-4a05-b2e0-75655cbe6f80",
+          "processed": true,
+          "state": "LATE"
+        },
+        "result_state_after_mutation": "LATE",
+        "saved_state_before_mutation": "WAITING_EXECUTION",
+        "sequence": [
+          "task_submitted",
+          "turn_dispatched_and_business_result_saved",
+          "execution_terminal_pending",
+          "cancel_requested",
+          "execution_terminal_confirmed",
+          "cancel_replayed",
+          "business_result_applied",
+          "pending_terminal_scans_replayed_noop",
+          "business_result_replayed"
+        ],
+        "task_id": "353e717d-712d-45b1-915f-1915f0ff8b3e",
+        "task_outcome": "CANCELLED",
+        "task_state": "CANCELLED",
+        "task_state_immediately_after_cancel": "STOPPING",
+        "task_stop_reason": "USER_CANCELLED",
+        "terminal_audits": 1
+      },
+      "passed": true,
+      "revision": {
+        "accounting_after_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_after_result_replay": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_acceptance": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_before_cancel": {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "accounting_delta_from_cancel": {
+          "consumed_permits": 0,
+          "ledger_entries": 0,
+          "permits": 0,
+          "provider_calls": 0
+        },
+        "accounting_delta_from_result_replay": {
+          "consumed_permits": 0,
+          "ledger_entries": 0,
+          "permits": 0,
+          "provider_calls": 0
+        },
+        "application_result": {
+          "inbox_id": "84ee5409-e07c-4234-8708-002b6f01ee79",
+          "processed": true,
+          "state": "LATE"
+        },
+        "audit_counts_after_replay": {
+          "business_result.late": 1
+        },
+        "audit_counts_before_replay": {
+          "business_result.late": 1
+        },
+        "cancel_audits": 0,
+        "cancel_replay": null,
+        "conclusion_eligible": false,
+        "cost_status_after_cancel": null,
+        "cost_status_before_cancel": null,
+        "execution_state_after_terminal": "QUIESCENT",
+        "execution_state_before_cancel": "QUIESCENT",
+        "input_revision": 2,
+        "late_audit_has_output_hash": true,
+        "passed": true,
+        "pending_execution_replay_count": 0,
+        "pending_provider_calls_after_cancel": null,
+        "pending_provider_calls_before_cancel": null,
+        "pending_reservations_after_cancel": null,
+        "pending_reservations_before_cancel": null,
+        "pending_result_replay_count": 0,
+        "provider_request_delta_after_replay": 0,
+        "provider_requests_after_replay": 5,
+        "provider_requests_before_acceptance": 5,
+        "response_count": 0,
+        "result_rejection_reason": "task_or_binding_changed",
+        "result_replay": {
+          "inbox_id": "84ee5409-e07c-4234-8708-002b6f01ee79",
+          "processed": true,
+          "state": "LATE"
+        },
+        "result_state_after_mutation": "LATE",
+        "saved_state_before_mutation": "WAITING_EXECUTION",
+        "sequence": [
+          "task_submitted",
+          "turn_dispatched_and_business_result_saved",
+          "execution_terminal_confirmed",
+          "input_revision_changed",
+          "business_result_applied",
+          "pending_terminal_scans_replayed_noop",
+          "business_result_replayed"
+        ],
+        "task_id": "d8a8cd0d-48c0-407d-8f0d-4b33a748ec2c",
+        "task_outcome": null,
+        "task_state": "RUNNING",
+        "task_state_immediately_after_cancel": null,
+        "task_stop_reason": null,
+        "terminal_audits": 0
+      }
+    },
+    "R7_budget_pre_dispatch": {
+      "passed": true,
+      "prepared_leases": 0,
+      "provider_calls_after": 6,
+      "provider_calls_before": 6,
+      "stop_reason": "BUDGET",
+      "task_id": "6033b24e-c7b1-4fa9-b84f-66bb491c5d3d",
+      "task_state": "FAILED"
+    },
+    "R7_deadline_pre_dispatch": {
+      "passed": true,
+      "prepared_leases": 0,
+      "provider_calls_after": 6,
+      "provider_calls_before": 6,
+      "session_prepares_after": 8,
+      "session_prepares_before": 8,
+      "stop_reason": "DEADLINE",
+      "task_id": "322ff91d-2c52-418c-8d72-020370f4b4c2",
+      "task_state": "FAILED"
+    },
+    "R7_unknown_hold_admission": {
+      "accounting_after_cancel": {
+        "consumed_permits": 0,
+        "ledger_entries": 2,
+        "permits": 0,
+        "provider_calls": 0
+      },
+      "accounting_before_cancel": {
+        "consumed_permits": 0,
+        "ledger_entries": 2,
+        "permits": 0,
+        "provider_calls": 0
+      },
+      "accounting_delta_from_cancel": {
+        "consumed_permits": 0,
+        "ledger_entries": 0,
+        "permits": 0,
+        "provider_calls": 0
+      },
+      "blocked_task_attempts_and_operations": {
+        "attempts": 0,
+        "operations": 0
+      },
+      "blocked_task_id": "0cb0f69e-53c9-4e8a-9a5f-1c6fcee8ba36",
+      "blocked_task_state": "QUEUED",
+      "passed": true,
+      "provider_calls_after": 6,
+      "provider_calls_after_cancel": 6,
+      "provider_calls_before": 6,
+      "provider_calls_before_cancel": 6,
+      "session_prepares_after": 9,
+      "session_prepares_before": 9,
+      "source_cost_status_after_cancel": "PENDING_SETTLEMENT",
+      "source_pending_reservations": 1,
+      "source_pending_reservations_after_cancel": 1,
+      "source_task_cost_status": "PENDING_SETTLEMENT",
+      "source_task_id": "48902b5f-a0c3-4c3e-8a3e-45f05c68f444",
+      "unknown_cancel_receipt": {
+        "state": "STOPPING",
+        "stop_reason": "USER_CANCELLED",
+        "task_id": "48902b5f-a0c3-4c3e-8a3e-45f05c68f444"
+      },
+      "unknown_execution_state_after_cancel": "UNKNOWN",
+      "unknown_hold_state": "UNKNOWN",
+      "unknown_hold_state_after_cancel": "UNKNOWN",
+      "unknown_task_outcome_after_cancel": null,
+      "unknown_task_state_after_cancel": "STOPPING",
+      "unknown_task_stop_reason_after_cancel": "USER_CANCELLED"
+    }
+  },
+  "run_id": "p3b-20261004T171800Z-09a16445",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "start_commit_sha": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "turn_result_states": [
+    {
+      "count": 2,
+      "processing_state": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "count": 1,
+      "processing_state": "LATE",
+      "rejection_reason": "deadline_elapsed"
+    },
+    {
+      "count": 2,
+      "processing_state": "LATE",
+      "rejection_reason": "task_cancelled"
+    },
+    {
+      "count": 1,
+      "processing_state": "LATE",
+      "rejection_reason": "task_or_binding_changed"
+    }
+  ],
+  "unresolved_provider_calls": [],
+  "verification": {
+    "command": "uv run python scripts/phase3_verify.py",
+    "commands": [
+      {
+        "command": "python -m compileall -q src scripts tests",
+        "exit_code": 0,
+        "name": "python_compile",
+        "status": "passed"
+      },
+      {
+        "command": "python -m unittest discover -s tests/contract -p test_phase3_bridge_and_gateway.py -v",
+        "exit_code": 0,
+        "name": "phase3_contract_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 6,
+        "tests_run": 6
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "phase2_migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_TEST_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m unittest discover -s tests/persistence -v",
+        "exit_code": 0,
+        "name": "phase2_postgres_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 19,
+        "tests_run": 19
+      },
+      {
+        "command": "npm test (pinned Node.js 22.19.0)",
+        "exit_code": 0,
+        "name": "bridge_tests_and_build",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 15,
+        "tests_run": 15
+      },
+      {
+        "checks_failed": 0,
+        "checks_passed": 7,
+        "checks_run": 7,
+        "command": "python -c <generated schema byte comparison>",
+        "exit_code": 0,
+        "name": "schema_reproducibility",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic downgrade 0004_terminal_inbox",
+        "exit_code": 1,
+        "name": "migration_downgrade",
+        "status": "failed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_reupgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check_after_reupgrade",
+        "status": "passed"
+      },
+      {
+        "command": "git diff --check",
+        "exit_code": 0,
+        "name": "diff_check",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3_runtime_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_probe",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3b_single_hekate_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_single_hekate_probe",
+        "status": "passed"
+      }
+    ],
+    "commands_failed": 1,
+    "commands_passed": 13,
+    "commands_run": 14,
+    "phase3a_artifact": "integration/runtime/artifacts/p3-20261004T171744Z-51ed97ac.json",
+    "phase3b_artifact": "integration/runtime/artifacts/p3b-20261004T171800Z-09a16445.json",
+    "phase3b_runtime_scenarios": {
+      "failed_count": 0,
+      "passed_count": 8,
+      "scenario_count": 8
+    },
+    "runtime_scenarios": {
+      "command": "uv run python scripts/phase3_runtime_probe.py",
+      "failed_count": 0,
+      "passed_count": 9,
+      "scenario_count": 9,
+      "scenario_results": {
+        "T1_actual_db_runtime_gateway_fake_provider": true,
+        "T1_same_accounting_id_replay": true,
+        "T2_actual_runtime_compaction": true,
+        "T2_roles_retry_and_compaction_plan": true,
+        "T3_outbox_claim_fence_and_send_marker": true,
+        "T4_bridge_loss_keeps_unknown_hold": true,
+        "T5_db_and_permit_failures_do_not_forward": true,
+        "T6_inbox_replay_and_conflict": true,
+        "T7_private_gateway_fail_closed": true
+      },
+      "scope": "PostgreSQL + pinned Letta App Server + Python bridge + DB gateway + isolated fake provider"
+    },
+    "status": "failed"
+  },
+  "working_tree_change_count_at_probe": 126,
+  "working_tree_dirty_at_probe": true
+}

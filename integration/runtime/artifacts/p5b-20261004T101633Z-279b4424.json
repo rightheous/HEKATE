@@ -1,0 +1,158 @@
+{
+  "base_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "branch": "phase5b-bounded-deliberation",
+  "bridge_stderr_tail": "",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "dc9e02dfcbb6e37022cfe49c7da3f5acda7465a1164e08fb006e96e551640d3e",
+  "database": {
+    "migration_head": "0009_p5b_parent_attempt_id",
+    "name": "hekate_phase5b_delib_20261004",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "dispatch_safety": {
+    "production_dispatch": "blocked",
+    "real_provider_calls": 0,
+    "runtime_mode": "test"
+  },
+  "executed_at": "2026-10-04T10:16:33.752787Z",
+  "execution": {
+    "command": "IFS= read -r HEKATE_TEST_DATABASE_URL < /tmp/hekate-phase5a-dsn; export HEKATE_TEST_DATABASE_URL HEKATE_NODE_BIN=/tmp/node-v22.19.0/bin/node; uv run --locked python scripts/phase5a_critic_synthesis_probe.py",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL",
+      "HEKATE_NODE_BIN"
+    ],
+    "result": "failed"
+  },
+  "failure": {
+    "message": "timed out waiting for synthesis and Critic retirement; last state: {}",
+    "traceback": "Traceback (most recent call last):\n  File \"scripts/phase5b_bounded_deliberation_probe.py\", line 899, in _run\n    await _wait_for(engine, task_id, observe_delete_failure, \"synthesis and Critic retirement\", 150)\n  File \"scripts/phase5b_bounded_deliberation_probe.py\", line 366, in _wait_for\n    raise TimeoutError(f\"timed out waiting for {label}; last state: {last}\")\nTimeoutError: timed out waiting for synthesis and Critic retirement; last state: {}\n",
+    "type": "TimeoutError"
+  },
+  "fake_provider_requests": 5,
+  "limitations": [
+    "Synthetic pricing and the local fake provider were used; no production model or pricing is claimed.",
+    "Critic review and synthesis are bounded at two each; HEKATE-only continuation is bounded at one. Repair, retry, and recursive spawning remain out of scope.",
+    "Letta memory projection remains pending and unsupported; PostgreSQL remains authoritative.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Production dispatch remains closed; no real provider endpoint or credentials were configured."
+  ],
+  "overall_status": "blocked",
+  "phase4_included_fingerprint": "5f07215a7a987a9756ceebc16d08f5359c96e6dddc577c0d6599b4969ccd56aa",
+  "probe": "phase5b-bounded-deliberation",
+  "profiles": {
+    "compaction_calls": 0,
+    "critic": "phase5b-shared-synthetic-v1",
+    "hekate": "phase5b-shared-synthetic-v1",
+    "pricing": "phase5b-synthetic-pricing-v1"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "attempt_id": "aa8696ea-3d34-59b6-a926-d66ee9652f3c",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "69469995-6e9b-4dcb-8eb6-e35fa0e94deb"
+      ],
+      "prompt_sha256": "13dcbe92b7718b73de99f64b062c084bb61da10df46b36ba2a59981c73e91638",
+      "reasoning_role": "hekate",
+      "registry_id": "daed088e-976f-53f0-b84b-49b81a14188e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "planning",
+      "task_id": "e8881cf5-9643-4413-99b3-c098e956f0a8",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "c14d307d-b1e0-57fa-97c5-fd3cdb43d0c7",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "69469995-6e9b-4dcb-8eb6-e35fa0e94deb"
+      ],
+      "prompt_sha256": "3509c57c381d971bf39e942b9e0fe0b0c43e1ddee31c01b327e80295bcff47e0",
+      "reasoning_role": "critic",
+      "registry_id": "a39568c4-b11d-59fa-a566-312b79a841f6",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_1",
+      "task_id": "e8881cf5-9643-4413-99b3-c098e956f0a8",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "60bd5aa3-f7eb-5900-8404-1914bbd86784",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [
+        "e4efce7b-14d0-5b34-87f9-a745fadc30f4"
+      ],
+      "evidence_ids": [
+        "69469995-6e9b-4dcb-8eb6-e35fa0e94deb"
+      ],
+      "prompt_sha256": "138a26520777f86d120d93f4ab3b4c4419d335791457a1950f01ce5dfeda6133",
+      "reasoning_role": "hekate",
+      "registry_id": "daed088e-976f-53f0-b84b-49b81a14188e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "synthesis_1_continue",
+      "task_id": "e8881cf5-9643-4413-99b3-c098e956f0a8",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "78cb6188-6356-5686-b6f8-56bec046f1e9",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "69469995-6e9b-4dcb-8eb6-e35fa0e94deb"
+      ],
+      "prompt_sha256": "e03c92f2c45f5c2c9d569b47f0436a86a8751a95a0f08ecde272d28f304b4455",
+      "reasoning_role": "hekate",
+      "registry_id": "daed088e-976f-53f0-b84b-49b81a14188e",
+      "schema": "hekate-turn-output.v1.schema.json",
+      "stage": "hekate_reasoning",
+      "task_id": "e8881cf5-9643-4413-99b3-c098e956f0a8",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    },
+    {
+      "attempt_id": "c9bb4a89-fbde-50ea-b22b-8b1f798717b0",
+      "context_checked": true,
+      "critic_conclusion_received": false,
+      "dissent_ids": [],
+      "evidence_ids": [
+        "69469995-6e9b-4dcb-8eb6-e35fa0e94deb"
+      ],
+      "prompt_sha256": "942b7e1fabeb4107e08482ee6b3c0497903929114b41175aa10d60f9e9b5ae23",
+      "reasoning_role": "critic",
+      "registry_id": "a39568c4-b11d-59fa-a566-312b79a841f6",
+      "schema": "critic-turn-output.v1.schema.json",
+      "stage": "critic_review_2",
+      "task_id": "e8881cf5-9643-4413-99b3-c098e956f0a8",
+      "upstream_tool_names": [
+        "StructuredOutput"
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "results": {},
+  "run_id": "p5b-20261004T101633Z-279b4424",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}

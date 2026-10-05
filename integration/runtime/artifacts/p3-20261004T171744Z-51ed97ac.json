@@ -1,0 +1,975 @@
+{
+  "artifact": "integration/runtime/artifacts/p3-20261004T171744Z-51ed97ac.json",
+  "base_commit": "6eb11d128cd697d93ef746b0e69d9e3d1dbfce22",
+  "branch": "phase5b-bounded-deliberation",
+  "bridge_capabilities": {
+    "capabilities": {
+      "agent_create": true,
+      "agent_delete": true,
+      "agent_get": true,
+      "agent_list": true,
+      "event_collection": true,
+      "pre_provider_call": false,
+      "provider_usage_by_call_id": false,
+      "session_prepare": true,
+      "session_turn": true
+    },
+    "limitations": [
+      "Provider-call authorization is enforced by the probe gateway using metadata emitted by its pinned runtime patch.",
+      "Runtime usage fields are forwarded when present; the stock SDK contract does not guarantee physical provider-call identity."
+    ],
+    "protocol_version": "1",
+    "sdk_version": "0.8.25"
+  },
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "database": {
+    "migration_head": "0010_p5b_delib_maint",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "executed_at": "2026-10-04T17:17:44.798874Z",
+  "executed_at_finished": "2026-10-04T17:17:59.568774Z",
+  "limitations": [
+    "Synthetic profile only; no real provider key or external provider URL was configured.",
+    "G8 full-request tokenization remains unverified; the gateway enforces the admitted conservative input/output plan and does not claim exact input-token measurement.",
+    "G7 physical provider-call identity depends on the pinned runtime patch; stock SDK capabilities remain false.",
+    "No production readiness, API ingress, business loop, Critic lifecycle, same-execution resume, or operator recovery is claimed."
+  ],
+  "observed_totals": {
+    "budget_accounts": [
+      {
+        "held_amount": "69.999680",
+        "id": "system-budget:phase3",
+        "limit_amount": "100",
+        "scope_kind": "SYSTEM",
+        "spent_amount": "0.000225"
+      },
+      {
+        "held_amount": "0.000000",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t1",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000045"
+      },
+      {
+        "held_amount": "9.99968",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t2",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000090"
+      },
+      {
+        "held_amount": "0.000000",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000090"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t4",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t5-cancellation",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t5-db-authorize",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t5-db-consume",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t5-post-forward-db-failure",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261004T171744Z-51ed97ac:t5-revision",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      }
+    ],
+    "calls_pending_execution_or_settlement": 8,
+    "database_call_count": 12,
+    "database_consumed_permit_count": 8,
+    "database_permit_count": 12,
+    "database_provider_calls": [
+      {
+        "accounting_call_id": "e4fd4f21-7a44-47c0-85ad-01e4e695be81",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t1:operation-1",
+        "permit_id": "66ed3c4f-1f68-5955-8df6-b8e8bd304016",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-1",
+        "settlement_state": "SETTLED"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t2-compaction",
+        "call_kind": "compaction",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2:roles",
+        "permit_id": "8829b7c3-2094-5400-8cce-b1cfedda870c",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-5",
+        "settlement_state": "CONFLICT"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t2-main",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2:roles",
+        "permit_id": "f1b4b4e1-bc2b-5863-84cf-1f539757976a",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": "SETTLED"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-consumed-before-send",
+        "call_kind": "compaction",
+        "call_state": "CONSUMED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2:roles",
+        "permit_id": "cd040c31-086c-5448-abfa-8d7e9637dca9",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-consume-failure",
+        "call_kind": "compaction",
+        "call_state": "ALLOCATED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2:roles",
+        "permit_id": "d21193d4-258e-5c88-97ef-68440c79a06d",
+        "permit_state": "REVOKED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "5ba6333e-f268-4ee0-8b78-3956511f1953",
+        "call_kind": "compaction",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction:runtime-compaction",
+        "permit_id": "a1e0830b-e6e6-5d3e-ae40-cc92c48473e3",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-2",
+        "settlement_state": "SETTLED"
+      },
+      {
+        "accounting_call_id": "9c6f9e28-a446-4702-9fe3-71cdd1c3e17d",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction:runtime-compaction",
+        "permit_id": "e09e84f5-fc07-5d7e-a1f6-f315f806b92b",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-3",
+        "settlement_state": "SETTLED"
+      },
+      {
+        "accounting_call_id": "33aebd74-1ef4-4b15-8786-6f99d78d0e68",
+        "call_kind": "turn",
+        "call_state": "UNKNOWN",
+        "completeness": null,
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t4:disconnect",
+        "permit_id": "a1b0f510-79dc-5309-8232-f0b79dd39a42",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-authorize-cancellation",
+        "call_kind": "turn",
+        "call_state": "ALLOCATED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t5-cancellation:t5-cancellation",
+        "permit_id": "584cf365-ee70-5fec-a83d-155aad63a4ae",
+        "permit_state": "ISSUED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-db-consume",
+        "call_kind": "turn",
+        "call_state": "ALLOCATED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t5-db-consume:t5-db-consume",
+        "permit_id": "fc66dafc-d111-5ea1-a9a6-b477def52514",
+        "permit_state": "ISSUED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-post-forward-db-failure",
+        "call_kind": "turn",
+        "call_state": "CONSUMED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t5-post-forward-db-failure:t5-post-forward-db-failure",
+        "permit_id": "f256f384-dac6-5413-b2b7-8c0a06a748b5",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-authorize-revision",
+        "call_kind": "turn",
+        "call_state": "ALLOCATED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t5-revision:t5-revision",
+        "permit_id": "04708fc0-6f61-5ae3-a964-972570dabec1",
+        "permit_state": "ISSUED",
+        "provider_call_id": null,
+        "settlement_state": null
+      }
+    ],
+    "fake_provider_forward_requests": 7,
+    "fake_provider_responses": [
+      "fake-response-1",
+      "fake-response-2",
+      "fake-response-3",
+      "fake-response-4",
+      "fake-response-5",
+      "fake-response-7"
+    ],
+    "inbox_counts": {
+      "pending": 1,
+      "processed": 22,
+      "rows": 23
+    },
+    "ledger_effect_counts": [
+      {
+        "count": 18,
+        "effect_type": "HOLD"
+      },
+      {
+        "count": 4,
+        "effect_type": "RELEASE"
+      },
+      {
+        "count": 10,
+        "effect_type": "SETTLE"
+      }
+    ],
+    "pending_call_reasons": [
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t2-compaction",
+        "call_state": "QUIESCENT",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2:roles",
+        "permit_state": "CONSUMED",
+        "reason": "usage_conflict_requires_reconciliation",
+        "settlement_state": "CONFLICT"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-consumed-before-send",
+        "call_state": "CONSUMED",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2:roles",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-consume-failure",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2:roles",
+        "permit_state": "REVOKED",
+        "reason": "permit_revoked_before_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "33aebd74-1ef4-4b15-8786-6f99d78d0e68",
+        "call_state": "UNKNOWN",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t4:disconnect",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-authorize-cancellation",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t5-cancellation:t5-cancellation",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-db-consume",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t5-db-consume:t5-db-consume",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-post-forward-db-failure",
+        "call_state": "CONSUMED",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t5-post-forward-db-failure:t5-post-forward-db-failure",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-authorize-revision",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t5-revision:t5-revision",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      }
+    ],
+    "provider_gateway_metrics": {
+      "observation_conflicts": 0,
+      "observation_write_attempts": 11,
+      "observation_write_failures": 1,
+      "upstream_forward_attempts": 7
+    },
+    "provider_gateway_requests": {
+      "requests": 20,
+      "status_counts": {
+        "200": 7,
+        "401": 1,
+        "402": 10,
+        "404": 1,
+        "500": 1
+      }
+    },
+    "real_provider_calls": 0
+  },
+  "overall_status": "pass",
+  "probe": "phase3-runtime-dispatch",
+  "real_provider_calls": 0,
+  "results": {
+    "T1_actual_db_runtime_gateway_fake_provider": {
+      "agent_tools": [],
+      "blocked_tool_attempts": 0,
+      "call_plan": {
+        "compaction_calls": 0,
+        "main_turn_calls": 1,
+        "max_input_tokens": 16384,
+        "max_output_tokens": 64,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "consumed_permit_count": 1,
+      "disabled_toolset_confirmed": true,
+      "fake_provider_requests": 1,
+      "operation": {
+        "accounting_call_id": "e4fd4f21-7a44-47c0-85ad-01e4e695be81",
+        "attempt_status": "SUCCEEDED",
+        "call_kind": "turn",
+        "call_status": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "dispatch_state": "QUIESCENT",
+        "evaluated_cost_usd": "0.000045",
+        "execution_state": "QUIESCENT",
+        "hold_state": "QUIESCENT",
+        "permit_id": "66ed3c4f-1f68-5955-8df6-b8e8bd304016",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-1",
+        "settlement_state": "SETTLED",
+        "state": "COMPLETED"
+      },
+      "outbox": {
+        "claim_fence": 1,
+        "send_intent_at": "2026-10-04 17:17:51.546190+00:00",
+        "send_intent_fence": 1,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "ACKED"
+      },
+      "passed": true,
+      "permit_count": 1,
+      "repeated_collect_no_resend_or_duplicate_settlement": true,
+      "settlement_ledger_entries": 2,
+      "terminal_applied_after_gateway_commit": true,
+      "terminal_waited_for_individual_call_evidence": true,
+      "tool_executor_calls": 0
+    },
+    "T1_same_accounting_id_replay": {
+      "blocked_without_forward": true,
+      "error": null,
+      "passed": true,
+      "provider_requests_after": 1,
+      "provider_requests_before": 1,
+      "status": 402
+    },
+    "T2_actual_runtime_compaction": {
+      "all_calls_quiescent_and_settled": true,
+      "bridge_stderr_tail": "",
+      "call_kinds": [
+        "compaction",
+        "turn"
+      ],
+      "call_plan": {
+        "compaction_calls": 2,
+        "main_turn_calls": 1,
+        "max_input_tokens": 8192,
+        "max_output_tokens": 64,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "call_records": [
+        {
+          "accounting_call_id": "5ba6333e-f268-4ee0-8b78-3956511f1953",
+          "attempt_status": "SUCCEEDED",
+          "call_kind": "compaction",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "dispatch_state": "QUIESCENT",
+          "evaluated_cost_usd": "0.000045",
+          "execution_state": "QUIESCENT",
+          "hold_state": "QUIESCENT",
+          "permit_id": "a1e0830b-e6e6-5d3e-ae40-cc92c48473e3",
+          "permit_state": "CONSUMED",
+          "provider_call_id": "fake-response-2",
+          "settlement_state": "SETTLED",
+          "state": "COMPLETED"
+        },
+        {
+          "accounting_call_id": "9c6f9e28-a446-4702-9fe3-71cdd1c3e17d",
+          "attempt_status": "SUCCEEDED",
+          "call_kind": "turn",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "dispatch_state": "QUIESCENT",
+          "evaluated_cost_usd": "0.000045",
+          "execution_state": "QUIESCENT",
+          "hold_state": "QUIESCENT",
+          "permit_id": "e09e84f5-fc07-5d7e-a1f6-f315f806b92b",
+          "permit_state": "CONSUMED",
+          "provider_call_id": "fake-response-3",
+          "settlement_state": "SETTLED",
+          "state": "COMPLETED"
+        }
+      ],
+      "consumed_permit_count": 2,
+      "fake_provider_requests": 2,
+      "operation": {
+        "accounting_call_id": "5ba6333e-f268-4ee0-8b78-3956511f1953",
+        "attempt_status": "SUCCEEDED",
+        "call_kind": "compaction",
+        "call_status": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "dispatch_state": "QUIESCENT",
+        "evaluated_cost_usd": "0.000045",
+        "execution_state": "QUIESCENT",
+        "hold_state": "QUIESCENT",
+        "permit_id": "a1e0830b-e6e6-5d3e-ae40-cc92c48473e3",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-2",
+        "settlement_state": "SETTLED",
+        "state": "COMPLETED"
+      },
+      "outbox": {
+        "claim_fence": 1,
+        "send_intent_at": "2026-10-04 17:17:52.878158+00:00",
+        "send_intent_fence": 1,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "ACKED"
+      },
+      "passed": true,
+      "permit_count": 2,
+      "physical_call_count": 2,
+      "runtime_observation": {
+        "events": [
+          {
+            "binding": {
+              "agent_registry_id": "ha:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction",
+              "attempt_id": "attempt:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction:runtime-compaction",
+              "conversation_id": "local-conv-4",
+              "fence": 1,
+              "input_revision": 1,
+              "provider_agent_id": "agent-local-a1b6c7cd-b6d3-4d35-baf5-3c88453dd48d",
+              "task_id": "task:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction"
+            },
+            "business_result": null,
+            "error_code": null,
+            "event_id": "operation:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction:runtime-compaction:7:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction:runtime-compaction",
+            "schema_version": "1",
+            "success": null,
+            "usage": {
+              "accounting_call_id": "5ba6333e-f268-4ee0-8b78-3956511f1953",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 4,
+              "provider_call_id": "fake-response-2",
+              "source": "runtime_reported",
+              "total_tokens": 41
+            }
+          },
+          {
+            "binding": {
+              "agent_registry_id": "ha:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction",
+              "attempt_id": "attempt:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction:runtime-compaction",
+              "conversation_id": "local-conv-4",
+              "fence": 1,
+              "input_revision": 1,
+              "provider_agent_id": "agent-local-a1b6c7cd-b6d3-4d35-baf5-3c88453dd48d",
+              "task_id": "task:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction"
+            },
+            "business_result": null,
+            "error_code": null,
+            "event_id": "operation:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction:runtime-compaction:10:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "operation:p3-20261004T171744Z-51ed97ac:t2-runtime-compaction:runtime-compaction",
+            "schema_version": "1",
+            "success": null,
+            "usage": {
+              "accounting_call_id": "9c6f9e28-a446-4702-9fe3-71cdd1c3e17d",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 4,
+              "provider_call_id": "fake-response-3",
+              "source": "runtime_reported",
+              "total_tokens": 41
+            }
+          }
+        ],
+        "state": "COMPLETE"
+      },
+      "settlement_ledger_entries": 4
+    },
+    "T2_roles_retry_and_compaction_plan": {
+      "call_plan": {
+        "compaction_calls": 3,
+        "main_turn_calls": 1,
+        "max_input_tokens": 128,
+        "max_output_tokens": 16,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "call_records": [
+        {
+          "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t2-compaction",
+          "attempt_status": "PENDING",
+          "call_kind": "compaction",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "dispatch_state": "SEND_INTENT",
+          "evaluated_cost_usd": "0.000045",
+          "execution_state": "PENDING",
+          "hold_state": "PENDING",
+          "permit_id": "8829b7c3-2094-5400-8cce-b1cfedda870c",
+          "permit_state": "CONSUMED",
+          "provider_call_id": "fake-response-5",
+          "settlement_state": "SETTLED",
+          "state": "ADMITTED"
+        },
+        {
+          "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t2-main",
+          "attempt_status": "PENDING",
+          "call_kind": "turn",
+          "call_status": "QUIESCENT",
+          "completeness": null,
+          "dispatch_state": "SEND_INTENT",
+          "evaluated_cost_usd": null,
+          "execution_state": "PENDING",
+          "hold_state": "PENDING",
+          "permit_id": "f1b4b4e1-bc2b-5863-84cf-1f539757976a",
+          "permit_state": "CONSUMED",
+          "provider_call_id": null,
+          "settlement_state": null,
+          "state": "ADMITTED"
+        },
+        {
+          "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-consumed-before-send",
+          "attempt_status": "PENDING",
+          "call_kind": "compaction",
+          "call_status": "CONSUMED",
+          "completeness": null,
+          "dispatch_state": "SEND_INTENT",
+          "evaluated_cost_usd": null,
+          "execution_state": "PENDING",
+          "hold_state": "PENDING",
+          "permit_id": "cd040c31-086c-5448-abfa-8d7e9637dca9",
+          "permit_state": "CONSUMED",
+          "provider_call_id": null,
+          "settlement_state": null,
+          "state": "ADMITTED"
+        },
+        {
+          "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t5-consume-failure",
+          "attempt_status": "PENDING",
+          "call_kind": "compaction",
+          "call_status": "ALLOCATED",
+          "completeness": null,
+          "dispatch_state": "SEND_INTENT",
+          "evaluated_cost_usd": null,
+          "execution_state": "PENDING",
+          "hold_state": "PENDING",
+          "permit_id": "d21193d4-258e-5c88-97ef-68440c79a06d",
+          "permit_state": "REVOKED",
+          "provider_call_id": null,
+          "settlement_state": null,
+          "state": "ADMITTED"
+        }
+      ],
+      "compaction_and_main_have_distinct_accounting_ids": true,
+      "compaction_limit_enforced": true,
+      "compaction_status": 200,
+      "concurrent_claim_count": 1,
+      "consumed_permit_count": 3,
+      "expired_send_marker_reclaimed": false,
+      "extra_compaction_status": 402,
+      "invalid_binding_status": 402,
+      "main_turn_status": 500,
+      "operation": {
+        "accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t2-compaction",
+        "attempt_status": "PENDING",
+        "call_kind": "compaction",
+        "call_status": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "dispatch_state": "SEND_INTENT",
+        "evaluated_cost_usd": "0.000045",
+        "execution_state": "PENDING",
+        "hold_state": "PENDING",
+        "permit_id": "8829b7c3-2094-5400-8cce-b1cfedda870c",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-5",
+        "settlement_state": "SETTLED",
+        "state": "ADMITTED"
+      },
+      "outbox": {
+        "claim_fence": 2,
+        "send_intent_at": "2026-10-04 17:17:54.212879+00:00",
+        "send_intent_fence": 2,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "CLAIMED"
+      },
+      "passed": true,
+      "permit_consume_failure_blocked": true,
+      "permit_count": 4,
+      "permit_failure_forward_delta": 0,
+      "retry_provider_request_delta": 0,
+      "same_consumed_id_replay_status": 402,
+      "settlement_ledger_entries": 2,
+      "stale_ack_blocked": true,
+      "stale_claim_fence_blocked": true,
+      "unapproved_500_retry_blocked": true,
+      "unapproved_retry_status": 402
+    },
+    "T3_outbox_claim_fence_and_send_marker": {
+      "concurrent_claim_count": 1,
+      "expired_send_marker_reclaimed": false,
+      "passed": true,
+      "pre_send_claim_expiry_reclaimed": true,
+      "stale_ack_blocked": true,
+      "stale_claim_fence_blocked": true
+    },
+    "T4_bridge_loss_keeps_unknown_hold": {
+      "call_plan": {
+        "compaction_calls": 0,
+        "main_turn_calls": 1,
+        "max_input_tokens": 16384,
+        "max_output_tokens": 64,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "call_records": [
+        {
+          "accounting_call_id": "33aebd74-1ef4-4b15-8786-6f99d78d0e68",
+          "attempt_status": "DISPATCHED",
+          "call_kind": "turn",
+          "call_status": "RUNNING",
+          "completeness": null,
+          "dispatch_state": "UNKNOWN",
+          "evaluated_cost_usd": null,
+          "execution_state": "UNKNOWN",
+          "hold_state": "UNKNOWN",
+          "permit_id": "a1b0f510-79dc-5309-8232-f0b79dd39a42",
+          "permit_state": "CONSUMED",
+          "provider_call_id": null,
+          "settlement_state": null,
+          "state": "UNKNOWN"
+        }
+      ],
+      "consumed_permit_count": 1,
+      "fake_provider_requests": 1,
+      "new_claim_after_unknown": false,
+      "operation": {
+        "accounting_call_id": "33aebd74-1ef4-4b15-8786-6f99d78d0e68",
+        "attempt_status": "DISPATCHED",
+        "call_kind": "turn",
+        "call_status": "RUNNING",
+        "completeness": null,
+        "dispatch_state": "UNKNOWN",
+        "evaluated_cost_usd": null,
+        "execution_state": "UNKNOWN",
+        "hold_state": "UNKNOWN",
+        "permit_id": "a1b0f510-79dc-5309-8232-f0b79dd39a42",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": null,
+        "state": "UNKNOWN"
+      },
+      "outbox": {
+        "claim_fence": 1,
+        "send_intent_at": "2026-10-04 17:17:58.352046+00:00",
+        "send_intent_fence": 1,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "ACKED"
+      },
+      "passed": true,
+      "permit_count": 1,
+      "sdk_terminal_without_provider_quiescence_blocked": true,
+      "session_reprepare_blocked_by_db_hold": true,
+      "settlement_ledger_entries": 0,
+      "state_after_sdk_terminal_only": "UNKNOWN"
+    },
+    "T5_db_and_permit_failures_do_not_forward": {
+      "authorization_then_cancellation_race": {
+        "authorized_before_mutation": true,
+        "blocked_before_forward": true,
+        "gateway_status": 402,
+        "permit_state": "ISSUED",
+        "provider_call_state": "ALLOCATED",
+        "provider_forward_delta": 0,
+        "task_mutation_result": "STOPPING"
+      },
+      "authorization_then_revision_race": {
+        "authorized_before_mutation": true,
+        "blocked_before_forward": true,
+        "gateway_status": 402,
+        "permit_state": "ISSUED",
+        "provider_call_state": "ALLOCATED",
+        "provider_forward_delta": 0,
+        "task_mutation_result": 2
+      },
+      "authorize_storage_failure": {
+        "blocked_before_forward": true,
+        "gateway_status": 402,
+        "permit_state": null,
+        "provider_call_state": null,
+        "provider_forward_delta": 0
+      },
+      "consume_storage_failure": {
+        "blocked_before_forward": true,
+        "gateway_status": 402,
+        "permit_state": "ISSUED",
+        "provider_call_state": "ALLOCATED",
+        "provider_forward_delta": 0
+      },
+      "invalid_binding_status": 402,
+      "passed": true,
+      "post_forward_observation_storage_failure": {
+        "blocked_after_write_failure": true,
+        "call_state_after_write_failure": "CONSUMED",
+        "first_gateway_status": 200,
+        "first_provider_forward_delta": 1,
+        "observation_write_failure_delta": 1,
+        "permit_state_after_write_failure": "CONSUMED",
+        "replay_provider_forward_delta": 0,
+        "same_id_replay_status": 402,
+        "settlement_state_after_write_failure": null
+      },
+      "provider_forward_delta_for_failures": 0,
+      "revoked_permit_consume_blocked": true,
+      "same_consumed_id_replay_status": 402
+    },
+    "T6_inbox_replay_and_conflict": {
+      "conflict_projection_state": "CONFLICT",
+      "conflicting_payload_preserved": true,
+      "conflicting_terminal_outcome_preserved": true,
+      "late_conflict_did_not_reverse_spend": true,
+      "late_usage_accounting_call_id": "acc:p3-20261004T171744Z-51ed97ac:t2-main",
+      "late_usage_after_cancel_settled_original_call": true,
+      "late_usage_call_state": "QUIESCENT",
+      "late_usage_settlement_ledger_entries": 2,
+      "late_usage_settlement_state": "SETTLED",
+      "late_usage_task_state": "STOPPING",
+      "new_pending_row_inserted": true,
+      "passed": true,
+      "processed_duplicate_is_noop": true,
+      "restart_pending_inbox_processed_count": 1,
+      "restart_pending_inbox_scan_ran": true,
+      "terminal_replay_is_noop": true,
+      "unprocessed_insert_duplicate": true,
+      "unprocessed_row_applied": true
+    },
+    "T7_private_gateway_fail_closed": {
+      "external_test_profile_rejected": true,
+      "invalid_bearer_status": 401,
+      "open_proxy_status": 404,
+      "passed": true,
+      "production_settings_rejected_without_profile": true,
+      "real_provider_calls": 0
+    }
+  },
+  "run_id": "p3-20261004T171744Z-51ed97ac",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "verification": {
+    "command": "uv run python scripts/phase3_verify.py",
+    "commands": [
+      {
+        "command": "python -m compileall -q src scripts tests",
+        "exit_code": 0,
+        "name": "python_compile",
+        "status": "passed"
+      },
+      {
+        "command": "python -m unittest discover -s tests/contract -p test_phase3_bridge_and_gateway.py -v",
+        "exit_code": 0,
+        "name": "phase3_contract_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 6,
+        "tests_run": 6
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "phase2_migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_TEST_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m unittest discover -s tests/persistence -v",
+        "exit_code": 0,
+        "name": "phase2_postgres_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 19,
+        "tests_run": 19
+      },
+      {
+        "command": "npm test (pinned Node.js 22.19.0)",
+        "exit_code": 0,
+        "name": "bridge_tests_and_build",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 15,
+        "tests_run": 15
+      },
+      {
+        "checks_failed": 0,
+        "checks_passed": 7,
+        "checks_run": 7,
+        "command": "python -c <generated schema byte comparison>",
+        "exit_code": 0,
+        "name": "schema_reproducibility",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic downgrade 0004_terminal_inbox",
+        "exit_code": 1,
+        "name": "migration_downgrade",
+        "status": "failed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_reupgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check_after_reupgrade",
+        "status": "passed"
+      },
+      {
+        "command": "git diff --check",
+        "exit_code": 0,
+        "name": "diff_check",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3_runtime_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_probe",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3b_single_hekate_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_single_hekate_probe",
+        "status": "passed"
+      }
+    ],
+    "commands_failed": 1,
+    "commands_passed": 13,
+    "commands_run": 14,
+    "phase3b_artifact": "integration/runtime/artifacts/p3b-20261004T171800Z-09a16445.json",
+    "phase3b_runtime_scenarios": {
+      "failed_count": 0,
+      "passed_count": 8,
+      "scenario_count": 8
+    },
+    "runtime_scenarios": {
+      "command": "uv run python scripts/phase3_runtime_probe.py",
+      "failed_count": 0,
+      "passed_count": 9,
+      "scenario_count": 9,
+      "scenario_results": {
+        "T1_actual_db_runtime_gateway_fake_provider": true,
+        "T1_same_accounting_id_replay": true,
+        "T2_actual_runtime_compaction": true,
+        "T2_roles_retry_and_compaction_plan": true,
+        "T3_outbox_claim_fence_and_send_marker": true,
+        "T4_bridge_loss_keeps_unknown_hold": true,
+        "T5_db_and_permit_failures_do_not_forward": true,
+        "T6_inbox_replay_and_conflict": true,
+        "T7_private_gateway_fail_closed": true
+      },
+      "scope": "PostgreSQL + pinned Letta App Server + Python bridge + DB gateway + isolated fake provider"
+    },
+    "status": "failed"
+  },
+  "working_tree_change_count_at_probe": 125,
+  "working_tree_dirty_at_probe": true
+}
