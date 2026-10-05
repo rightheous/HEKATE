@@ -8,6 +8,7 @@ from uuid import NAMESPACE_URL, uuid5
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from hekate.domain.errors import Conflict
 from hekate.domain.models import (
     ConclusionCapsule, DissentExcerpt, EvidenceRecord, Objection, PositionBody, PositionTopicView, PositionView,
     PositionVersionRecord, StoredConclusion,
@@ -295,6 +296,20 @@ class PostgresKnowledgeRepository:
         return (await self.connection.execute(select(tables.artifacts).where(
             tables.artifacts.c.storage_state.in_(["DELETE_PENDING", "DELETE_FAILED"]),
         ).order_by(tables.artifacts.c.created_at, tables.artifacts.c.artifact_ref).limit(limit))).mappings().all()
+
+    async def archive_delete_is_pending(self, ref: str) -> bool:
+        artifact = (await self.connection.execute(select(tables.artifacts).where(
+            tables.artifacts.c.artifact_ref == ref,
+            tables.artifacts.c.storage_state.in_(["DELETE_PENDING", "DELETE_FAILED"]),
+        ).with_for_update())).mappings().one_or_none()
+        if artifact is None:
+            return False
+        active = await self.connection.scalar(select(func.count()).select_from(tables.evidence).where(
+            tables.evidence.c.artifact_ref == ref,
+            tables.evidence.c.availability.in_(["AVAILABLE", "STAGED"]),
+            (tables.evidence.c.expiry_at.is_(None)) | (tables.evidence.c.expiry_at > aware_now()),
+        ))
+        return not active
 
     async def expire_evidence(self, now: datetime, limit: int) -> tuple[str, ...]:
         rows = (await self.connection.execute(select(tables.evidence).where(

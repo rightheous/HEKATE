@@ -3,8 +3,10 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Mapping
 
+from hekate.application import evidence as evidence_app
 from hekate.application.operations import record_dispatch_accepted, record_dispatch_send_intent
 from hekate.application.results import process_business_result_inbox, process_pending_results, receive_business_result, receive_missing_business_result
 from hekate.application.runtime_inbox import InboxBinding, RuntimeInboxPayload, process_runtime_observation
@@ -23,6 +25,8 @@ from hekate.bootstrap import Container
 _LOG = logging.getLogger(__name__)
 CLAIM_BATCH = 4
 CLAIM_LEASE_SECONDS = 30
+EVIDENCE_MAINTENANCE_INTERVAL_SECONDS = 60
+EVIDENCE_MAINTENANCE_BATCH = 100
 REGISTRY_LEASE_SECONDS = 45
 HEARTBEAT_SECONDS = 10
 SHUTDOWN_DRAIN_SECONDS = 5
@@ -266,6 +270,14 @@ async def process_pending_inbox(factory: UowFactory, limit: int = 100, processor
     return processed
 
 
+async def run_evidence_maintenance_tick(
+    factory: UowFactory, archive_root: Path, *, now: datetime | None = None,
+) -> dict[str, object]:
+    return await evidence_app.expire(
+        factory, archive_root, now or datetime.now(UTC), EVIDENCE_MAINTENANCE_BATCH,
+    )
+
+
 async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
     await container.runtime.verify_compatibility()
     worker = container.settings.worker_id
@@ -284,6 +296,7 @@ async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
     heartbeat.add_done_callback(lambda task: stop_event.set() if not task.cancelled() and task.exception() else None)
     dispatches: set[asyncio.Task[None]] = set()
     next_maintenance = 0.0
+    next_evidence_maintenance = 0.0
     try:
         while not stop_event.is_set():
             now = asyncio.get_running_loop().time()
@@ -304,6 +317,19 @@ async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
                     except Exception as error:
                         _LOG.error("queued Task preparation failed: %s: %s", type(error).__name__, str(error)[:240])
                 next_maintenance = now + 1.0
+            if now >= next_evidence_maintenance:
+                try:
+                    cleanup = await run_evidence_maintenance_tick(
+                        container.uow_factory, container.settings.archive_dir,
+                    )
+                    if cleanup["failed_artifacts"]:
+                        _LOG.warning(
+                            "Evidence archive cleanup failed for %d artifact(s)",
+                            len(cleanup["failed_artifacts"]),
+                        )
+                except Exception as error:
+                    _LOG.error("Evidence maintenance failed: %s: %s", type(error).__name__, str(error)[:240])
+                next_evidence_maintenance = now + EVIDENCE_MAINTENANCE_INTERVAL_SECONDS
             dispatches = {task for task in dispatches if not task.done()}
             if len(dispatches) < CLAIM_BATCH:
                 async with container.uow_factory() as uow:

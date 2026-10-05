@@ -1,0 +1,437 @@
+{
+  "accounting": {
+    "note": "The permit-consumption race intentionally leaves one issued, unconsumed fixture allocation; it was not normalized or settled without execution evidence.",
+    "unresolved_or_unsettled_provider_calls": 1
+  },
+  "artifact": "integration/runtime/artifacts/p4-20261003T101358Z-22540d85.json",
+  "base_sha": "675cadfb1606884c6b7d3ff32bec2b8bb2b1630e",
+  "branch": "phase4-evidence-position",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "544a825db511ecd46ce522782eefccad9d00c86ce2dde457f097556a11a6755b",
+  "database": {
+    "database_name": "hekate_phase4_harden_20261003",
+    "migration_head": "0006_phase4_knowledge",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "executed_at": "2026-10-03T10:13:58.725031Z",
+  "executed_at_finished": "2026-10-03T10:14:19.807292Z",
+  "execution": {
+    "command": "uv run python scripts/phase4_evidence_position_probe.py --database-url postgresql+psycopg://<redacted>@127.0.0.1:55432/hekate_phase4_harden_20261003 --node-bin /tmp/node-v22.19.0/bin/node --node-archive /tmp/hekate-node-v22.19.0-linux-x64.tar.xz --artifact integration/runtime/artifacts/p4-20261003T101358Z-22540d85.json --hardening-only",
+    "database_preparation": "The disposable database was created by a short-lived Python wrapper using the PostgreSQL container configuration; credentials were not written to the artifact or console.",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL",
+      "HEKATE_NODE_BIN",
+      "HEKATE_NODE_ARCHIVE"
+    ],
+    "result": "pass"
+  },
+  "fake_provider": {
+    "gateway_route": "isolated-local-fake-only",
+    "http_requests": 3,
+    "real_provider_calls": 0,
+    "task_turn_requests": 3,
+    "turn_observations": [
+      {
+        "allowed_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "attempt_id": "9872ceb3-18e2-55b2-aa07-bd6ea665f942",
+        "base_position_version": 0,
+        "evidence_excerpt_bytes": 119,
+        "evidence_excerpts_truncated": [
+          false,
+          false
+        ],
+        "evidence_ids": [
+          "2e270a34-fcb4-4b9e-8f73-50b9e962e0ef",
+          "f7e85237-6e2f-4e46-bcec-395caafaf9be"
+        ],
+        "mode": "independent_exploration",
+        "persistent_dissent_ids": [],
+        "prompt_utf8_bytes": 10824,
+        "registry_id": "208f2b57-2ed3-5131-b00f-03c7ff69c15c",
+        "request_hash": "f088151982cdb311ba935939bf93cc3f65096a7431a29c44684ef5d65b45f32e",
+        "schema_hash_matches_generated": true,
+        "target_position_version": null,
+        "task_id": "8c045b32-922e-46f6-88bb-6fc6f030c739",
+        "topic_id": "hardening-baseline-p4-20261003T101358Z-22540d85"
+      },
+      {
+        "allowed_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "attempt_id": "ae7ccf24-9828-513b-a87d-fac225931e80",
+        "base_position_version": 0,
+        "evidence_excerpt_bytes": 119,
+        "evidence_excerpts_truncated": [
+          false,
+          false
+        ],
+        "evidence_ids": [
+          "2e270a34-fcb4-4b9e-8f73-50b9e962e0ef",
+          "f7e85237-6e2f-4e46-bcec-395caafaf9be"
+        ],
+        "mode": "independent_exploration",
+        "persistent_dissent_ids": [],
+        "prompt_utf8_bytes": 10827,
+        "registry_id": "208f2b57-2ed3-5131-b00f-03c7ff69c15c",
+        "request_hash": "1c923a34524a68a5dad33316f957929fc3ad430b9e8a0369ebe1181e665a209b",
+        "schema_hash_matches_generated": true,
+        "target_position_version": null,
+        "task_id": "64890ea0-a48b-43d3-8ee3-a13c05c99372",
+        "topic_id": "deadline-after-effect-p4-20261003T101358Z-22540d85"
+      },
+      {
+        "allowed_actions": [
+          "answer",
+          "request_information",
+          "abstain",
+          "commit"
+        ],
+        "attempt_id": "82945e87-707f-59d2-8581-85dc3562ddfc",
+        "base_position_version": 0,
+        "evidence_excerpt_bytes": 119,
+        "evidence_excerpts_truncated": [
+          false,
+          false
+        ],
+        "evidence_ids": [
+          "2e270a34-fcb4-4b9e-8f73-50b9e962e0ef",
+          "f7e85237-6e2f-4e46-bcec-395caafaf9be"
+        ],
+        "mode": "independent_exploration",
+        "persistent_dissent_ids": [],
+        "prompt_utf8_bytes": 10822,
+        "registry_id": "208f2b57-2ed3-5131-b00f-03c7ff69c15c",
+        "request_hash": "8f5361c888aebc83195450e4b26ad84edd578d5258c23f29a90ad61a9b1e8bff",
+        "schema_hash_matches_generated": true,
+        "target_position_version": null,
+        "task_id": "0c457c6c-209f-4be7-9670-db711822d3d9",
+        "topic_id": "adoption-failure-p4-20261003T101358Z-22540d85"
+      }
+    ]
+  },
+  "fake_provider_requests": 3,
+  "final_counts": {
+    "evidence": 7,
+    "position_receipts": 2,
+    "position_versions": 2,
+    "provider_calls": 4,
+    "tasks": 4
+  },
+  "limitations": [
+    "Provider traffic used only the pinned local App Server, private permit gateway, and synthetic fake provider.",
+    "Production dispatch remains closed; no real provider credentials or route were configured.",
+    "G7 same-execution resume and G8 exact full-request tokenization remain follow-up boundaries.",
+    "Task frame byte limits are not asserted as exact input token limits.",
+    "Letta memory projection remains unsupported and durably pending; PostgreSQL is authoritative."
+  ],
+  "overall_status": "pass",
+  "position_projection": {
+    "applied_watermark": 0,
+    "passed": true,
+    "pending_projection_outbox_rows": 2,
+    "projection_calls": 0
+  },
+  "probe": "phase4-evidence-position",
+  "real_provider_calls": 0,
+  "results": {
+    "deadline_after_position_effect": {
+      "accounting_before_after_replay": [
+        {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        }
+      ],
+      "clock_trace": [
+        "before_deadline",
+        "before_deadline",
+        "after_deadline",
+        "after_deadline"
+      ],
+      "deadline": "2026-10-03T10:15:44.464542+00:00",
+      "initial_apply": {
+        "inbox_id": "2c36f1a7-bdf3-486b-b05a-1a248d596304",
+        "processed": true,
+        "state": "LATE"
+      },
+      "operation_id": "e8d341eb-6fd3-5041-886b-295c939af68e",
+      "passed": true,
+      "position_counts": {
+        "receipts": 0,
+        "responses": 0,
+        "versions": 0
+      },
+      "position_effects_after_late": {
+        "conclusion_eligible": false,
+        "current_version": 0,
+        "projection_intents": 0,
+        "projections": 0,
+        "receipts": 0,
+        "result_state": "LATE",
+        "stop_reason": "DEADLINE",
+        "success_responses": 0,
+        "versions": 0
+      },
+      "provider_requests_before_after_replay": [
+        2,
+        2
+      ],
+      "replay": {
+        "inbox_id": "2c36f1a7-bdf3-486b-b05a-1a248d596304",
+        "processed": true,
+        "state": "LATE"
+      },
+      "task_id": "64890ea0-a48b-43d3-8ee3-a13c05c99372",
+      "task_state": "FAILED",
+      "topic_id": "deadline-after-effect-p4-20261003T101358Z-22540d85"
+    },
+    "evidence_registration_and_scope": {
+      "access_scope_is_server_owned": true,
+      "bounded_readable_view": true,
+      "cross_scope_body_denied": true,
+      "derived_evidence_id": "2e270a34-fcb4-4b9e-8f73-50b9e962e0ef",
+      "derived_root_source_ids": [
+        "f7e85237-6e2f-4e46-bcec-395caafaf9be"
+      ],
+      "evidence_id": "f7e85237-6e2f-4e46-bcec-395caafaf9be",
+      "passed": true,
+      "reference_validation": true,
+      "root_source_preserved": true,
+      "same_request_key_changed_content_conflicts": true,
+      "same_request_key_same_content_returns_same_id": true
+    },
+    "hardening_baseline_commit": {
+      "passed": true,
+      "position_version": 1,
+      "task_id": "8c045b32-922e-46f6-88bb-6fc6f030c739",
+      "task_state": "COMPLETED",
+      "worker_after_maintenance_failure": {
+        "calls": 1,
+        "injected_failure": true
+      }
+    },
+    "provider_permit_evidence_revalidation": {
+      "compaction_boundary": {
+        "gateway_status": 402,
+        "planned_compaction_calls": 1,
+        "provider_row": {}
+      },
+      "consume_boundary": {
+        "call_status": "ALLOCATED",
+        "gateway_status": 402,
+        "permit_id_issued": "0616cf60-46fc-58a5-82dd-f5c07d899d71",
+        "permit_state": "ISSUED"
+      },
+      "fake_provider_requests_before_after": [
+        3,
+        3
+      ],
+      "issue_boundary": {
+        "gateway_status": 402,
+        "provider_rows": []
+      },
+      "operation_id": "465e3613-7b9b-533d-b923-223ec0506597",
+      "passed": true,
+      "send_intent_recorded": true,
+      "task_id": "f4ad5c4b-85a9-48a8-8a00-01e4797943c8",
+      "upstream_forward_attempts_before_after": [
+        3,
+        3
+      ]
+    },
+    "task_adoption_failure_rolls_back_position": {
+      "accounting_before_retry_after_replay": [
+        {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        }
+      ],
+      "injected_failure_after_task_response_write": true,
+      "operation_id": "25a4e3f4-7eb1-559c-b5f7-12ba2e55daa4",
+      "passed": true,
+      "position_counts_after_replay": {
+        "receipts": 1,
+        "responses": 1,
+        "versions": 1
+      },
+      "position_counts_after_retry": {
+        "receipts": 1,
+        "responses": 1,
+        "versions": 1
+      },
+      "replay": {
+        "inbox_id": "73a79169-3b55-42e0-8194-b194e3be188c",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "retry": {
+        "inbox_id": "73a79169-3b55-42e0-8194-b194e3be188c",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "state_after_rollback_before_retry": {
+        "current_version": null,
+        "projection_intents": 0,
+        "projections": 0,
+        "receipts": 0,
+        "responses": 0,
+        "result_state": "WAITING_EXECUTION",
+        "status": "RUNNING",
+        "versions": 0
+      },
+      "task_id": "0c457c6c-209f-4be7-9670-db711822d3d9",
+      "task_state_after_retry": "COMPLETED",
+      "topic_id": "adoption-failure-p4-20261003T101358Z-22540d85"
+    },
+    "worker_evidence_maintenance": {
+      "batch_limit": 100,
+      "concurrent_cleanup": {
+        "same_intent_contention": {
+          "archive_file_missing": true,
+          "artifact_state": "DELETED",
+          "filesystem_delete_calls": 1,
+          "first_tick": {
+            "deleted_artifacts": [
+              "sha256:66a09341d3fb59acd936205e28f294c76b1f975c56e9d9304d55f53149984e74"
+            ],
+            "expired_evidence": 1,
+            "failed_artifacts": []
+          },
+          "passed": true,
+          "second_tick": {
+            "deleted_artifacts": [],
+            "expired_evidence": 0,
+            "failed_artifacts": []
+          },
+          "source_input_retained": true
+        },
+        "stale_cleaner_after_reregistration": {
+          "artifact_state": "AVAILABLE",
+          "content_hash_matches": true,
+          "fresh_cleanup": {
+            "deleted_artifacts": [
+              "sha256:eca197e567aa0b7a37139d32ddf783c8e26edcf4aefb7bcf0fa8013da0ccca47"
+            ],
+            "expired_evidence": 0,
+            "failed_artifacts": []
+          },
+          "new_evidence_id": "0883d468-1f8e-4302-bc75-929db6220152",
+          "new_evidence_state": "AVAILABLE",
+          "old_evidence_id": "f1718b89-919a-4d89-a6fc-ef1515f71fe3",
+          "passed": true,
+          "source_input_retained": true,
+          "stale_cleanup": {
+            "deleted_artifacts": [],
+            "expired_evidence": 1,
+            "failed_artifacts": []
+          }
+        }
+      },
+      "delete_failure_and_retry": {
+        "failure_tick": {
+          "deleted_artifacts": [],
+          "expired_evidence": 1,
+          "failed_artifacts": [
+            "sha256:89f0d428b4bc06eae34e4b48248886a96722deede5a74a0e21e821d946e9e6ef"
+          ]
+        },
+        "passed": true,
+        "retry_tick": {
+          "deleted_artifacts": [
+            "sha256:89f0d428b4bc06eae34e4b48248886a96722deede5a74a0e21e821d946e9e6ef"
+          ],
+          "expired_evidence": 0,
+          "failed_artifacts": []
+        },
+        "source_input_retained": true,
+        "state_after_failure": "DELETE_FAILED",
+        "state_after_retry": "DELETED"
+      },
+      "expired_position_evidence": {
+        "passed": true,
+        "position_history_versions": [
+          1
+        ],
+        "source_inputs_retained": true,
+        "tick": {
+          "deleted_artifacts": [
+            "sha256:8511d72332c1b525b630a806e911a4ffbad3e12b6683d82e0c93384e77eb424f",
+            "sha256:2bfdf657aec76ad08b566f76da03bc3d42aec4677c7cccdcef7d91e6364553bb"
+          ],
+          "expired_evidence": 2,
+          "failed_artifacts": []
+        },
+        "tombstones": [
+          {
+            "availability": "EXPIRED",
+            "id": "2e270a34-fcb4-4b9e-8f73-50b9e962e0ef"
+          },
+          {
+            "availability": "EXPIRED",
+            "id": "f7e85237-6e2f-4e46-bcec-395caafaf9be"
+          }
+        ]
+      },
+      "passed": true,
+      "shared_artifact": {
+        "artifact_state": "AVAILABLE",
+        "other_reference_state": "AVAILABLE",
+        "passed": true,
+        "source_input_retained": true,
+        "tick": {
+          "deleted_artifacts": [],
+          "expired_evidence": 1,
+          "failed_artifacts": []
+        }
+      },
+      "tick_interval_seconds": 60
+    }
+  },
+  "run_id": "p4-20261003T101358Z-22540d85",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "summary": {
+    "failed_scenarios": [],
+    "passed_count": 5,
+    "required_scenarios": [
+      "hardening_baseline_commit",
+      "deadline_after_position_effect",
+      "task_adoption_failure_rolls_back_position",
+      "provider_permit_evidence_revalidation",
+      "worker_evidence_maintenance"
+    ]
+  }
+}

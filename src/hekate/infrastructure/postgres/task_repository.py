@@ -269,7 +269,8 @@ class PostgresTaskRepository:
         }
 
     async def finalize_task_response(
-        self, task_id: TaskId, revision: int, response: Mapping[str, object], *, successful: bool,
+        self, task_id: TaskId, revision: int, response: Mapping[str, object], *,
+        successful: bool, accepted_at: datetime | None = None,
     ) -> bool:
         task = await self.lock_task(task_id)
         existing = await self.get_task_response(task_id)
@@ -287,7 +288,7 @@ class PostgresTaskRepository:
             tables.tasks.c.input_revision == revision,
             tables.tasks.c.status == TaskStatus.RUNNING.value,
             tables.tasks.c.cancel_requested_at.is_(None),
-            tables.tasks.c.deadline > datetime.now(timezone.utc),
+            tables.tasks.c.deadline > (accepted_at or datetime.now(timezone.utc)),
         )
         changed = await self.connection.execute(query.values(**values))
         if changed.rowcount != 1:
@@ -306,7 +307,9 @@ class PostgresTaskRepository:
         ))
         return True
 
-    async def resolve_task_after_execution(self, task_id: TaskId, revision: int) -> Task | None:
+    async def resolve_task_after_execution(
+        self, task_id: TaskId, revision: int, *, now: datetime | None = None,
+    ) -> Task | None:
         task = await self.lock_task(task_id)
         if task.input_revision != revision or task.status not in {
             TaskStatus.RUNNING, TaskStatus.WAITING, TaskStatus.STOPPING,
@@ -317,7 +320,7 @@ class PostgresTaskRepository:
                 return None
             status, outcome = transition_task(task.status, TaskEvent.CANCEL), "CANCELLED"
             stop_reason = task.stop_reason or StopReason.USER_CANCELLED.value
-        elif task.deadline <= aware_now():
+        elif task.deadline <= (now or aware_now()):
             status, outcome = transition_task(task.status, TaskEvent.FAIL), "FAILED"
             stop_reason = StopReason.DEADLINE.value
         else:

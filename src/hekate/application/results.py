@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from typing import Literal
 from uuid import NAMESPACE_URL, uuid5
@@ -15,7 +16,7 @@ from hekate.application.positions import _propose_commit_in_uow
 from hekate.domain.bridge_contracts import BridgeBusinessResult, BridgeEvent
 from hekate.domain.capsules import parse_hekate_turn_output, validate_capsule_binding
 from hekate.domain.contracts import canonical_json, canonical_json_hash
-from hekate.domain.errors import Conflict, PolicyDenied
+from hekate.domain.errors import Conflict, PolicyDenied, StaleInput
 from hekate.domain.models import (
     CommitProposal, ConclusionCapsule, ContractModel, GuardBinding, HekateProposal, HekateTurnOutput,
     PositionCommitRequest, StoredConclusion,
@@ -286,7 +287,139 @@ async def process_business_result_inbox(factory: UowFactory, inbox_id: str) -> d
     return await apply_turn_result(factory, inbox_id)
 
 
-async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, object]:
+def _late_reason(task, current_scope, attempt, result, binding, now: datetime) -> str | None:
+    if (
+        task.scope != binding.scope or task.input_revision != binding.input_revision
+        or current_scope.principal_id != binding.principal_id
+        or current_scope.policy_version != binding.policy_version
+        or current_scope.authz_epoch != binding.authz_epoch
+        or attempt.operation_id != result["operation_id"]
+        or attempt.input_revision != binding.input_revision
+        or attempt.agent_registry_id != binding.agent_registry_id
+    ):
+        return "task_or_binding_changed"
+    if task.cancel_requested_at is not None:
+        return "task_cancelled"
+    if task.status == TaskStatus.FAILED and task.stop_reason == StopReason.DEADLINE.value:
+        return "deadline_elapsed"
+    if task.status in {TaskStatus.COMPLETED, TaskStatus.CANCELLED, TaskStatus.FAILED}:
+        return "task_already_terminal"
+    if task.deadline <= now:
+        return "deadline_elapsed"
+    if task.status != TaskStatus.RUNNING:
+        return "task_not_running"
+    return None
+
+
+def _policy_rejection(reason: str) -> bool:
+    return reason.startswith(("evidence_", "dissent_", "commit_", "authorization_")) or reason in {
+        "invalid_structured_output", "output_hash_mismatch", "output_truncated", "output_missing",
+        "output_not_valid", "structured_output_mismatch", "conclusion_binding_mismatch",
+        "conclusion_not_done", "unsupported_action", "empty_answer", "empty_reason",
+        "context_manifest_missing",
+    }
+
+
+async def _record_late_after_rollback(
+    factory: UowFactory, inbox_id: str, reason: str, clock: Callable[[], datetime],
+) -> dict[str, object]:
+    async with factory() as uow:
+        result = await uow.knowledge.lock_turn_result(inbox_id)
+        if result is None:
+            return {"inbox_id": inbox_id, "processed": False, "reason": "result_not_stored"}
+        if result["processing_state"] in {"REJECTED", "LATE", "ACCEPTED"}:
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": True, "state": result["processing_state"]}
+        operation = await uow.delivery.lock_operation(OperationId(result["operation_id"]))
+        binding = _restore_binding(operation)
+        await uow.tasks.lock_scope(binding.scope)
+        task = await uow.tasks.lock_task(binding.task_id)
+        attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
+        await uow.agents.lock_registry(binding.agent_registry_id)
+        if (
+            task.scope == binding.scope and task.input_revision == binding.input_revision
+            and attempt.operation_id == result["operation_id"]
+            and operation["execution_state"] == "QUIESCENT"
+        ):
+            await converge_task_execution(uow, binding.task_id, binding.input_revision, now=clock())
+        await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
+        if result["conclusion_id"]:
+            await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
+        await uow.delivery.append_audit({
+            "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+            "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
+            "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
+            "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
+        })
+        await uow.commit()
+        return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
+
+
+async def _record_commit_failure(
+    factory: UowFactory, inbox_id: str, failure: str, clock: Callable[[], datetime],
+) -> dict[str, object]:
+    async with factory() as uow:
+        result = await uow.knowledge.lock_turn_result(inbox_id)
+        if result is None:
+            return {"inbox_id": inbox_id, "processed": False, "reason": "result_not_stored"}
+        if result["processing_state"] in {"REJECTED", "LATE", "ACCEPTED"}:
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": True, "state": result["processing_state"]}
+        operation = await uow.delivery.lock_operation(OperationId(result["operation_id"]))
+        binding = _restore_binding(operation)
+        scope = await uow.tasks.lock_scope(binding.scope)
+        task = await uow.tasks.lock_task(binding.task_id)
+        attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
+        await uow.agents.lock_registry(binding.agent_registry_id)
+        terminal_reason = _late_reason(task, scope, attempt, result, binding, clock())
+        if terminal_reason is not None:
+            await uow.rollback()
+            return await _record_late_after_rollback(factory, inbox_id, terminal_reason, clock)
+        reason = failure or "commit_policy_rejected"
+        policy_rejection = _policy_rejection(reason)
+        response = {
+            "operation_id": result["operation_id"], "attempt_id": result["attempt_id"],
+            "registry_id": result["registry_id"], "source_inbox_id": inbox_id,
+            "proposal": result["proposal"],
+            "response_text": f"HEKATE could not complete this request ({reason}).",
+            "outcome": "FAILED",
+            "stop_reason": StopReason.POLICY.value if policy_rejection else StopReason.ERROR.value,
+        }
+        actor = ActorContext(
+            principal_id=binding.principal_id, scope=binding.scope,
+            authenticated_agent_registry_id=binding.agent_registry_id, task_id=binding.task_id,
+            attempt_id=binding.attempt_id, input_revision=binding.input_revision,
+            policy_version=binding.policy_version, authz_epoch=binding.authz_epoch,
+            fence=binding.fence,
+        )
+        try:
+            adopted = await complete_task(
+                uow, actor, binding.task_id, binding.input_revision, response,
+                successful=False, accepted_at=clock(),
+            )
+        except (Conflict, PolicyDenied, StaleInput):
+            await uow.rollback()
+            return await _record_late_after_rollback(factory, inbox_id, "task_changed_before_adoption", clock)
+        if not adopted:
+            await uow.rollback()
+            return await _record_late_after_rollback(factory, inbox_id, "task_changed_before_adoption", clock)
+        await uow.knowledge.update_turn_result(inbox_id, state="REJECTED", rejection_reason=reason)
+        if result["conclusion_id"]:
+            await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
+        await uow.delivery.append_audit({
+            "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+            "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
+            "registry_id": str(binding.agent_registry_id), "event_kind": "task.result_failed",
+            "safe_payload": {"output_hash": result["output_hash"], "outcome": "FAILED", "stop_reason": response["stop_reason"]},
+        })
+        await uow.commit()
+    return {"inbox_id": inbox_id, "processed": True, "state": "REJECTED"}
+
+
+async def apply_turn_result(
+    factory: UowFactory, inbox_id: str, *, clock: Callable[[], datetime] | None = None,
+) -> dict[str, object]:
+    current_time = clock or (lambda: datetime.now(UTC))
     async with factory() as uow:
         result = await uow.knowledge.lock_turn_result(inbox_id)
         if result is None:
@@ -299,11 +432,27 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
         current_scope = await uow.tasks.lock_scope(binding.scope)
         task = await uow.tasks.lock_task(binding.task_id)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
-        registry = await uow.agents.lock_registry(binding.agent_registry_id)
+        await uow.agents.lock_registry(binding.agent_registry_id)
         if operation["execution_state"] != "QUIESCENT":
             await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", delay_seconds=1)
             await uow.commit()
             return {"inbox_id": inbox_id, "processed": False, "pending": True}
+
+        late_reason = _late_reason(task, current_scope, attempt, result, binding, current_time())
+        if late_reason is not None:
+            if task.input_revision == binding.input_revision and task.scope == binding.scope:
+                await converge_task_execution(uow, binding.task_id, binding.input_revision, now=current_time())
+            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=late_reason)
+            if result["conclusion_id"]:
+                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, late_reason)
+            await uow.delivery.append_audit({
+                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
+                "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
+                "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
+                "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": late_reason},
+            })
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
 
         reason = result["rejection_reason"]
         operation_outcome = (operation.get("observation") or {}).get("outcome")
@@ -315,6 +464,7 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
         proposal_model: HekateProposal | None = None
         manifest_row = await uow.knowledge.get_context_manifest(OperationId(result["operation_id"]))
         manifest = manifest_row["manifest"] if manifest_row is not None else {}
+        conclusion_capsule: ConclusionCapsule | None = None
         if successful and reason is None and not isinstance(proposal, dict):
             successful = False
             reason = "proposal_missing"
@@ -356,10 +506,12 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
                         operation=operation, binding=binding, attempt=attempt,
                         conclusion_id=DomainId(result["conclusion_id"]),
                         conclusion_evidence_used=conclusion_capsule.evidence_used,
-                        manifest=manifest,
+                        manifest=manifest, now=current_time(),
                     )
                 except (PolicyDenied, Conflict) as error:
-                    successful, reason = False, str(error) or "commit_policy_rejected"
+                    failure = str(error) or "commit_policy_rejected"
+                    await uow.rollback()
+                    return await _record_commit_failure(factory, inbox_id, failure, current_time)
                 else:
                     response_text = receipt.response_text
                     outcome = "NEEDS_USER_INPUT" if receipt.conflict else "POSITION_COMMITTED"
@@ -370,63 +522,10 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
         if not successful or reason is not None:
             safe_reason = reason or "execution_failed"
             response_text = f"HEKATE could not complete this request ({safe_reason})."
-            policy_rejection = safe_reason.startswith(("evidence_", "dissent_", "commit_", "authorization_")) or safe_reason in {
-                "invalid_structured_output", "output_hash_mismatch", "output_truncated", "output_missing",
-                "output_not_valid", "structured_output_mismatch", "conclusion_binding_mismatch",
-                "conclusion_not_done", "unsupported_action", "empty_answer", "empty_reason",
-                "context_manifest_missing",
-            }
             outcome = "FAILED"
-            stop_reason = StopReason.POLICY.value if policy_rejection else StopReason.ERROR.value
+            stop_reason = StopReason.POLICY.value if _policy_rejection(safe_reason) else StopReason.ERROR.value
             successful = False
 
-        stale = (
-            task.scope != binding.scope or task.input_revision != binding.input_revision
-            or current_scope.principal_id != binding.principal_id
-            or current_scope.policy_version != binding.policy_version
-            or current_scope.authz_epoch != binding.authz_epoch
-            or attempt.operation_id != result["operation_id"]
-            or attempt.input_revision != binding.input_revision
-            or attempt.agent_registry_id != binding.agent_registry_id
-        )
-        if stale:
-            reason = "task_or_binding_changed"
-            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
-            if result["conclusion_id"]:
-                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
-            await uow.delivery.append_audit({
-                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
-                "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
-                "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
-                "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
-            })
-            await uow.commit()
-            return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
-        terminal_reason = None
-        if task.cancel_requested_at is not None:
-            terminal_reason = "task_cancelled"
-        elif task.status == TaskStatus.FAILED and task.stop_reason == StopReason.DEADLINE.value:
-            terminal_reason = "deadline_elapsed"
-        elif task.status in {TaskStatus.COMPLETED, TaskStatus.CANCELLED, TaskStatus.FAILED}:
-            terminal_reason = "task_already_terminal"
-        elif task.deadline <= datetime.now(UTC):
-            terminal_reason = "deadline_elapsed"
-        elif task.status != TaskStatus.RUNNING:
-            terminal_reason = "task_not_running"
-        if terminal_reason is not None:
-            await converge_task_execution(uow, binding.task_id, binding.input_revision)
-            reason = terminal_reason
-            await uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
-            if result["conclusion_id"]:
-                await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
-            await uow.delivery.append_audit({
-                "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
-                "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
-                "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
-                "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
-            })
-            await uow.commit()
-            return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
         response = {
             "operation_id": result["operation_id"], "attempt_id": result["attempt_id"],
             "registry_id": result["registry_id"], "source_inbox_id": inbox_id,
@@ -440,25 +539,17 @@ async def apply_turn_result(factory: UowFactory, inbox_id: str) -> dict[str, obj
             policy_version=binding.policy_version, authz_epoch=binding.authz_epoch,
             fence=binding.fence,
         )
-        adopted = await complete_task(
-            uow, actor, binding.task_id, binding.input_revision, response,
-            successful=successful,
-        )
+        try:
+            adopted = await complete_task(
+                uow, actor, binding.task_id, binding.input_revision, response,
+                successful=successful, accepted_at=current_time(),
+            )
+        except (Conflict, PolicyDenied, StaleInput):
+            await uow.rollback()
+            return await _record_late_after_rollback(factory, inbox_id, "task_changed_before_adoption", current_time)
         if not adopted:
             await uow.rollback()
-            reason = "task_changed_before_adoption"
-            async with factory() as late_uow:
-                await late_uow.knowledge.update_turn_result(inbox_id, state="LATE", rejection_reason=reason)
-                if result["conclusion_id"]:
-                    await late_uow.knowledge.set_conclusion_eligible(result["conclusion_id"], False, reason)
-                await late_uow.delivery.append_audit({
-                    "owner_scope": str(binding.scope), "task_id": str(binding.task_id),
-                    "attempt_id": str(binding.attempt_id), "operation_id": str(result["operation_id"]),
-                    "registry_id": str(binding.agent_registry_id), "event_kind": "business_result.late",
-                    "safe_payload": {"output_hash": result["output_hash"], "rejection_reason": reason},
-                })
-                await late_uow.commit()
-            return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
+            return await _record_late_after_rollback(factory, inbox_id, "task_changed_before_adoption", current_time)
         await uow.knowledge.update_turn_result(inbox_id, state="ACCEPTED" if successful else "REJECTED", rejection_reason=None if successful else reason or "execution_failed")
         if result["conclusion_id"]:
             await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], successful and reason is None, None if successful and reason is None else reason or "execution_failed")

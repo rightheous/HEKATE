@@ -220,14 +220,16 @@ async def cancel(
         }
 
 
-async def converge_task_execution(uow: UnitOfWork, task_id: TaskId, revision: Revision) -> Task | None:
+async def converge_task_execution(
+    uow: UnitOfWork, task_id: TaskId, revision: Revision, *, now: datetime | None = None,
+) -> Task | None:
     operations = await uow.delivery.task_execution_states(task_id)
     if not operations or any(
         operation["execution_state"] != "QUIESCENT" or operation["unconfirmed_calls"]
         for operation in operations
     ):
         return None
-    resolved = await uow.tasks.resolve_task_after_execution(task_id, revision)
+    resolved = await uow.tasks.resolve_task_after_execution(task_id, revision, now=now)
     if resolved is not None:
         await uow.delivery.append_audit({
             "owner_scope": str(resolved.scope), "task_id": str(task_id),
@@ -262,6 +264,7 @@ async def complete(
     response: Mapping[str, object],
     *,
     successful: bool,
+    accepted_at: datetime | None = None,
 ) -> bool:
     """Persist a scoped response and terminal Task state in the caller's UoW."""
     authorization = await uow.tasks.lock_scope(actor.scope)
@@ -277,5 +280,5 @@ async def complete(
     if task.input_revision != expected_revision:
         return False
     return await uow.tasks.finalize_task_response(
-        task_id, expected_revision, response, successful=successful,
+        task_id, expected_revision, response, successful=successful, accepted_at=accepted_at,
     )

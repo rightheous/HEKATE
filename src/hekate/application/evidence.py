@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,6 +17,7 @@ from hekate.ports.store import UowFactory
 
 
 MAX_EVIDENCE_BYTES = 1_048_576
+_LOG = logging.getLogger(__name__)
 
 
 async def _authorized_scope(uow, actor: ActorContext):
@@ -302,6 +304,56 @@ async def manifest_references_current(uow, scope: ScopeId, access_epoch: int, ma
     return True
 
 
+async def _delete_pending_artifact(
+    factory: UowFactory, archive_root: Path, ref: str, cancel_requested: asyncio.Event,
+) -> str:
+    """Own the archive lock until every filesystem and DB effect has finished."""
+    lock_fd = await asyncio.to_thread(archive.acquire_lock, archive_root, ref)
+    try:
+        if cancel_requested.is_set():
+            return "cancelled_before_delete"
+        async with factory() as uow:
+            eligible = await uow.knowledge.archive_delete_is_pending(ref)
+            await uow.commit()
+        if not eligible or cancel_requested.is_set():
+            return "skipped"
+        try:
+            await asyncio.to_thread(archive.delete_locked, archive_root, ref)
+        except (OSError, ValueError):
+            async with factory() as uow:
+                await uow.knowledge.finish_archive_delete(ref, deleted=False)
+                await uow.commit()
+            return "failed"
+        async with factory() as uow:
+            await uow.knowledge.finish_archive_delete(ref, deleted=True)
+            await uow.commit()
+        return "deleted"
+    finally:
+        await asyncio.to_thread(archive.release_lock, lock_fd)
+
+
+async def _wait_for_archive_delete(operation: asyncio.Task[str], cancel_requested: asyncio.Event) -> str:
+    try:
+        return await asyncio.shield(operation)
+    except asyncio.CancelledError:
+        # The child owns the descriptor and lock. Keep that owner alive until an
+        # in-flight flock/delete/close thread and its durable DB result are done.
+        cancel_requested.set()
+        while not operation.done():
+            try:
+                await asyncio.shield(operation)
+            except asyncio.CancelledError:
+                cancel_requested.set()
+            except Exception:
+                break
+        try:
+            operation.result()
+        except Exception as error:
+            # A failed result write leaves the durable delete intent pending.
+            _LOG.error("archive cleanup did not finish for its pending intent: %s: %s", type(error).__name__, str(error)[:240])
+        raise
+
+
 async def expire(
     factory: UowFactory, archive_root: Path, now: datetime, limit: int,
 ) -> dict[str, object]:
@@ -315,18 +367,16 @@ async def expire(
         await uow.commit()
     deleted, failed = [], []
     for item in pending:
-        try:
-            await asyncio.to_thread(archive.delete, archive_root, item["artifact_ref"])
-        except (OSError, ValueError):
-            async with factory() as uow:
-                await uow.knowledge.finish_archive_delete(item["artifact_ref"], deleted=False)
-                await uow.commit()
-            failed.append(item["artifact_ref"])
-        else:
-            async with factory() as uow:
-                await uow.knowledge.finish_archive_delete(item["artifact_ref"], deleted=True)
-                await uow.commit()
-            deleted.append(item["artifact_ref"])
+        ref = item["artifact_ref"]
+        cancel_requested = asyncio.Event()
+        operation = asyncio.create_task(_delete_pending_artifact(
+            factory, archive_root, ref, cancel_requested,
+        ))
+        outcome = await _wait_for_archive_delete(operation, cancel_requested)
+        if outcome == "deleted":
+            deleted.append(ref)
+        elif outcome == "failed":
+            failed.append(ref)
     return {"expired_evidence": len(expired), "deleted_artifacts": deleted, "failed_artifacts": failed}
 
 

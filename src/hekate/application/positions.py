@@ -71,7 +71,7 @@ async def read_history(factory: UowFactory, actor: ActorContext, topic_id: Topic
 async def _propose_commit_in_uow(
     uow, actor: ActorContext, request: PositionCommitRequest, *, runtime_operation_id: OperationId,
     operation: Mapping[str, object], binding, attempt, conclusion_id: DomainId,
-    conclusion_evidence_used: tuple[object, ...], manifest: Mapping[str, object],
+    conclusion_evidence_used: tuple[object, ...], manifest: Mapping[str, object], now: datetime | None = None,
 ) -> CommitReceipt:
     if actor.authenticated_agent_registry_id is None:
         raise PolicyDenied("Position commit requires a trusted HEKATE registry identity")
@@ -117,7 +117,7 @@ async def _propose_commit_in_uow(
         raise PolicyDenied("commit_requires_successful_quiescent_execution")
     if task.status != TaskStatus.RUNNING or task.cancel_requested_at is not None:
         raise PolicyDenied("commit_task_not_active")
-    if task.deadline <= datetime.now(UTC):
+    if task.deadline <= (now or datetime.now(UTC)):
         raise PolicyDenied("commit_task_deadline_elapsed")
 
     if (

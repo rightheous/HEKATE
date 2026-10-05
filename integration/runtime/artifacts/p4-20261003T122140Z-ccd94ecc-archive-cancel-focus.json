@@ -1,0 +1,225 @@
+{
+  "artifact": "integration/runtime/artifacts/p4-20261003T122140Z-ccd94ecc-archive-cancel-focus.json",
+  "base_sha": "675cadfb1606884c6b7d3ff32bec2b8bb2b1630e",
+  "branch": "phase4-evidence-position",
+  "checked_out_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "code_fingerprint_sha256": "02e6c1094d4ebdbb93a59c18bfcb28e834c00cebbbfc9a51f0c24237fe05f764",
+  "database": {
+    "database_name": "hekate_phase4_cancel_20261003_8f27559f",
+    "migration_head": "0006_phase4_knowledge",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "error": {
+    "message": "name 'Conflict' is not defined",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/hekate/hekate-phase4-evidence-position/scripts/phase4_evidence_position_probe.py\", line 1364, in _run\n    maintenance_result = await _hardening_maintenance_checks(\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase4-evidence-position/scripts/phase4_evidence_position_probe.py\", line 972, in _hardening_maintenance_checks\n    contention = await _maintenance_contention_scenarios(factory, engine, actor, archive_root, state_path, run_id)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase4-evidence-position/scripts/phase4_evidence_position_probe.py\", line 808, in _maintenance_contention_scenarios\n    premature_reregister = await evidence_app.register(\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase4-evidence-position/src/hekate/application/evidence.py\", line 135, in register\n    await uow.knowledge.stage_artifact(artifact_ref, digest, len(content), source.retention_class)\n  File \"/home/hekate/hekate-phase4-evidence-position/src/hekate/infrastructure/postgres/knowledge_repository.py\", line 250, in stage_artifact\n    raise Conflict(\"archive artifact deletion is pending; retry Evidence registration after cleanup\")\n          ^^^^^^^^\nNameError: name 'Conflict' is not defined\n",
+    "type": "NameError"
+  },
+  "executed_at": "2026-10-03T12:21:42.082966Z",
+  "executed_at_finished": "2026-10-03T12:22:02.960065Z",
+  "execution": {
+    "command": "uv run python scripts/phase4_evidence_position_probe.py --hardening-only",
+    "environment_variables": [
+      "HEKATE_TEST_DATABASE_URL",
+      "HEKATE_NODE_BIN",
+      "HEKATE_NODE_ARCHIVE"
+    ],
+    "result": "failed"
+  },
+  "fake_provider_requests": 3,
+  "final_counts": {
+    "evidence": 9,
+    "position_receipts": 2,
+    "position_versions": 2,
+    "provider_calls": 4,
+    "tasks": 4
+  },
+  "limitations": [
+    "Provider traffic used only the pinned local App Server, private permit gateway, and synthetic fake provider.",
+    "Production dispatch remains closed; no real provider credentials or route were configured.",
+    "G7 same-execution resume and G8 exact full-request tokenization remain follow-up boundaries.",
+    "Task frame byte limits are not asserted as exact input token limits.",
+    "Letta memory projection remains unsupported and durably pending; PostgreSQL is authoritative."
+  ],
+  "overall_status": "failed",
+  "probe": "phase4-evidence-position",
+  "real_provider_calls": 0,
+  "results": {
+    "deadline_after_position_effect": {
+      "accounting_before_after_replay": [
+        {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        }
+      ],
+      "clock_trace": [
+        "before_deadline",
+        "before_deadline",
+        "after_deadline",
+        "after_deadline"
+      ],
+      "deadline": "2026-10-03T12:23:27.706626+00:00",
+      "initial_apply": {
+        "inbox_id": "84812a97-359f-4813-b705-3324252eca1b",
+        "processed": true,
+        "state": "LATE"
+      },
+      "operation_id": "760eac4f-5439-5171-8f03-e2c7d1cb7141",
+      "passed": true,
+      "position_counts": {
+        "receipts": 0,
+        "responses": 0,
+        "versions": 0
+      },
+      "position_effects_after_late": {
+        "conclusion_eligible": false,
+        "current_version": 0,
+        "projection_intents": 0,
+        "projections": 0,
+        "receipts": 0,
+        "result_state": "LATE",
+        "stop_reason": "DEADLINE",
+        "success_responses": 0,
+        "versions": 0
+      },
+      "provider_requests_before_after_replay": [
+        2,
+        2
+      ],
+      "replay": {
+        "inbox_id": "84812a97-359f-4813-b705-3324252eca1b",
+        "processed": true,
+        "state": "LATE"
+      },
+      "task_id": "72374c1d-4331-498c-b6b1-8247d1172d91",
+      "task_state": "FAILED",
+      "topic_id": "deadline-after-effect-p4-20261003T122141Z-d7b946e4"
+    },
+    "evidence_registration_and_scope": {
+      "access_scope_is_server_owned": true,
+      "bounded_readable_view": true,
+      "cross_scope_body_denied": true,
+      "derived_evidence_id": "827d1bf3-3b4a-4a57-ab5d-c4556dfd8ccc",
+      "derived_root_source_ids": [
+        "5010849a-1a5c-497e-b810-dc993745e316"
+      ],
+      "evidence_id": "5010849a-1a5c-497e-b810-dc993745e316",
+      "passed": true,
+      "reference_validation": true,
+      "root_source_preserved": true,
+      "same_request_key_changed_content_conflicts": true,
+      "same_request_key_same_content_returns_same_id": true
+    },
+    "hardening_baseline_commit": {
+      "passed": true,
+      "position_version": 1,
+      "task_id": "3a0df125-3570-4faa-9ae6-fde8cf7b791a",
+      "task_state": "COMPLETED",
+      "worker_after_maintenance_failure": {
+        "calls": 1,
+        "injected_failure": true
+      }
+    },
+    "provider_permit_evidence_revalidation": {
+      "compaction_boundary": {
+        "gateway_status": 402,
+        "planned_compaction_calls": 1,
+        "provider_row": {}
+      },
+      "consume_boundary": {
+        "call_status": "ALLOCATED",
+        "gateway_status": 402,
+        "permit_id_issued": "3b490fbe-a7e0-5ce5-b8e1-ff041a72ffad",
+        "permit_state": "ISSUED"
+      },
+      "fake_provider_requests_before_after": [
+        3,
+        3
+      ],
+      "issue_boundary": {
+        "gateway_status": 402,
+        "provider_rows": []
+      },
+      "operation_id": "f54165d9-d634-5da1-a93e-d5a0a7d8357b",
+      "passed": true,
+      "send_intent_recorded": true,
+      "task_id": "7fb50176-2502-4adc-8303-f0fc3a76f913",
+      "upstream_forward_attempts_before_after": [
+        3,
+        3
+      ]
+    },
+    "task_adoption_failure_rolls_back_position": {
+      "accounting_before_retry_after_replay": [
+        {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        {
+          "consumed_permits": 1,
+          "ledger_entries": 6,
+          "permits": 1,
+          "provider_calls": 1
+        }
+      ],
+      "injected_failure_after_task_response_write": true,
+      "operation_id": "9868d9c6-5827-5be7-97b2-6a1cedbcc863",
+      "passed": true,
+      "position_counts_after_replay": {
+        "receipts": 1,
+        "responses": 1,
+        "versions": 1
+      },
+      "position_counts_after_retry": {
+        "receipts": 1,
+        "responses": 1,
+        "versions": 1
+      },
+      "replay": {
+        "inbox_id": "fcea3496-0abf-46a3-80a7-086765d6f74c",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "retry": {
+        "inbox_id": "fcea3496-0abf-46a3-80a7-086765d6f74c",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      "state_after_rollback_before_retry": {
+        "current_version": null,
+        "projection_intents": 0,
+        "projections": 0,
+        "receipts": 0,
+        "responses": 0,
+        "result_state": "WAITING_EXECUTION",
+        "status": "RUNNING",
+        "versions": 0
+      },
+      "task_id": "9ca45d29-fa97-4924-befd-89a9813edbc5",
+      "task_state_after_retry": "COMPLETED",
+      "topic_id": "adoption-failure-p4-20261003T122141Z-d7b946e4"
+    }
+  },
+  "run_id": "p4-20261003T122141Z-d7b946e4",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:0dec5424dc76defe8138abbbb97dcae5a427550e2ff3cfb3e2c21255a55ed0e9",
+    "runtime_patch_sha256": "e45bab7a65db8710d1e0e79573547faa4c7ef4ba16816367629cb6fbd7b0ee6f",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1"
+}
