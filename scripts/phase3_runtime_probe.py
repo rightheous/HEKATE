@@ -103,6 +103,11 @@ class FakeProvider:
         self.behaviors: deque[str] = deque()
         self.requests: list[dict[str, object]] = []
         self.response_factory: Callable[[dict[str, object]], str] | None = None
+        self.sse_response_factory: Callable[
+            [dict[str, object], str, str, dict[str, int]],
+            tuple[list[bytes | tuple[bytes, float]], dict[str, object]],
+        ] | None = None
+        self.sse_response_observations: list[dict[str, object]] = []
         self.inspect_test_tokens = False
         self.request_seen = threading.Event()
         self.release_block = threading.Event()
@@ -180,6 +185,67 @@ class FakeProvider:
                 structured_call = structured_tool and isinstance(assistant_content, dict)
                 call_id = f"fake-structured-call-{sequence}"
                 if request_body.get("stream") is True:
+                    with owner.lock:
+                        sse_response_factory = owner.sse_response_factory
+                    if sse_response_factory is not None and not structured_call:
+                        try:
+                            wire_chunks, stream_observation = sse_response_factory(
+                                request_body, assistant_content, response_id, usage,
+                            )
+                        except Exception:
+                            self._reply(500, b'{"error":{"message":"isolated SSE fixture rejected the request"}}')
+                            return
+                        with owner.lock:
+                            owner.sse_response_observations.append(stream_observation)
+                        stream_observation["fake_http_status"] = None
+                        stream_observation["fake_http_headers_sent"] = False
+                        stream_observation["fake_http_body_bytes_sent"] = 0
+                        stream_observation["fake_http_body_completed"] = False
+                        initial_response_delay = stream_observation.get("initial_response_delay_seconds", 0)
+                        if (
+                            not isinstance(initial_response_delay, (int, float))
+                            or initial_response_delay < 0
+                            or initial_response_delay > 30
+                        ):
+                            self._reply(500, b'{"error":{"message":"isolated SSE fixture has an invalid response delay"}}')
+                            return
+                        if initial_response_delay:
+                            time.sleep(initial_response_delay)
+                        self.protocol_version = "HTTP/1.1"
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/event-stream")
+                        self.send_header("Transfer-Encoding", "chunked")
+                        self.end_headers()
+                        stream_observation["fake_http_status"] = 200
+                        stream_observation["fake_http_headers_sent"] = True
+                        try:
+                            for item in wire_chunks:
+                                if isinstance(item, tuple):
+                                    wire_chunk, delay_seconds = item
+                                    if not isinstance(wire_chunk, bytes) or not isinstance(delay_seconds, (int, float)):
+                                        raise TypeError("timed SSE chunks must be (bytes, seconds) pairs")
+                                    if delay_seconds < 0 or delay_seconds > 5:
+                                        raise ValueError("timed SSE chunk delay is outside the five-second replay bound")
+                                    if delay_seconds:
+                                        time.sleep(delay_seconds)
+                                else:
+                                    wire_chunk = item
+                                if not wire_chunk:
+                                    continue
+                                self.wfile.write(f"{len(wire_chunk):X}\r\n".encode("ascii"))
+                                self.wfile.write(wire_chunk)
+                                self.wfile.write(b"\r\n")
+                                self.wfile.flush()
+                                stream_observation["fake_http_body_bytes_sent"] = (
+                                    int(stream_observation["fake_http_body_bytes_sent"]) + len(wire_chunk)
+                                )
+                            self.wfile.write(b"0\r\n\r\n")
+                            self.wfile.flush()
+                            stream_observation["fake_http_body_completed"] = True
+                        except (BrokenPipeError, ConnectionResetError):
+                            stream_observation["fake_http_body_interrupted"] = True
+                            return
+                        return
                     if structured_call:
                         chunks = [
                             {"id": response_id, "object": "chat.completion.chunk", "created": 1,
@@ -236,6 +302,16 @@ class FakeProvider:
     def set_response_factory(self, factory: Callable[[dict[str, object]], str] | None) -> None:
         with self.lock:
             self.response_factory = factory
+
+    def set_sse_response_factory(
+        self,
+        factory: Callable[
+            [dict[str, object], str, str, dict[str, int]],
+            tuple[list[bytes | tuple[bytes, float]], dict[str, object]],
+        ] | None,
+    ) -> None:
+        with self.lock:
+            self.sse_response_factory = factory
 
     def enable_test_token_inspection(self) -> None:
         with self.lock:
@@ -308,7 +384,7 @@ class Phase3Sandbox(p1.DockerSandbox):
         self.token_path.write_text(token, encoding="utf-8")
         self.token_path.chmod(0o600)
         self.port = p1.APP_PORT
-        p1.run([
+        command = [
             "docker", "run", "--detach", "--name", self.container,
             "--network", self.network,
             "--env", "HEKATE_REQUIRE_PROVIDER_BINDING=1",
@@ -316,10 +392,20 @@ class Phase3Sandbox(p1.DockerSandbox):
             "--add-host", f"hekate-fake-provider:{self.gateway_address}",
             "--mount", f"type=bind,source={self.state},target=/root/.letta",
             "--mount", f"type=bind,source={self.token_path},target=/run/secrets/hekate-ws-token,readonly",
+        ]
+        observation_directory = getattr(self, "adapter_observation_directory", None)
+        if observation_directory is not None:
+            command.extend([
+                "--env", "HEKATE_OUTPUT_OBSERVATION_FILE=/run/hekate-output-observation/adapter-observations.jsonl",
+                "--env", "HEKATE_OUTPUT_OBSERVATION_RAW=1",
+                "--mount", f"type=bind,source={observation_directory},target=/run/hekate-output-observation",
+            ])
+        command.extend([
             self.image,
             "letta", "--backend", "local", "server", "--listen", f"ws://0.0.0.0:{p1.APP_PORT}",
             "--ws-auth", "capability-token", "--ws-token-file", "/run/secrets/hekate-ws-token",
-        ], timeout=120)
+        ])
+        p1.run(command, timeout=120)
         self.container_created = True
         end = time.monotonic() + 90
         while time.monotonic() < end:

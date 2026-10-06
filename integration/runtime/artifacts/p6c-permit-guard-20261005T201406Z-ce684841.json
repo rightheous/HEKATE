@@ -1,0 +1,187 @@
+{
+  "actual_provider_inference_calls": 0,
+  "branch": "phase6c-ollama-qwen-profile",
+  "code_fingerprint_sha256": "add0993ad7479d5094b7839b2bac117c3958002b76a5b3652dc99df66d361eac",
+  "database": {
+    "container_disposition": "stopped and auto-removed after focused verification",
+    "database": "hekate_phase2_test",
+    "existing_fixture_databases_accessed": false,
+    "host": "127.0.0.1",
+    "image": "postgres:16.15",
+    "isolated_fresh_container": true,
+    "migration_head": "0013_provider_token_measurement",
+    "port": 55449,
+    "version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "executed_at": "2026-10-05T20:14:06.297294Z",
+  "executed_commands": [
+    "HEKATE_DATABASE_URL=<isolated-loopback-postgresql-url> .venv/bin/python -m alembic upgrade head",
+    "HEKATE_DATABASE_URL=<isolated-loopback-postgresql-url> .venv/bin/python -m alembic check",
+    "HEKATE_TEST_DATABASE_URL=<same-isolated-loopback-postgresql-url> .venv/bin/python focused unittest: T4 single-use + unregistered-call/no-permit guard"
+  ],
+  "fake_provider_requests_in_focused_run": 0,
+  "fingerprint_files": [
+    {
+      "bytes": 29082,
+      "path": "bridge/letta/src/main.ts",
+      "sha256": "888bcd93e44f322310877059d5b089c79567528937ca058eef83b0c25d0abb69"
+    },
+    {
+      "bytes": 7527,
+      "path": "bridge/letta/src/protocol.ts",
+      "sha256": "8332ee2e22239654f6c9ba55f4bced997648a0793cd1f9f4162b9adf9b1331d3"
+    },
+    {
+      "bytes": 5216,
+      "path": "config/local-candidates.yaml",
+      "sha256": "328d582b6af8fe34df154b209f5db3fabf2e23a2f2a005155d354776affc486f"
+    },
+    {
+      "bytes": 39085,
+      "path": "contracts/generated/bridge.v1.schema.json",
+      "sha256": "87c60a59cb5ec3689e7653b716a594a149b934bf7d4e9143222da0af52bb0e33"
+    },
+    {
+      "bytes": 13344,
+      "path": "docs/implementation/phase6c-ollama-qwen-profile.md",
+      "sha256": "424666f0516723a8804213d4a7867c8dd6b2775ebaff88fcdada6eae94de612a"
+    },
+    {
+      "bytes": 10059,
+      "path": "integration/runtime/fixtures/qwen35-renderer-tokenizer-v1.json",
+      "sha256": "18767749bad4b998bb1fd7322c9904c9ade72de09821686bd03661a1e74f3e41"
+    },
+    {
+      "bytes": 1122,
+      "path": "pyproject.toml",
+      "sha256": "6ac20065ee3e9423930601eea8af1092df857895c5ceb2d9e6f0e91da3f66232"
+    },
+    {
+      "bytes": 3428,
+      "path": "scripts/build_qwen35_unicode_flags.py",
+      "sha256": "141acd43566d8f0eff98751d21503dbf5576e9b5fab6da3a7c7ea309bdc8a54a"
+    },
+    {
+      "bytes": 1080,
+      "path": "scripts/export_contracts.py",
+      "sha256": "a5e2ce3586c266829e7fe8fa4fa4b92342f000e7d617c606baaf5c39b47f6df5"
+    },
+    {
+      "bytes": 49327,
+      "path": "scripts/phase6c_ollama_qwen_probe.py",
+      "sha256": "59d863d680b965311ba206febb30814135e237a082f884c98a238dd657da187e"
+    },
+    {
+      "bytes": 82336,
+      "path": "src/hekate/application/lifecycle.py",
+      "sha256": "ff69faf8dd14406cf228441701f5e86d28944a55ebcfefea4f678f752fea16cf"
+    },
+    {
+      "bytes": 30655,
+      "path": "src/hekate/application/operations.py",
+      "sha256": "61c1f3d4fb0f25b01a0f1cfbac07d5e07dc5536a3ee8a19b50c9c4db2a23525f"
+    },
+    {
+      "bytes": 70583,
+      "path": "src/hekate/application/turns.py",
+      "sha256": "d19da887b49126cf4d2c682fb44f0bf6339024acbe5d4b9210582e1e397c2252"
+    },
+    {
+      "bytes": 9448,
+      "path": "src/hekate/domain/bridge_contracts.py",
+      "sha256": "e7be903b0c095d7e900315e52bb66053d3e2b0387b22d6d6024121869777d9c8"
+    },
+    {
+      "bytes": 42513,
+      "path": "src/hekate/domain/models.py",
+      "sha256": "8afae7bded3e6ffa0c5a07afc9cc3407f0cb74bdad31537ecb80c1f5eb61caa8"
+    },
+    {
+      "bytes": 11803,
+      "path": "src/hekate/infrastructure/letta/adapter.py",
+      "sha256": "be3a4d2a1a160a4a2172e69b2ad3ae93c1e4c5b1eeffdb6f55718b634c631a9e"
+    },
+    {
+      "bytes": 7960382,
+      "path": "src/hekate/infrastructure/letta/assets/qwen35_installed_tokenizer.v1.json",
+      "sha256": "136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f"
+    },
+    {
+      "bytes": 31786,
+      "path": "src/hekate/infrastructure/letta/assets/qwen35_unicode_flags.v1.json",
+      "sha256": "3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69"
+    },
+    {
+      "bytes": 25260,
+      "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+      "sha256": "21a6eea7d93cc4cdc0743195eb76faa4134ed3283ad7ddb929c5ac5969ef5495"
+    },
+    {
+      "bytes": 42309,
+      "path": "src/hekate/infrastructure/letta/qwen_ollama.py",
+      "sha256": "d38ada4b68f23352741c3773fc8ba14147159f594a7ae27fb963509d91eb7b27"
+    },
+    {
+      "bytes": 19974,
+      "path": "src/hekate/infrastructure/letta/token_accounting.py",
+      "sha256": "44ea1efe3d365e1debb4d41c010960e9eaa42295e9b06d332a2baa27a277c3d3"
+    },
+    {
+      "bytes": 1937,
+      "path": "src/hekate/ports/runtime.py",
+      "sha256": "5b83330c93b5c5a2e81e2685a07b7f5beaf8eae06b3ba84ebd4402579cf8d8fe"
+    },
+    {
+      "bytes": 19314,
+      "path": "src/hekate/settings.py",
+      "sha256": "5018c1108e1044accbe931a2f028965d7a94fd6c7726a8fe8de927bd7dff7b60"
+    },
+    {
+      "bytes": 10169,
+      "path": "tests/unit/test_qwen_ollama.py",
+      "sha256": "77dd4535d4af1a5ad662621f6bf799228ca690e6e27fa40f45c0412258fef255"
+    }
+  ],
+  "fingerprint_method": "scripts/phase6c_ollama_qwen_probe.py::_fingerprint over the 24 implementation/probe/fixture/doc files listed below",
+  "head": "9c25acca594d3edb5db4f2ce710e490b7e6d95b7",
+  "probe": "phase6c-postgresql-permit-guard-regression",
+  "production_dispatch": "blocked",
+  "related_runtime_probe": {
+    "actual_ollama_inference_requests": 0,
+    "artifact": "integration/runtime/artifacts/p6c-20261005T200837Z-60478a24-ollama-qwen-runtime.json",
+    "fake_provider_requests": 1,
+    "metadata_requests": 6,
+    "permit_state": "CONSUMED",
+    "request_and_profile_digest_binding": "matched final normalized upstream bytes and frozen profile",
+    "status": "pass"
+  },
+  "run_id": "p6c-permit-guard-20261005T201406Z-ce684841",
+  "schema_version": "1",
+  "supplemental_test_source": {
+    "path": "tests/persistence/test_phase2_postgres.py",
+    "sha256": "1da865e9b7d23476c86df796263a7d679dec2ac299ac4e4d28d415ba372c9834"
+  },
+  "tests": {
+    "execution_boundary": "PostgreSQL application permit API regression; this focused run made no gateway or upstream request.",
+    "scenarios": {
+      "single_use_concurrent_consumption": {
+        "asserted_one_consumer_and_one_UnknownExecution": true,
+        "result": "pass",
+        "test_id": "Phase2PostgresTests.test_t4_single_use_multiple_same_kind_slots_and_cancel"
+      },
+      "unregistered_call_without_issued_permit": {
+        "expected_rejection": "StaleInput",
+        "permit_rows_after_rejection": 0,
+        "provider_call_rows_after_rejection": 0,
+        "result": "pass",
+        "spend_ledger_rows_after_rejection": 0
+      }
+    },
+    "status": "pass",
+    "tests_run": 2
+  },
+  "unexecuted": [
+    "No real Ollama generation request was issued.",
+    "The focused no-permit assertion exercised the PostgreSQL application API, not a separately forged gateway HTTP request; the related runtime probe exercised the actual gateway with a valid consumed permit."
+  ]
+}

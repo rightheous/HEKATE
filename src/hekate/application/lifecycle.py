@@ -172,8 +172,10 @@ async def ensure_hekate(
                 "persistence": "persistent",
                 "registry_id": str(record.registry_id),
                 "model": config.letta_model,
+                "context_window_tokens": config.letta_context_estimator_tokens or config.context_window_tokens,
                 "max_input_tokens": config.max_input_tokens,
                 "max_output_tokens": config.max_output_tokens,
+                **({"system_prompt": config.agent_system_prompt} if config.agent_system_prompt is not None else {}),
             }, record.creation_operation_id)
             provider_id = ProviderAgentId(str(_field(created, "provider_agent_id")))
             _assert_hekate_runtime_identity(
@@ -1351,8 +1353,10 @@ async def create_from_intent(
                 "owner": str(owner), "creation_tag": creation_tag, "role": "critic",
                 "persistence": "ephemeral", "registry_id": str(workflow.critic_registry_id),
                 "model": critic_config.letta_model,
+                "context_window_tokens": critic_config.context_window_tokens,
                 "max_input_tokens": critic_config.max_input_tokens,
                 "max_output_tokens": critic_config.max_output_tokens,
+                **({"system_prompt": critic_config.agent_system_prompt} if critic_config.agent_system_prompt is not None else {}),
             }, workflow.create_operation_id)
             observation = {
                 "provider_agent_id": str(_field(created, "provider_agent_id")),

@@ -1,11 +1,12 @@
 import {
   LettaAgentClient,
+  type LettaCodeRemoteClientOptions,
   type LettaCodeSession,
   type SDKMessage,
 } from "@letta-ai/letta-agent-sdk";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -40,9 +41,225 @@ interface SessionEntry {
 const MAX_FRAME_BYTES = 1_048_576;
 const structuredOutputProbe = process.env.HEKATE_STRUCTURED_OUTPUT_PROBE === "1";
 const MAX_BUSINESS_OUTPUT_BYTES = 65_536;
+const outputObservationFile = process.env.HEKATE_OUTPUT_OBSERVATION_FILE;
+const outputObservationRaw = outputObservationFile !== undefined && process.env.HEKATE_OUTPUT_OBSERVATION_RAW === "1";
 const sessions = new Map<string, SessionEntry>();
 const appServerUrl = process.env.HEKATE_LETTA_URL;
 if (!appServerUrl) throw new Error("HEKATE_LETTA_URL is required");
+const DEFAULT_SESSION_TURN_TIMEOUT_MS = 240_000;
+const configuredTurnTimeout = process.env.HEKATE_LETTA_TURN_TIMEOUT_MS;
+const sessionTurnTimeoutMs = configuredTurnTimeout === undefined ? DEFAULT_SESSION_TURN_TIMEOUT_MS : Number(configuredTurnTimeout);
+if (!Number.isInteger(sessionTurnTimeoutMs) || sessionTurnTimeoutMs < 1 || sessionTurnTimeoutMs > 240_000) {
+  throw new Error("HEKATE_LETTA_TURN_TIMEOUT_MS must be an integer from 1 through 240000");
+}
+
+type OutputChannelSummary = {
+  event_count: number;
+  utf8_bytes: number;
+  hash: ReturnType<typeof createHash>;
+  run_ids: Set<string>;
+  message_ids: Set<string>;
+  otids: Set<string>;
+  events: Array<Record<string, unknown>>;
+};
+
+const appServerOutputByOperation = new Map<
+  string,
+  { assistant: OutputChannelSummary; reasoning: OutputChannelSummary }
+>();
+const appServerEventOrderByOperation = new Map<string, Array<Record<string, unknown>>>();
+const operationByConversation = new Map<string, string>();
+const operationByRunId = new Map<string, string>();
+const appServerRawBytesByOperation = new Map<string, number>();
+
+function emptyOutputChannelSummary(): OutputChannelSummary {
+  return {
+    event_count: 0,
+    utf8_bytes: 0,
+    hash: createHash("sha256"),
+    run_ids: new Set(),
+    message_ids: new Set(),
+    otids: new Set(),
+    events: [],
+  };
+}
+
+function outputChannelSnapshot(value: OutputChannelSummary): Record<string, unknown> {
+  return {
+    event_count: value.event_count,
+    utf8_bytes: value.utf8_bytes,
+    sha256: value.hash.copy().digest("hex"),
+    run_ids: [...value.run_ids].sort(),
+    message_ids: [...value.message_ids].sort(),
+    otids: [...value.otids].sort(),
+    events: value.events,
+  };
+}
+
+function appServerOutputSnapshot(operationId: string): Record<string, unknown> {
+  const value = appServerOutputByOperation.get(operationId);
+  return {
+    kind: "app_server_stream_snapshot",
+    operation_id: operationId,
+    assistant: outputChannelSnapshot(value?.assistant ?? emptyOutputChannelSummary()),
+    reasoning: outputChannelSnapshot(value?.reasoning ?? emptyOutputChannelSummary()),
+    event_order: appServerEventOrderByOperation.get(operationId) ?? [],
+  };
+}
+
+function appendOutputObservation(value: Record<string, unknown>): void {
+  if (!outputObservationFile) return;
+  try {
+    appendFileSync(outputObservationFile, `${JSON.stringify(value)}\n`);
+  } catch {
+    // Diagnostic I/O must not change the runtime output or terminal decision.
+  }
+}
+
+function boundedUtf8Prefix(value: string, limit: number): Buffer {
+  let text = "";
+  let bytes = 0;
+  for (const point of Array.from(value)) {
+    const length = Buffer.byteLength(point, "utf8");
+    if (bytes + length > limit) break;
+    text += point;
+    bytes += length;
+  }
+  return Buffer.from(text, "utf8");
+}
+
+function protocolText(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    return value.map((part) => {
+      if (typeof part === "string") return part;
+      if (!part || typeof part !== "object") return "";
+      const record = part as Record<string, unknown>;
+      return typeof record.text === "string" ? record.text : "";
+    }).join("");
+  }
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return typeof record.text === "string" ? record.text : undefined;
+  }
+  return undefined;
+}
+
+function messageDataText(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (value instanceof ArrayBuffer) return Buffer.from(value).toString("utf8");
+  if (value instanceof Uint8Array) return Buffer.from(value).toString("utf8");
+  return undefined;
+}
+
+function observeAppServerMessage(data: unknown): void {
+  if (!outputObservationFile) return;
+  const raw = messageDataText(data);
+  if (raw === undefined) return;
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return;
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return;
+  const message = value as Record<string, unknown>;
+  if (message.type !== "stream_delta" || !message.delta || typeof message.delta !== "object") return;
+  const delta = message.delta as Record<string, unknown>;
+  const messageType = delta.message_type;
+  const channel = messageType === "assistant_message"
+    ? "assistant"
+    : messageType === "reasoning_message" ? "reasoning" : undefined;
+  const runtime = message.runtime && typeof message.runtime === "object"
+    ? message.runtime as Record<string, unknown>
+    : undefined;
+  const conversationId = typeof message.conversation_id === "string"
+    ? message.conversation_id
+    : typeof runtime?.conversation_id === "string" ? runtime.conversation_id : undefined;
+  const runId = typeof delta.run_id === "string" ? delta.run_id : undefined;
+  const operationId = (runId ? operationByRunId.get(runId) : undefined) ??
+    (conversationId ? operationByConversation.get(conversationId) : undefined);
+  if (!operationId) return;
+  if (runId && !operationByRunId.has(runId)) operationByRunId.set(runId, operationId);
+  const order = appServerEventOrderByOperation.get(operationId) ?? [];
+  const sequence = order.length + 1;
+  order.push({
+    sequence,
+    event_type: typeof messageType === "string" ? messageType : "unknown",
+    run_id: runId ?? null,
+    message_id: typeof delta.id === "string" ? delta.id : null,
+    otid: typeof delta.otid === "string" ? delta.otid : null,
+    received_at_unix_ms: Date.now(),
+  });
+  appServerEventOrderByOperation.set(operationId, order);
+  if (!channel) {
+    appendOutputObservation({
+      kind: "app_server_stream_event",
+      operation_id: operationId,
+      ...order[order.length - 1],
+    });
+    return;
+  }
+  const content = channel === "assistant"
+    ? protocolText(delta.content)
+    : (typeof delta.reasoning === "string" ? delta.reasoning : protocolText(delta.content));
+  if (!content) return;
+  let summary = appServerOutputByOperation.get(operationId);
+  if (!summary) {
+    summary = { assistant: emptyOutputChannelSummary(), reasoning: emptyOutputChannelSummary() };
+    appServerOutputByOperation.set(operationId, summary);
+  }
+  const channelSummary = summary[channel];
+  const bytes = Buffer.from(content, "utf8");
+  if (channel === "assistant" && outputObservationRaw) {
+    const rawPath = process.env.HEKATE_OUTPUT_APP_SERVER_RAW_FILE;
+    const previousBytes = appServerRawBytesByOperation.get(operationId) ?? 0;
+    const retained = boundedUtf8Prefix(content, Math.max(0, MAX_BUSINESS_OUTPUT_BYTES - previousBytes));
+    if (rawPath && retained.byteLength > 0) {
+      try {
+        appendFileSync(rawPath, retained);
+        appServerRawBytesByOperation.set(operationId, previousBytes + retained.byteLength);
+      } catch {
+        // Diagnostic I/O must not change the runtime output or terminal decision.
+      }
+    }
+  }
+  channelSummary.event_count += 1;
+  channelSummary.utf8_bytes += bytes.byteLength;
+  channelSummary.hash.update(bytes);
+  if (runId) channelSummary.run_ids.add(runId);
+  if (typeof delta.id === "string") channelSummary.message_ids.add(delta.id);
+  if (typeof delta.otid === "string") channelSummary.otids.add(delta.otid);
+  channelSummary.events.push({
+    sequence: channelSummary.event_count,
+    channel,
+    run_id: runId ?? null,
+    message_id: typeof delta.id === "string" ? delta.id : null,
+    otid: typeof delta.otid === "string" ? delta.otid : null,
+    utf8_bytes: bytes.byteLength,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  });
+  appendOutputObservation({
+    kind: "app_server_stream_event",
+    operation_id: operationId,
+    ...order[order.length - 1],
+    channel,
+    utf8_bytes: bytes.byteLength,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  });
+}
+
+function outputObservationWebSocket(): NonNullable<LettaCodeRemoteClientOptions["WebSocket"]> {
+  const BaseWebSocket = globalThis.WebSocket;
+  if (!BaseWebSocket) throw new Error("output observation requires the pinned Node WebSocket runtime");
+  class ObservingWebSocket extends BaseWebSocket {
+    constructor(url: string | URL, options?: { headers?: Record<string, string> }) {
+      super(url, options as unknown as string | string[] | undefined);
+      this.addEventListener("message", (event) => observeAppServerMessage(event.data));
+    }
+  }
+  return ObservingWebSocket as unknown as NonNullable<LettaCodeRemoteClientOptions["WebSocket"]>;
+}
 
 const client = new LettaAgentClient({
   backend: "remote",
@@ -50,7 +267,8 @@ const client = new LettaAgentClient({
   ...(process.env.HEKATE_LETTA_TOKEN
     ? { authToken: process.env.HEKATE_LETTA_TOKEN }
     : {}),
-  requestTimeoutMs: 30_000,
+  ...(outputObservationFile ? { WebSocket: outputObservationWebSocket() } : {}),
+  requestTimeoutMs: sessionTurnTimeoutMs,
 });
 
 const positionCommitSchema = JSON.parse(
@@ -222,6 +440,29 @@ async function runTurn(
   let outputBytes = 0;
   let outputTruncated = false;
   let outputHash = createHash("sha256");
+  let sdkAssistantEventCount = 0;
+  let sdkAssistantBytes = 0;
+  let sdkAssistantRawBytes = 0;
+  let sdkAssistantRawTruncated = false;
+  const sdkAssistantHash = createHash("sha256");
+  let sdkReasoningEventCount = 0;
+  let sdkReasoningBytes = 0;
+  const sdkReasoningHash = createHash("sha256");
+  const sdkMessageOrder: Array<Record<string, unknown>> = [];
+
+  const appendBoundedRaw = (environmentName: string, text: string, alreadyWritten: number): { written: number; truncated: boolean } => {
+    const path = process.env[environmentName];
+    if (!path || !outputObservationRaw) return { written: alreadyWritten, truncated: false };
+    const remaining = Math.max(0, MAX_BUSINESS_OUTPUT_BYTES - alreadyWritten);
+    const bytes = Buffer.from(text, "utf8");
+    const keep = boundedUtf8Prefix(text, remaining);
+    try {
+      if (keep.byteLength) appendFileSync(path, keep);
+    } catch {
+      return { written: alreadyWritten, truncated: true };
+    }
+    return { written: alreadyWritten + keep.byteLength, truncated: keep.byteLength < bytes.byteLength };
+  };
 
   const resetOutput = (): void => {
     finalAssistantOutput = "";
@@ -250,10 +491,52 @@ async function runTurn(
         conversation_id: entry.conversationId,
       };
       const event = summarizeSdkMessage(message, command.operation_id, binding, index++);
+      const sdkRecord = message as unknown as Record<string, unknown>;
+      const streamRecord = sdkRecord.event && typeof sdkRecord.event === "object"
+        ? sdkRecord.event as Record<string, unknown>
+        : undefined;
+      sdkMessageOrder.push({
+        sequence: index,
+        sdk_message_type: message.type,
+        channel: message.type === "assistant" ? "assistant" : message.type === "reasoning" ? "reasoning" : "control",
+        event_type: typeof streamRecord?.message_type === "string" ? streamRecord.message_type : null,
+        stop_reason: typeof streamRecord?.stop_reason === "string" ? streamRecord.stop_reason : null,
+        run_id: typeof sdkRecord.runId === "string" ? sdkRecord.runId : typeof streamRecord?.run_id === "string" ? streamRecord.run_id : null,
+        message_id: typeof sdkRecord.id === "string" ? sdkRecord.id : typeof streamRecord?.id === "string" ? streamRecord.id : null,
+        accounting_call_id: event.usage.accounting_call_id ?? null,
+        provider_call_id: event.usage.provider_call_id ?? null,
+        ...(message.type === "error" ? {
+          error_code: message.errorCode ?? null,
+          error_message_utf8_bytes: Buffer.byteLength(message.message, "utf8"),
+          error_message_sha256: createHash("sha256").update(message.message, "utf8").digest("hex"),
+          recoverable: message.recoverable ?? null,
+        } : {}),
+        ...(message.type === "result" ? {
+          result_success: message.success,
+          result_error_code: message.errorCode ?? null,
+          result_stop_reason: message.stopReason ?? null,
+          result_duration_ms: message.durationMs,
+        } : {}),
+      });
       if (message.type === "result" && message.errorCode === "structured_output_error") {
         process.stderr.write(`structured output rejected: ${(message.errorDetail ?? "unknown validation error").slice(0, 500)}\\n`);
       }
-      if (message.type === "assistant") captureOutput(message.content);
+      if (message.type === "assistant") {
+        const bytes = Buffer.from(message.content, "utf8");
+        sdkAssistantEventCount += 1;
+        sdkAssistantBytes += bytes.byteLength;
+        sdkAssistantHash.update(bytes);
+        captureOutput(message.content);
+        const appended = appendBoundedRaw("HEKATE_OUTPUT_ASSISTANT_RAW_FILE", message.content, sdkAssistantRawBytes);
+        sdkAssistantRawBytes = appended.written;
+        sdkAssistantRawTruncated ||= appended.truncated;
+      }
+      if (message.type === "reasoning") {
+        const bytes = Buffer.from(message.content, "utf8");
+        sdkReasoningEventCount += 1;
+        sdkReasoningBytes += bytes.byteLength;
+        sdkReasoningHash.update(bytes);
+      }
       if (message.type === "tool_call") resetOutput();
       const callId = event.usage.accounting_call_id;
       if (callId) {
@@ -308,6 +591,65 @@ async function runTurn(
           const structuredTooLarge = structuredObject !== undefined &&
             Buffer.byteLength(JSON.stringify(structuredObject), "utf8") > MAX_BUSINESS_OUTPUT_BYTES;
           const valid = message.success && structuredObject !== undefined && !outputTruncated && !structuredTooLarge;
+          const bridgeRawBytes = Buffer.from(finalAssistantOutput, "utf8");
+          const sdkResult = typeof message.result === "string" ? Buffer.from(message.result, "utf8") : undefined;
+          if (outputObservationRaw) {
+            for (const [environmentName, value] of [
+              ["HEKATE_OUTPUT_SDK_RESULT_RAW_FILE", typeof message.result === "string" ? message.result : ""],
+              ["HEKATE_OUTPUT_BRIDGE_RAW_FILE", finalAssistantOutput],
+            ] as const) {
+              appendBoundedRaw(environmentName, value, 0);
+            }
+          }
+          if (outputObservationFile) {
+            appendOutputObservation({
+              kind: "sdk_turn_result",
+              operation_id: command.operation_id,
+              task_id: command.binding.task_id,
+              attempt_id: command.binding.attempt_id,
+              registry_id: command.binding.agent_registry_id,
+              input_revision: command.binding.input_revision,
+              conversation_id: entry.conversationId,
+              app_server: appServerOutputSnapshot(command.operation_id),
+              sdk_assistant: {
+                event_count: sdkAssistantEventCount,
+                utf8_bytes: sdkAssistantBytes,
+                sha256: sdkAssistantHash.copy().digest("hex"),
+              },
+              sdk_reasoning: {
+                event_count: sdkReasoningEventCount,
+                utf8_bytes: sdkReasoningBytes,
+                sha256: sdkReasoningHash.copy().digest("hex"),
+              },
+              sdk_result: sdkResult ? {
+                event_count: 1,
+                utf8_bytes: sdkResult.byteLength,
+                sha256: createHash("sha256").update(sdkResult).digest("hex"),
+              } : { event_count: 0, utf8_bytes: null, sha256: null },
+              sdk_message_order: sdkMessageOrder,
+              sdk_assistant_raw: {
+                file: process.env.HEKATE_OUTPUT_ASSISTANT_RAW_FILE ?? null,
+                captured_utf8_bytes: sdkAssistantRawBytes,
+                truncated: sdkAssistantRawTruncated,
+              },
+              ...(outputObservationRaw ? {
+                app_server_assistant_raw_file: process.env.HEKATE_OUTPUT_APP_SERVER_RAW_FILE ?? null,
+                app_server_assistant_raw_captured_utf8_bytes: appServerRawBytesByOperation.get(command.operation_id) ?? 0,
+              } : {}),
+              ...(outputObservationRaw ? {
+                sdk_result_text_raw_file: process.env.HEKATE_OUTPUT_SDK_RESULT_RAW_FILE ?? null,
+                sdk_result_text_raw_truncated: Boolean(sdkResult && sdkResult.byteLength > MAX_BUSINESS_OUTPUT_BYTES),
+                bridge_raw_output_text_file: process.env.HEKATE_OUTPUT_BRIDGE_RAW_FILE ?? null,
+              } : {}),
+              bridge_raw_output: {
+                event_count: sdkAssistantEventCount,
+                utf8_bytes: bridgeRawBytes.byteLength,
+                sha256: createHash("sha256").update(bridgeRawBytes).digest("hex"),
+                output_truncated: outputTruncated,
+                raw_capture_file: process.env.HEKATE_OUTPUT_BRIDGE_RAW_FILE ?? null,
+              },
+            });
+          }
           const event: BridgeEvent = {
             schema_version: "1",
             event_id: `${command.operation_id}:business-result`,
@@ -340,6 +682,7 @@ async function runTurn(
   };
 
   try {
+    operationByConversation.set(entry.conversationId, command.operation_id);
     const stream = consume();
     await entry.session.send(command.message, {
       otid: trustedOperationOtid(command.operation_id, command.binding),
@@ -427,12 +770,16 @@ export async function routeCommand(
         tags,
         baseTools: [],
         ...(command.model ? { model: command.model } : {}),
+        ...(command.system_prompt ? { systemPrompt: command.system_prompt } : {}),
       });
-      if (command.max_input_tokens !== undefined || command.max_output_tokens !== undefined) {
+      if (
+        command.context_window_tokens !== undefined || command.max_input_tokens !== undefined ||
+        command.max_output_tokens !== undefined
+      ) {
         await client.agents.update(providerAgentId, {
           modelSettings: {
-            ...(command.max_input_tokens !== undefined
-              ? { context_window_limit: command.max_input_tokens }
+            ...(command.context_window_tokens !== undefined || command.max_input_tokens !== undefined
+              ? { context_window_limit: command.context_window_tokens ?? command.max_input_tokens }
               : {}),
             ...(command.max_output_tokens !== undefined
               ? { max_tokens: command.max_output_tokens }
@@ -562,7 +909,9 @@ export async function routeCommand(
             : structuredOutputProbe && !command.output_contract
               ? positionCommitSchema
               : undefined;
-      const sdkSchema = selectedOutputSchema ? sdkOutputSchema(selectedOutputSchema) : undefined;
+      const sdkSchema = selectedOutputSchema && command.sdk_output_format !== false
+        ? sdkOutputSchema(selectedOutputSchema)
+        : undefined;
       const session = client.createSession(command.binding.provider_agent_id, {
         allowedTools: [],
         toolset: { base: "none" as const },

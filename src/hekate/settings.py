@@ -98,6 +98,13 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
     profile_id = profile.get("profile_id")
     model_revision = profile.get("model_revision")
     context_window_tokens = profile.get("context_window_tokens")
+    agent_system_prompt = profile.get("agent_system_prompt")
+    letta_context_estimator_tokens: int | None = None
+    sdk_output_format = True
+    if agent_system_prompt is not None and (
+        not isinstance(agent_system_prompt, str) or not agent_system_prompt or len(agent_system_prompt) > 2048
+    ):
+        raise ValueError("agent_system_prompt must be a non-empty string up to 2048 characters")
     pricing_version = settings.pricing.get("version")
     prices = settings.pricing.get("prices")
     price = prices.get(model) if isinstance(prices, dict) and isinstance(model, str) else None
@@ -137,13 +144,49 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
         raise ValueError("pricing effective_at is required for the fixed test contract")
     input_price = decimal_value(price.get("input_usd_per_million"), "input_usd_per_million", allow_zero=True)
     output_price = decimal_value(price.get("output_usd_per_million"), "output_usd_per_million", allow_zero=True)
-    execution_profile, _ = test_execution_profile(
-        profile_id=profile_id, model=model, model_revision=model_revision,
-        context_window_tokens=context_window, max_input_tokens=max_input_tokens,
-        max_output_tokens=max_output_tokens, pricing_version=pricing_version,
-        input_usd_per_million=input_price, output_usd_per_million=output_price,
-        pricing_effective_at=pricing_effective_at,
-    )
+    profile_kind = profile.get("execution_profile")
+    if profile_kind is None:
+        if agent_system_prompt is not None:
+            raise ValueError("custom agent_system_prompt is supported only by the frozen Qwen test profile")
+        execution_profile, _ = test_execution_profile(
+            profile_id=profile_id, model=model, model_revision=model_revision,
+            context_window_tokens=context_window, max_input_tokens=max_input_tokens,
+            max_output_tokens=max_output_tokens, pricing_version=pricing_version,
+            input_usd_per_million=input_price, output_usd_per_million=output_price,
+            pricing_effective_at=pricing_effective_at,
+        )
+    elif profile_kind in {"qwen35_test_v1", "qwen35_native_json_schema_test_v2"}:
+        from hekate.infrastructure.letta.qwen_ollama import (
+            load_qwen_candidate_profile, qwen35_native_json_schema_test_execution_profile,
+            qwen35_test_execution_profile,
+        )
+
+        candidate = load_qwen_candidate_profile()
+        execution_profile, qwen_prices = (
+            qwen35_native_json_schema_test_execution_profile(candidate)
+            if profile_kind == "qwen35_native_json_schema_test_v2"
+            else qwen35_test_execution_profile(candidate)
+        )
+        if (
+            profile_id != execution_profile.profile_id
+            or model != execution_profile.model
+            or model_revision != execution_profile.model_revision
+            or context_window != execution_profile.context_window_tokens
+            or max_input_tokens != execution_profile.max_input_tokens
+            or max_output_tokens != execution_profile.max_output_tokens
+            or pricing_version != qwen_prices.version
+            or input_price != qwen_prices.input_usd_per_million
+            or output_price != qwen_prices.output_usd_per_million
+            or pricing_effective_at != qwen_prices.effective_at
+            or letta_model != f"openai-compatible/{model}"
+            or agent_system_prompt != candidate.agent_system_prompt
+            or profile.get("letta_context_estimator_tokens") != candidate.letta_context_estimator_tokens
+        ):
+            raise ValueError("Qwen test settings differ from the frozen offline candidate contract")
+        letta_context_estimator_tokens = candidate.letta_context_estimator_tokens
+        sdk_output_format = candidate.sdk_output_format
+    else:
+        raise ValueError("unknown tokenizer profile; only the pinned fake-chat and Qwen test contracts are supported")
     return TaskExecutionConfig(
         task_budget_usd=decimal_value(limits.get("task_budget_usd"), "task_budget_usd"),
         system_daily_budget_usd=decimal_value(limits.get("system_daily_budget_usd"), "system_daily_budget_usd"),
@@ -161,6 +204,9 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
         model_revision=model_revision,
         profile_digest=execution_profile.content_digest,
         pricing_effective_at=pricing_effective_at,
+        agent_system_prompt=agent_system_prompt,
+        letta_context_estimator_tokens=letta_context_estimator_tokens,
+        sdk_output_format=sdk_output_format,
     )
 
 
@@ -194,7 +240,7 @@ _EXECUTION_CONFIG_FIELDS = frozenset({
 
 def execution_config_snapshot(config: TaskExecutionConfig) -> dict[str, object]:
     """Persist the trusted, bounded profile that authorized a durable workflow step."""
-    return {
+    value = {
         "task_budget_usd": str(config.task_budget_usd),
         "system_daily_budget_usd": str(config.system_daily_budget_usd),
         "deadline_seconds": config.deadline_seconds,
@@ -212,18 +258,36 @@ def execution_config_snapshot(config: TaskExecutionConfig) -> dict[str, object]:
         "profile_digest": config.profile_digest,
         "pricing_effective_at": config.pricing_effective_at,
     }
+    if config.agent_system_prompt is not None:
+        value["agent_system_prompt"] = config.agent_system_prompt
+    if config.letta_context_estimator_tokens is not None:
+        value["letta_context_estimator_tokens"] = config.letta_context_estimator_tokens
+    if not config.sdk_output_format:
+        value["sdk_output_format"] = False
+    return value
 
 
 def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig:
     """Rebuild only a complete persisted server profile; never read model routing from output."""
-    if set(value) != _EXECUTION_CONFIG_FIELDS:
+    optional_fields = {"agent_system_prompt", "letta_context_estimator_tokens", "sdk_output_format"}
+    persisted_fields = frozenset(value)
+    if not _EXECUTION_CONFIG_FIELDS <= persisted_fields or not (persisted_fields - _EXECUTION_CONFIG_FIELDS) <= optional_fields:
         raise ValueError("persisted workflow execution profile is incomplete or contains unknown fields")
+    agent_system_prompt = value.get("agent_system_prompt")
+    if agent_system_prompt is not None and (
+        not isinstance(agent_system_prompt, str) or not agent_system_prompt or len(agent_system_prompt) > 2048
+    ):
+        raise ValueError("persisted workflow execution profile has an invalid agent system prompt")
     decimal_names = {
         "task_budget_usd", "system_daily_budget_usd",
         "input_usd_per_million", "output_usd_per_million",
     }
     string_names = {"profile_id", "letta_model", "model", "pricing_version", "model_revision", "profile_digest", "pricing_effective_at"}
     integer_names = {"deadline_seconds", "max_input_tokens", "max_output_tokens", "max_compaction_calls", "context_window_tokens"}
+    if "letta_context_estimator_tokens" in value:
+        integer_names.add("letta_context_estimator_tokens")
+    if "sdk_output_format" in value and type(value["sdk_output_format"]) is not bool:
+        raise ValueError("persisted workflow execution profile has an invalid SDK output-format setting")
     if any(not isinstance(value.get(name), str) or not value[name] for name in string_names):
         raise ValueError("persisted workflow execution profile has an invalid identity")
     if any(type(value.get(name)) is not int for name in integer_names):
@@ -240,6 +304,8 @@ def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig
     if any(number < 0 for number in limits) or value["deadline_seconds"] < 1 \
             or value["max_input_tokens"] < 1 or value["max_output_tokens"] < 1:
         raise ValueError("persisted workflow execution profile has invalid limits")
+    if "letta_context_estimator_tokens" in value and value["letta_context_estimator_tokens"] < 1:
+        raise ValueError("persisted workflow execution profile has invalid App Server context estimator limit")
     return TaskExecutionConfig(
         **decimals,
         deadline_seconds=value["deadline_seconds"],
@@ -252,6 +318,9 @@ def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig
         model_revision=value["model_revision"],
         profile_digest=value["profile_digest"],
         pricing_effective_at=value["pricing_effective_at"],
+        agent_system_prompt=agent_system_prompt,
+        letta_context_estimator_tokens=value.get("letta_context_estimator_tokens"),
+        sdk_output_format=value.get("sdk_output_format", True),
     )
 
 

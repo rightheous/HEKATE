@@ -57,6 +57,8 @@ class LettaRuntimeAdapter(AgentRuntime):
             **({"registry_id": str(spec["registry_id"])} if spec.get("registry_id") else {}),
             **({"persistence": str(spec["persistence"])} if spec.get("persistence") else {}),
             **({"model": spec["model"]} if "model" in spec else {}),
+            **({"system_prompt": spec["system_prompt"]} if "system_prompt" in spec else {}),
+            **({"context_window_tokens": spec["context_window_tokens"]} if "context_window_tokens" in spec else {}),
             **({"max_input_tokens": spec["max_input_tokens"]} if "max_input_tokens" in spec else {}),
             **({"max_output_tokens": spec["max_output_tokens"]} if "max_output_tokens" in spec else {}),
         )
@@ -88,7 +90,7 @@ class LettaRuntimeAdapter(AgentRuntime):
         )
 
     async def prepare_session(
-        self, binding: RuntimeBinding, output_contract: str | None = None,
+        self, binding: RuntimeBinding, output_contract: str | None = None, sdk_output_format: bool = True,
     ) -> tuple[RuntimeBinding, Mapping[str, object]]:
         reply = await self._request(
             f"session-prepare:{binding.attempt_id}", "session.prepare",
@@ -99,6 +101,7 @@ class LettaRuntimeAdapter(AgentRuntime):
                 "input_revision": binding.input_revision, "fence": binding.fence,
             },
             **({"output_contract": output_contract} if output_contract else {}),
+            sdk_output_format=sdk_output_format,
         )
         if reply.status != "CONFIRMED" or reply.result is None or reply.result.kind != "session":
             detail = reply.error or "missing session result"

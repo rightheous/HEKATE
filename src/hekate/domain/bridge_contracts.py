@@ -38,6 +38,8 @@ class AgentCreateCommand(BridgeCommandBase):
     persistence: Literal["persistent", "ephemeral"] | None = None
     registry_id: str | None = Field(default=None, min_length=1, max_length=128)
     model: str | None = None
+    system_prompt: str | None = Field(default=None, max_length=2048)
+    context_window_tokens: int | None = Field(default=None, ge=1)
     max_input_tokens: int | None = Field(default=None, ge=1)
     max_output_tokens: int | None = Field(default=None, ge=1)
 
@@ -62,6 +64,7 @@ class SessionPrepareCommand(BridgeCommandBase):
     command: Literal["session.prepare"]
     binding: BridgeBinding
     output_contract: Literal["hekate_turn_output_v1", "critic_turn_output_v1", "position_commit_v1"] | None = None
+    sdk_output_format: bool = True
 
 
 class SessionTurnCommand(BridgeCommandBase):

@@ -1,0 +1,583 @@
+{
+  "actual_provider_calls": 0,
+  "artifact": "integration/runtime/artifacts/p6c-20261005T200837Z-60478a24-ollama-qwen-runtime.json",
+  "branch": "phase6c-ollama-qwen-profile",
+  "code_fingerprint_sha256": "add0993ad7479d5094b7839b2bac117c3958002b76a5b3652dc99df66d361eac",
+  "command": {
+    "arguments": [
+      "--database-url",
+      "<fresh loopback PostgreSQL URL; credentials redacted>",
+      "--node-bin",
+      "/tmp/hekate-node-v22.19.0/bin/node",
+      "--node-archive",
+      "/tmp/hekate-node-v22.19.0-linux-x64.tar.xz",
+      "--image",
+      "hekate/letta-code-p1:0bb6f741-d6f47067"
+    ],
+    "entrypoint": "scripts/phase6c_ollama_qwen_probe.py",
+    "execution_mode": "pinned_fake_provider"
+  },
+  "database": {
+    "fresh_database_before_probe": true,
+    "migration_head": "0013_provider_token_measurement",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "database_target": {
+    "database": "hekate_phase6c_runtime_20261005_44ec0fc2",
+    "host": "127.0.0.1",
+    "port": 55436
+  },
+  "deferred_boundaries": {
+    "g7_same_execution_resume": "deferred",
+    "g8_production_exact_request_validation": "pending actual provider usage and production approval",
+    "letta_memory_projection": "not executed in Phase 6C",
+    "production_dispatch": "blocked"
+  },
+  "executed_at": "2026-10-05T20:08:38.375407Z",
+  "executed_at_finished": "2026-10-05T20:09:02.767505Z",
+  "execution_mode": "pinned_fake_provider",
+  "fake_fixture_failures": [],
+  "fake_provider_requests": 1,
+  "fake_request_shapes": [
+    {
+      "max_completion_tokens": null,
+      "max_tokens": 2048,
+      "message_count": 5,
+      "message_roles": [
+        "system",
+        "user",
+        "user",
+        "user",
+        "user"
+      ],
+      "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+      "output_limit_tokens": 2048,
+      "output_schema_in_prompt": true,
+      "response_format_type": null,
+      "store_field_forwarded": false,
+      "structured_output_grammar_sent": false,
+      "task_capsule_present": true,
+      "tool_names": []
+    }
+  ],
+  "fingerprinted_files": [
+    {
+      "bytes": 29082,
+      "path": "bridge/letta/src/main.ts",
+      "sha256": "888bcd93e44f322310877059d5b089c79567528937ca058eef83b0c25d0abb69"
+    },
+    {
+      "bytes": 7527,
+      "path": "bridge/letta/src/protocol.ts",
+      "sha256": "8332ee2e22239654f6c9ba55f4bced997648a0793cd1f9f4162b9adf9b1331d3"
+    },
+    {
+      "bytes": 5216,
+      "path": "config/local-candidates.yaml",
+      "sha256": "328d582b6af8fe34df154b209f5db3fabf2e23a2f2a005155d354776affc486f"
+    },
+    {
+      "bytes": 39085,
+      "path": "contracts/generated/bridge.v1.schema.json",
+      "sha256": "87c60a59cb5ec3689e7653b716a594a149b934bf7d4e9143222da0af52bb0e33"
+    },
+    {
+      "bytes": 13344,
+      "path": "docs/implementation/phase6c-ollama-qwen-profile.md",
+      "sha256": "424666f0516723a8804213d4a7867c8dd6b2775ebaff88fcdada6eae94de612a"
+    },
+    {
+      "bytes": 10059,
+      "path": "integration/runtime/fixtures/qwen35-renderer-tokenizer-v1.json",
+      "sha256": "18767749bad4b998bb1fd7322c9904c9ade72de09821686bd03661a1e74f3e41"
+    },
+    {
+      "bytes": 1122,
+      "path": "pyproject.toml",
+      "sha256": "6ac20065ee3e9423930601eea8af1092df857895c5ceb2d9e6f0e91da3f66232"
+    },
+    {
+      "bytes": 3428,
+      "path": "scripts/build_qwen35_unicode_flags.py",
+      "sha256": "141acd43566d8f0eff98751d21503dbf5576e9b5fab6da3a7c7ea309bdc8a54a"
+    },
+    {
+      "bytes": 1080,
+      "path": "scripts/export_contracts.py",
+      "sha256": "a5e2ce3586c266829e7fe8fa4fa4b92342f000e7d617c606baaf5c39b47f6df5"
+    },
+    {
+      "bytes": 49327,
+      "path": "scripts/phase6c_ollama_qwen_probe.py",
+      "sha256": "59d863d680b965311ba206febb30814135e237a082f884c98a238dd657da187e"
+    },
+    {
+      "bytes": 82336,
+      "path": "src/hekate/application/lifecycle.py",
+      "sha256": "ff69faf8dd14406cf228441701f5e86d28944a55ebcfefea4f678f752fea16cf"
+    },
+    {
+      "bytes": 30655,
+      "path": "src/hekate/application/operations.py",
+      "sha256": "61c1f3d4fb0f25b01a0f1cfbac07d5e07dc5536a3ee8a19b50c9c4db2a23525f"
+    },
+    {
+      "bytes": 70583,
+      "path": "src/hekate/application/turns.py",
+      "sha256": "d19da887b49126cf4d2c682fb44f0bf6339024acbe5d4b9210582e1e397c2252"
+    },
+    {
+      "bytes": 9448,
+      "path": "src/hekate/domain/bridge_contracts.py",
+      "sha256": "e7be903b0c095d7e900315e52bb66053d3e2b0387b22d6d6024121869777d9c8"
+    },
+    {
+      "bytes": 42513,
+      "path": "src/hekate/domain/models.py",
+      "sha256": "8afae7bded3e6ffa0c5a07afc9cc3407f0cb74bdad31537ecb80c1f5eb61caa8"
+    },
+    {
+      "bytes": 11803,
+      "path": "src/hekate/infrastructure/letta/adapter.py",
+      "sha256": "be3a4d2a1a160a4a2172e69b2ad3ae93c1e4c5b1eeffdb6f55718b634c631a9e"
+    },
+    {
+      "bytes": 7960382,
+      "path": "src/hekate/infrastructure/letta/assets/qwen35_installed_tokenizer.v1.json",
+      "sha256": "136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f"
+    },
+    {
+      "bytes": 31786,
+      "path": "src/hekate/infrastructure/letta/assets/qwen35_unicode_flags.v1.json",
+      "sha256": "3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69"
+    },
+    {
+      "bytes": 25260,
+      "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+      "sha256": "21a6eea7d93cc4cdc0743195eb76faa4134ed3283ad7ddb929c5ac5969ef5495"
+    },
+    {
+      "bytes": 42309,
+      "path": "src/hekate/infrastructure/letta/qwen_ollama.py",
+      "sha256": "d38ada4b68f23352741c3773fc8ba14147159f594a7ae27fb963509d91eb7b27"
+    },
+    {
+      "bytes": 19974,
+      "path": "src/hekate/infrastructure/letta/token_accounting.py",
+      "sha256": "44ea1efe3d365e1debb4d41c010960e9eaa42295e9b06d332a2baa27a277c3d3"
+    },
+    {
+      "bytes": 1937,
+      "path": "src/hekate/ports/runtime.py",
+      "sha256": "5b83330c93b5c5a2e81e2685a07b7f5beaf8eae06b3ba84ebd4402579cf8d8fe"
+    },
+    {
+      "bytes": 19314,
+      "path": "src/hekate/settings.py",
+      "sha256": "5018c1108e1044accbe931a2f028965d7a94fd6c7726a8fe8de927bd7dff7b60"
+    },
+    {
+      "bytes": 10169,
+      "path": "tests/unit/test_qwen_ollama.py",
+      "sha256": "77dd4535d4af1a5ad662621f6bf799228ca690e6e27fa40f45c0412258fef255"
+    }
+  ],
+  "head": "9c25acca594d3edb5db4f2ce710e490b7e6d95b7",
+  "letta_agent_profile": {
+    "configured_context_window_tokens": 8192,
+    "configured_input_ceiling_tokens": 6144,
+    "configured_letta_context_estimator_tokens": 16384,
+    "configured_output_ceiling_tokens": 2048,
+    "configured_system_prompt_sha256": "c09441989fbd043f3f3b73d27810f1873f4891d2add18e501c6fff36cb29bd52",
+    "context_window_limit": 16384,
+    "max_tokens": 2048,
+    "provider_agent_id": "agent-local-f926213c-85c9-4b7b-9bfb-2fef20713fa2",
+    "system_prompt_chars": 253,
+    "system_prompt_sha256": "c09441989fbd043f3f3b73d27810f1873f4891d2add18e501c6fff36cb29bd52"
+  },
+  "live_ollama_metadata": {
+    "gguf_blob_digest_source": "pinned local manifest/blob metadata; not inferred from /api/tags manifest digest",
+    "inference_requests": 0,
+    "installed_tokenizer_array_sha256": {
+      "tokenizer.ggml.merges": "7e299304d9ad9dc312acdbcb1f6ccf0dce1256bf1aa986d651f13814dfd27e7b",
+      "tokenizer.ggml.token_type": "f6fdca1063d1ae1cc77ba1f5087d259f044c2634e64b65e31bc844ec00e9acab",
+      "tokenizer.ggml.tokens": "5ee0f927bcaa4b9fe85c244776ae9487468e427f83e053fc81f2a186f14936a3"
+    },
+    "loaded_context_verified": false,
+    "loaded_models_observed": [],
+    "manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a",
+    "metadata_requests": 6,
+    "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+    "model_size_bytes": 16240185450,
+    "ollama_version": "0.34.0",
+    "openai_model_list_contains_exact_tag": true,
+    "parameter_count_observed": 27320697856,
+    "routes": [
+      "GET /api/version",
+      "GET /api/tags",
+      "GET /api/ps",
+      "GET /v1/models",
+      "POST /api/show verbose=true",
+      "POST /api/show verbose=false"
+    ],
+    "template_bytes": 13,
+    "template_sha256": "b507b9c2f6ca642bffcd06665ea7c91f235fd32daeefdf875a0f938db05fb315"
+  },
+  "metadata_observation": {
+    "gguf_blob_digest_source": "pinned local manifest/blob metadata; not inferred from /api/tags manifest digest",
+    "inference_requests": 0,
+    "installed_tokenizer_array_sha256": {
+      "tokenizer.ggml.merges": "7e299304d9ad9dc312acdbcb1f6ccf0dce1256bf1aa986d651f13814dfd27e7b",
+      "tokenizer.ggml.token_type": "f6fdca1063d1ae1cc77ba1f5087d259f044c2634e64b65e31bc844ec00e9acab",
+      "tokenizer.ggml.tokens": "5ee0f927bcaa4b9fe85c244776ae9487468e427f83e053fc81f2a186f14936a3"
+    },
+    "loaded_context_verified": false,
+    "loaded_models_observed": [],
+    "manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a",
+    "metadata_requests": 6,
+    "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+    "model_size_bytes": 16240185450,
+    "ollama_version": "0.34.0",
+    "openai_model_list_contains_exact_tag": true,
+    "parameter_count_observed": 27320697856,
+    "routes": [
+      "GET /api/version",
+      "GET /api/tags",
+      "GET /api/ps",
+      "GET /v1/models",
+      "POST /api/show verbose=true",
+      "POST /api/show verbose=false"
+    ],
+    "template_bytes": 13,
+    "template_sha256": "b507b9c2f6ca642bffcd06665ea7c91f235fd32daeefdf875a0f938db05fb315"
+  },
+  "offline_reference": {
+    "comparison_test": "tests.unit.test_qwen_ollama.QwenOllamaProfileTests.test_installed_tokenizer_and_pinned_renderer_goldens",
+    "fixture": "integration/runtime/fixtures/qwen35-renderer-tokenizer-v1.json",
+    "fixture_sha256": "18767749bad4b998bb1fd7322c9904c9ade72de09821686bd03661a1e74f3e41",
+    "golden_rendered_prompts": 5,
+    "golden_token_vectors": 8,
+    "model_identity": {
+      "gguf_blob_digest": "ce18b852ff0f7f7fc3cbe3467b4a87d3b27e7b3e611bf41e0a529220604aa79f",
+      "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+      "ollama_manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a"
+    },
+    "renderer_reference": {
+      "commit": "d8ab4b4f0ca24b51d3a46b3bf4f462e58ce66b1f",
+      "reference_runtime": "Go 1.26.0 container golang:1.26.0",
+      "renderer": "qwen3.5",
+      "repository": "ollama/ollama",
+      "source": "model/renderers/qwen35.go",
+      "source_sha256": "a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23",
+      "tag": "v0.34.0",
+      "thinking": false
+    },
+    "tokenizer_reference": {
+      "commit": "0f3a71be15af836d277c9f918adfafb45732677e",
+      "cpu_vocab_only": true,
+      "merge_count": 247587,
+      "reference_gguf": "tokenizer-only extraction from installed GGUF metadata; no tensors or weights",
+      "repository": "ggml-org/llama.cpp",
+      "tag": "b10760",
+      "tokenizer_array_digests": {
+        "merges": "7e299304d9ad9dc312acdbcb1f6ccf0dce1256bf1aa986d651f13814dfd27e7b",
+        "token_type": "f6fdca1063d1ae1cc77ba1f5087d259f044c2634e64b65e31bc844ec00e9acab",
+        "tokens": "5ee0f927bcaa4b9fe85c244776ae9487468e427f83e053fc81f2a186f14936a3"
+      },
+      "vocab_size": 248320
+    }
+  },
+  "overall_status": "pass",
+  "probe": "phase6c-ollama-qwen-profile-runtime",
+  "production_dispatch": "blocked",
+  "provider_authorization_attempts": [
+    {
+      "authorization": "permitted",
+      "call_kind": "turn",
+      "measured_input_tokens": 4081,
+      "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+      "profile_digest": "512dcd0186a3fad455a2cf95f157dc9626f6675320a58a369a850e35006084e2",
+      "request_digest": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+      "requested_output_tokens": 2048
+    }
+  ],
+  "qwen_candidate": {
+    "agent_system_prompt_sha256": "c09441989fbd043f3f3b73d27810f1873f4891d2add18e501c6fff36cb29bd52",
+    "architecture": "qwen35",
+    "dispatch_approved": false,
+    "effective_context_policy_tokens": 8192,
+    "effective_context_verified": false,
+    "gguf_blob_digest": "ce18b852ff0f7f7fc3cbe3467b4a87d3b27e7b3e611bf41e0a529220604aa79f",
+    "inference_usage_verified": false,
+    "letta_context_estimator_tokens": 16384,
+    "manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a",
+    "max_input_tokens": 6144,
+    "max_output_tokens": 2048,
+    "metadata_context_tokens": 262144,
+    "metadata_identity_verified": true,
+    "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+    "offline_reference_verified": true,
+    "ollama_source_revision": "d8ab4b4f0ca24b51d3a46b3bf4f462e58ce66b1f",
+    "ollama_version": "0.34.0",
+    "parameter_count": 27320697856,
+    "profile_digest": "8671e610aa1be37a3e1471567a6fd7f8c7ef08b89af8252a26d2285e11f07f22",
+    "quantization": "IQ4_XS",
+    "renderer": "qwen3.5",
+    "renderer_source_sha256": "a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23",
+    "request_normalizer_sha256": "d38ada4b68f23352741c3773fc8ba14147159f594a7ae27fb963509d91eb7b27",
+    "request_support": [
+      "text-only",
+      "system-developer-user-assistant",
+      "single-completion",
+      "prompt-embedded-json-schema",
+      "bridge-output-validation",
+      "sdk-output-format-disabled",
+      "store-false-omitted-by-ollama",
+      "tools-disabled",
+      "reasoning-effort-none",
+      "streaming-response"
+    ],
+    "sdk_output_format": false,
+    "tokenizer_asset_sha256": "136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f",
+    "tokenizer_implementation": "hekate-qwen35-installed-gguf-bpe"
+  },
+  "real_provider_calls": 0,
+  "results": {
+    "pinned_runtime_turn": {
+      "actual_provider_calls": 0,
+      "agent_profile": {
+        "configured_context_window_tokens": 8192,
+        "configured_input_ceiling_tokens": 6144,
+        "configured_letta_context_estimator_tokens": 16384,
+        "configured_output_ceiling_tokens": 2048,
+        "configured_system_prompt_sha256": "c09441989fbd043f3f3b73d27810f1873f4891d2add18e501c6fff36cb29bd52",
+        "context_window_limit": 16384,
+        "max_tokens": 2048,
+        "provider_agent_id": "agent-local-f926213c-85c9-4b7b-9bfb-2fef20713fa2",
+        "system_prompt_chars": 253,
+        "system_prompt_sha256": "c09441989fbd043f3f3b73d27810f1873f4891d2add18e501c6fff36cb29bd52"
+      },
+      "budget_accounts": [
+        {
+          "held_amount": "0",
+          "scope_kind": "SYSTEM",
+          "spent_amount": "0"
+        },
+        {
+          "held_amount": "0",
+          "scope_kind": "TASK",
+          "spent_amount": "0"
+        }
+      ],
+      "counts": {
+        "compaction_calls": 0,
+        "consumed_permits": 1,
+        "measured_calls": 1,
+        "provider_calls": 1
+      },
+      "fake_provider_requests": 1,
+      "local_upstream_forward_attempts": 0,
+      "postgresql_call_and_permit": {
+        "accounting_call_id": "3557eb49-8aa3-4cb5-97e1-907d4cb845f8",
+        "allocation_amount": "0",
+        "call_kind": "turn",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_tokens": 37,
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 8192,
+          "measured_at": "2026-10-05T20:08:55.370646Z",
+          "measured_input_tokens": 4081,
+          "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+          "pricing_version": "local-qwen35-external-tariff-v1",
+          "profile_digest": "512dcd0186a3fad455a2cf95f157dc9626f6675320a58a369a850e35006084e2",
+          "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:d38ada4b68f23352741c3773fc8ba14147159f594a7ae27fb963509d91eb7b27",
+          "request_digest": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+          "requested_output_tokens": 2048,
+          "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "output_tokens": 4,
+        "permit_profile_digest": "512dcd0186a3fad455a2cf95f157dc9626f6675320a58a369a850e35006084e2",
+        "permit_request_digest": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+        "permit_state": "CONSUMED",
+        "profile_digest": "512dcd0186a3fad455a2cf95f157dc9626f6675320a58a369a850e35006084e2",
+        "request_digest": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+        "settlement_state": "SETTLED",
+        "total_tokens": 41,
+        "usage_completeness": "COMPLETE"
+      },
+      "provider_authorization_attempts": [
+        {
+          "authorization": "permitted",
+          "call_kind": "turn",
+          "measured_input_tokens": 4081,
+          "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+          "profile_digest": "512dcd0186a3fad455a2cf95f157dc9626f6675320a58a369a850e35006084e2",
+          "request_digest": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+          "requested_output_tokens": 2048
+        }
+      ],
+      "provider_request": {
+        "canonical_body_sha256": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+        "context_request_verified_by_fake_fixture": true,
+        "forwarded_bytes_match_measurement_digest": true,
+        "json_schema_grammar_format_present": false,
+        "keys": [
+          "max_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options"
+        ],
+        "max_tokens": 2048,
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "raw_forwarded_body_sha256": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+        "reasoning_effort": "none",
+        "tools": []
+      },
+      "qwen_measurement": {
+        "context_window_tokens": 8192,
+        "fits_context": true,
+        "input_tokens": 4081,
+        "normalized_model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "output_limit_tokens": 2048,
+        "profile_digest": "512dcd0186a3fad455a2cf95f157dc9626f6675320a58a369a850e35006084e2",
+        "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:d38ada4b68f23352741c3773fc8ba14147159f594a7ae27fb963509d91eb7b27",
+        "request_digest": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+        "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760"
+      },
+      "request_contract_observation": [
+        {
+          "agent_registry_id": "659504f1-7dc7-5cc3-bbb3-0d0e405ebb6a",
+          "attempt_id": "d291a446-9d95-5244-8fa3-4e5fd909fddc",
+          "definition_count": 12,
+          "input_revision": 1,
+          "prompt_hash": "305c11fe0dcee9ebaf5e0d2817e6cf76ff9095a562fae7c578f771b9ede4858c",
+          "provider_request_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+          "request_hash": "eac6ea536d7da7c885bd42cb5606e6557945f04cbbbfa3151a950bc9e969a11f",
+          "required_outer_fields": [
+            "conclusion",
+            "proposal",
+            "schema_version"
+          ],
+          "resolved_local_refs": [
+            "#/$defs/AnswerProposal",
+            "#/$defs/Assessment",
+            "#/$defs/CommitProposal",
+            "#/$defs/ConclusionCapsule",
+            "#/$defs/Confidence",
+            "#/$defs/ContinuationProposal",
+            "#/$defs/Objection",
+            "#/$defs/PositionBody",
+            "#/$defs/PositionRecommendation",
+            "#/$defs/RecommendedNextStep",
+            "#/$defs/SimpleProposal",
+            "#/$defs/SpawnProposal"
+          ],
+          "schema_hash_matches_server": true,
+          "server_policy_hash": "7b8f12424a61b4dfbbe60ee2477ada252cb6ad5f016ac7127ebcf92833c0acf6",
+          "server_policy_present": true,
+          "server_schema_hash": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+          "supported_actions": [
+            "answer",
+            "request_information",
+            "abstain",
+            "commit"
+          ],
+          "task_id": "12a7b9fe-4517-46c9-b174-d3207833d8bc",
+          "unicode_prompt_bytes": 9920,
+          "unicode_prompt_characters": 9920
+        }
+      ],
+      "runtime_capabilities": {
+        "capabilities": {
+          "agent_create": true,
+          "agent_delete": true,
+          "agent_get": true,
+          "agent_list": true,
+          "event_collection": true,
+          "memory_projection": true,
+          "pre_provider_call": false,
+          "provider_usage_by_call_id": false,
+          "session_prepare": true,
+          "session_turn": true
+        },
+        "limitations": [
+          "Provider-call authorization is enforced by the probe gateway using metadata emitted by its pinned runtime patch.",
+          "Runtime usage fields are forwarded when present; the stock SDK contract does not guarantee physical provider-call identity."
+        ],
+        "protocol_version": "1",
+        "sdk_version": "0.8.25"
+      },
+      "same_key_replay": {
+        "fake_provider_requests_after_replay": 1,
+        "no_new_accounting_effect": true,
+        "no_new_fake_request": true,
+        "no_new_upstream_request": true,
+        "provider_accounting_effects_after_replay": {
+          "consumed_permits": 1,
+          "ledger_entries": 4,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "provider_accounting_effects_before_replay": {
+          "consumed_permits": 1,
+          "ledger_entries": 4,
+          "permits": 1,
+          "provider_calls": 1
+        },
+        "same_task_id": true
+      },
+      "session_compaction_limit": 0,
+      "task_id": "12a7b9fe-4517-46c9-b174-d3207833d8bc",
+      "task_response_present": true,
+      "task_response_sha256": "b7fc71bf539900505c157eee9304e588ecc866f67d874ddacdb849c47a815209",
+      "task_state": "COMPLETED",
+      "usage_observation": {
+        "completeness": "COMPLETE",
+        "evaluated_external_tariff_usd": "0",
+        "input_tokens": 37,
+        "local_qwen_usage_semantics_verified": false,
+        "output_tokens": 4,
+        "synthetic_fake_provider": true,
+        "total_tokens": 41
+      }
+    },
+    "production_gate": {
+      "candidate_inference_usage_verified": false,
+      "candidate_runtime_context_verified": false,
+      "gateway_profile_test_only": true,
+      "local_candidate_dispatch_approved": false,
+      "production_dispatch": "blocked"
+    }
+  },
+  "run_id": "p6c-20261005T200837Z-60478a24",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:02d7d5a101f636e5c1744ecadb344213b5b794b91ce36f41fa5c973b8e36a2db",
+    "runtime_patch_sha256": "d6f4706748a4fc7878a1ba50946243cd246bf94e183d6b1ee02e81a93fa1ff19",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "task_observation": {
+    "state": "COMPLETED",
+    "stop_reason": "COMPLETED",
+    "task_id": "12a7b9fe-4517-46c9-b174-d3207833d8bc"
+  },
+  "unexecuted": [
+    "No Ollama inference request was made by the default fake-provider run; no model was loaded or changed.",
+    "The fake-provider usage record is synthetic and does not verify Qwen output usage semantics.",
+    "Effective loaded context and actual smoke-test generation remain unverified."
+  ]
+}

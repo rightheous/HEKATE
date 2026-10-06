@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -36,6 +38,9 @@ from hekate.domain.budget_math import price_usage
 from hekate.domain.types import AccountingCallId, OperationId, PermitId, ProviderCallId
 from hekate.ports.store import UowFactory
 from .token_accounting import measure_test_request, validate_measurement, validate_profile
+from .qwen_ollama import (
+    measure_qwen35_request,
+)
 
 MAX_REQUEST_BYTES = 2_097_152
 _LOG = logging.getLogger(__name__)
@@ -155,6 +160,34 @@ async def _trusted_call(factory: UowFactory, claims: dict[str, str], plan_profil
         plan = ProviderCallPlan.model_validate_json(canonical_json(raw_plan), strict=True)
         if plan.profile_id != plan_profile_id or plan.profile_digest != plan_profile_digest:
             raise ValueError("provider profile differs from admitted plan")
+        attempt = await uow.tasks.get_attempt(binding.attempt_id)
+        registry = await uow.agents.get_registry(binding.agent_registry_id)
+        if (
+            registry is None
+            or attempt.task_id != binding.task_id
+            or attempt.operation_id != operation_id
+            or attempt.input_revision != binding.input_revision
+            or attempt.agent_registry_id != binding.agent_registry_id
+            or registry.owner_scope != binding.scope
+            or registry.provider_id != binding.provider_agent_id
+        ):
+            raise ValueError("provider output contract binding is inconsistent")
+        if plan.output_contract is not None:
+            expected_contracts = {
+                ("hekate.turn", "planning"): ("hekate", "persistent", "hekate_turn_output_v1"),
+                ("hekate.synthesis", "synthesis"): ("hekate", "persistent", "hekate_turn_output_v1"),
+                ("hekate.reasoning", "hekate_reasoning"): ("hekate", "persistent", "hekate_turn_output_v1"),
+                ("hekate.synthesis", "synthesis_round2"): ("hekate", "persistent", "hekate_turn_output_v1"),
+                ("critic.review", "critic_review"): ("critic", "ephemeral", "critic_turn_output_v1"),
+            }
+            expected = expected_contracts.get((operation["kind"], attempt.kind))
+            if (
+                expected is None
+                or plan.output_contract != expected[2]
+                or registry.kind != expected[0]
+                or registry.persistence != expected[1]
+            ):
+                raise ValueError("admitted operation output contract differs from trusted attempt and registry")
         envelope = ExecutionEnvelope.model_validate_json(canonical_json(operation["envelope"]), strict=True)
         lease = await uow.agents.get_lease(binding.agent_registry_id)
         if lease is None or lease.fence != binding.fence or lease.expires_at <= datetime.now(UTC):
@@ -200,6 +233,179 @@ def _usage_from(value: object, source: str) -> dict[str, object] | None:
     return {"source": source, "completeness": completeness, **fields}
 
 
+class _ProviderSSEObserver:
+    """Bounded SSE parser that records content digests and terminal metadata only."""
+
+    def __init__(self) -> None:
+        self._pending = bytearray()
+        self._discarding_oversize_line = False
+        self._choices: dict[int, dict[str, object]] = {}
+        self._hashes: dict[int, object] = {}
+        self._reasoning_hashes: dict[tuple[int, str], object] = {}
+        self._wire_hash = hashlib.sha256()
+        self._wire_bytes = 0
+        self._done_seen = False
+        self._event_count = 0
+        self._event_order: list[dict[str, object]] = []
+        self._malformed_event_count = 0
+        self._oversize_line_count = 0
+
+    def feed(self, chunk: bytes) -> list[dict[str, object]]:
+        self._wire_hash.update(chunk)
+        self._wire_bytes += len(chunk)
+        self._pending.extend(chunk)
+        parsed: list[dict[str, object]] = []
+        while True:
+            try:
+                newline = self._pending.index(0x0A)
+            except ValueError:
+                break
+            line = bytes(self._pending[:newline]).rstrip(b"\r")
+            del self._pending[:newline + 1]
+            if self._discarding_oversize_line:
+                self._discarding_oversize_line = False
+                continue
+            record = self._data_line(line)
+            if record is not None:
+                parsed.append(record)
+        if len(self._pending) > 65_536:
+            self._pending[:] = self._pending[-65_536:]
+            self._discarding_oversize_line = True
+            self._oversize_line_count += 1
+        return parsed
+
+    def finish(self) -> list[dict[str, object]]:
+        if not self._pending or self._discarding_oversize_line:
+            self._pending.clear()
+            return []
+        line = bytes(self._pending).rstrip(b"\r")
+        self._pending.clear()
+        record = self._data_line(line)
+        return [record] if record is not None else []
+
+    def _data_line(self, line: bytes) -> dict[str, object] | None:
+        if not line.startswith(b"data:"):
+            return None
+        data = line[5:].strip()
+        if data == b"[DONE]":
+            self._done_seen = True
+            self._event_order.append({
+                "sequence": len(self._event_order) + 1,
+                "event": "done_marker",
+                "received_monotonic_ns": time.monotonic_ns(),
+            })
+            return None
+        try:
+            record = _strict_json(data)
+        except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+            self._malformed_event_count += 1
+            return None
+        if not isinstance(record, dict):
+            self._malformed_event_count += 1
+            return None
+        self._event_count += 1
+        ordered_event: dict[str, object] = {
+            "sequence": len(self._event_order) + 1,
+            "event": "provider_sse_data",
+            "received_monotonic_ns": time.monotonic_ns(),
+            "provider_response_id": record.get("id"),
+            "choice_events": [],
+            "usage_present": isinstance(record.get("usage"), dict),
+        }
+        choices = record.get("choices")
+        if isinstance(choices, list):
+            for choice in choices:
+                if not isinstance(choice, dict):
+                    continue
+                index = choice.get("index")
+                if type(index) is not int or index < 0:
+                    continue
+                summary = self._choices.setdefault(index, {
+                    "content_delta_events": 0,
+                    "content_utf8_bytes": 0,
+                    "finish_reason": None,
+                    "reasoning_channels": {},
+                })
+                finish_reason = choice.get("finish_reason")
+                if isinstance(finish_reason, str):
+                    summary["finish_reason"] = finish_reason
+                delta = choice.get("delta")
+                content = delta.get("content") if isinstance(delta, dict) else None
+                choice_event: dict[str, object] = {
+                    "choice_index": index,
+                    "channel": "assistant" if isinstance(content, str) and content else "metadata",
+                    "content_delta_utf8_bytes": 0,
+                    "content_delta_sha256": hashlib.sha256(b"").hexdigest(),
+                    "finish_reason": finish_reason,
+                }
+                if isinstance(content, str) and content:
+                    content_bytes = content.encode("utf-8", "strict")
+                    choice_event["content_delta_utf8_bytes"] = len(content_bytes)
+                    choice_event["content_delta_sha256"] = hashlib.sha256(content_bytes).hexdigest()
+                    summary["content_delta_events"] = int(summary["content_delta_events"]) + 1
+                    summary["content_utf8_bytes"] = int(summary["content_utf8_bytes"]) + len(content_bytes)
+                    digest = self._hashes.get(index)
+                    if digest is None:
+                        digest = hashlib.sha256()
+                        self._hashes[index] = digest
+                    digest.update(content_bytes)
+                if isinstance(delta, dict):
+                    channels = summary["reasoning_channels"]
+                    if not isinstance(channels, dict):
+                        channels = {}
+                        summary["reasoning_channels"] = channels
+                    for field in ("reasoning", "reasoning_content", "analysis"):
+                        reasoning = delta.get(field)
+                        if not isinstance(reasoning, str) or not reasoning:
+                            continue
+                        reasoning_bytes = reasoning.encode("utf-8", "strict")
+                        channel = channels.setdefault(field, {"delta_events": 0, "utf8_bytes": 0})
+                        channel["delta_events"] = int(channel["delta_events"]) + 1
+                        channel["utf8_bytes"] = int(channel["utf8_bytes"]) + len(reasoning_bytes)
+                        digest = self._reasoning_hashes.get((index, field))
+                        if digest is None:
+                            digest = hashlib.sha256()
+                            self._reasoning_hashes[(index, field)] = digest
+                        digest.update(reasoning_bytes)
+                        choice_event["channel"] = "reasoning" if choice_event["channel"] == "metadata" else "assistant_and_reasoning"
+                ordered_event["choice_events"].append(choice_event)
+        self._event_order.append(ordered_event)
+        return record
+
+    @property
+    def done_seen(self) -> bool:
+        return self._done_seen
+
+    def snapshot(self) -> dict[str, object]:
+        choices = []
+        for index in sorted(self._choices):
+            item = dict(self._choices[index])
+            digest = self._hashes.get(index)
+            item["index"] = index
+            item["content_sha256"] = digest.hexdigest() if digest is not None else hashlib.sha256(b"").hexdigest()
+            channels = item.get("reasoning_channels")
+            if isinstance(channels, dict):
+                item["reasoning_channels"] = {
+                    field: {
+                        **channel,
+                        "sha256": self._reasoning_hashes[(index, field)].hexdigest(),
+                    }
+                    for field, channel in sorted(channels.items())
+                    if isinstance(channel, dict) and (index, field) in self._reasoning_hashes
+                }
+            choices.append(item)
+        return {
+            "received_and_yielded_wire_utf8_bytes": self._wire_bytes,
+            "received_and_yielded_wire_sha256": self._wire_hash.hexdigest(),
+            "event_count": self._event_count,
+            "event_order": list(self._event_order),
+            "malformed_event_count": self._malformed_event_count,
+            "oversize_line_count": self._oversize_line_count,
+            "done_seen": self._done_seen,
+            "choices": choices,
+        }
+
+
 def create_provider_gateway(
     factory: UowFactory,
     profile: ProviderGatewayProfile,
@@ -217,6 +423,9 @@ def create_provider_gateway(
         "observation_write_failures": 0,
         "observation_conflicts": 0,
     }
+    capture_stream_observations = allow_test_profile and profile.test_only
+    app.state.last_provider_stream_observation = None
+    app.state.provider_stream_observations = [] if capture_stream_observations else None
     opener = _no_redirect_handler()
 
     def authenticated(request: Request) -> bool:
@@ -318,7 +527,14 @@ def create_provider_gateway(
                 or output_limit > envelope.max_output_tokens
             ):
                 raise ValueError("provider request exceeds the fixed profile or call plan")
-            measurement = measure_test_request(raw_body, body, profile.execution_profile, output_limit)
+            if profile.execution_profile.provider == "ollama-local":
+                _normalized_body, final_body, measurement = measure_qwen35_request(
+                    body, profile.execution_profile, output_limit,
+                    output_contract=plan.output_contract,
+                )
+            else:
+                final_body = raw_body
+                measurement = measure_test_request(raw_body, body, profile.execution_profile, output_limit)
             validate_measurement(
                 measurement, profile.execution_profile,
                 plan_max_input=plan.max_input_tokens,
@@ -371,7 +587,7 @@ def create_provider_gateway(
         upstream_url = profile.upstream_base_url.rstrip("/") + "/v1/chat/completions"
         upstream_request = urllib.request.Request(
             upstream_url,
-            data=raw_body,
+            data=final_body,
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {profile.upstream_api_key}", "Accept": request.headers.get("accept", "application/json")},
             method="POST",
         )
@@ -391,37 +607,27 @@ def create_provider_gateway(
         if is_sse:
             await _record_call(factory, profile, claims, binding, lease_owner, "RUNNING", None, None, app.state.metrics)
             completed = False
+            stream_observer = _ProviderSSEObserver()
 
             async def stream_body():
                 nonlocal provider_call_id, latest_usage, completed
-                finished = False
-                pending = b""
                 try:
                     while True:
                         chunk = await asyncio.to_thread(upstream.read, 8192)
                         if not chunk:
                             break
+                        for record in stream_observer.feed(chunk):
+                            candidate = record.get("id")
+                            if isinstance(candidate, str):
+                                provider_call_id = candidate
+                            latest_usage = _usage_from(record, "provider_reported") or latest_usage
                         yield chunk
-                        pending = (pending + chunk)[-65_536:]
-                        lines = pending.split(b"\n")
-                        pending = lines.pop()
-                        for line in lines:
-                            if not line.startswith(b"data:"):
-                                continue
-                            data = line[5:].strip()
-                            if data == b"[DONE]":
-                                finished = True
-                                continue
-                            try:
-                                record = _strict_json(data)
-                            except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
-                                continue
-                            if isinstance(record, dict):
-                                candidate = record.get("id")
-                                if isinstance(candidate, str):
-                                    provider_call_id = candidate
-                                latest_usage = _usage_from(record, "provider_reported") or latest_usage
-                    completed = finished
+                    for record in stream_observer.finish():
+                        candidate = record.get("id")
+                        if isinstance(candidate, str):
+                            provider_call_id = candidate
+                        latest_usage = _usage_from(record, "provider_reported") or latest_usage
+                    completed = stream_observer.done_seen
                 except asyncio.CancelledError:
                     await _record_call(factory, profile, claims, binding, lease_owner, "UNKNOWN", provider_call_id, latest_usage, app.state.metrics)
                     raise
@@ -429,6 +635,16 @@ def create_provider_gateway(
                     await _record_call(factory, profile, claims, binding, lease_owner, "UNKNOWN", provider_call_id, latest_usage, app.state.metrics)
                     raise
                 finally:
+                    observation = {
+                        **stream_observer.snapshot(),
+                        "operation_id": claims["operation_id"],
+                        "accounting_call_id": claims["accounting_call_id"],
+                        "provider_call_id": provider_call_id,
+                        "choice_scope": "choice index as received; reasoning channels summarized separately",
+                    }
+                    if capture_stream_observations:
+                        app.state.last_provider_stream_observation = observation
+                        app.state.provider_stream_observations.append(observation)
                     await asyncio.to_thread(upstream.close)
 
             async def record_stream_completion():

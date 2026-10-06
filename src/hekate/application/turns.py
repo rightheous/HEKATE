@@ -234,6 +234,7 @@ async def prepare_queued_tasks(
             prepared, _ = await prepare_runtime_session(
                 factory, runtime, binding_without_conversation, worker,
                 output_contract="hekate_turn_output_v1",
+                sdk_output_format=config.sdk_output_format,
             )
             binding = GuardBinding(
                 task_id=task.id, attempt_id=attempt_id, agent_registry_id=agent.registry_id,
@@ -365,6 +366,7 @@ async def prepare_queued_tasks(
                 pricing_version=config.pricing_version, max_input_tokens=config.max_input_tokens,
                 max_output_tokens=config.max_output_tokens, main_turn_calls=1,
                 compaction_calls=config.max_compaction_calls, retry_calls=0,
+                output_contract="hekate_turn_output_v1",
             )
             await admit_operation(factory, AdmissionRequest(
                 binding=binding, reservation=reservation, envelope=envelope,
@@ -699,6 +701,7 @@ async def prepare_critic_workflow_steps(
             )
             prepared, _ = await prepare_runtime_session(
                 factory, runtime, conversationless, worker, output_contract=output_contract,
+                sdk_output_format=config.sdk_output_format,
             )
             binding = GuardBinding(
                 task_id=task.id, attempt_id=attempt_id, agent_registry_id=agent.registry_id,
@@ -748,6 +751,7 @@ async def prepare_critic_workflow_steps(
                 model=config.model, pricing_version=config.pricing_version,
                 max_input_tokens=config.max_input_tokens, max_output_tokens=config.max_output_tokens,
                 main_turn_calls=1, compaction_calls=config.max_compaction_calls, retry_calls=0,
+                output_contract=output_contract,
             )
             await admit_operation(factory, AdmissionRequest(
                 binding=binding, reservation=reservation, envelope=envelope,
@@ -1081,6 +1085,7 @@ async def prepare_deliberation_steps(
             prepared, _ = await prepare_runtime_session(
                 factory, runtime, conversationless, worker,
                 output_contract="critic_turn_output_v1" if is_critic else "hekate_turn_output_v1",
+                sdk_output_format=config.sdk_output_format,
             )
             binding = GuardBinding(
                 task_id=task.id, attempt_id=attempt_id, agent_registry_id=agent.registry_id,
@@ -1126,6 +1131,7 @@ async def prepare_deliberation_steps(
                 model=config.model, pricing_version=config.pricing_version,
                 max_input_tokens=config.max_input_tokens, max_output_tokens=config.max_output_tokens,
                 main_turn_calls=1, compaction_calls=config.max_compaction_calls, retry_calls=0,
+                output_contract="critic_turn_output_v1" if is_critic else "hekate_turn_output_v1",
             )
             stage_hash = uow.deliberation.stage_hash(step)
             await admit_operation(factory, AdmissionRequest(

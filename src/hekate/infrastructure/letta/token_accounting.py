@@ -161,6 +161,20 @@ def validate_profile(
     *,
     allow_test_profile: bool,
 ) -> None:
+    if profile.provider == "ollama-local":
+        if not allow_test_profile:
+            raise ValueError("Qwen request contracts are enabled only for explicit test-only gateway construction")
+        from .qwen_ollama import (
+            is_qwen35_native_json_schema_profile,
+            validate_qwen35_native_json_schema_profile,
+            validate_qwen_test_profile,
+        )
+
+        if is_qwen35_native_json_schema_profile(profile):
+            validate_qwen35_native_json_schema_profile(profile, price_table)
+        else:
+            validate_qwen_test_profile(profile, price_table)
+        return
     if not profile.test_only or profile.verification_state != "TEST_CONTRACT_VERIFIED" or not allow_test_profile:
         raise ValueError("only the explicitly enabled verified fake-chat test profile is available")
     encoding = _encoding()

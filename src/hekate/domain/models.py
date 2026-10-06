@@ -73,6 +73,9 @@ class TaskExecutionConfig:
     model_revision: str
     profile_digest: str
     pricing_effective_at: str
+    agent_system_prompt: str | None = None
+    letta_context_estimator_tokens: int | None = None
+    sdk_output_format: bool = True
 
 
 def snapshot_task(
@@ -168,6 +171,7 @@ class ProviderCallPlan(ContractModel):
     main_turn_calls: int = Field(ge=0)
     compaction_calls: int = Field(ge=0)
     retry_calls: Literal[0] = 0
+    output_contract: Literal["hekate_turn_output_v1", "critic_turn_output_v1"] | None = None
 
 
 class UserMessage(ContractModel):
@@ -588,6 +592,83 @@ class ProviderExecutionProfile(ContractModel):
         "TEST_CONTRACT_VERIFIED", "PRODUCTION_VERIFIED", "UNCONFIGURED", "UNSUPPORTED", "UNVERIFIED",
     ]
     evidence_digests: tuple[str, ...] = Field(min_length=1, max_length=16)
+
+    @property
+    def content_digest(self) -> str:
+        return canonical_json_hash(self)
+
+
+class QwenOllamaCandidateProfile(ContractModel):
+    """Read-only verified identity for the local Qwen candidate; never production approval."""
+
+    profile_id: str = Field(min_length=1, max_length=128)
+    test_only: Literal[True] = True
+    dispatch_approved: Literal[False] = False
+    provider: Literal["ollama-local"] = "ollama-local"
+    request_protocol: Literal["openai-compatible-chat-completions-v1"] = "openai-compatible-chat-completions-v1"
+    model: str = Field(min_length=1, max_length=256)
+    ollama_version: str = Field(min_length=1, max_length=32)
+    ollama_source_revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    llama_cpp_version: str = Field(min_length=1, max_length=32)
+    llama_cpp_source_revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    model_manifest_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    gguf_model_blob_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    model_architecture: str = Field(min_length=1, max_length=64)
+    model_parameter_count: int = Field(ge=1)
+    model_quantization: str = Field(min_length=1, max_length=64)
+    model_license: str = Field(min_length=1, max_length=128)
+    agent_system_prompt: str = Field(min_length=1, max_length=2048)
+    agent_system_prompt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    model_metadata_context_tokens: int = Field(ge=1)
+    context_window_tokens: int = Field(ge=1)
+    letta_context_estimator_tokens: int = Field(ge=1)
+    sdk_output_format: Literal[False] = False
+    max_input_tokens: int = Field(ge=1)
+    max_output_tokens: int = Field(ge=1)
+    output_ceiling_includes_reasoning: Literal[True] = True
+    additional_reserved_tokens: int = Field(ge=0)
+    runtime_context_source: str = Field(min_length=1, max_length=256)
+    runtime_context_verified: Literal[False] = False
+    loaded_context_tokens: None = None
+    tokenizer_implementation: str = Field(min_length=1, max_length=128)
+    tokenizer_version: str = Field(min_length=1, max_length=64)
+    tokenizer_model: str = Field(min_length=1, max_length=32)
+    tokenizer_pre: str = Field(min_length=1, max_length=64)
+    tokenizer_asset_revision: str = Field(min_length=1, max_length=128)
+    tokenizer_asset_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    tokenizer_tokens_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    tokenizer_merges_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    tokenizer_token_types_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    tokenizer_vocab_size: int = Field(ge=1)
+    tokenizer_merge_count: int = Field(ge=1)
+    renderer_id: str = Field(min_length=1, max_length=128)
+    renderer_revision: str = Field(min_length=1, max_length=128)
+    renderer_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    request_normalizer_id: str = Field(min_length=1, max_length=128)
+    request_normalizer_revision: str = Field(min_length=1, max_length=128)
+    request_normalizer_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    parser_id: str = Field(min_length=1, max_length=128)
+    parser_revision: str = Field(min_length=1, max_length=128)
+    parser_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    model_template_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    thinking_policy: Literal["reasoning_effort=none"] = "reasoning_effort=none"
+    request_support: tuple[str, ...] = Field(min_length=1, max_length=64)
+    usage_semantics: Literal["aggregate_input_output_v1"] = "aggregate_input_output_v1"
+    pricing_version: str = Field(min_length=1, max_length=128)
+    pricing_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    currency: Literal["USD"] = "USD"
+    pricing_unit: Literal["USD_PER_MILLION_AGGREGATE_TOKENS"] = "USD_PER_MILLION_AGGREGATE_TOKENS"
+    pricing_effective_at: str = Field(min_length=1, max_length=40)
+    external_tariff_input_usd_per_million: str = "0"
+    external_tariff_output_usd_per_million: str = "0"
+    local_cost_policy_source: str = Field(min_length=1, max_length=256)
+    provider_reported_zero_cost: Literal[False] = False
+    gpu_energy_cost_included: Literal[False] = False
+    metadata_identity_verified: Literal[True] = True
+    offline_reference_verified: Literal[True] = True
+    inference_usage_verified: Literal[False] = False
+    operational_dispatch_approved: Literal[False] = False
+    evidence_digests: tuple[str, ...] = Field(min_length=1, max_length=32)
 
     @property
     def content_digest(self) -> str:

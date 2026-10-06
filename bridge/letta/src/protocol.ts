@@ -31,6 +31,8 @@ export type Command =
       persistence?: "persistent" | "ephemeral" | null;
       registry_id?: string | null;
       model?: string | null;
+      system_prompt?: string | null;
+      context_window_tokens?: number | null;
       max_input_tokens?: number | null;
       max_output_tokens?: number | null;
     })
@@ -45,6 +47,7 @@ export type Command =
       command: "session.prepare";
       binding: RuntimeBinding;
       output_contract?: "hekate_turn_output_v1" | "critic_turn_output_v1" | "position_commit_v1" | null;
+      sdk_output_format?: boolean;
     })
   | (CommandBase & {
       command: "session.turn";

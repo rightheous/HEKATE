@@ -1,0 +1,31 @@
+{
+  "conclusion": {
+    "agent_id": "6d6949f6-9498-515e-9677-a4056ca98689",
+    "assessment": {
+      "confidence": {
+        "basis": [
+          "17과 25의 합은 42이다."
+        ],
+        "level": "high"
+      },
+      "statement": "17과 25의 합은 42이다."
+    },
+    "attempt_id": "9ecddc09-0a7c-579b-b1f8-2819da7e9e7c",
+    "position_recommendation": {
+      "action": "answer",
+      "summary": "17과 25의 합은 42이다."
+    },
+    "recommended_next_step": {
+      "type": "none"
+    },
+    "schema_version": "1",
+    "status": "done",
+    "task_id": "dfe17e20-b154-45c5-8468-f83c5ef61f8e"
+  },
+  "proposal": {
+    "action": "answer",
+    "answer": "17과 25의 합은 42입니다.",
+    "schema_version": "1"
+  },
+  "schema_version": "1"
+}

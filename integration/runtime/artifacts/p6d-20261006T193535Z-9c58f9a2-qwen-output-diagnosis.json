@@ -1,0 +1,561 @@
+{
+  "actual_run": {
+    "accounting": {
+      "call_status": "QUIESCENT",
+      "configured_tariff_usd": "0",
+      "host_energy_cost": "unmeasured",
+      "input_matches_measurement": true,
+      "measured_input_tokens": 4091,
+      "permit_state": "CONSUMED",
+      "provider_input_tokens": 4091,
+      "provider_output_tokens": 338,
+      "provider_total_tokens": 4429,
+      "settlement": "SETTLED",
+      "usage": "COMPLETE"
+    },
+    "accounting_call_id": "3baeadc7-373e-4e7f-a4cc-57649f8e785e",
+    "actual_provider_calls": 1,
+    "actual_same_key_replay": {
+      "fake_provider_requests_after_replay": 0,
+      "no_new_accounting_effect": true,
+      "no_new_fake_request": true,
+      "no_new_upstream_request": true,
+      "provider_accounting_effects_after_replay": {
+        "consumed_permits": 1,
+        "ledger_entries": 4,
+        "permits": 1,
+        "provider_calls": 1
+      },
+      "provider_accounting_effects_before_replay": {
+        "consumed_permits": 1,
+        "ledger_entries": 4,
+        "permits": 1,
+        "provider_calls": 1
+      },
+      "same_task_id": true
+    },
+    "app_server": {
+      "assistant_bytes": 763,
+      "combined_raw_sha256": "not available; no combined App Server raw file was retained",
+      "event_count": 240,
+      "ordered_delta_hashes_match": true
+    },
+    "artifact": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen.json",
+    "attempt_id": "9ecddc09-0a7c-579b-b1f8-2819da7e9e7c",
+    "authorized_generation_attempts": 1,
+    "boundaries": {
+      "app_server_assistant_stream": {
+        "aggregate_raw_hash_available": false,
+        "event_count": 270,
+        "matches_provider_content_by_delta": true,
+        "sha256": null,
+        "truncated": false,
+        "utf8_bytes": 763
+      },
+      "bridge_raw_output": {
+        "event_count": 240,
+        "sha256": "4256735f07346f244ce48f83aea95a60cbdde5e0c15276e0f17d640cec2af9ce",
+        "utf8_bytes": 669
+      },
+      "gateway_received_and_yielded_choice_0": {
+        "event_count": 270,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "utf8_bytes": 763
+      },
+      "ollama_choice_0_content": {
+        "event_count": 270,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "truncated": false,
+        "utf8_bytes": 763
+      },
+      "postgresql_raw_output": {
+        "sha256": "4256735f07346f244ce48f83aea95a60cbdde5e0c15276e0f17d640cec2af9ce",
+        "utf8_bytes": 669
+      },
+      "provider_adapter_emitted_text_delta": {
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "truncated": false,
+        "utf8_bytes": 763
+      },
+      "provider_adapter_received_content": {
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "truncated": false,
+        "utf8_bytes": 763
+      },
+      "sdk_assistant_messages": {
+        "event_count": 240,
+        "sha256": "4256735f07346f244ce48f83aea95a60cbdde5e0c15276e0f17d640cec2af9ce",
+        "utf8_bytes": 669
+      },
+      "sdk_result_text": {
+        "event_count": 0,
+        "sha256": null,
+        "utf8_bytes": null
+      }
+    },
+    "candidate_profile_digest": "84791c7a4ab479f92542d3200d967c547688a04f54910656045b2a3800f3ae60",
+    "execution_profile_digest": "caaf40fcb793d2d7bc7fb65ae3497d6e9dfa6aa6c3ef2a549d0f2a1e1221cb81",
+    "failure_diagnosis": {
+      "accepted_user_answer": false,
+      "app_server_terminal_order_after_sdk_result": [
+        "usage_statistics",
+        "stop_reason"
+      ],
+      "full_observed_stream_seconds": 31.977372367616333,
+      "recomputed_first_divergence": "sdk_assistant_messages:content_mismatch",
+      "sdk_and_postgres_prefix_bytes": 669,
+      "sdk_and_postgres_prefix_sha256": "4256735f07346f244ce48f83aea95a60cbdde5e0c15276e0f17d640cec2af9ce",
+      "sdk_timeout_ms": 30000,
+      "source_stop_reason": "POLICY",
+      "source_task_state": "FAILED"
+    },
+    "gateway_context_tokens": 8192,
+    "generation_free_model_loads": 1,
+    "ledger": "integration/runtime/artifacts/p6d-qwen-output-observed-authorized-attempt-ledger.json",
+    "loaded_context_tokens": 65536,
+    "operation_id": "2c4320bb-d3e4-51ed-a8d7-7b7aa89078c9",
+    "permit_id": "f6012d89-6e24-515b-9a3c-2d02cdfc101d",
+    "provider_agent_id": "agent-local-09d36f2c-7623-4653-8cf6-2ad775af0613",
+    "provider_response": {
+      "answer": "17과 25의 합은 42입니다.",
+      "assistant_deltas": 270,
+      "choice_bytes": 763,
+      "choice_path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/provider-choice-0.txt",
+      "choice_sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+      "done": true,
+      "finish_reason": "stop",
+      "frames_including_done": 273,
+      "limits": {
+        "assistant_bytes": 65536,
+        "sse_bytes": 2097152,
+        "within_bounds": true
+      },
+      "reasoning_deltas": 0,
+      "sse_bytes": 64872,
+      "sse_path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/provider-response.sse",
+      "sse_sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829",
+      "strict_parse": "pass",
+      "trusted_binding_check": "pass",
+      "validated_revision": 1
+    },
+    "provider_response_id": "chatcmpl-906",
+    "question": "17과 25의 합을 한국어 한 문장으로 답해줘.",
+    "registry_id": "6d6949f6-9498-515e-9677-a4056ca98689",
+    "request_sha256": "c472ba6740bca7545b515cf5f3b3da32836628bfd872d5cdea0f90bfa3804717",
+    "schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+    "source_artifact_sha256": "f116488d1ab1ff3283501cd205276dd60b9e32275c05d041b4cc380328d238b2",
+    "task_id": "dfe17e20-b154-45c5-8468-f83c5ef61f8e"
+  },
+  "branch": "phase6c-ollama-qwen-profile",
+  "commands": [
+    "phase6c_ollama_qwen_probe.py --output-delivery-reproduction (fresh isolated PostgreSQL; URL redacted)",
+    "phase6c_ollama_qwen_probe.py --replay-captured-sse <source-artifact> --bridge-request-timeout-ms 30000 (fresh isolated PostgreSQL; URL redacted)",
+    "phase6c_ollama_qwen_probe.py --replay-captured-sse <source-artifact> --bridge-request-timeout-ms 240000 (fresh isolated PostgreSQL; URL redacted)",
+    "python -m py_compile scripts/phase6c_ollama_qwen_probe.py scripts/phase3_runtime_probe.py",
+    "npm run build (bridge/letta)",
+    "git diff --check"
+  ],
+  "created_at": "2026-10-06T19:35:35.843241Z",
+  "fake_verification": {
+    "multidelta_preflight": {
+      "artifact": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery.json",
+      "checks": {
+        "complete_fixture_matches_historical_size_count_and_terminal_shape": true,
+        "complete_task_accepted": true,
+        "incomplete_fixture_is_one_byte_short_and_uses_same_frame_terminal": true,
+        "incomplete_task_rejected": true
+      },
+      "fake_requests": 2,
+      "status": "pass"
+    },
+    "new_actual_provider_calls": 0,
+    "timeout_240ms": {
+      "actual_provider_calls": 0,
+      "artifact": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms.json",
+      "call": {
+        "call_status": "QUIESCENT",
+        "measurement_status": "MEASURED",
+        "permit_state": "CONSUMED",
+        "settlement_state": "SETTLED",
+        "usage_completeness": "COMPLETE"
+      },
+      "database": "hekate_phase6c_replay_timeout240_7824ba6a",
+      "expected_outcome": "complete_transport_replay_with_stale_source_binding_rejected",
+      "fake_http_complete": true,
+      "fake_requests": 1,
+      "first_divergence": null,
+      "probe_status": "pass",
+      "same_key_replay_no_effect": true,
+      "sdk_timeout_truncation_reproduced": false,
+      "stages": {
+        "app_server_assistant_stream": {
+          "event_count": 270,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "truncated": false,
+          "utf8_bytes": 763
+        },
+        "bridge_raw_output": {
+          "event_count": 270,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "utf8_bytes": 763
+        },
+        "gateway_received_and_yielded_choice_0": {
+          "event_count": 270,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "utf8_bytes": 763
+        },
+        "ollama_choice_0_content": {
+          "event_count": 270,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "truncated": false,
+          "utf8_bytes": 763
+        },
+        "postgresql_raw_output": {
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "utf8_bytes": 763
+        },
+        "provider_adapter_emitted_text_delta": {
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "truncated": false,
+          "utf8_bytes": 763
+        },
+        "provider_adapter_received_content": {
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "truncated": false,
+          "utf8_bytes": 763
+        },
+        "sdk_assistant_messages": {
+          "event_count": 270,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "utf8_bytes": 763
+        },
+        "sdk_result_text": {
+          "event_count": 1,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "utf8_bytes": 763
+        }
+      },
+      "stale_source_binding_rejected": true,
+      "synthetic_fake_usage": true,
+      "task": {
+        "accepted_user_response": null,
+        "response_present": true,
+        "response_sha256": "048a932c882abd65ff6c8b883da369d441ba3149c0b3ecb94eb706753d55e5e0",
+        "result_status": "failed",
+        "state": "FAILED",
+        "stop_reason": "POLICY",
+        "task_id": "a88c3b4a-2c53-4f25-9ea2-a07bf640286b"
+      },
+      "timeout_ms": 240000,
+      "transport_complete_through_postgresql": true
+    },
+    "timeout_30ms": {
+      "actual_provider_calls": 0,
+      "artifact": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms.json",
+      "call": {
+        "call_status": "QUIESCENT",
+        "measurement_status": "MEASURED",
+        "permit_state": "CONSUMED",
+        "settlement_state": "SETTLED",
+        "usage_completeness": "COMPLETE"
+      },
+      "database": "hekate_phase6c_replay_timeout30_86c17278",
+      "expected_outcome": "sdk_timeout_truncation_reproduced",
+      "fake_http_complete": true,
+      "fake_requests": 1,
+      "first_divergence": "sdk_assistant_messages:content_mismatch",
+      "probe_status": "pass",
+      "same_key_replay_no_effect": true,
+      "sdk_timeout_truncation_reproduced": true,
+      "stages": {
+        "app_server_assistant_stream": {
+          "event_count": 270,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "truncated": false,
+          "utf8_bytes": 763
+        },
+        "bridge_raw_output": {
+          "event_count": 171,
+          "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+          "utf8_bytes": 493
+        },
+        "gateway_received_and_yielded_choice_0": {
+          "event_count": 270,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "utf8_bytes": 763
+        },
+        "ollama_choice_0_content": {
+          "event_count": 270,
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "truncated": false,
+          "utf8_bytes": 763
+        },
+        "postgresql_raw_output": {
+          "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+          "utf8_bytes": 493
+        },
+        "provider_adapter_emitted_text_delta": {
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "truncated": false,
+          "utf8_bytes": 763
+        },
+        "provider_adapter_received_content": {
+          "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+          "truncated": false,
+          "utf8_bytes": 763
+        },
+        "sdk_assistant_messages": {
+          "event_count": 171,
+          "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+          "utf8_bytes": 493
+        },
+        "sdk_result_text": {
+          "event_count": 0,
+          "sha256": null,
+          "utf8_bytes": null
+        }
+      },
+      "stale_source_binding_rejected": true,
+      "synthetic_fake_usage": true,
+      "task": {
+        "accepted_user_response": null,
+        "response_present": true,
+        "response_sha256": "dbcfb611e881f16b4dc0f8db913cfb03ee29dae12db0df4201c21719f1514ce1",
+        "result_status": "failed",
+        "state": "FAILED",
+        "stop_reason": "POLICY",
+        "task_id": "73d955f7-b6cf-4f64-9bab-4a2ffa7197ec"
+      },
+      "timeout_ms": 30000,
+      "transport_complete_through_postgresql": false
+    },
+    "timing_caveat": "measured first-delta delay applied before fake HTTP headers; subsequent intervals replayed; upstream header timing and HTTP chunk boundaries unavailable"
+  },
+  "fingerprints": {
+    "actual_execution": "4fe9e4f26fadd051ff22ffd1a20102649029c8904c9babaf2e5f0ac85ba0e7fb",
+    "final_code": "58aa8c2d2ce35e0a9f4b73cca4487bce5ddab87a32dcdaff8d182aba7e91fd79",
+    "final_files": [
+      {
+        "bytes": 44471,
+        "path": "bridge/letta/src/main.ts",
+        "sha256": "b1bc30daa2985944d29e98b76f0e5e3b08e3d65dc6405358967c0a5317acf9e0"
+      },
+      {
+        "bytes": 7527,
+        "path": "bridge/letta/src/protocol.ts",
+        "sha256": "8332ee2e22239654f6c9ba55f4bced997648a0793cd1f9f4162b9adf9b1331d3"
+      },
+      {
+        "bytes": 5216,
+        "path": "config/local-candidates.yaml",
+        "sha256": "16b43c49b7fa70756a8bf3e5d6f8aed9e383c0a1c62936f13ff0412161b4b1e8"
+      },
+      {
+        "bytes": 39085,
+        "path": "contracts/generated/bridge.v1.schema.json",
+        "sha256": "87c60a59cb5ec3689e7653b716a594a149b934bf7d4e9143222da0af52bb0e33"
+      },
+      {
+        "bytes": 13344,
+        "path": "docs/implementation/phase6c-ollama-qwen-profile.md",
+        "sha256": "424666f0516723a8804213d4a7867c8dd6b2775ebaff88fcdada6eae94de612a"
+      },
+      {
+        "bytes": 23903,
+        "path": "docs/implementation/phase6d-local-qwen-smoke.md",
+        "sha256": "1f15c440b056626c7d3947d02286ead6eefe041e1953f1898206de8dd9427b0c"
+      },
+      {
+        "bytes": 52788,
+        "path": "integration/letta/patches/provider-call-context-usage.patch",
+        "sha256": "70e395632b9899edd213a4bf2e52acaa0662443f954217c0eb6271461db4be05"
+      },
+      {
+        "bytes": 1187,
+        "path": "integration/letta/versions.lock.json",
+        "sha256": "760cbce19a44ce787738b2d7e8e9287f0a89724a6e72476526b31e8988307e1f"
+      },
+      {
+        "bytes": 10059,
+        "path": "integration/runtime/fixtures/qwen35-renderer-tokenizer-v1.json",
+        "sha256": "18767749bad4b998bb1fd7322c9904c9ade72de09821686bd03661a1e74f3e41"
+      },
+      {
+        "bytes": 1122,
+        "path": "pyproject.toml",
+        "sha256": "6ac20065ee3e9423930601eea8af1092df857895c5ceb2d9e6f0e91da3f66232"
+      },
+      {
+        "bytes": 3428,
+        "path": "scripts/build_qwen35_unicode_flags.py",
+        "sha256": "141acd43566d8f0eff98751d21503dbf5576e9b5fab6da3a7c7ea309bdc8a54a"
+      },
+      {
+        "bytes": 1080,
+        "path": "scripts/export_contracts.py",
+        "sha256": "a5e2ce3586c266829e7fe8fa4fa4b92342f000e7d617c606baaf5c39b47f6df5"
+      },
+      {
+        "bytes": 115194,
+        "path": "scripts/phase3_runtime_probe.py",
+        "sha256": "a87e6e46f7c3430d2bb8ee5719a630aba91744fa8b183ccb59d2f1ae906953db"
+      },
+      {
+        "bytes": 204944,
+        "path": "scripts/phase6c_ollama_qwen_probe.py",
+        "sha256": "a7b4935690b712b0c06da33c023fb3cbccbceeb6680d1adf35256c753fd4798d"
+      },
+      {
+        "bytes": 82336,
+        "path": "src/hekate/application/lifecycle.py",
+        "sha256": "ff69faf8dd14406cf228441701f5e86d28944a55ebcfefea4f678f752fea16cf"
+      },
+      {
+        "bytes": 30655,
+        "path": "src/hekate/application/operations.py",
+        "sha256": "61c1f3d4fb0f25b01a0f1cfbac07d5e07dc5536a3ee8a19b50c9c4db2a23525f"
+      },
+      {
+        "bytes": 70788,
+        "path": "src/hekate/application/turns.py",
+        "sha256": "1b0a18148a20828819f98fb07811a1348908f4a7dc07049296d58c8cb3f0187b"
+      },
+      {
+        "bytes": 9448,
+        "path": "src/hekate/domain/bridge_contracts.py",
+        "sha256": "e7be903b0c095d7e900315e52bb66053d3e2b0387b22d6d6024121869777d9c8"
+      },
+      {
+        "bytes": 42606,
+        "path": "src/hekate/domain/models.py",
+        "sha256": "29b948c162979dedc7892c3690444860052fbd8abb3384c58c3fc2fc725433e4"
+      },
+      {
+        "bytes": 11803,
+        "path": "src/hekate/infrastructure/letta/adapter.py",
+        "sha256": "be3a4d2a1a160a4a2172e69b2ad3ae93c1e4c5b1eeffdb6f55718b634c631a9e"
+      },
+      {
+        "bytes": 7960382,
+        "path": "src/hekate/infrastructure/letta/assets/qwen35_installed_tokenizer.v1.json",
+        "sha256": "136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f"
+      },
+      {
+        "bytes": 31786,
+        "path": "src/hekate/infrastructure/letta/assets/qwen35_unicode_flags.v1.json",
+        "sha256": "3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69"
+      },
+      {
+        "bytes": 35474,
+        "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+        "sha256": "7fe05d6f0508fc6e6e268283827d78751de373cf7b00728c9589cba4f9385334"
+      },
+      {
+        "bytes": 47158,
+        "path": "src/hekate/infrastructure/letta/qwen_ollama.py",
+        "sha256": "2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525"
+      },
+      {
+        "bytes": 20258,
+        "path": "src/hekate/infrastructure/letta/token_accounting.py",
+        "sha256": "7004f5d1e7d8362f0857312a9f6f897a679c570e0ed0ac454a25092e6ab532aa"
+      },
+      {
+        "bytes": 1937,
+        "path": "src/hekate/ports/runtime.py",
+        "sha256": "5b83330c93b5c5a2e81e2685a07b7f5beaf8eae06b3ba84ebd4402579cf8d8fe"
+      },
+      {
+        "bytes": 19583,
+        "path": "src/hekate/settings.py",
+        "sha256": "2b9543d1f700aa7e3faeac4f8b5857e274d13056436a2932e1777afef2d792e0"
+      },
+      {
+        "bytes": 12266,
+        "path": "tests/unit/test_phase6d_local_probe_guard.py",
+        "sha256": "ae78fc276cd7f6d9e48e2145efd1d9dda2fbfe2847075c11886930a56975530c"
+      },
+      {
+        "bytes": 3233,
+        "path": "tests/unit/test_provider_gateway_sse.py",
+        "sha256": "feca18b5d64ab0530b9f5ab145c75d2ac59a9a3b45f2023891e06fd65a02c4d1"
+      },
+      {
+        "bytes": 15209,
+        "path": "tests/unit/test_qwen_ollama.py",
+        "sha256": "b8ad2456a2566e01a6abfddb557c2ff89ac9cb5dde6456a63d14e594140ccfa8"
+      }
+    ]
+  },
+  "goal_status": {
+    "additional_actual_calls_this_turn": 0,
+    "checks": [
+      "Python compile",
+      "bridge build",
+      "whitespace check",
+      "multi-delta pinned fake preflight",
+      "strict output parse and trusted binding validation",
+      "SDK-first source reanalysis",
+      "30s and 240s captured SSE pinned runtime/PostgreSQL replays"
+    ],
+    "diagnostic_goal": "complete",
+    "g7": "deferred",
+    "g8": "pending",
+    "not_run": [
+      "No further Ollama generation or model load",
+      "No full Phase 3–6 verifier",
+      "No production dispatch or G7/G8/projection work"
+    ],
+    "phase6d_answer_success": "not achieved",
+    "prior_unknown_live_databases_rechecked": true,
+    "production_dispatch": "blocked",
+    "projection": "unsupported/not executed",
+    "total_authorized_actual_generation_calls": 1
+  },
+  "head": "9c25acca594d3edb5db4f2ce710e490b7e6d95b7",
+  "preserved_synthetic_unknowns": [
+    {
+      "accounting_call_id": "d5147e24-35d3-4aec-8fd1-9da6bdb02cab",
+      "artifact": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms.json",
+      "call": "UNKNOWN/MEASURED",
+      "database": "hekate_phase6c_replay_timeout30_9c868f84",
+      "operation_id": "a29856b1-72c9-5905-8649-76d6bb6576f4",
+      "permit": "CONSUMED",
+      "task_id": "b7a28fbc-67b5-4a42-852e-2aebfe58f1f3",
+      "usage": "UNKNOWN/PENDING"
+    },
+    {
+      "accounting_call_id": "e78c5316-94b3-4f8c-830b-07949c1dd736",
+      "artifact": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms.json",
+      "call": "UNKNOWN/MEASURED",
+      "database": "hekate_phase6c_replay_timeout240_9c868f84",
+      "operation_id": "8783544a-4d6d-522b-b665-2c17d5f9d353",
+      "permit": "CONSUMED",
+      "task_id": "ca263fa6-1c8a-49fa-9e6e-279dcc44613c",
+      "usage": "UNKNOWN/PENDING"
+    }
+  ],
+  "probe": "phase6d-one-authorized-qwen-output-diagnosis",
+  "run_id": "p6d-20261006T193535Z-9c58f9a2",
+  "runtime": {
+    "app_server": "0.33.8",
+    "app_server_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "bridge_protocol": "1",
+    "image_id": "sha256:f56d530fbbc0cf5c827f6c3d51e9cbccf68ffa39a79a8072409e896e211d45e6",
+    "migration_head": "0013_provider_token_measurement",
+    "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+    "node": "22.19.0",
+    "ollama": "0.34.0",
+    "postgres": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "runtime_patch_sha256": "70e395632b9899edd213a4bf2e52acaa0662443f954217c0eb6271461db4be05",
+    "sdk": "0.8.25"
+  },
+  "schema_version": "1",
+  "worktree": {
+    "commit_push_pr_merge_performed": false,
+    "existing_changes_preserved": true,
+    "path": "/home/hekate/hekate-phase6c-ollama-qwen-profile",
+    "staged_changes": false,
+    "uncommitted_entries": 87
+  }
+}

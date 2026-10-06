@@ -23,4 +23,4 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hekate"]
-force-include = { "src/hekate/infrastructure/letta/assets/cl100k_base.tiktoken" = "hekate/infrastructure/letta/assets/cl100k_base.tiktoken", "src/hekate/infrastructure/letta/assets/test_chat_contract.v1.json" = "hekate/infrastructure/letta/assets/test_chat_contract.v1.json" }
+force-include = { "src/hekate/infrastructure/letta/assets/cl100k_base.tiktoken" = "hekate/infrastructure/letta/assets/cl100k_base.tiktoken", "src/hekate/infrastructure/letta/assets/test_chat_contract.v1.json" = "hekate/infrastructure/letta/assets/test_chat_contract.v1.json", "src/hekate/infrastructure/letta/assets/qwen35_installed_tokenizer.v1.json" = "hekate/infrastructure/letta/assets/qwen35_installed_tokenizer.v1.json", "src/hekate/infrastructure/letta/assets/qwen35_unicode_flags.v1.json" = "hekate/infrastructure/letta/assets/qwen35_unicode_flags.v1.json" }

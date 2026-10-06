@@ -98,6 +98,7 @@ async def prepare_runtime_session(
     binding: RuntimeBinding,
     lease_owner: str,
     output_contract: str | None = None,
+    sdk_output_format: bool = True,
 ) -> tuple[RuntimeBinding, dict[str, object]]:
     async with factory() as uow:
         agent = await uow.agents.lock_registry(binding.agent_registry_id)
@@ -112,11 +113,17 @@ async def prepare_runtime_session(
             raise PolicyDenied("agent is not ready for session preparation")
         await uow.commit()
 
-    prepared, session = (
-        await runtime.prepare_session(binding, output_contract=output_contract)
-        if output_contract is not None
-        else await runtime.prepare_session(binding)
-    )
+    if output_contract is not None:
+        if sdk_output_format:
+            prepared, session = await runtime.prepare_session(binding, output_contract=output_contract)
+        else:
+            prepared, session = await runtime.prepare_session(
+                binding, output_contract=output_contract, sdk_output_format=False,
+            )
+    elif sdk_output_format:
+        prepared, session = await runtime.prepare_session(binding)
+    else:
+        prepared, session = await runtime.prepare_session(binding, sdk_output_format=False)
     if (
         prepared.task_id != binding.task_id
         or prepared.attempt_id != binding.attempt_id

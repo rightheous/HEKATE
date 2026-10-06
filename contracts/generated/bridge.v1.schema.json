@@ -9,6 +9,19 @@
           "title": "Command",
           "type": "string"
         },
+        "context_window_tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Context Window Tokens"
+        },
         "creation_tag": {
           "maxLength": 128,
           "minLength": 1,
@@ -114,6 +127,19 @@
           "const": "1",
           "title": "Schema Version",
           "type": "string"
+        },
+        "system_prompt": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "System Prompt"
         }
       },
       "required": [
@@ -1486,6 +1512,11 @@
           "const": "1",
           "title": "Schema Version",
           "type": "string"
+        },
+        "sdk_output_format": {
+          "default": true,
+          "title": "Sdk Output Format",
+          "type": "boolean"
         }
       },
       "required": [
