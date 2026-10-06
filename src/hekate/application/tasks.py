@@ -312,7 +312,7 @@ async def process_pending_execution_tasks(factory: UowFactory, limit: int = 100)
         task_id = TaskId(candidate["id"])
         scope = ScopeId(candidate["owner_scope"])
         async with factory() as uow:
-            await uow.tasks.lock_scope(scope)
+            await uow.tasks.lock_scope_for_observation(scope)
             resolved = await converge_task_execution(uow, task_id, candidate["input_revision"])
             if resolved is not None:
                 processed += 1

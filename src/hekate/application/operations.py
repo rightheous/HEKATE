@@ -421,7 +421,7 @@ async def record_dispatch_accepted(factory: UowFactory, job: OutboxJob, worker: 
         operation = await uow.delivery.lock_operation(job.operation_id)
         if operation["binding"] != _json_value(binding):
             raise Conflict("outbox acceptance binding changed")
-        await uow.tasks.lock_scope(binding.scope)
+        await uow.tasks.lock_scope_for_observation(binding.scope)
         await uow.tasks.lock_task(binding.task_id)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
         await uow.agents.lock_registry(binding.agent_registry_id)
@@ -445,7 +445,7 @@ async def apply_execution_observation(uow, observation: ExecutionObservation) ->
     operation = await uow.delivery.lock_operation(observation.operation_id)
     if operation["binding"] != _json_value(binding):
         raise Conflict("execution observation binding mismatch")
-    await uow.tasks.lock_scope(binding.scope)
+    await uow.tasks.lock_scope_for_observation(binding.scope)
     task_before = await uow.tasks.lock_task(binding.task_id)
     attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
     agent = await uow.agents.lock_registry(binding.agent_registry_id)

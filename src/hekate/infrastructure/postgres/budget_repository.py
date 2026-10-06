@@ -295,8 +295,18 @@ class PostgresBudgetRepository:
             raise PolicyDenied("call token limits exceed the persisted envelope")
         if intent.limits.deadline > envelope.deadline or intent.permit_expires_at > envelope.deadline or intent.permit_expires_at <= aware_now():
             raise PolicyDenied("call deadline or permit expiry is invalid")
-        if intent.price_table.synthetic != intent.test_only:
-            raise PolicyDenied("synthetic profiles are restricted to test-only permits")
+        if intent.execution_mode == "synthetic_test":
+            if not intent.test_only or not intent.price_table.synthetic:
+                raise PolicyDenied("synthetic provider calls require a test-only synthetic price table")
+        elif intent.execution_mode == "local_candidate":
+            if (
+                not intent.test_only or intent.price_table.synthetic
+                or intent.model != "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs"
+                or intent.price_table.version != "local-qwen35-external-tariff-v1"
+            ):
+                raise PolicyDenied("local candidate calls require the fixed Qwen profile and external tariff")
+        else:
+            raise PolicyDenied("production provider dispatch remains blocked")
         if not intent.test_only:
             raise PolicyDenied("production provider dispatch is blocked pending structural profile evidence")
         if intent.price_table.model != intent.model:
@@ -383,6 +393,8 @@ class PostgresBudgetRepository:
             pricing_verified=intent.price_table.pricing_verified,
             tokenizer_verified=intent.price_table.tokenizer_verified,
             test_only=intent.test_only,
+            execution_mode=intent.execution_mode,
+            price_synthetic=intent.price_table.synthetic,
             input_revision=intent.binding.input_revision,
             fence=intent.binding.fence,
             conversation_id=intent.binding.conversation_id,
@@ -787,7 +799,7 @@ class PostgresBudgetRepository:
                     model_profile_verified=call["model_profile_verified"],
                     pricing_verified=call["pricing_verified"],
                     tokenizer_verified=call["tokenizer_verified"],
-                    synthetic=call["test_only"],
+                    synthetic=call["price_synthetic"],
                     usage_semantics=usage_semantics,
                 ))
                 cost = assessment.amount

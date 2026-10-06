@@ -32,6 +32,8 @@ class Settings:
     local: Mapping[str, object] = field(default_factory=dict)
     archive_dir: Path = Path(".hekate-archive")
     memory_projection_enabled: bool = False
+    project_dir: Path = Path.cwd()
+    letta_turn_timeout_ms: int = 240_000
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,7 +67,8 @@ def _yaml(path: Path) -> Mapping[str, object]:
 
 
 def load_settings(env: Mapping[str, str], config_dir: Path) -> Settings:
-    root = config_dir.parent
+    root = Path(env.get("HEKATE_PROJECT_DIR", Path(__file__).resolve().parents[2])).expanduser().resolve()
+    config_dir = config_dir.expanduser().resolve()
     local = _yaml(config_dir / "local.yaml") if (config_dir / "local.yaml").is_file() else {}
     projection_value = env.get("HEKATE_MEMORY_PROJECTION_ENABLED", "false").strip().lower()
     if projection_value not in {"true", "false", "1", "0"}:
@@ -76,15 +79,23 @@ def load_settings(env: Mapping[str, str], config_dir: Path) -> Settings:
         bridge_entry=Path(env.get("HEKATE_BRIDGE_ENTRY", root / "bridge/letta/dist/main.js")),
         letta_url=env.get("HEKATE_LETTA_URL", ""),
         letta_token=env.get("HEKATE_LETTA_TOKEN") or None,
-        worker_id=env.get("HEKATE_WORKER_ID", ""),
+        worker_id=env.get("HEKATE_WORKER_ID", str((local.get("runtime") or {}).get("worker_id", ""))
+                         if isinstance(local.get("runtime"), dict) else ""),
         runtime_mode=env.get("HEKATE_RUNTIME_MODE", "production"),
         config_dir=config_dir,
         policy=_yaml(config_dir / "policy.yaml"),
         models=_yaml(config_dir / "models.yaml"),
         pricing=_yaml(config_dir / "pricing.yaml"),
         local=local,
-        archive_dir=Path(env.get("HEKATE_ARCHIVE_DIR", root / ".hekate-archive")),
+        archive_dir=Path(env.get(
+            "HEKATE_ARCHIVE_DIR",
+            config_dir / str((local.get("paths") or {}).get("archive_dir", "state/archive"))
+            if isinstance(local.get("paths"), dict) else root / ".hekate-archive",
+        )).expanduser().resolve(),
         memory_projection_enabled=projection_value in {"true", "1"},
+        project_dir=root,
+        letta_turn_timeout_ms=(local.get("runtime", {}).get("letta_turn_timeout_ms", 240_000)
+                               if isinstance(local.get("runtime"), dict) else 240_000),
     )
 
 
@@ -134,7 +145,7 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
 
     if not all(isinstance(value, str) and value for value in (letta_model, model, profile_id, pricing_version, model_revision)):
         raise ValueError("fixed Letta model, provider model, model revision, profile_id, and pricing version are required")
-    if settings.runtime_mode != "test":
+    if settings.runtime_mode not in {"test", "local"}:
         raise ValueError("production provider profiles remain blocked pending model, tokenizer, renderer, and pricing evidence")
     context_window = integer_value(context_window_tokens, "context_window_tokens")
     max_input_tokens = integer_value(profile.get("max_input_tokens"), "max_input_tokens")
@@ -145,6 +156,8 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
     input_price = decimal_value(price.get("input_usd_per_million"), "input_usd_per_million", allow_zero=True)
     output_price = decimal_value(price.get("output_usd_per_million"), "output_usd_per_million", allow_zero=True)
     profile_kind = profile.get("execution_profile")
+    if settings.runtime_mode == "local" and profile_kind != "qwen35_native_json_schema_test_v2":
+        raise ValueError("local mode only accepts the frozen native-schema Qwen candidate profile")
     if profile_kind is None:
         if agent_system_prompt is not None:
             raise ValueError("custom agent_system_prompt is supported only by the frozen Qwen test profile")
@@ -352,8 +365,8 @@ def configured_local_actor(settings: Settings) -> ActorContext:
 def validate_settings(settings: Settings) -> None:
     if not settings.database_url.startswith("postgresql+psycopg://"):
         raise ValueError("HEKATE requires PostgreSQL via psycopg")
-    if settings.runtime_mode not in {"production", "test"}:
-        raise ValueError("HEKATE_RUNTIME_MODE must be production or test")
+    if settings.runtime_mode not in {"production", "test", "local"}:
+        raise ValueError("HEKATE_RUNTIME_MODE must be production, test, or explicitly enabled local")
     if not settings.worker_id or len(settings.worker_id) > 128:
         raise ValueError("HEKATE_WORKER_ID must be a stable unique worker identity")
     if urlsplit(settings.letta_url).scheme not in {"ws", "wss"} or not urlsplit(settings.letta_url).hostname:
@@ -364,7 +377,70 @@ def validate_settings(settings: Settings) -> None:
     version = subprocess.run([node, "--version"], capture_output=True, text=True, check=True, timeout=10).stdout.strip()
     if version != "v22.19.0":
         raise ValueError("HEKATE bridge requires the pinned Node.js 22.19.0 runtime")
+    if settings.runtime_mode == "local":
+        validate_local_settings(settings)
     if settings.runtime_mode == "production":
         # There is no production evidence bundle or operator approval record in this repository.
         # YAML booleans and a nonempty price table cannot establish an exact provider request contract.
         raise ValueError("no approved model, tokenizer, renderer, and pricing evidence; production dispatch stays closed")
+
+
+def validate_local_settings(settings: Settings) -> None:
+    if settings.runtime_mode != "local":
+        raise ValueError("local setup requires HEKATE_RUNTIME_MODE=local")
+    value = settings.local
+    if value.get("schema_version") != "1" or value.get("enabled") is not True:
+        raise ValueError("local.yaml must explicitly enable schema_version 1 local execution")
+    identity = value.get("identity")
+    runtime = value.get("runtime")
+    gateway = value.get("gateway")
+    if not all(isinstance(item, dict) for item in (identity, runtime, gateway)):
+        raise ValueError("local.yaml requires identity, runtime, and gateway objects")
+    if runtime.get("execution_mode") != "local_candidate":
+        raise ValueError("local execution must explicitly select local_candidate mode")
+    if not isinstance(runtime.get("worker_id"), str) or not runtime["worker_id"]:
+        raise ValueError("local runtime requires an explicit stable worker_id")
+    if gateway.get("host") != "127.0.0.1" or type(gateway.get("port")) is not int or not 1 <= gateway["port"] <= 65_535:
+        raise ValueError("local provider gateway must bind to 127.0.0.1 and a valid port")
+    upstream = gateway.get("upstream_base_url")
+    if not isinstance(upstream, str) or upstream.rstrip("/") != "http://127.0.0.1:19191":
+        raise ValueError("local Qwen upstream must use the fixed loopback tunnel at 127.0.0.1:19191")
+    if not isinstance(gateway.get("upstream_api_key"), str) or not gateway["upstream_api_key"]:
+        raise ValueError("local gateway requires an explicit upstream credential field")
+    turn_timeout = runtime.get("letta_turn_timeout_ms", 240_000)
+    if type(turn_timeout) is not int or not 1 <= turn_timeout <= 240_000:
+        raise ValueError("local Letta turn timeout must be between 1 and 240000 ms")
+    paths = value.get("paths", {})
+    if not isinstance(paths, dict) or not isinstance(paths.get("state_dir"), str) or not paths["state_dir"]:
+        raise ValueError("local.yaml must define a separate local paths.state_dir")
+    if not settings.project_dir.is_dir():
+        raise ValueError("HEKATE_PROJECT_DIR must point to the checkout containing the pinned bridge and assets")
+    if not settings.database_url.startswith("postgresql+psycopg://"):
+        raise ValueError("local execution requires PostgreSQL via psycopg")
+    letta = urlsplit(settings.letta_url)
+    if letta.scheme not in {"ws", "wss"} or not letta.hostname:
+        raise ValueError("HEKATE_LETTA_URL must be a valid App Server WebSocket URL")
+    if not settings.worker_id or len(settings.worker_id) > 128:
+        raise ValueError("HEKATE_WORKER_ID must be a stable unique worker identity")
+    _ = configured_local_actor(settings)
+    limits = settings.policy.get("limits")
+    if not isinstance(limits, dict) or limits.get("task_deadline_seconds") != 900:
+        raise ValueError("local Qwen run requires the explicit 900-second Task deadline")
+    if settings.policy.get("tool_grants") != [] or settings.policy.get("allowed_actions") != [
+        "answer", "request_information", "abstain", "commit",
+    ]:
+        raise ValueError("local policy must disable tools and keep the bounded HEKATE action set")
+    critic = settings.policy.get("critic")
+    deliberation = settings.policy.get("deliberation")
+    if not isinstance(critic, dict) or critic.get("enabled") is not False or not isinstance(deliberation, dict) or deliberation.get("enabled") is not False:
+        raise ValueError("local execution requires Critic and automatic continuation to remain disabled")
+    config = configured_task_execution(settings)
+    if (
+        config.profile_id != "local-qwen35-native-json-schema-test-v2"
+        or config.model != "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs"
+        or config.context_window_tokens != 8_192
+        or config.max_input_tokens != 6_144
+        or config.max_output_tokens != 2_048
+        or config.max_compaction_calls != 0
+    ):
+        raise ValueError("local Qwen limits must remain fixed at 8192/6144/2048 with compaction disabled")

@@ -19,7 +19,7 @@ from hekate.domain.capsules import parse_critic_turn_output, parse_hekate_turn_o
 from hekate.domain.contracts import canonical_json, canonical_json_hash
 from hekate.domain.errors import BudgetDenied, Conflict, PolicyDenied, StaleInput
 from hekate.domain.models import (
-    CommitProposal, ConclusionCapsule, ContractModel, ContinuationProposal, CriticTurnOutput, GuardBinding,
+    AuthorizationSnapshot, CommitProposal, ConclusionCapsule, ContractModel, ContinuationProposal, CriticTurnOutput, GuardBinding,
     HekateProposal, HekateTurnOutput, PositionCommitRequest, ReservationRequest, SpawnProposal,
     StoredConclusion, TaskExecutionConfig,
 )
@@ -407,12 +407,9 @@ async def process_business_result_inbox(
     return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config)
 
 
-def _late_reason(task, current_scope, attempt, result, binding, now: datetime) -> str | None:
+def _late_reason(task, attempt, result, binding, now: datetime) -> str | None:
     if (
         task.scope != binding.scope or task.input_revision != binding.input_revision
-        or current_scope.principal_id != binding.principal_id
-        or current_scope.policy_version != binding.policy_version
-        or current_scope.authz_epoch != binding.authz_epoch
         or attempt.operation_id != result["operation_id"]
         or attempt.input_revision != binding.input_revision
         or attempt.agent_registry_id != binding.agent_registry_id
@@ -429,6 +426,26 @@ def _late_reason(task, current_scope, attempt, result, binding, now: datetime) -
     if task.status != TaskStatus.RUNNING:
         return "task_not_running"
     return None
+
+
+def _authorization_failure(scope_state, binding) -> str | None:
+    snapshot = scope_state.snapshot
+    if not scope_state.active:
+        return "authorization_scope_revoked"
+    if (snapshot.principal_id, snapshot.policy_version, snapshot.authz_epoch) != (
+        binding.principal_id, binding.policy_version, binding.authz_epoch,
+    ):
+        return "authorization_snapshot_changed"
+    return None
+
+
+def _expected_authorization(binding):
+    return AuthorizationSnapshot(
+        scope=binding.scope,
+        principal_id=binding.principal_id,
+        policy_version=binding.policy_version,
+        authz_epoch=binding.authz_epoch,
+    )
 
 
 def _policy_rejection(reason: str) -> bool:
@@ -459,7 +476,7 @@ async def _record_late_after_rollback(
             return {"inbox_id": inbox_id, "processed": True, "state": result["processing_state"]}
         operation = await uow.delivery.lock_operation(OperationId(result["operation_id"]))
         binding = _restore_binding(operation)
-        await uow.tasks.lock_scope(binding.scope)
+        await uow.tasks.lock_scope_for_observation(binding.scope)
         task = await uow.tasks.lock_task(binding.task_id)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
         await uow.agents.lock_registry(binding.agent_registry_id)
@@ -499,15 +516,20 @@ async def _record_commit_failure(
             return {"inbox_id": inbox_id, "processed": True, "state": result["processing_state"]}
         operation = await uow.delivery.lock_operation(OperationId(result["operation_id"]))
         binding = _restore_binding(operation)
-        scope = await uow.tasks.lock_scope(binding.scope)
+        scope_state = await uow.tasks.lock_scope_for_observation(binding.scope)
         task = await uow.tasks.lock_task(binding.task_id)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
         await uow.agents.lock_registry(binding.agent_registry_id)
-        terminal_reason = _late_reason(task, scope, attempt, result, binding, clock())
+        if operation["execution_state"] != "QUIESCENT":
+            await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", delay_seconds=1)
+            await uow.commit()
+            return {"inbox_id": inbox_id, "processed": False, "pending": True}
+        terminal_reason = _late_reason(task, attempt, result, binding, clock())
         if terminal_reason is not None:
             await uow.rollback()
             return await _record_late_after_rollback(factory, inbox_id, terminal_reason, clock)
-        reason = failure or "commit_policy_rejected"
+        authorization_failure = _authorization_failure(scope_state, binding)
+        reason = authorization_failure or failure or "commit_policy_rejected"
         response = {
             "operation_id": result["operation_id"], "attempt_id": result["attempt_id"],
             "registry_id": result["registry_id"], "source_inbox_id": inbox_id,
@@ -524,10 +546,16 @@ async def _record_commit_failure(
             fence=binding.fence,
         )
         try:
-            adopted = await complete_task(
-                uow, actor, binding.task_id, binding.input_revision, response,
-                successful=False, accepted_at=clock(),
-            )
+            if authorization_failure is not None:
+                adopted = await uow.tasks.fail_unaccepted_execution_with_policy_response(
+                    binding.scope, _expected_authorization(binding), binding.task_id,
+                    binding.input_revision, response, accepted_at=clock(),
+                )
+            else:
+                adopted = await complete_task(
+                    uow, actor, binding.task_id, binding.input_revision, response,
+                    successful=False, accepted_at=clock(),
+                )
         except (Conflict, PolicyDenied, StaleInput):
             await uow.rollback()
             return await _record_late_after_rollback(factory, inbox_id, "task_changed_before_adoption", clock)
@@ -769,7 +797,7 @@ async def _record_continuation_stop(
             return {"inbox_id": inbox_id, "processed": True, "state": result["processing_state"]}
         operation = await uow.delivery.lock_operation(OperationId(result["operation_id"]))
         binding = _restore_binding(operation)
-        scope = await uow.tasks.lock_scope(binding.scope)
+        scope_state = await uow.tasks.lock_scope_for_observation(binding.scope)
         task = await uow.tasks.lock_task(binding.task_id)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
         await uow.agents.lock_registry(binding.agent_registry_id)
@@ -777,15 +805,14 @@ async def _record_continuation_stop(
             await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", delay_seconds=1)
             await uow.commit()
             return {"inbox_id": inbox_id, "processed": False, "pending": True}
-        late = _late_reason(task, scope, attempt, result, binding, clock())
+        late = _late_reason(task, attempt, result, binding, clock())
         if late is not None:
             await uow.rollback()
             return await _record_late_after_rollback(factory, inbox_id, late, clock)
-        if (scope.principal_id, scope.policy_version, scope.authz_epoch) != (
-            binding.principal_id, binding.policy_version, binding.authz_epoch,
-        ):
+        authorization_failure = _authorization_failure(scope_state, binding)
+        if authorization_failure is not None:
             await uow.rollback()
-            return await _record_late_after_rollback(factory, inbox_id, "authorization_changed", clock)
+            return await _record_commit_failure(factory, inbox_id, authorization_failure, clock)
         manifest_row = await uow.knowledge.get_context_manifest(OperationId(result["operation_id"]))
         conclusion_row = await uow.knowledge.get_conclusion(result["conclusion_id"]) if result["conclusion_id"] else None
         if manifest_row is None or conclusion_row is None or not await manifest_references_current(
@@ -853,7 +880,7 @@ async def apply_turn_result(
             return {"inbox_id": inbox_id, "processed": True, "state": result["processing_state"]}
         operation = await uow.delivery.lock_operation(OperationId(result["operation_id"]))
         binding = _restore_binding(operation)
-        current_scope = await uow.tasks.lock_scope(binding.scope)
+        current_scope = await uow.tasks.lock_scope_for_observation(binding.scope)
         task = await uow.tasks.lock_task(binding.task_id)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
         await uow.agents.lock_registry(binding.agent_registry_id)
@@ -862,7 +889,7 @@ async def apply_turn_result(
             await uow.commit()
             return {"inbox_id": inbox_id, "processed": False, "pending": True}
 
-        late_reason = _late_reason(task, current_scope, attempt, result, binding, current_time())
+        late_reason = _late_reason(task, attempt, result, binding, current_time())
         if late_reason is not None:
             if task.input_revision == binding.input_revision and task.scope == binding.scope:
                 await converge_task_execution(uow, binding.task_id, binding.input_revision, now=current_time())
@@ -877,6 +904,11 @@ async def apply_turn_result(
             })
             await uow.commit()
             return {"inbox_id": inbox_id, "processed": True, "state": "LATE"}
+
+        authorization_failure = _authorization_failure(current_scope, binding)
+        if authorization_failure is not None:
+            await uow.rollback()
+            return await _record_commit_failure(factory, inbox_id, authorization_failure, current_time)
 
         reason = result["rejection_reason"]
         operation_outcome = (operation.get("observation") or {}).get("outcome")
@@ -1125,7 +1157,12 @@ async def apply_turn_result(
                 uow, actor, binding.task_id, binding.input_revision, response,
                 successful=successful, accepted_at=current_time(),
             )
-        except (Conflict, PolicyDenied, StaleInput):
+        except PolicyDenied:
+            await uow.rollback()
+            return await _record_commit_failure(
+                factory, inbox_id, "authorization_snapshot_changed", current_time,
+            )
+        except (Conflict, StaleInput):
             await uow.rollback()
             return await _record_late_after_rollback(factory, inbox_id, "task_changed_before_adoption", current_time)
         if not adopted:

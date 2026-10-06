@@ -13,7 +13,9 @@ import sys
 from uuid import uuid4
 
 from hekate.application import tasks
+from hekate.application.local_setup import initialize_local
 from hekate.bootstrap import build_container, close_container
+from hekate.diagnostics import doctor as run_doctor
 from hekate.domain.models import EvidenceInput, ReadLimits, UserMessage, VersionCursor
 from hekate.domain.types import EvidenceId, StopReason, TaskId, TopicId
 from hekate.infrastructure.postgres.database import create_engine, create_uow_factory
@@ -21,6 +23,7 @@ from hekate.settings import (
     configured_local_actor, configured_task_execution, load_settings,
 )
 from hekate.worker.service import run_worker
+from hekate.infrastructure.letta.gateway_entry import serve_gateway
 
 
 def _settings():
@@ -46,6 +49,23 @@ async def _worker() -> int:
     return 0
 
 
+async def _init_local() -> int:
+    result = await initialize_local(_settings())
+    _write(result)
+    return 0
+
+
+async def _gateway() -> int:
+    await serve_gateway(_settings())
+    return 0
+
+
+async def _doctor() -> int:
+    result = await run_doctor(_settings())
+    _write(result)
+    return 0 if result["status"] in {"READY", "PRESTART_OK"} else 1
+
+
 async def _task_command(command: str, args: argparse.Namespace) -> int:
     settings = _settings()
     if not settings.database_url.startswith("postgresql+psycopg://"):
@@ -55,6 +75,9 @@ async def _task_command(command: str, args: argparse.Namespace) -> int:
     factory = create_uow_factory(engine)
     try:
         if command == "ask":
+            from hekate.settings import validate_settings
+
+            validate_settings(settings)
             config = configured_task_execution(settings)
             raw = sys.stdin.buffer.read(65_537)
             question = raw.decode("utf-8", "strict")
@@ -125,6 +148,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="hekate")
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("worker")
+    subparsers.add_parser("init-local", help="apply migrations and initialize the fixed local scope")
+    subparsers.add_parser("gateway", help="run the private loopback provider gateway")
+    subparsers.add_parser("doctor", help="read-only local configuration and service checks")
     ask = subparsers.add_parser("ask", help="submit a question from stdin")
     ask.add_argument("--request-key", required=True)
     ask.add_argument("--wait-seconds", type=float, default=30.0)
@@ -155,8 +181,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     position_history.add_argument("--limit", type=int, default=50)
     subparsers.add_parser("serve")
     subparsers.add_parser("reconcile")
-    subparsers.add_parser("doctor")
     args = parser.parse_args(argv)
+    if args.command == "init-local":
+        return asyncio.run(_init_local())
+    if args.command == "gateway":
+        return asyncio.run(_gateway())
+    if args.command == "doctor":
+        return asyncio.run(_doctor())
     if args.command == "worker":
         return asyncio.run(_worker())
     if args.command in {"ask", "task", "cancel"}:

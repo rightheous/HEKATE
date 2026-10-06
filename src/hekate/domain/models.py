@@ -718,6 +718,18 @@ class AuthorizationSnapshot:
 
 
 @dataclass(frozen=True, slots=True)
+class AuthorizationScopeState:
+    """Locked authorization identity plus its current active state.
+
+    This state is for recording facts about an already admitted execution. New
+    work must continue to use ``lock_scope()``, which rejects inactive scopes.
+    """
+
+    snapshot: AuthorizationSnapshot
+    active: bool
+
+
+@dataclass(frozen=True, slots=True)
 class OperationClaim:
     operation_id: OperationId
     owner_scope: ScopeId
@@ -796,6 +808,7 @@ class BillableCallIntent:
     permit_expires_at: datetime
     lease_owner: str
     test_only: bool = False
+    execution_mode: str = "synthetic_test"
     reservation_id: ReservationId | None = None
     measurement: ProviderRequestMeasurement | None = None
 

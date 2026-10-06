@@ -102,6 +102,23 @@ async def process_runtime_observation(
             binding = _restore_binding(operation)
             if not event.binding.matches(binding):
                 raise ValueError("runtime inbox binding differs from the admitted operation")
+            await uow.tasks.lock_scope_for_observation(binding.scope)
+            # A byte-identical, already-processed terminal fact was authenticated
+            # under its original observer fence. Return its durable receipt before
+            # checking the current lease so a worker restart cannot turn a safe
+            # replay into a stale-fence failure. New or conflicting observations
+            # still require the original live fence below.
+            processed_inbox_id = await uow.delivery.processed_inbox_id(
+                provider_scope, stable_event_key, payload_hash,
+            )
+            if processed_inbox_id is not None:
+                await uow.commit()
+                return {
+                    "inbox_id": processed_inbox_id,
+                    "duplicate": True,
+                    "conflict": False,
+                    "processed": True,
+                }
             # Authenticate the observation's original runtime fence before persisting it.
             await uow.agents.assert_current_lease(binding.agent_registry_id, event.lease_owner, event.observer_fence)
             if processor_owner is not None:
@@ -122,6 +139,7 @@ async def process_runtime_observation(
         binding = _restore_binding(operation)
         if not event.binding.matches(binding):
             raise ValueError("runtime inbox binding differs from the admitted operation")
+        await uow.tasks.lock_scope_for_observation(binding.scope)
         receipt = await uow.delivery.insert_inbox_once(provider_scope, stable_event_key, values, payload_hash)
         if receipt.conflict:
             row = await uow.delivery.lock_inbox(receipt.id)

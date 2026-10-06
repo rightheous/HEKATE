@@ -11,6 +11,7 @@ from hekate.domain.errors import Conflict, PolicyDenied, StaleInput
 from hekate.domain.models import (
     Attempt,
     AuthorizationSnapshot,
+    AuthorizationScopeState,
     InputChange,
     Task,
     TaskCounters,
@@ -20,6 +21,7 @@ from hekate.domain.types import (
     AttemptStatus,
     AttemptEvent,
     EvidenceId,
+    OperationId,
     PrincipalId,
     RegistryId,
     ScopeId,
@@ -47,6 +49,29 @@ class PostgresTaskRepository:
             authz_epoch=snapshot.authz_epoch,
         ))
 
+    async def ensure_local_scope(self, snapshot: AuthorizationSnapshot) -> bool:
+        """Create the configured local scope once; never overwrite or reactivate it."""
+        inserted = await self.connection.execute(pg_insert(tables.authorization_scopes).values(
+            id=snapshot.scope,
+            principal_id=snapshot.principal_id,
+            policy_version=snapshot.policy_version,
+            authz_epoch=snapshot.authz_epoch,
+            active=True,
+        ).on_conflict_do_nothing(index_elements=[tables.authorization_scopes.c.id]).returning(
+            tables.authorization_scopes.c.id,
+        ))
+        created = inserted.scalar_one_or_none() is not None
+        row = (await self.connection.execute(select(tables.authorization_scopes).where(
+            tables.authorization_scopes.c.id == snapshot.scope,
+        ).with_for_update())).mappings().one_or_none()
+        if row is None or not row["active"]:
+            raise PolicyDenied("local authorization scope is missing or revoked")
+        if (row["principal_id"], row["policy_version"], row["authz_epoch"]) != (
+            snapshot.principal_id, snapshot.policy_version, snapshot.authz_epoch,
+        ):
+            raise Conflict("local authorization scope already has a different principal or policy epoch")
+        return created
+
     async def claim_submission(self, scope: ScopeId, request_key: str, request_hash: str):
         await self.connection.execute(pg_insert(tables.task_submissions).values(
             owner_scope=scope,
@@ -73,16 +98,30 @@ class PostgresTaskRepository:
             raise Conflict("task submission receipt changed")
 
     async def lock_scope(self, scope: ScopeId) -> AuthorizationSnapshot:
+        state = await self.lock_scope_for_observation(scope)
+        if not state.active:
+            raise PolicyDenied("authorization scope is revoked")
+        return state.snapshot
+
+    async def lock_scope_for_observation(self, scope: ScopeId) -> AuthorizationScopeState:
+        """Lock an existing scope while processing facts for admitted work.
+
+        Unlike ``lock_scope``, this does not authorize new work and therefore
+        returns inactive scopes to the caller as explicit state.
+        """
         row = (await self.connection.execute(
             select(tables.authorization_scopes).where(tables.authorization_scopes.c.id == scope).with_for_update()
         )).mappings().one_or_none()
         if row is None:
             raise PolicyDenied("authorization scope is unavailable")
-        return AuthorizationSnapshot(
-            scope=ScopeId(row["id"]),
-            principal_id=PrincipalId(row["principal_id"]),
-            policy_version=row["policy_version"],
-            authz_epoch=row["authz_epoch"],
+        return AuthorizationScopeState(
+            snapshot=AuthorizationSnapshot(
+                scope=ScopeId(row["id"]),
+                principal_id=PrincipalId(row["principal_id"]),
+                policy_version=row["policy_version"],
+                authz_epoch=row["authz_epoch"],
+            ),
+            active=bool(row["active"]),
         )
 
     async def insert_task(self, task: Task, constraints: Mapping[str, object] | None = None) -> None:
@@ -325,6 +364,117 @@ class PostgresTaskRepository:
             response_text=response["response_text"],
             outcome=response["outcome"],
             stop_reason=response["stop_reason"],
+        ))
+        return True
+
+    async def fail_unaccepted_execution_with_policy_response(
+        self, scope: ScopeId, expected_authorization: AuthorizationSnapshot,
+        task_id: TaskId, revision: int, response: Mapping[str, object], *, accepted_at: datetime,
+    ) -> bool:
+        """Persist a POLICY failure for a completed execution whose authority changed.
+
+        This narrow path records the result of an already admitted and quiescent
+        operation. It cannot accept a model answer and refuses use while the
+        original authorization snapshot remains active and current.
+        """
+        if response.get("stop_reason") != StopReason.POLICY.value or response.get("outcome") != "FAILED":
+            raise ValueError("revoked-execution response must be a POLICY failure")
+        if expected_authorization.scope != scope:
+            raise Conflict("revoked-execution authorization scope mismatch")
+        try:
+            response_operation_id = OperationId(str(response["operation_id"]))
+            response_attempt_id = AttemptId(str(response["attempt_id"]))
+            response_registry_id = RegistryId(str(response["registry_id"]))
+        except (KeyError, TypeError, ValueError) as error:
+            raise Conflict("revoked-execution response has no trusted binding identity") from error
+        authorization = (await self.connection.execute(
+            select(tables.authorization_scopes).where(
+                tables.authorization_scopes.c.id == scope,
+            ).with_for_update()
+        )).mappings().one_or_none()
+        if authorization is None:
+            raise PolicyDenied("authorization scope is unavailable")
+        still_current = bool(authorization["active"]) and (
+            authorization["principal_id"], authorization["policy_version"], authorization["authz_epoch"],
+        ) == (
+            str(expected_authorization.principal_id), expected_authorization.policy_version,
+            expected_authorization.authz_epoch,
+        )
+        if still_current:
+            raise PolicyDenied("authorization snapshot is still current")
+
+        task = await self.lock_task(task_id)
+        if task.scope != scope:
+            raise PolicyDenied("task is outside the revoked execution scope")
+        attempt = await self.get_attempt(response_attempt_id, for_update=True)
+        operation = (await self.connection.execute(select(tables.operations).where(
+            tables.operations.c.id == response_operation_id,
+        ))).mappings().one_or_none()
+        trusted_binding = operation["binding"] if operation is not None else None
+        if (
+            attempt.task_id != task_id
+            or attempt.input_revision != revision
+            or attempt.operation_id != response_operation_id
+            or attempt.agent_registry_id != response_registry_id
+            or operation is None
+            or operation["owner_scope"] != scope
+            or operation["task_id"] != task_id
+            or operation["execution_state"] != "QUIESCENT"
+            or not isinstance(trusted_binding, Mapping)
+            or trusted_binding.get("scope") != str(scope)
+            or trusted_binding.get("task_id") != str(task_id)
+            or trusted_binding.get("attempt_id") != str(response_attempt_id)
+            or trusted_binding.get("agent_registry_id") != str(response_registry_id)
+            or trusted_binding.get("input_revision") != revision
+            or trusted_binding.get("principal_id") != str(expected_authorization.principal_id)
+            or trusted_binding.get("policy_version") != expected_authorization.policy_version
+            or trusted_binding.get("authz_epoch") != expected_authorization.authz_epoch
+        ):
+            raise Conflict("revoked-execution response differs from a quiescent immutable binding")
+        existing = await self.get_task_response(task_id)
+        if existing is not None:
+            return (
+                existing["input_revision"] == revision
+                and existing["operation_id"] == response["operation_id"]
+                and existing["attempt_id"] == response["attempt_id"]
+                and existing["registry_id"] == response["registry_id"]
+                and existing["source_inbox_id"] == response["source_inbox_id"]
+                and existing["proposal"] == json_value(response["proposal"])
+                and existing["response_text"] == response["response_text"]
+                and existing["stop_reason"] == response["stop_reason"]
+                and existing["outcome"] == response["outcome"]
+            )
+        if (
+            task.input_revision != revision
+            or task.status not in {TaskStatus.RUNNING, TaskStatus.WAITING}
+            or task.cancel_requested_at is not None or task.deadline <= accepted_at
+        ):
+            return False
+        changed = await self.connection.execute(update(tables.tasks).where(
+            tables.tasks.c.id == task_id,
+            tables.tasks.c.owner_scope == scope,
+            tables.tasks.c.input_revision == revision,
+            tables.tasks.c.status == task.status.value,
+            tables.tasks.c.cancel_requested_at.is_(None),
+            tables.tasks.c.deadline > accepted_at,
+        ).values(
+            status=TaskStatus.FAILED.value,
+            outcome="FAILED",
+            stop_reason=StopReason.POLICY.value,
+        ))
+        if changed.rowcount != 1:
+            return False
+        await self.connection.execute(insert(tables.task_responses).values(
+            task_id=task_id,
+            input_revision=revision,
+            operation_id=response["operation_id"],
+            attempt_id=response["attempt_id"],
+            registry_id=response["registry_id"],
+            source_inbox_id=response["source_inbox_id"],
+            proposal=json_value(response["proposal"]),
+            response_text=response["response_text"],
+            outcome="FAILED",
+            stop_reason=StopReason.POLICY.value,
         ))
         return True
 

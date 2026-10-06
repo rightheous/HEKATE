@@ -4,3 +4,8 @@ __pycache__/
 /bridge/letta/node_modules/
 /bridge/letta/dist/
 /.hekate-archive/
+/.hekate-local/
+/config/local/
+.env
+.env.*
+!.env.example

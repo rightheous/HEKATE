@@ -554,6 +554,16 @@ class PostgresDeliveryRepository:
         ).limit(1))).first() is not None
         return InboxReceipt(id=existing, duplicate=True, conflict=different)
 
+    async def processed_inbox_id(
+        self, provider_scope: str, stable_event_key: str, payload_hash: str,
+    ) -> str | None:
+        return (await self.connection.execute(select(tables.inbox.c.id).where(
+            tables.inbox.c.provider_scope == provider_scope,
+            tables.inbox.c.stable_event_key == stable_event_key,
+            tables.inbox.c.payload_hash == payload_hash,
+            tables.inbox.c.processed_at.is_not(None),
+        ).limit(1))).scalar_one_or_none()
+
     async def lock_inbox(self, inbox_id: str):
         return (await self.connection.execute(select(tables.inbox).where(
             tables.inbox.c.id == inbox_id,

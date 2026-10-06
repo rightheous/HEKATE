@@ -160,6 +160,7 @@ def validate_profile(
     price_table: PriceTable,
     *,
     allow_test_profile: bool,
+    allow_local_tariff: bool = False,
 ) -> None:
     if profile.provider == "ollama-local":
         if not allow_test_profile:
@@ -171,7 +172,12 @@ def validate_profile(
         )
 
         if is_qwen35_native_json_schema_profile(profile):
-            validate_qwen35_native_json_schema_profile(profile, price_table)
+            if allow_local_tariff:
+                from .qwen_local_profile import validate_qwen35_native_json_schema_local_profile
+
+                validate_qwen35_native_json_schema_local_profile(profile, price_table)
+            else:
+                validate_qwen35_native_json_schema_profile(profile, price_table)
         else:
             validate_qwen_test_profile(profile, price_table)
         return

@@ -23,7 +23,12 @@ from hekate.application.budgets import (
     settle,
     settle_call,
 )
-from hekate.application.operations import admit_operation, record_execution_observation
+from hekate.application.operations import (
+    admit_operation,
+    record_dispatch_accepted,
+    record_dispatch_send_intent,
+    record_execution_observation,
+)
 from hekate.application.tasks import cancel, revise
 from hekate.domain.contracts import canonical_json_hash
 from hekate.domain.errors import BudgetDenied, Conflict, PolicyDenied, StorageUnavailable, StaleInput, UnknownExecution
@@ -351,6 +356,339 @@ class Phase2PostgresTests(unittest.IsolatedAsyncioTestCase):
         empty_request, _ = await self._admit(empty_context)
         self.assertEqual(await settle(self.factory, empty_request.envelope.operation_id), ())
         self.assertEqual(await reconcile_pending(self.factory, empty_request.reservation.id), ())
+
+    async def test_phase6e_revocation_blocks_admission_and_both_permit_edges(self):
+        context = await self._seed("phase6e-revoked-permit")
+        request, _ = await self._admit(context)
+        issued_call = self._call(request, "phase6e-issued-before-revoke")
+        permit = await authorize_provider_call(self.factory, issued_call)
+
+        async with self.engine.begin() as connection:
+            await connection.execute(text(
+                "UPDATE authorization_scopes SET active=false WHERE id=:scope"
+            ), {"scope": str(context["scope"])})
+
+        async with self.factory() as uow:
+            scope_state = await uow.tasks.lock_scope_for_observation(context["scope"])
+            self.assertFalse(scope_state.active)
+            self.assertEqual(scope_state.snapshot.authz_epoch, 1)
+            with self.assertRaises(PolicyDenied):
+                await uow.tasks.lock_scope(context["scope"])
+            await uow.commit()
+
+        blocked_admission = self._request(
+            context,
+            operation_id=OperationId("operation:phase6e-revoked-replay-attempt"),
+            attempt_id=AttemptId("attempt:phase6e-revoked-replay-attempt"),
+            reservation_id=ReservationId("reservation:phase6e-revoked-replay-attempt"),
+        )
+        with self.assertRaises(PolicyDenied):
+            await admit_operation(self.factory, blocked_admission)
+
+        with self.assertRaises(PolicyDenied):
+            await authorize_provider_call(
+                self.factory, self._call(request, "phase6e-new-permit-after-revoke"),
+            )
+        with self.assertRaises(PolicyDenied):
+            await consume_call_permit(
+                self.factory, request.binding, request.lease_owner,
+                permit.permit_id, permit.accounting_call_id,
+            )
+
+        self.assertEqual(await self._scalar(
+            "SELECT state FROM call_permits WHERE permit_id=:id", id=str(permit.permit_id),
+        ), "ISSUED")
+        self.assertEqual(await self._scalar(
+            "SELECT status FROM provider_calls WHERE accounting_call_id=:id",
+            id=str(permit.accounting_call_id),
+        ), "ALLOCATED")
+        self.assertEqual(await self._scalar(
+            "SELECT count(*) FROM operations WHERE id=:id",
+            id=str(blocked_admission.envelope.operation_id),
+        ), 0)
+
+    async def test_phase6e_revoked_usage_conflict_and_unknown_hold_stay_unsettled(self):
+        context = await self._seed("phase6e-revoked-unknown")
+        request, _ = await self._admit(context)
+        call = self._call(request, "phase6e-unknown-call")
+        permit = await authorize_provider_call(self.factory, call)
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner,
+            permit.permit_id, permit.accounting_call_id,
+        )
+        await record_call_observation(self.factory, CallObservation(
+            accounting_call_id=call.accounting_call_id,
+            binding=request.binding,
+            state="UNKNOWN",
+            source="bridge_disconnect",
+            observed_at=datetime.now(UTC),
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+        ))
+        await record_execution_observation(self.factory, ExecutionObservation(
+            operation_id=request.envelope.operation_id,
+            binding=request.binding,
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+            state="UNKNOWN",
+            source="bridge_disconnect",
+            observed_at=datetime.now(UTC),
+            reason="delivery_not_confirmed",
+        ))
+        async with self.engine.begin() as connection:
+            await connection.execute(text(
+                "UPDATE authorization_scopes SET active=false WHERE id=:scope"
+            ), {"scope": str(context["scope"])})
+
+        wrong_binding = replace(
+            request.binding,
+            provider_agent_id=ProviderAgentId("provider:wrong-binding"),
+        )
+        rejected = await record_usage(self.factory, UsageRecord(
+            accounting_call_id=call.accounting_call_id,
+            binding=wrong_binding,
+            observation_identity="wrong-binding-usage",
+            source="provider_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=1,
+            output_tokens=1,
+            total_tokens=2,
+            completeness="COMPLETE",
+            pricing_version="test-price-v1",
+        ))
+        self.assertFalse(rejected.accepted)
+        self.assertEqual(rejected.settlement_state, "REJECTED")
+
+        partial = UsageRecord(
+            accounting_call_id=call.accounting_call_id,
+            binding=request.binding,
+            observation_identity="revoked-scope-usage-event",
+            source="runtime_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=3,
+            completeness="PARTIAL",
+            pricing_version="test-price-v1",
+        )
+        first = await record_usage(self.factory, partial)
+        self.assertTrue(first.accepted)
+        self.assertEqual(first.settlement_state, "PENDING")
+        contradiction = await record_usage(self.factory, partial.model_copy(update={"input_tokens": 4}))
+        self.assertTrue(contradiction.conflict)
+        self.assertEqual(contradiction.settlement_state, "CONFLICT")
+
+        settlement = await settle_call(self.factory, call.accounting_call_id)
+        self.assertFalse(settlement.settled)
+        self.assertEqual(await self._scalar(
+            "SELECT state FROM agent_execution_holds WHERE operation_id=:id",
+            id=str(request.envelope.operation_id),
+        ), "UNKNOWN")
+        self.assertEqual(await self._scalar(
+            "SELECT status FROM provider_calls WHERE accounting_call_id=:id",
+            id=str(call.accounting_call_id),
+        ), "UNKNOWN")
+        self.assertEqual(await self._scalar(
+            "SELECT settlement_state FROM usage_projections WHERE accounting_call_id=:id",
+            id=str(call.accounting_call_id),
+        ), "CONFLICT")
+        self.assertEqual(await self._scalar(
+            "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal(0))
+        self.assertGreater(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal(0))
+
+    async def test_phase6e_revoked_scope_accepts_quiescent_usage_and_settlement(self):
+        context = await self._seed("phase6e-revoked-settlement")
+        request, _ = await self._admit(context)
+        call = self._call(request, "phase6e-revoked-settled-call")
+        permit = await authorize_provider_call(self.factory, call)
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner,
+            permit.permit_id, permit.accounting_call_id,
+        )
+
+        # These terminal facts belong to the admitted immutable binding. Revoke
+        # only after the call has crossed the provider boundary.
+        await record_call_observation(self.factory, CallObservation(
+            accounting_call_id=call.accounting_call_id,
+            binding=request.binding,
+            state="QUIESCENT",
+            source="provider_response",
+            observed_at=datetime.now(UTC),
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+            provider_call_id=ProviderCallId("provider-call:phase6e-revoked-settled"),
+        ))
+        await record_execution_observation(self.factory, ExecutionObservation(
+            operation_id=request.envelope.operation_id,
+            binding=request.binding,
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+            state="QUIESCENT",
+            source="bridge_terminal",
+            observed_at=datetime.now(UTC),
+            outcome="SUCCEEDED",
+        ))
+        async with self.engine.begin() as connection:
+            await connection.execute(text(
+                "UPDATE authorization_scopes SET active=false WHERE id=:scope"
+            ), {"scope": str(context["scope"])})
+
+        usage = UsageRecord(
+            accounting_call_id=call.accounting_call_id,
+            binding=request.binding,
+            observation_identity="revoked-scope-complete-usage",
+            source="runtime_reported",
+            observed_at=datetime.now(UTC),
+            input_tokens=7,
+            output_tokens=3,
+            total_tokens=10,
+            completeness="COMPLETE",
+            pricing_version="test-price-v1",
+            monetary_amount=Decimal("0.000010"),
+            provider_call_id=ProviderCallId("provider-call:phase6e-revoked-settled"),
+        )
+        receipt = await record_usage(self.factory, usage)
+        self.assertTrue(receipt.accepted)
+        self.assertEqual(receipt.settlement_state, "SETTLED")
+        replay = await record_usage(self.factory, usage)
+        self.assertTrue(replay.accepted)
+        self.assertTrue(replay.duplicate)
+        self.assertEqual(replay.settlement_state, "SETTLED")
+        settlement = await settle_call(self.factory, call.accounting_call_id)
+        self.assertTrue(settlement.settled)
+        self.assertEqual(settlement.actual_cost, Decimal("0.000010"))
+        self.assertEqual(await self._scalar(
+            "SELECT state FROM operations WHERE id=:id", id=str(request.envelope.operation_id),
+        ), "COMPLETED")
+        self.assertEqual(await self._scalar(
+            "SELECT execution_state FROM operations WHERE id=:id", id=str(request.envelope.operation_id),
+        ), "QUIESCENT")
+        self.assertEqual(await self._scalar(
+            "SELECT status FROM provider_calls WHERE accounting_call_id=:id",
+            id=str(call.accounting_call_id),
+        ), "QUIESCENT")
+        self.assertEqual(await self._scalar(
+            "SELECT spent_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal("0.000010"))
+        self.assertEqual(await self._scalar(
+            "SELECT held_amount FROM budget_accounts WHERE id=:id", id=context["task_account_id"],
+        ), Decimal(0))
+        self.assertEqual(await self._scalar(
+            "SELECT count(*) FROM budget_ledger WHERE effect_type='SETTLE'"
+        ), 2)
+
+    async def test_phase6e_revoked_policy_response_rolls_back_and_replays_once(self):
+        context = await self._seed("phase6e-revoked-policy-rollback")
+        request, _ = await self._admit(context)
+        worker = context["lease"].owner
+        async with self.factory() as uow:
+            jobs = await uow.delivery.claim_jobs(worker, 1, 60)
+            self.assertEqual(len(jobs), 1)
+            job = jobs[0]
+            await uow.commit()
+        await record_dispatch_send_intent(self.factory, job, worker)
+        await record_dispatch_accepted(self.factory, job, worker)
+        call = self._call(request, "phase6e-revoked-policy-call")
+        permit = await authorize_provider_call(self.factory, call)
+        await consume_call_permit(
+            self.factory, request.binding, request.lease_owner,
+            permit.permit_id, permit.accounting_call_id,
+        )
+        await record_call_observation(self.factory, CallObservation(
+            accounting_call_id=call.accounting_call_id,
+            binding=request.binding,
+            state="QUIESCENT",
+            source="provider_response",
+            observed_at=datetime.now(UTC),
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+            provider_call_id=ProviderCallId("provider-call:phase6e-revoked-policy"),
+        ))
+        await record_execution_observation(self.factory, ExecutionObservation(
+            operation_id=request.envelope.operation_id,
+            binding=request.binding,
+            lease_owner=request.lease_owner,
+            observer_fence=context["lease"].fence,
+            state="QUIESCENT",
+            source="bridge_terminal",
+            observed_at=datetime.now(UTC),
+            outcome="SUCCEEDED",
+        ))
+        async with self.engine.begin() as connection:
+            await connection.execute(text(
+                "UPDATE authorization_scopes SET active=false WHERE id=:scope"
+            ), {"scope": str(context["scope"])})
+
+        source_payload = {
+            "event_type": "business_result",
+            "operation_id": str(request.envelope.operation_id),
+        }
+        async with self.factory() as uow:
+            source_receipt = await uow.delivery.insert_inbox_once(
+                "phase6e-policy-test", "revoked-policy-result",
+                source_payload, canonical_json_hash(source_payload),
+            )
+            await uow.commit()
+        response = {
+            "operation_id": str(request.envelope.operation_id),
+            "attempt_id": str(request.binding.attempt_id),
+            "registry_id": str(request.binding.agent_registry_id),
+            "source_inbox_id": source_receipt.id,
+            "proposal": {"action": "answer", "answer": "untrusted model answer"},
+            "response_text": "HEKATE could not complete this request (authorization_scope_revoked).",
+            "outcome": "FAILED",
+            "stop_reason": StopReason.POLICY.value,
+        }
+        expected = AuthorizationSnapshot(
+            scope=context["scope"], principal_id=context["principal"],
+            policy_version=context["policy"], authz_epoch=1,
+        )
+
+        class InjectedRollback(Exception):
+            pass
+
+        with self.assertRaises(InjectedRollback):
+            async with self.factory() as uow:
+                applied = await uow.tasks.fail_unaccepted_execution_with_policy_response(
+                    context["scope"], expected, context["task_id"], 1,
+                    response, accepted_at=datetime.now(UTC),
+                )
+                self.assertTrue(applied)
+                raise InjectedRollback()
+        self.assertEqual(await self._scalar(
+            "SELECT count(*) FROM task_responses WHERE task_id=:id", id=str(context["task_id"]),
+        ), 0)
+        self.assertIn(await self._scalar(
+            "SELECT status FROM tasks WHERE id=:id", id=str(context["task_id"]),
+        ), {"RUNNING", "WAITING"})
+
+        async with self.factory() as uow:
+            applied = await uow.tasks.fail_unaccepted_execution_with_policy_response(
+                context["scope"], expected, context["task_id"], 1,
+                response, accepted_at=datetime.now(UTC),
+            )
+            self.assertTrue(applied)
+            await uow.commit()
+        async with self.factory() as uow:
+            replayed = await uow.tasks.fail_unaccepted_execution_with_policy_response(
+                context["scope"], expected, context["task_id"], 1,
+                response, accepted_at=datetime.now(UTC),
+            )
+            self.assertTrue(replayed)
+            await uow.commit()
+        self.assertEqual(await self._scalar(
+            "SELECT status FROM tasks WHERE id=:id", id=str(context["task_id"]),
+        ), "FAILED")
+        self.assertEqual(await self._scalar(
+            "SELECT stop_reason FROM tasks WHERE id=:id", id=str(context["task_id"]),
+        ), "POLICY")
+        self.assertEqual(await self._scalar(
+            "SELECT count(*) FROM task_responses WHERE task_id=:id", id=str(context["task_id"]),
+        ), 1)
+        self.assertEqual(await self._scalar(
+            "SELECT response_text FROM task_responses WHERE task_id=:id", id=str(context["task_id"]),
+        ), response["response_text"])
 
     async def test_ta_malformed_persisted_binding_fails_all_settlement_entrypoints(self):
         for index, corruption in enumerate(("missing", "unexpected")):

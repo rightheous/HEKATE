@@ -29,6 +29,7 @@ async def build_container(settings: Settings) -> Container:
         settings.bridge_entry,
         env={
             "HEKATE_LETTA_URL": settings.letta_url,
+            "HEKATE_LETTA_TURN_TIMEOUT_MS": str(settings.letta_turn_timeout_ms),
             **({"HEKATE_LETTA_TOKEN": settings.letta_token} if settings.letta_token else {}),
         },
     )

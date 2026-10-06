@@ -4,12 +4,14 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import NAMESPACE_URL, uuid5
 
@@ -57,6 +59,8 @@ class ProviderGatewayProfile:
     test_only: bool
     execution_profile: ProviderExecutionProfile | None = None
     permit_ttl_seconds: int = 30
+    execution_mode: str = "synthetic_test"
+    one_shot_attempt_ledger: Path | None = None
 
     def validate(self, *, allow_test_profile: bool = False) -> None:
         parsed = urlsplit(self.upstream_base_url)
@@ -71,8 +75,23 @@ class ProviderGatewayProfile:
             or not self.upstream_api_key
         ):
             raise ValueError("provider gateway upstream must be a fixed loopback endpoint")
-        if self.test_only != self.price_table.synthetic:
-            raise ValueError("synthetic prices must be test-only")
+        if self.execution_mode not in {"synthetic_test", "local_candidate"}:
+            raise ValueError("provider gateway execution mode is unsupported")
+        if self.execution_mode == "synthetic_test" and (not self.test_only or not self.price_table.synthetic):
+            raise ValueError("synthetic provider calls require a test-only synthetic tariff")
+        if self.execution_mode == "local_candidate":
+            if (
+                not self.test_only or self.price_table.synthetic
+                or self.profile_id != "local-qwen35-native-json-schema-test-v2"
+                or self.price_table.version != "local-qwen35-external-tariff-v1"
+                or self.upstream_base_url.rstrip("/") != "http://127.0.0.1:19191"
+                or self.execution_profile is None
+                or self.execution_profile.provider != "ollama-local"
+                or self.execution_profile.model != "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs"
+            ):
+                raise ValueError("local candidate mode requires the fixed loopback Qwen profile and external tariff")
+        elif self.one_shot_attempt_ledger is not None:
+            raise ValueError("the durable one-shot attempt gate is only valid for a local candidate")
         if self.test_only and not allow_test_profile:
             raise ValueError("test provider profiles require explicit test-mode construction")
         if not self.test_only:
@@ -81,7 +100,10 @@ class ProviderGatewayProfile:
             raise ValueError("provider execution profile is missing")
         if self.max_input_tokens < 0 or self.max_output_tokens < 1 or self.permit_ttl_seconds < 1:
             raise ValueError("provider gateway profile limits are invalid")
-        validate_profile(self.execution_profile, self.price_table, allow_test_profile=allow_test_profile)
+        validate_profile(
+            self.execution_profile, self.price_table, allow_test_profile=allow_test_profile,
+            allow_local_tariff=self.execution_mode == "local_candidate",
+        )
         if (
             self.execution_profile.profile_id != self.profile_id
             or self.execution_profile.model != self.price_table.model
@@ -201,6 +223,43 @@ def _no_redirect_handler():
             return None
 
     return urllib.request.build_opener(NoRedirect)
+
+
+def _claim_local_attempt(path: Path, claims: dict[str, str], request_digest: str, profile_digest: str) -> None:
+    """Durably consume the optional local verification allowance before opening the socket.
+
+    O_EXCL makes this survive gateway restarts. If the gateway is interrupted
+    after the claim, the conservative state is still consumed and no retry is
+    attempted automatically.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    value = {
+        "schema_version": "1",
+        "state": "ATTEMPT_RESERVED",
+        "created_at": datetime.now(UTC).isoformat(),
+        "task_id": claims["task_id"],
+        "operation_id": claims["operation_id"],
+        "accounting_call_id": claims["accounting_call_id"],
+        "model": claims["model"],
+        "request_digest": request_digest,
+        "profile_digest": profile_digest,
+    }
+    descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            json.dump(value, stream, sort_keys=True, separators=(",", ":"))
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        directory = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    except BaseException:
+        # A partial file remains a consumed allowance. Never remove it and
+        # accidentally make a retry look like the first attempt.
+        raise
 
 
 def _usage_from(value: object, source: str) -> dict[str, object] | None:
@@ -428,8 +487,34 @@ def create_provider_gateway(
     app.state.provider_stream_observations = [] if capture_stream_observations else None
     opener = _no_redirect_handler()
 
+    @app.get("/healthz")
+    async def healthz():
+        return {"status": "ok", "profile_id": profile.profile_id, "model": profile.price_table.model}
+
     def authenticated(request: Request) -> bool:
         return request.headers.get("authorization") == f"Bearer {private_token}"
+
+    @app.get("/internal/metrics")
+    async def internal_metrics(request: Request):
+        if not authenticated(request):
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+        observations = app.state.provider_stream_observations or []
+        return {
+            **app.state.metrics,
+            "provider_stream_observations": [
+                {
+                    "operation_id": item.get("operation_id"),
+                    "accounting_call_id": item.get("accounting_call_id"),
+                    "provider_call_id": item.get("provider_call_id"),
+                    "wire_bytes": item.get("received_and_yielded_wire_utf8_bytes"),
+                    "wire_sha256": item.get("received_and_yielded_wire_sha256"),
+                    "event_count": item.get("event_count"),
+                    "done_seen": item.get("done_seen"),
+                    "choices": item.get("choices"),
+                }
+                for item in observations
+            ],
+        }
 
     @app.get("/v1/models")
     async def models(request: Request):
@@ -571,6 +656,7 @@ def create_provider_gateway(
                 permit_expires_at=min(envelope.deadline, datetime.now(UTC) + timedelta(seconds=profile.permit_ttl_seconds)),
                 lease_owner=lease_owner,
                 test_only=profile.test_only,
+                execution_mode=profile.execution_mode,
                 reservation_id=envelope.reservation_id,
                 measurement=measurement,
             )
@@ -585,6 +671,21 @@ def create_provider_gateway(
             return JSONResponse({"error": "provider request denied"}, status_code=402)
 
         upstream_url = profile.upstream_base_url.rstrip("/") + "/v1/chat/completions"
+        if profile.one_shot_attempt_ledger is not None:
+            try:
+                await asyncio.to_thread(
+                    _claim_local_attempt,
+                    profile.one_shot_attempt_ledger,
+                    claims,
+                    measurement.request_digest,
+                    measurement.profile_digest,
+                )
+            except FileExistsError:
+                _LOG.warning("local one-shot provider attempt allowance is already consumed")
+                return JSONResponse({"error": "local provider attempt allowance is already consumed"}, status_code=409)
+            except OSError as error:
+                _LOG.error("local one-shot provider attempt allowance could not be recorded: %s", type(error).__name__)
+                return JSONResponse({"error": "local provider attempt allowance unavailable"}, status_code=503)
         upstream_request = urllib.request.Request(
             upstream_url,
             data=final_body,
