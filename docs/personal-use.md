@@ -156,12 +156,19 @@ uv run hekate reconcile
 uv run hekate reconcile --apply
 ```
 
-Apply processes persisted, bound observations, completed turn results, and
-usage that already has terminal execution evidence through existing paths. It
-does not infer, retry, resume, rebuild, create a new session, or resolve an
-UNKNOWN execution. Missing terminal or usage evidence keeps the call and its
-hold pending. Archive deletion and unsupported projection work remain the
-worker's responsibility.
+Apply reconciles persisted, bound observations, terminal execution facts,
+eligible usage, and final HEKATE answers or Position commits through the
+existing validation and atomic adoption paths. A valid result that needs a new
+Critic, review, synthesis, or continuation stays pending for the normal Worker;
+the report lists its result, Task, operation, stage, and
+`followup_inference_requires_worker` reason. The stored result and binding stay
+available, and running `reconcile --apply` again does not approve that follow-up.
+The Worker can later process the same result normally. Reconciliation preserves
+UNKNOWN executions and their holds when termination evidence is missing. It
+does not retry, resume, rebuild, or create a new runtime session. Archive
+deletion and unsupported projection work remain the Worker's responsibility.
+The no-follow-up-approval statement applies to the reconcile command itself; a
+separately running Worker may continue authorized work concurrently.
 
 ## Backup and isolated restore check
 

@@ -16,7 +16,7 @@ from uuid import uuid4
 from sqlalchemy import text
 
 from hekate.application import budgets, tasks
-from hekate.application.results import process_pending_results
+from hekate.application.results import ResultProcessingMode, process_pending_results
 from hekate.application.local_setup import initialize_local
 from hekate.bootstrap import build_container, close_container
 from hekate.diagnostics import doctor as run_doctor
@@ -468,26 +468,47 @@ async def _reconcile_command(args: argparse.Namespace) -> int:
                 "task_held_usd": str(unknown_snapshot["task_held"]),
             },
             "inference_requested": False,
+            "result_processing_mode": ResultProcessingMode.RECONCILIATION.value,
+            "inference_statement_scope": "this reconcile command only; a concurrent Worker runs independently",
         })
         if args.apply:
             applied_inbox = []
+            deferred_by_id: dict[str, dict[str, object]] = {}
             for row in inbox_rows:
                 try:
                     outcome = await process_inbox_row(
                         factory, row, processor_owner=settings.worker_id,
                         hekate_config=configured_task_execution(settings),
                         critic_config=configured_critic_execution(settings),
+                        deliberation_config=configured_deliberation(settings),
+                        result_mode=ResultProcessingMode.RECONCILIATION,
                     )
-                    applied_inbox.append({"id": row["id"], "processed": outcome.get("processed", False)})
+                    applied_inbox.append({"id": row["id"], **outcome})
+                    if outcome.get("deferred"):
+                        deferred_by_id[str(outcome["inbox_id"])] = {
+                            key: outcome[key] for key in (
+                                "inbox_id", "task_id", "operation_id", "result_kind", "stage", "reason",
+                            ) if key in outcome
+                        }
                 except Exception as error:
                     applied_inbox.append({"id": row["id"], "error": type(error).__name__})
             try:
-                applied_results = await process_pending_results(
+                result_outcomes = await process_pending_results(
                     factory, args.limit, hekate_config=configured_task_execution(settings),
                     critic_config=configured_critic_execution(settings), owner_scope=scope,
+                    deliberation_config=configured_deliberation(settings),
+                    mode=ResultProcessingMode.RECONCILIATION,
+                    return_outcomes=True, continue_on_error=True,
                 )
             except Exception as error:
-                applied_results = {"error": type(error).__name__}
+                result_outcomes = [{"error": type(error).__name__}]
+            for outcome in result_outcomes:
+                if outcome.get("deferred"):
+                    deferred_by_id[str(outcome["inbox_id"])] = {
+                        key: outcome[key] for key in (
+                            "inbox_id", "task_id", "operation_id", "result_kind", "stage", "reason",
+                        ) if key in outcome
+                    }
             settled = []
             for row in pending_calls:
                 if (
@@ -509,7 +530,10 @@ async def _reconcile_command(args: argparse.Namespace) -> int:
                             "error": type(error).__name__,
                         })
             report["apply"] = {
-                "inbox": applied_inbox, "turn_results_processed": applied_results,
+                "inbox": applied_inbox,
+                "turn_results_processed": sum(int(item.get("processed", False)) for item in result_outcomes),
+                "turn_result_outcomes": result_outcomes,
+                "deferred_followup_results": [deferred_by_id[key] for key in sorted(deferred_by_id)],
                 "settlements": settled,
             }
             async with engine.connect() as connection:

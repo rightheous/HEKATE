@@ -8,7 +8,10 @@ from typing import Mapping
 
 from hekate.application import evidence as evidence_app
 from hekate.application.operations import record_dispatch_accepted, record_dispatch_send_intent
-from hekate.application.results import process_business_result_inbox, process_pending_results, receive_business_result, receive_missing_business_result
+from hekate.application.results import (
+    ResultProcessingMode, process_business_result_inbox, process_pending_results,
+    receive_business_result, receive_missing_business_result,
+)
 from hekate.application.lifecycle import (
     confirm_deletion, create_from_intent, maintain_critic_workflows, maintain_deliberation_steps,
 )
@@ -81,6 +84,7 @@ async def _record_execution(
 async def _collect_turn(
     container: Container, binding: RuntimeBinding, operation_id: OperationId, worker: str,
     deadline: datetime, hekate_config=None, critic_config=None, deliberation_config=None,
+    result_mode: ResultProcessingMode = ResultProcessingMode.WORKER,
 ) -> None:
     runtime: LettaRuntimeAdapter = container.runtime
     saw_business_result = False
@@ -109,6 +113,7 @@ async def _collect_turn(
                     container.uow_factory, event,
                     hekate_config=hekate_config, critic_config=critic_config,
                     deliberation_config=deliberation_config,
+                    mode=result_mode,
                 )
                 saw_business_result = True
             usage = value.get("usage")
@@ -161,6 +166,7 @@ async def _collect_turn(
                     "structured_output_error" if state == "COMPLETE" else "error",
                     hekate_config=hekate_config, critic_config=critic_config,
                     deliberation_config=deliberation_config,
+                    mode=result_mode,
                 )
             return
         await _record_execution(
@@ -268,6 +274,7 @@ async def process_pending_inbox(
     factory: UowFactory, limit: int = 100, processor_owner: str | None = None,
     *, hekate_config=None, critic_config=None, deliberation_config=None,
     owner_scope: ScopeId | None = None,
+    result_mode: ResultProcessingMode = ResultProcessingMode.WORKER,
 ) -> int:
     async with factory() as uow:
         rows = await uow.delivery.pending_inbox(limit, owner_scope)
@@ -277,7 +284,7 @@ async def process_pending_inbox(
         result = await process_inbox_row(
             factory, row, processor_owner=processor_owner,
             hekate_config=hekate_config, critic_config=critic_config,
-            deliberation_config=deliberation_config,
+            deliberation_config=deliberation_config, result_mode=result_mode,
         )
         if result["processed"]:
             processed += 1
@@ -287,12 +294,13 @@ async def process_pending_inbox(
 async def process_inbox_row(
     factory: UowFactory, row: Mapping[str, object], *, processor_owner: str | None = None,
     hekate_config=None, critic_config=None, deliberation_config=None,
+    result_mode: ResultProcessingMode = ResultProcessingMode.WORKER,
 ) -> dict[str, object]:
     payload = row["payload"]
     if payload.get("event_type") == "business_result":
         return await process_business_result_inbox(
             factory, row["id"], hekate_config=hekate_config, critic_config=critic_config,
-            deliberation_config=deliberation_config,
+            deliberation_config=deliberation_config, mode=result_mode,
         )
     if processor_owner and payload.get("event_type") == "execution" and payload.get("state") == "QUIESCENT":
         binding = payload["binding"]

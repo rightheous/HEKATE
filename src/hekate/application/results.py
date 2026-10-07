@@ -4,6 +4,7 @@ import hashlib
 import json
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Literal
 from uuid import NAMESPACE_URL, uuid5
 
@@ -39,6 +40,11 @@ class BusinessResultPayload(ContractModel):
     observation_identity: str = Field(min_length=1, max_length=256)
     binding: InboxBinding
     business_result: BridgeBusinessResult
+
+
+class ResultProcessingMode(StrEnum):
+    WORKER = "worker"
+    RECONCILIATION = "reconciliation"
 
 
 def _reason(error: Exception) -> str:
@@ -138,6 +144,7 @@ def supported_proposal_response(proposal: HekateProposal) -> tuple[str, str, Sto
 async def receive_business_result(
     factory: UowFactory, event: BridgeEvent, *, hekate_config=None, critic_config=None,
     deliberation_config: DeliberationConfig | None = None,
+    mode: ResultProcessingMode = ResultProcessingMode.WORKER,
 ) -> dict[str, object]:
     if event.event_type != "business_result" or event.business_result is None:
         raise ValueError("bridge event is not a business result")
@@ -172,13 +179,14 @@ async def receive_business_result(
         return {"inbox_id": receipt.id, "conflict": True, "processed": True}
     return await process_business_result_inbox(
         factory, receipt.id, hekate_config=hekate_config, critic_config=critic_config,
-        deliberation_config=deliberation_config,
+        deliberation_config=deliberation_config, mode=mode,
     )
 
 
 async def receive_missing_business_result(
     factory: UowFactory, operation_id: OperationId, binding_value: dict[str, object], failure_code: str | None,
     *, hekate_config=None, critic_config=None, deliberation_config: DeliberationConfig | None = None,
+    mode: ResultProcessingMode = ResultProcessingMode.WORKER,
 ) -> dict[str, object]:
     event = BridgeEvent.model_validate({
         "schema_version": "1",
@@ -191,7 +199,7 @@ async def receive_missing_business_result(
     }, strict=True)
     return await receive_business_result(
         factory, event, hekate_config=hekate_config, critic_config=critic_config,
-        deliberation_config=deliberation_config,
+        deliberation_config=deliberation_config, mode=mode,
     )
 
 
@@ -225,6 +233,7 @@ async def _store_rejected_conflict(factory: UowFactory, inbox_id: str, payload: 
 async def process_business_result_inbox(
     factory: UowFactory, inbox_id: str, *, hekate_config=None, critic_config=None,
     deliberation_config: DeliberationConfig | None = None,
+    mode: ResultProcessingMode = ResultProcessingMode.WORKER,
 ) -> dict[str, object]:
     async with factory() as uow:
         inbox = await uow.delivery.lock_inbox(inbox_id)
@@ -273,19 +282,19 @@ async def process_business_result_inbox(
                 "safe_payload": {"reason": reason, "output_hash": digest},
             })
             await uow.commit()
-            return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config)
+            return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config, mode=mode)
         if raw is None or business.output_truncated:
             reason = "output_truncated" if business.output_truncated else "output_missing"
             await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", rejection_reason=reason, delay_seconds=1)
             await uow.delivery.mark_inbox_processed(inbox_id)
             await uow.commit()
-            return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config)
+            return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config, mode=mode)
         if hashlib.sha256(raw_bytes).hexdigest() != business.output_sha256:
             reason = "output_hash_mismatch"
             await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", rejection_reason=reason, delay_seconds=1)
             await uow.delivery.mark_inbox_processed(inbox_id)
             await uow.commit()
-            return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config)
+            return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config, mode=mode)
         attempt = await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
         agent = await uow.agents.lock_registry(binding.agent_registry_id)
         deliberation_step = await uow.deliberation.get_by_operation(payload.operation_id, lock=True)
@@ -328,7 +337,7 @@ async def process_business_result_inbox(
             await uow.knowledge.update_turn_result(inbox_id, state="WAITING_EXECUTION", rejection_reason=reason, delay_seconds=1)
             await uow.delivery.mark_inbox_processed(inbox_id)
             await uow.commit()
-            return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config)
+            return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config, mode=mode)
         if canonical_json(json.loads(raw)) != canonical_json(business.structured_output):
             reason = "structured_output_mismatch"
         else:
@@ -404,7 +413,7 @@ async def process_business_result_inbox(
         )
         await uow.delivery.mark_inbox_processed(inbox_id)
         await uow.commit()
-    return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config)
+    return await apply_turn_result(factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config, deliberation_config=deliberation_config, mode=mode)
 
 
 def _late_reason(task, attempt, result, binding, now: datetime) -> str | None:
@@ -426,6 +435,15 @@ def _late_reason(task, attempt, result, binding, now: datetime) -> str | None:
     if task.status != TaskStatus.RUNNING:
         return "task_not_running"
     return None
+
+
+def _deferred_followup_result(result: Mapping[str, object], kind: str, stage: str) -> dict[str, object]:
+    return {
+        "inbox_id": result["inbox_id"], "task_id": result["task_id"],
+        "operation_id": result["operation_id"], "result_kind": kind, "stage": stage,
+        "processed": False, "pending": True, "deferred": True,
+        "reason": "followup_inference_requires_worker",
+    }
 
 
 def _authorization_failure(scope_state, binding) -> str | None:
@@ -590,7 +608,7 @@ async def _approve_continuation_in_uow(
     uow, actor: ActorContext, task, operation: Mapping[str, object], attempt,
     conclusion_id: DomainId, proposal: ContinuationProposal, manifest: Mapping[str, object],
     hekate_config: TaskExecutionConfig | None, critic_config: TaskExecutionConfig | None,
-    limits: DeliberationConfig,
+    limits: DeliberationConfig, *, validate_only: bool = False,
 ) -> Mapping[str, object]:
     """Reserve an approved bounded follow-up and its durable identity in this result transaction."""
     if not limits.enabled or hekate_config is None:
@@ -675,7 +693,7 @@ async def _approve_continuation_in_uow(
     if proposal.next_action == "hekate_reasoning":
         if task.counters.hekate_continuations >= limits.max_hekate_continuations:
             return {"approved": False, "stop_reason": StopReason.ROUND_LIMIT.value}
-        if not await uow.tasks.increment_counter_if_below(
+        if not validate_only and not await uow.tasks.increment_counter_if_below(
             task.id, "hekate_continuations", limits.max_hekate_continuations,
         ):
             return {"approved": False, "stop_reason": StopReason.ROUND_LIMIT.value}
@@ -707,6 +725,16 @@ async def _approve_continuation_in_uow(
             ("critic_review", "critic_review_2", 2, "READY", None, critic_config, critic.registry_id),
             ("synthesis", "synthesis_2", 2, "WAITING_PARENT", "critic_review_2", hekate_config, binding.agent_registry_id),
         ]
+
+    if validate_only:
+        period = (task.created_at or datetime.now(UTC)).astimezone(UTC).strftime("%Y-%m-%d")
+        accounts = await uow.budgets.lock_accounts([
+            f"task-budget:{task.id}", f"system-budget:{period}",
+        ])
+        required = sum((_reservation_amount(plan[5]) for plan in plans), start=0)
+        if len(accounts) != 2 or any(account.available < required for account in accounts):
+            raise BudgetDenied("task or system budget is insufficient")
+        return {"approved": True, "replayed": False, "would_create": True}
 
     request_hash = canonical_json_hash({
         "scope": str(binding.scope), "registry_id": str(binding.agent_registry_id),
@@ -869,6 +897,7 @@ async def apply_turn_result(
     hekate_config: TaskExecutionConfig | None = None,
     critic_config: TaskExecutionConfig | None = None,
     deliberation_config: DeliberationConfig | None = None,
+    mode: ResultProcessingMode = ResultProcessingMode.WORKER,
 ) -> dict[str, object]:
     current_time = clock or (lambda: datetime.now(UTC))
     async with factory() as uow:
@@ -954,6 +983,9 @@ async def apply_turn_result(
                 ):
                     successful, reason = False, "critic_workflow_binding_mismatch"
                 else:
+                    if mode == ResultProcessingMode.RECONCILIATION:
+                        await uow.commit()
+                        return _deferred_followup_result(result, "critic_review", "critic_review")
                     await uow.knowledge.ensure_dissent(binding.scope, DomainId(result["conclusion_id"]), conclusion_capsule.objections)
                     await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], True, None)
                     await uow.deliberation.mark_result_accepted(step["id"], result["conclusion_id"])
@@ -988,6 +1020,9 @@ async def apply_turn_result(
             ):
                 successful, reason = False, "critic_workflow_binding_mismatch"
             else:
+                if mode == ResultProcessingMode.RECONCILIATION:
+                    await uow.commit()
+                    return _deferred_followup_result(result, "critic_review", "critic_review")
                 await uow.knowledge.ensure_dissent(binding.scope, DomainId(result["conclusion_id"]), conclusion_capsule.objections)
                 await uow.knowledge.set_conclusion_eligible(result["conclusion_id"], True, None)
                 await uow.critic_workflows.transition(
@@ -1017,15 +1052,28 @@ async def apply_turn_result(
                 await uow.rollback()
                 failure = "critic_profile_unavailable" if critic_config is None else "spawn_not_allowed_for_attempt"
                 return await _record_commit_failure(factory, inbox_id, failure, current_time)
+            actor = ActorContext(
+                principal_id=binding.principal_id, scope=binding.scope,
+                authenticated_agent_registry_id=binding.agent_registry_id,
+                task_id=binding.task_id, attempt_id=binding.attempt_id,
+                input_revision=binding.input_revision, policy_version=binding.policy_version,
+                authz_epoch=binding.authz_epoch, fence=binding.fence,
+            )
+            if mode == ResultProcessingMode.RECONCILIATION:
+                try:
+                    preview = await request_critic(
+                        uow, actor, proposal_model, operation, attempt,
+                        DomainId(result["conclusion_id"]), hekate_config, critic_config,
+                        validate_only=True,
+                    )
+                except (BudgetDenied, Conflict, PolicyDenied):
+                    preview = False
+                if preview is None:
+                    await uow.commit()
+                    return _deferred_followup_result(result, "planning_spawn", "planning")
             try:
                 workflow = await request_critic(
-                    uow, ActorContext(
-                        principal_id=binding.principal_id, scope=binding.scope,
-                        authenticated_agent_registry_id=binding.agent_registry_id,
-                        task_id=binding.task_id, attempt_id=binding.attempt_id,
-                        input_revision=binding.input_revision, policy_version=binding.policy_version,
-                        authz_epoch=binding.authz_epoch, fence=binding.fence,
-                    ), proposal_model, operation, attempt,
+                    uow, actor, proposal_model, operation, attempt,
                     DomainId(result["conclusion_id"]), hekate_config, critic_config,
                 )
             except BudgetDenied:
@@ -1066,6 +1114,18 @@ async def apply_turn_result(
                 input_revision=binding.input_revision, policy_version=binding.policy_version,
                 authz_epoch=binding.authz_epoch, fence=binding.fence,
             )
+            if mode == ResultProcessingMode.RECONCILIATION:
+                try:
+                    preview = await _approve_continuation_in_uow(
+                        uow, actor, task, operation, attempt, DomainId(result["conclusion_id"]),
+                        proposal_model, manifest, hekate_config, critic_config, deliberation_config,
+                        validate_only=True,
+                    )
+                except (BudgetDenied, Conflict, PolicyDenied, StaleInput):
+                    preview = None
+                if preview is not None and preview.get("approved") and not preview.get("replayed"):
+                    await uow.commit()
+                    return _deferred_followup_result(result, "continuation", "continuation")
             try:
                 approval = await _approve_continuation_in_uow(
                     uow, actor, task, operation, attempt, DomainId(result["conclusion_id"]),
@@ -1204,15 +1264,25 @@ async def process_pending_results(
     critic_config: TaskExecutionConfig | None = None,
     deliberation_config: DeliberationConfig | None = None,
     owner_scope: ScopeId | None = None,
-) -> int:
+    mode: ResultProcessingMode = ResultProcessingMode.WORKER,
+    return_outcomes: bool = False,
+    continue_on_error: bool = False,
+) -> int | list[dict[str, object]]:
     async with factory() as uow:
         inbox_ids = await uow.tasks.list_pending_turn_results(limit, owner_scope)
         await uow.commit()
-    processed = 0
+    outcomes: list[dict[str, object]] = []
     for inbox_id in inbox_ids:
-        result = await apply_turn_result(
-            factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config,
-            deliberation_config=deliberation_config,
-        )
-        processed += int(result.get("processed", False))
-    return processed
+        try:
+            result = await apply_turn_result(
+                factory, inbox_id, hekate_config=hekate_config, critic_config=critic_config,
+                deliberation_config=deliberation_config, mode=mode,
+            )
+        except Exception as error:
+            if not continue_on_error:
+                raise
+            result = {"inbox_id": inbox_id, "processed": False, "error": type(error).__name__}
+        outcomes.append(result)
+    if return_outcomes:
+        return outcomes
+    return sum(int(result.get("processed", False)) for result in outcomes)
