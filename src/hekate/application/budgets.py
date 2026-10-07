@@ -605,6 +605,23 @@ async def reconcile_pending(factory: UowFactory, reservation_id: ReservationId) 
         return tuple(receipts)
 
 
+async def reconcile_observed_call(factory: UowFactory, accounting_call_id: AccountingCallId) -> SettlementReceipt | None:
+    """Settle one call only through its persisted binding and observed terminal state."""
+    async with factory() as uow:
+        descriptor = await uow.budgets.get_call_descriptor(accounting_call_id)
+        if descriptor is None or descriptor["status"] != "QUIESCENT":
+            return None
+        operation = await uow.delivery.lock_operation(OperationId(descriptor["operation_id"]))
+        binding = _restore_binding(operation)
+        await uow.tasks.lock_scope_for_observation(binding.scope)
+        await uow.tasks.lock_task(binding.task_id)
+        await uow.tasks.get_attempt(binding.attempt_id, for_update=True)
+        await uow.agents.lock_registry(binding.agent_registry_id)
+        receipt = await uow.budgets.settle_call(accounting_call_id)
+        await uow.commit()
+        return receipt
+
+
 async def list_pending(factory: UowFactory, limit: int = 100) -> Sequence[Mapping[str, object]]:
     async with factory() as uow:
         return await uow.budgets.list_pending_calls(limit)

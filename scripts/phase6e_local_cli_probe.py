@@ -43,7 +43,7 @@ from hekate.infrastructure.letta.qwen_ollama import (  # noqa: E402
 LOCAL_EXAMPLE = ROOT / "config/local.example"
 ARTIFACTS = ROOT / "integration/runtime/artifacts"
 GLOBAL_REAL_RUN_GUARD = ROOT / ".hekate-local/phase6e-real-generation-authorization.json"
-DEFAULT_IMAGE = "hekate/letta-code-p1:0bb6f741-70e39563"
+DEFAULT_IMAGE = "hekate/letta-code-p1:0bb6f741-0c6a0fc3"
 CLI_OBSERVATIONS: list[dict[str, object]] = []
 
 
@@ -290,7 +290,7 @@ def start_app_server(
         "docker", "run", "--detach", "--rm", "--name", container_name,
         "--network", "host",
         "--env", "HEKATE_REQUIRE_PROVIDER_BINDING=1",
-        "--env", f"HEKATE_PROJECTION_GUARD_URL=http://127.0.0.1:{gateway_port}/internal/memory-projection/authorize",
+        "--env", f"HEKATE_PROJECTION_GUARD_URL=http://127.0.0.1:{gateway_port}/internal/memory-projection",
         "--env", f"HEKATE_PROJECTION_GUARD_TOKEN={gateway_token}",
         "--mount", f"type=bind,source={state_dir},target=/root/.letta",
         "--mount", f"type=bind,source={token_path},target=/run/secrets/hekate-ws-token,readonly",
@@ -388,7 +388,7 @@ def counts(engine, scope_id: str) -> dict[str, int]:
 
 
 def task_db_snapshot(engine, task_id: str) -> dict[str, object]:
-    task = db_read(engine, "SELECT id, owner_scope, input_revision, status, outcome, stop_reason, provider_calls FROM tasks WHERE id=:task", {"task": task_id})
+    task = db_read(engine, "SELECT id, owner_scope, input_revision, status, outcome, stop_reason, provider_calls, max_provider_calls FROM tasks WHERE id=:task", {"task": task_id})
     calls = db_read(engine, """
         SELECT p.accounting_call_id, p.operation_id, p.attempt_id, p.registry_id,
                p.model, p.status AS call_status, p.execution_mode, p.price_synthetic,

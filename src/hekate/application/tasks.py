@@ -86,6 +86,7 @@ async def submit(
             topic_id=message.topic_id,
             evidence_refs=evidence_refs,
             deadline=now + timedelta(seconds=config.deadline_seconds),
+            max_provider_calls=config.max_generations_per_task,
             created_at=now,
             counters=TaskCounters(),
         )

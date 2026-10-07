@@ -1,0 +1,846 @@
+{
+  "branch": "phase6f-reviewed-qwen",
+  "candidate_file_count": 56,
+  "created_at": "2026-10-07T10:09:58Z",
+  "current_code_fingerprint_sha256": "9b9c5cd68f44e01e77b2bc622ef2a8838d0681595ed8b0fe8131cd0d05c6bd47",
+  "excluded_private_or_generated_data": [
+    "private .env or credentials",
+    "database data or Docker volumes",
+    "Evidence archive source files",
+    "raw provider request captures",
+    "model weights",
+    "node_modules",
+    "virtual environments",
+    "build output and caches"
+  ],
+  "final_fake_artifact": {
+    "actual_provider_generations": 0,
+    "bytes": 169547,
+    "code_fingerprint_sha256": "9b9c5cd68f44e01e77b2bc622ef2a8838d0681595ed8b0fe8131cd0d05c6bd47",
+    "external_provider_calls": 0,
+    "fake_provider_requests": 4,
+    "ollama_model_load_requests": 0,
+    "path": "integration/runtime/artifacts/personal-local-fake-20261007T100453Z-ff50f975.json",
+    "sha256": "0349719a65ff5a5284d8983d2a69b6fd27a704f213a3a6208e2ac0343b232099",
+    "status": "PASS"
+  },
+  "head": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "historical_local_artifacts_preserved_not_staged": [
+    {
+      "bytes": 75671,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T011123Z-28e9cea9-reviewed-qwen.json",
+      "sha256": "c1eb3a4445d7f6349b44a0271b847b9972bac329815df527aeedc90533a20afd",
+      "staged": false
+    },
+    {
+      "bytes": 78919,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T011648Z-67aca025-reviewed-qwen.json",
+      "sha256": "5ff96948609cde752da358d519a018061c7b0ce5cadd387edcd59dbc8839308b",
+      "staged": false
+    },
+    {
+      "bytes": 78650,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T012057Z-d0db0453-reviewed-qwen.json",
+      "sha256": "a7cc4f74dea607805b6bf91f9984f5d5f60b1c7c0fd21f78ecf0add96fbc555d",
+      "staged": false
+    },
+    {
+      "bytes": 79450,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T012541Z-e01852d6-reviewed-qwen.json",
+      "sha256": "3d560c7dedd46b65814c774b82bc042b6e23702c667da93b15c703465e88d851",
+      "staged": false
+    },
+    {
+      "bytes": 169083,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T012658Z-c9f2a53c-reviewed-qwen.json",
+      "sha256": "4830aa7ea1db0806b783928e6325723e6ebac08e63568a564a0efe669a3e80e4",
+      "staged": false
+    },
+    {
+      "bytes": 169264,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T013325Z-2919d524-reviewed-qwen.json",
+      "sha256": "0972e45bf6701257bf2613a7197ceb019ac924a847d82e5783beae32b8ec868f",
+      "staged": false
+    },
+    {
+      "bytes": 169586,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T013750Z-a1f07bf9-reviewed-qwen.json",
+      "sha256": "fa686cc2691ef3f7d9a7acc7ad829fdcf56c7ecaa84ee0f6e0c92546293d5ddf",
+      "staged": false
+    },
+    {
+      "bytes": 157007,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T014514Z-a32790e9-reviewed-qwen.json",
+      "sha256": "ac9e31db1358da45ce028f013fe1c808d5234ae1c6780983dfd1c0adfa12ec35",
+      "staged": false
+    },
+    {
+      "bytes": 157261,
+      "classification": "intermediate fake verification artifact",
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T015718Z-1f0aeecb-reviewed-qwen.json",
+      "sha256": "95e397e3846390f6bec43bb1ece7f6c3b33ef47d5b517a43f3e10ab93f87a1b1",
+      "staged": false
+    },
+    {
+      "bytes": 7979,
+      "classification": "superseded intermediate real reconciliation",
+      "path": "integration/runtime/artifacts/p6f-real-reconciliation-20261007T021014Z-b0c47acf-task-b-replay.json",
+      "sha256": "264ac33c4e9e90e3b1c43781e2b1595d933f1bca6e17c9845a6db6664b8c35b7",
+      "staged": false
+    },
+    {
+      "bytes": 5869,
+      "classification": "duplicate first-run reconciliation diagnostic",
+      "path": "integration/runtime/artifacts/p6f-reconciliation-20261007T013919Z-f1161c10-latest-fake-and-real-mismatch.json",
+      "sha256": "f5702cd9762e3082933160c46465ebda1e66b0c8b2248095c9b4bc07793abcdb",
+      "staged": false
+    }
+  ],
+  "manifest_file": "docs/implementation/personal-local-submission-manifest.json",
+  "manifest_self_hash_excluded": true,
+  "manifest_type": "personal_local_submission_manifest",
+  "phase6f_history": {
+    "manifest_path": "docs/implementation/phase6f-submission-manifest.json",
+    "manifest_preserved_unmodified": true,
+    "manifest_sha256": "3591339a3f87a9b59ca16f9af9566c117b153c5552ca5573ba013ca0c3452c75",
+    "previous_candidate_count": 36,
+    "previous_local_preserve_entry_count": 23,
+    "previous_verdict_preserved": {
+      "goal_wide_actual_local_qwen_generations": 5,
+      "later_functional_path": "PASS",
+      "original_goal_instruction_compliance": "NOT_MET",
+      "original_limit": 4,
+      "over_by": 1
+    }
+  },
+  "schema_version": "1",
+  "staged_paths": 0,
+  "submission_candidates": [
+    {
+      "bytes": 835,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "README.md",
+      "sha256": "ff566ebf5ef538805d2a8cf2a963e3d62ed40364173fccabb305467f0d7414dc"
+    },
+    {
+      "bytes": 563,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "config/local-reviewed.example/local.env.example",
+      "phase6f_manifest_bytes": 563,
+      "phase6f_manifest_sha256": "a44953ace337f7d7f6f2072028345679641d281bce201cda32a38c0f8fd31b22",
+      "sha256": "a44953ace337f7d7f6f2072028345679641d281bce201cda32a38c0f8fd31b22",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 564,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "config/local-reviewed.example/local.yaml",
+      "phase6f_manifest_bytes": 564,
+      "phase6f_manifest_sha256": "f884f3efc094c0b96d1b6b187c7d6d78f3d3256a1656615948deac36b5e3f6d7",
+      "sha256": "f884f3efc094c0b96d1b6b187c7d6d78f3d3256a1656615948deac36b5e3f6d7",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 1619,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "config/local-reviewed.example/models.yaml",
+      "phase6f_manifest_bytes": 1619,
+      "phase6f_manifest_sha256": "a193cfd01180f137e8884425c2dc542ad3a4494e76417abc0e1249c0c4424d04",
+      "sha256": "a193cfd01180f137e8884425c2dc542ad3a4494e76417abc0e1249c0c4424d04",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 576,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "config/local-reviewed.example/policy.yaml",
+      "phase6f_manifest_bytes": 576,
+      "phase6f_manifest_sha256": "9fe969e218045e950a4497e386b712198f94019c461f9e9cf81e9d12541b98b0",
+      "sha256": "9fe969e218045e950a4497e386b712198f94019c461f9e9cf81e9d12541b98b0",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 193,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "config/local-reviewed.example/pricing.yaml",
+      "phase6f_manifest_bytes": 193,
+      "phase6f_manifest_sha256": "af429d9759d1737133987fcedcf5f881327f36022f9cb432f95289114214f444",
+      "sha256": "af429d9759d1737133987fcedcf5f881327f36022f9cb432f95289114214f444",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 563,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "config/personal-local.example/local.env.example",
+      "sha256": "29900b0cb8975d06c2520d286f4a67903727b3af78ee1910d75e060ac78145b8"
+    },
+    {
+      "bytes": 501,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "config/personal-local.example/local.yaml",
+      "sha256": "1ac2bec6ad96e6c1fa2b9cfa8840001b2ae2cd5a76e8becc17321ebc041b8873"
+    },
+    {
+      "bytes": 1619,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "config/personal-local.example/models.yaml",
+      "sha256": "a193cfd01180f137e8884425c2dc542ad3a4494e76417abc0e1249c0c4424d04"
+    },
+    {
+      "bytes": 604,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "config/personal-local.example/policy.yaml",
+      "sha256": "8e257b028b725a80152be57cca924c8fd039adf537dde674e77318dee59049f0"
+    },
+    {
+      "bytes": 193,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "config/personal-local.example/pricing.yaml",
+      "sha256": "af429d9759d1737133987fcedcf5f881327f36022f9cb432f95289114214f444"
+    },
+    {
+      "bytes": 16864,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "docs/implementation/phase6f-reviewed-qwen.md",
+      "phase6f_manifest_bytes": 16864,
+      "phase6f_manifest_sha256": "0dd1421d7774de5fa6441e9352e58f2a64ae9b1de1cd1411a3e3382028496bc7",
+      "sha256": "0dd1421d7774de5fa6441e9352e58f2a64ae9b1de1cd1411a3e3382028496bc7",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 18517,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "docs/implementation/phase6f-submission-manifest.json",
+      "sha256": "3591339a3f87a9b59ca16f9af9566c117b153c5552ca5573ba013ca0c3452c75"
+    },
+    {
+      "bytes": 4950,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "docs/implementation/phase6f-submission-review.md",
+      "phase6f_manifest_bytes": 4950,
+      "phase6f_manifest_sha256": "0fbb135a29c2defcdf0a756e5d4d17e90a25d6a3b755fc2b99d78d75bbb0e98d",
+      "sha256": "0fbb135a29c2defcdf0a756e5d4d17e90a25d6a3b755fc2b99d78d75bbb0e98d",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 10479,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "docs/local-quickstart.md",
+      "phase6f_manifest_bytes": 10145,
+      "phase6f_manifest_sha256": "fc826cd80bf784204888a314a83c5a0dc2473977b46603a9597fcf1ff3436a89",
+      "sha256": "af22c44d1c8f51982b9223bd49be3424ec14c9057803c01fb22bc091dfcd04ea",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 10615,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "docs/personal-use.md",
+      "sha256": "e60b14841b5a32955c9c01b42c875d480f5a7dae280197e1170bdc04c6c9b937"
+    },
+    {
+      "bytes": 52835,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/letta/patches/provider-call-context-usage.patch",
+      "phase6f_manifest_bytes": 52835,
+      "phase6f_manifest_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+      "sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 1187,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/letta/versions.lock.json",
+      "phase6f_manifest_bytes": 1187,
+      "phase6f_manifest_sha256": "5ffbc65f57edea21f5eda382e50510268f1b236ff6b74ca98147a9ac3907ad42",
+      "sha256": "5ffbc65f57edea21f5eda382e50510268f1b236ff6b74ca98147a9ac3907ad42",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 18556,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-correction-20261007T044918Z-00e29651-generation-count.json",
+      "phase6f_manifest_bytes": 18556,
+      "phase6f_manifest_sha256": "c41eb2ead37863953e1ed63dbf5d42bac0923d4edf9b3eb12b5280180f62f126",
+      "sha256": "c41eb2ead37863953e1ed63dbf5d42bac0923d4edf9b3eb12b5280180f62f126",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 157580,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T021533Z-c4d3fa51-reviewed-qwen.json",
+      "phase6f_manifest_bytes": 157580,
+      "phase6f_manifest_sha256": "0fa972ce7f72cf2961e205e831fc03fddba58fbcd6507b9bc7fda7d63b53669e",
+      "sha256": "0fa972ce7f72cf2961e205e831fc03fddba58fbcd6507b9bc7fda7d63b53669e",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 22455,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-final-audit-20261007T022514Z-9a75b54e-reviewed-qwen.json",
+      "phase6f_manifest_bytes": 22455,
+      "phase6f_manifest_sha256": "a8039f0b6db2b2d9953895d19ecc775da206d81d690071f4e38a04bd86db0703",
+      "sha256": "a8039f0b6db2b2d9953895d19ecc775da206d81d690071f4e38a04bd86db0703",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 78565,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-real-20261007T012852Z-1619873d-reviewed-qwen.json",
+      "phase6f_manifest_bytes": 78565,
+      "phase6f_manifest_sha256": "5a163796ab42165ed8fef029326fc52f16dc87148825a15b545657e8800077d9",
+      "sha256": "5a163796ab42165ed8fef029326fc52f16dc87148825a15b545657e8800077d9",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 65860,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-real-20261007T014451Z-00bf2b19-reviewed-qwen.json",
+      "phase6f_manifest_bytes": 65860,
+      "phase6f_manifest_sha256": "858f586c968c2b1c13d7f0cb2ee373064a6a6994dcf21b13513d6caa3b30d163",
+      "sha256": "858f586c968c2b1c13d7f0cb2ee373064a6a6994dcf21b13513d6caa3b30d163",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 68940,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-real-20261007T014647Z-b30b6924-reviewed-qwen.json",
+      "phase6f_manifest_bytes": 68940,
+      "phase6f_manifest_sha256": "6c4c6940d27ff78ab0f4c0fb8d656998afb2f036c164997e5d5d7696a9e44a5d",
+      "sha256": "6c4c6940d27ff78ab0f4c0fb8d656998afb2f036c164997e5d5d7696a9e44a5d",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 55667,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-real-continuation-20261007T020150Z-0b69db56-task-b-readback.json",
+      "phase6f_manifest_bytes": 55667,
+      "phase6f_manifest_sha256": "491a31fd446743f968ee9bc23ebad0eda78974eddc818d2f17a27241d05935d1",
+      "sha256": "491a31fd446743f968ee9bc23ebad0eda78974eddc818d2f17a27241d05935d1",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 21319,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-real-final-20261007T022149Z-ed55f657-reviewed-qwen.json",
+      "phase6f_manifest_bytes": 21319,
+      "phase6f_manifest_sha256": "9fc0eff595aa0bab25b1b5c7f6b947727a24b16c71053d1add2ecb2401939ddd",
+      "sha256": "9fc0eff595aa0bab25b1b5c7f6b947727a24b16c71053d1add2ecb2401939ddd",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 3120,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-real-final-20261007T022353Z-5e0707fd-task-a-b-replay.json",
+      "phase6f_manifest_bytes": 3120,
+      "phase6f_manifest_sha256": "fa02239c009855131906fdec43dc976c3dd7d37e6b2deeb8fdb7552d0b97dfb6",
+      "sha256": "fa02239c009855131906fdec43dc976c3dd7d37e6b2deeb8fdb7552d0b97dfb6",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 5478,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "integration/runtime/artifacts/p6f-reconciliation-20261007T013542Z-cbff8805-actual-action-mismatch.json",
+      "phase6f_manifest_bytes": 5478,
+      "phase6f_manifest_sha256": "cbbfb8e9c9e58d157a6eec9f3e8b33e44e5cf269bb02151b9df6f89d47b92c47",
+      "sha256": "cbbfb8e9c9e58d157a6eec9f3e8b33e44e5cf269bb02151b9df6f89d47b92c47",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 169547,
+      "groups": [
+        "personal_local_final_artifact"
+      ],
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T100453Z-ff50f975.json",
+      "sha256": "0349719a65ff5a5284d8983d2a69b6fd27a704f213a3a6208e2ac0343b232099"
+    },
+    {
+      "bytes": 1076,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "migrations/versions/0015_personal_task_generation_cap.py",
+      "sha256": "685e8af2bffae83085aabb0191bb711ab80cf788f0667899625da0b410e3c797"
+    },
+    {
+      "bytes": 100586,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "scripts/integration_probe.py",
+      "phase6f_manifest_bytes": 100586,
+      "phase6f_manifest_sha256": "a7793342b03491f2e8741a75be619865587c7f8edabf000a09a2a860694bf664",
+      "sha256": "a7793342b03491f2e8741a75be619865587c7f8edabf000a09a2a860694bf664",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 55212,
+      "groups": [
+        "phase6f_inherited"
+      ],
+      "path": "scripts/phase6e_local_cli_probe.py",
+      "phase6f_manifest_bytes": 55192,
+      "phase6f_manifest_sha256": "596821c6eeba13073861c6905aa9fcfce066c32af92a8c6794d26c8b90f3d6ab",
+      "sha256": "37aa79f3d9d0bb5d2af2ef20ced59d7b5b1dce862e019ec9ff3bba6b16204ec2",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 111454,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "scripts/phase6f_reviewed_qwen_probe.py",
+      "phase6f_manifest_bytes": 68288,
+      "phase6f_manifest_sha256": "a6d6f6806ca6036b4129443e7a30be85e7d424e9e561bff5302c52312cd63854",
+      "sha256": "58d20b5f4224ca4df835ae76a555f48a42aa14dc79c5088044233524359edae0",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 36413,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/__main__.py",
+      "sha256": "c1ef1dda0dd0c7e9a0f1f984ef9d0ce9eb4ef71500f333c06be0c73cee471721"
+    },
+    {
+      "bytes": 31396,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/application/budgets.py",
+      "sha256": "177180ec0acaedb9aec0e4e7d1cd191229f04c8c7842b66a6389d9b6bbe73c4d"
+    },
+    {
+      "bytes": 73288,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/application/results.py",
+      "sha256": "b609bf4a530f8eac775d731ccdcbcc4096093293b77fd307b0d55b48cd66b4a7"
+    },
+    {
+      "bytes": 17063,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/application/tasks.py",
+      "sha256": "d05176674a836b2ab533ec63309367a96834aeefd39dac8be065d68fbc3c9d46"
+    },
+    {
+      "bytes": 71869,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/application/turns.py",
+      "phase6f_manifest_bytes": 71869,
+      "phase6f_manifest_sha256": "7b9d83284e0ca49960acccfcb73fd8690a3dc9ba0c15ed6f96fbb7281e65d323",
+      "sha256": "7b9d83284e0ca49960acccfcb73fd8690a3dc9ba0c15ed6f96fbb7281e65d323",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 18380,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/diagnostics.py",
+      "phase6f_manifest_bytes": 18380,
+      "phase6f_manifest_sha256": "48a9fe8d6cb2bb1db0e910cc65b05ae1e49e787dccc0dfa59797356f2f49fab8",
+      "sha256": "48a9fe8d6cb2bb1db0e910cc65b05ae1e49e787dccc0dfa59797356f2f49fab8",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 43077,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/domain/models.py",
+      "sha256": "f6c1451b8c4bfd5ae5bc079acbdca2c481cf6e1d1a5deb79cd72e5f4fa20eb8f"
+    },
+    {
+      "bytes": 9427,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/infrastructure/letta/gateway_entry.py",
+      "phase6f_manifest_bytes": 8967,
+      "phase6f_manifest_sha256": "05a84089f5cf63745c1c679c435f2814c4cb43c4cac210914aeef1452c748f48",
+      "sha256": "863f5a599b37c4b72e7ac81fe0083c457ad74ec27905f91b5238ffdf175096af",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 55335,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+      "phase6f_manifest_bytes": 54855,
+      "phase6f_manifest_sha256": "946d7c4e298045ac0cfc45423b0fbc7444fd803db3349a1b3112911de4d13feb",
+      "sha256": "6c69d326c44381c8b043eba7b8d5718e5fbd223fffdfbccbfdb3b5783ed6e2a7",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 2413,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/infrastructure/letta/qwen_local_profile.py",
+      "phase6f_manifest_bytes": 2413,
+      "phase6f_manifest_sha256": "9cc0131c2b20a3060199769f62a8cd348753542cf940f98d68c21cf26f78b154",
+      "sha256": "9cc0131c2b20a3060199769f62a8cd348753542cf940f98d68c21cf26f78b154",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 6716,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/infrastructure/letta/reviewed_qwen_profile.py",
+      "phase6f_manifest_bytes": 6716,
+      "phase6f_manifest_sha256": "58162e4a5d46f942c4de3a387ed49bf82509ae0477ce5dd479db189838fe7147",
+      "sha256": "58162e4a5d46f942c4de3a387ed49bf82509ae0477ce5dd479db189838fe7147",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 21132,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/infrastructure/letta/token_accounting.py",
+      "phase6f_manifest_bytes": 21132,
+      "phase6f_manifest_sha256": "11b6e587b8248bd6851f298c2291d762fa7b152902dd319fc21899aaa6ef292e",
+      "sha256": "11b6e587b8248bd6851f298c2291d762fa7b152902dd319fc21899aaa6ef292e",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 62170,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/infrastructure/postgres/budget_repository.py",
+      "sha256": "c5ec88d6aba039f7b3c1994cf75f810b673eaa5a61628de6a37f084193dd73fc"
+    },
+    {
+      "bytes": 39224,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/infrastructure/postgres/delivery_repository.py",
+      "sha256": "01e8d81b6ff13c57e8ce5aa49fe0e6048547d27ec395708800430bdbd5ace9e4"
+    },
+    {
+      "bytes": 49012,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/infrastructure/postgres/tables.py",
+      "sha256": "a8242a3b5887706436c72aef20e9348041548e9eedbc600c86d48fd81796890f"
+    },
+    {
+      "bytes": 40892,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/infrastructure/postgres/task_repository.py",
+      "phase6f_manifest_bytes": 40448,
+      "phase6f_manifest_sha256": "7585b88e035bc4d6cf113bbbf3177c156b04a7209623896713ac32cce192caca",
+      "sha256": "0e6ba26c6619a2b08e69c9d456667d3214bd31938fb0cdaff325672d2001ff0c",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 20504,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/ports/store.py",
+      "phase6f_manifest_bytes": 20396,
+      "phase6f_manifest_sha256": "2a567aec01eb8c71b07dd69a85d3f0932d46178f5bcdd6d6b475e1f50893f72b",
+      "sha256": "37588401c031fae6a2440c71b6d90a09a89253813f9df7ef4cea220be22ca18f",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 29799,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "src/hekate/settings.py",
+      "phase6f_manifest_bytes": 28678,
+      "phase6f_manifest_sha256": "5012ec6c6f46643babd1e6375a3f40fdcffb5ac4bfb77626d8abaf15c99c8a94",
+      "sha256": "46ab4f4cf4ccb9e7483bc504ffca71ce7c3d8bce11ab2842a5ba702c34af081f",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 27617,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "src/hekate/worker/service.py",
+      "sha256": "33ad923fd5ac3428406c5320028af43fa7c5119f072af7c61d349f7d73c3a9f8"
+    },
+    {
+      "bytes": 4794,
+      "groups": [
+        "personal_local"
+      ],
+      "path": "tests/unit/test_personal_run.py",
+      "sha256": "ecfc9ff6b0fa1b0372bd25ac8d99c11107ead5bb0b1e7ca3f575e3284ddf9f13"
+    },
+    {
+      "bytes": 5907,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "tests/unit/test_phase6e_local_settings.py",
+      "phase6f_manifest_bytes": 5410,
+      "phase6f_manifest_sha256": "b1a18097103509554ff67996a6e8378702a687eb2776d4237b875190486592fc",
+      "sha256": "104c1d8f2ea6d46a710b3ff2918d59415a6c31a6ae2b3a104c05a1ae1f99eb60",
+      "unchanged_since_phase6f_manifest": false
+    },
+    {
+      "bytes": 5331,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "tests/unit/test_phase6f_generation_allowance.py",
+      "phase6f_manifest_bytes": 5331,
+      "phase6f_manifest_sha256": "b29e0b6a702b9138355b51fbbccc1d0aa20232f2ba5bab7eeffc378f93b84810",
+      "sha256": "b29e0b6a702b9138355b51fbbccc1d0aa20232f2ba5bab7eeffc378f93b84810",
+      "unchanged_since_phase6f_manifest": true
+    },
+    {
+      "bytes": 18232,
+      "groups": [
+        "personal_local",
+        "phase6f_inherited"
+      ],
+      "path": "tests/unit/test_qwen_ollama.py",
+      "phase6f_manifest_bytes": 18232,
+      "phase6f_manifest_sha256": "361fbbad00282a0bc683b1061b672a31195fe1bc0fbb90d40d902fa2404954c4",
+      "sha256": "361fbbad00282a0bc683b1061b672a31195fe1bc0fbb90d40d902fa2404954c4",
+      "unchanged_since_phase6f_manifest": true
+    }
+  ],
+  "suggested_stage_paths": [
+    "README.md",
+    "config/local-reviewed.example/local.env.example",
+    "config/local-reviewed.example/local.yaml",
+    "config/local-reviewed.example/models.yaml",
+    "config/local-reviewed.example/policy.yaml",
+    "config/local-reviewed.example/pricing.yaml",
+    "config/personal-local.example/local.env.example",
+    "config/personal-local.example/local.yaml",
+    "config/personal-local.example/models.yaml",
+    "config/personal-local.example/policy.yaml",
+    "config/personal-local.example/pricing.yaml",
+    "docs/implementation/personal-local-submission-manifest.json",
+    "docs/implementation/phase6f-reviewed-qwen.md",
+    "docs/implementation/phase6f-submission-manifest.json",
+    "docs/implementation/phase6f-submission-review.md",
+    "docs/local-quickstart.md",
+    "docs/personal-use.md",
+    "integration/letta/patches/provider-call-context-usage.patch",
+    "integration/letta/versions.lock.json",
+    "integration/runtime/artifacts/p6f-correction-20261007T044918Z-00e29651-generation-count.json",
+    "integration/runtime/artifacts/p6f-fake-20261007T021533Z-c4d3fa51-reviewed-qwen.json",
+    "integration/runtime/artifacts/p6f-final-audit-20261007T022514Z-9a75b54e-reviewed-qwen.json",
+    "integration/runtime/artifacts/p6f-real-20261007T012852Z-1619873d-reviewed-qwen.json",
+    "integration/runtime/artifacts/p6f-real-20261007T014451Z-00bf2b19-reviewed-qwen.json",
+    "integration/runtime/artifacts/p6f-real-20261007T014647Z-b30b6924-reviewed-qwen.json",
+    "integration/runtime/artifacts/p6f-real-continuation-20261007T020150Z-0b69db56-task-b-readback.json",
+    "integration/runtime/artifacts/p6f-real-final-20261007T022149Z-ed55f657-reviewed-qwen.json",
+    "integration/runtime/artifacts/p6f-real-final-20261007T022353Z-5e0707fd-task-a-b-replay.json",
+    "integration/runtime/artifacts/p6f-reconciliation-20261007T013542Z-cbff8805-actual-action-mismatch.json",
+    "integration/runtime/artifacts/personal-local-fake-20261007T100453Z-ff50f975.json",
+    "migrations/versions/0015_personal_task_generation_cap.py",
+    "scripts/integration_probe.py",
+    "scripts/phase6e_local_cli_probe.py",
+    "scripts/phase6f_reviewed_qwen_probe.py",
+    "src/hekate/__main__.py",
+    "src/hekate/application/budgets.py",
+    "src/hekate/application/results.py",
+    "src/hekate/application/tasks.py",
+    "src/hekate/application/turns.py",
+    "src/hekate/diagnostics.py",
+    "src/hekate/domain/models.py",
+    "src/hekate/infrastructure/letta/gateway_entry.py",
+    "src/hekate/infrastructure/letta/provider_gateway.py",
+    "src/hekate/infrastructure/letta/qwen_local_profile.py",
+    "src/hekate/infrastructure/letta/reviewed_qwen_profile.py",
+    "src/hekate/infrastructure/letta/token_accounting.py",
+    "src/hekate/infrastructure/postgres/budget_repository.py",
+    "src/hekate/infrastructure/postgres/delivery_repository.py",
+    "src/hekate/infrastructure/postgres/tables.py",
+    "src/hekate/infrastructure/postgres/task_repository.py",
+    "src/hekate/ports/store.py",
+    "src/hekate/settings.py",
+    "src/hekate/worker/service.py",
+    "tests/unit/test_personal_run.py",
+    "tests/unit/test_phase6e_local_settings.py",
+    "tests/unit/test_phase6f_generation_allowance.py",
+    "tests/unit/test_qwen_ollama.py"
+  ],
+  "superseded_personal_probe_artifacts_preserved_not_staged": [
+    {
+      "bytes": 57355,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T092458Z-38b5c66c.json",
+      "sha256": "3d31041c4c377b39ab1dfb6ff8ec26a850b2e11acd267aac4cf9de77661fc536",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 62440,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T092537Z-001e771e.json",
+      "sha256": "9bce3760a85f598bde922c1815b9af11afd0610d58f7264d8f92d7c4c2ffcb6a",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 62567,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T092952Z-94fe111b.json",
+      "sha256": "b96064795e69108d595a410ea3c5854ee82dd9a3824d13eca37207f977b7ca35",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 122591,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T093143Z-1e51f720.json",
+      "sha256": "6120bc8b5762ee273c78248e15871b35f93987eb080a9d84002bf69662cbf9bb",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 140704,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T093412Z-296b89e2.json",
+      "sha256": "8771753c99c831c7b39d48aaa5e0abdfc65b757673bdbaee0c207076e6b0720c",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 140819,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T093718Z-9a39f17d.json",
+      "sha256": "a9531610a9a27f782f0b78df1ddea0f02502880b3d8c3c6ba93fdb736f7878a8",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 141882,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T094101Z-7d829ac2.json",
+      "sha256": "7fe076c16896f8f427751c291dcc6c0f23b0faa46b88028c3c49b2197bfaa548",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 142497,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T094406Z-8d16ecb0.json",
+      "sha256": "14b2025883c2f1416cb74d21469abd3f4dfdae48149e93691ea595cf201a404d",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 141941,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T094846Z-0216f0cc.json",
+      "sha256": "92b690a7224b897b894919ff61a21e54c336e5b3af93f3bb7895dc67328d9d5e",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 142159,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T095233Z-33551302.json",
+      "sha256": "2dff5aba7a1c165c064a218c94f85fb15070559fa3e98bfbd653a911d7b7e943",
+      "status": "FAILED"
+    },
+    {
+      "bytes": 169058,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T095525Z-ed97aa7d.json",
+      "sha256": "6bd473f808a441a4ac2e919aa3a004a7f9f7b62a1bdc7f027bed68b696fa69e3",
+      "status": "PASS"
+    },
+    {
+      "bytes": 169456,
+      "classification": "superseded probe attempt; preserved, not staged",
+      "path": "integration/runtime/artifacts/personal-local-fake-20261007T095937Z-c39a9fb1.json",
+      "sha256": "9908c4d6aa53619cff0fe3b16af2224fd5d02c1ee4209b6e6fdce5415fd98800",
+      "status": "PASS"
+    }
+  ],
+  "unclassified_dirty_paths": [],
+  "worktree": "/home/hekate/hekate-phase6f-reviewed-qwen"
+}

@@ -26,7 +26,7 @@ from hekate.domain.models import (
 from hekate.domain.proposals import parse_hekate_proposal, validate_proposal_shape
 from hekate.domain.types import (
     ActorContext, AttemptId, AttemptStatus, DomainId, EvidenceId, OperationId, RegistryId,
-    ReservationId, StopReason, TaskId, TaskStatus,
+    ReservationId, ScopeId, StopReason, TaskId, TaskStatus,
 )
 from hekate.application.runtime_inbox import InboxBinding
 from hekate.ports.store import UowFactory
@@ -1203,9 +1203,10 @@ async def process_pending_results(
     factory: UowFactory, limit: int = 100, *, hekate_config: TaskExecutionConfig | None = None,
     critic_config: TaskExecutionConfig | None = None,
     deliberation_config: DeliberationConfig | None = None,
+    owner_scope: ScopeId | None = None,
 ) -> int:
     async with factory() as uow:
-        inbox_ids = await uow.tasks.list_pending_turn_results(limit)
+        inbox_ids = await uow.tasks.list_pending_turn_results(limit, owner_scope)
         await uow.commit()
     processed = 0
     for inbox_id in inbox_ids:

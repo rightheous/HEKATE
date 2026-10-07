@@ -20,7 +20,7 @@ from hekate.domain.bridge_contracts import BridgeEvent
 from hekate.domain.contracts import canonical_json
 from hekate.domain.errors import PolicyDenied, StaleInput
 from hekate.domain.models import ExecutionEnvelope, Lease, OutboxJob, RuntimeBinding
-from hekate.domain.types import AttemptId, OperationId, ProviderAgentId, RegistryId, TaskId
+from hekate.domain.types import AttemptId, OperationId, ProviderAgentId, RegistryId, ScopeId, TaskId
 from hekate.infrastructure.letta.adapter import LettaRuntimeAdapter
 from hekate.ports.store import UowFactory
 from hekate.settings import configured_critic_execution, configured_deliberation, configured_local_actor, configured_task_execution
@@ -267,40 +267,51 @@ async def heartbeat_leases(factory: UowFactory, worker: str, active: dict[str, L
 async def process_pending_inbox(
     factory: UowFactory, limit: int = 100, processor_owner: str | None = None,
     *, hekate_config=None, critic_config=None, deliberation_config=None,
+    owner_scope: ScopeId | None = None,
 ) -> int:
     async with factory() as uow:
-        rows = await uow.delivery.pending_inbox(limit)
+        rows = await uow.delivery.pending_inbox(limit, owner_scope)
         await uow.commit()
     processed = 0
     for row in rows:
-        payload = row["payload"]
-        if payload.get("event_type") == "business_result":
-            result = await process_business_result_inbox(
-                factory, row["id"], hekate_config=hekate_config, critic_config=critic_config,
-                deliberation_config=deliberation_config,
-            )
-        elif processor_owner and payload.get("event_type") == "execution" and payload.get("state") == "QUIESCENT":
-            binding = payload["binding"]
-            async with factory() as uow:
-                lease = await uow.agents.acquire_lease(
-                    RegistryId(binding["agent_registry_id"]), processor_owner, REGISTRY_LEASE_SECONDS,
-                )
-                if lease is None:
-                    await uow.delivery.defer_inbox(row["id"], "processor_lease_unavailable")
-                    await uow.commit()
-                    continue
-                await uow.commit()
-            from hekate.application.runtime_inbox import _apply_terminal_inbox
-
-            result = await _apply_terminal_inbox(factory, row["id"], processor_owner)
-        else:
-            result = await process_runtime_observation(
-                factory, row["provider_scope"], row["stable_event_key"], payload,
-                processor_owner=processor_owner,
-            )
+        result = await process_inbox_row(
+            factory, row, processor_owner=processor_owner,
+            hekate_config=hekate_config, critic_config=critic_config,
+            deliberation_config=deliberation_config,
+        )
         if result["processed"]:
             processed += 1
     return processed
+
+
+async def process_inbox_row(
+    factory: UowFactory, row: Mapping[str, object], *, processor_owner: str | None = None,
+    hekate_config=None, critic_config=None, deliberation_config=None,
+) -> dict[str, object]:
+    payload = row["payload"]
+    if payload.get("event_type") == "business_result":
+        return await process_business_result_inbox(
+            factory, row["id"], hekate_config=hekate_config, critic_config=critic_config,
+            deliberation_config=deliberation_config,
+        )
+    if processor_owner and payload.get("event_type") == "execution" and payload.get("state") == "QUIESCENT":
+        binding = payload["binding"]
+        async with factory() as uow:
+            lease = await uow.agents.acquire_lease(
+                RegistryId(binding["agent_registry_id"]), processor_owner, REGISTRY_LEASE_SECONDS,
+            )
+            if lease is None:
+                await uow.delivery.defer_inbox(row["id"], "processor_lease_unavailable")
+                await uow.commit()
+                return {"inbox_id": row["id"], "processed": False, "pending_reason": "processor_lease_unavailable"}
+            await uow.commit()
+        from hekate.application.runtime_inbox import _apply_terminal_inbox
+
+        return await _apply_terminal_inbox(factory, row["id"], processor_owner)
+    return await process_runtime_observation(
+        factory, row["provider_scope"], row["stable_event_key"], payload,
+        processor_owner=processor_owner,
+    )
 
 
 async def _process_lifecycle_job(container: Container, job: OutboxJob, worker: str) -> None:
@@ -411,10 +422,12 @@ async def run_worker(container: Container, stop_event: asyncio.Event) -> None:
                         container.uow_factory, processor_owner=worker,
                         hekate_config=execution_config, critic_config=critic_config,
                         deliberation_config=deliberation_config,
+                        owner_scope=actor.scope if actor is not None else None,
                     )
                     await process_pending_results(
                         container.uow_factory, hekate_config=execution_config,
                         critic_config=critic_config, deliberation_config=deliberation_config,
+                        owner_scope=actor.scope if actor is not None else None,
                     )
                     try:
                         await maintain_deliberation_steps(container.uow_factory)

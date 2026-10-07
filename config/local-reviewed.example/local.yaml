@@ -1,0 +1,21 @@
+schema_version: "1"
+enabled: true
+workflow_mode: reviewed_qwen_v1
+identity:
+  principal_id: local-reviewed-operator
+  scope_id: local-reviewed-workspace
+  policy_version: local-reviewed-qwen-v1
+  authz_epoch: 1
+runtime:
+  execution_mode: local_candidate
+  worker_id: local-reviewed-worker
+  letta_turn_timeout_ms: 240000
+gateway:
+  host: 127.0.0.1
+  port: 8765
+  upstream_base_url: http://127.0.0.1:19191
+  upstream_api_key: local-no-auth
+paths:
+  state_dir: state
+  archive_dir: state/archive
+  generation_allowance: state/qwen-reviewed-generation-allowance.json

@@ -350,6 +350,16 @@ class PostgresBudgetRepository:
             if permit["state"] != "ISSUED" or permit["expires_at"] <= aware_now():
                 raise UnknownExecution("call permit is no longer forwardable")
             return self._permit(existing, permit, consumed=False)
+        task_call_budget = (await self.connection.execute(select(
+            tables.tasks.c.provider_calls, tables.tasks.c.max_provider_calls,
+        ).where(tables.tasks.c.id == intent.binding.task_id).with_for_update())).mappings().one_or_none()
+        if task_call_budget is None:
+            raise StaleInput("Task generation budget is unavailable")
+        if (
+            task_call_budget["max_provider_calls"] > 0
+            and task_call_budget["provider_calls"] >= task_call_budget["max_provider_calls"]
+        ):
+            raise BudgetDenied("durable per-Task generation cap reached")
         now = aware_now()
         existing_count = (await self.connection.execute(select(func.count()).select_from(tables.provider_calls).where(
             tables.provider_calls.c.operation_id == intent.operation_id,
@@ -1042,12 +1052,13 @@ class PostgresBudgetRepository:
             spent_delta=spent_delta,
         ))
 
-    async def list_pending_calls(self, limit: int = 100):
-        if limit < 1:
+    async def list_pending_calls(self, limit: int = 100, owner_scope: ScopeId | None = None):
+        if not 1 <= limit <= 1_000:
             raise ValueError("limit must be positive")
-        return (await self.connection.execute(select(
+        query = select(
             tables.provider_calls.c.accounting_call_id,
             tables.provider_calls.c.operation_id,
+            tables.provider_calls.c.reservation_id,
             tables.provider_calls.c.status,
             tables.usage_projections.c.completeness,
             tables.usage_projections.c.settlement_state,
@@ -1061,7 +1072,15 @@ class PostgresBudgetRepository:
             (tables.provider_calls.c.status != "QUIESCENT")
             | (tables.usage_projections.c.settlement_state.is_(None))
             | (tables.usage_projections.c.settlement_state != "SETTLED"),
-        ).order_by(tables.provider_calls.c.created_at, tables.provider_calls.c.accounting_call_id).limit(limit))).mappings().all()
+        )
+        if owner_scope is not None:
+            query = query.join(
+                tables.operations,
+                tables.operations.c.id == tables.provider_calls.c.operation_id,
+            ).where(tables.operations.c.owner_scope == owner_scope)
+        return (await self.connection.execute(query.order_by(
+            tables.provider_calls.c.created_at, tables.provider_calls.c.accounting_call_id,
+        ).limit(limit))).mappings().all()
 
     async def call_ids_for_operation(self, operation_id: OperationId):
         return (await self.connection.execute(select(tables.provider_calls.c.accounting_call_id).where(

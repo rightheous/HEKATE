@@ -50,13 +50,15 @@ def configured_deliberation(settings: Settings) -> DeliberationConfig:
     if not isinstance(value, dict):
         return DeliberationConfig(enabled=False)
     enabled = value.get("enabled") is True
+    if not enabled:
+        return DeliberationConfig(enabled=False)
     expected = {
         "max_critic_agents": 1, "max_review_rounds": 2,
         "max_hekate_continuations": 1, "max_syntheses_per_task": 2,
     }
     if any(type(value.get(key)) is not int or value.get(key) != limit for key, limit in expected.items()):
         raise ValueError("Phase 5B deliberation limits must be explicitly fixed at 1/2/1/2")
-    return DeliberationConfig(enabled=enabled)
+    return DeliberationConfig(enabled=True)
 
 
 def _yaml(path: Path) -> Mapping[str, object]:
@@ -99,7 +101,7 @@ def load_settings(env: Mapping[str, str], config_dir: Path) -> Settings:
     )
 
 
-def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
+def configured_task_execution(settings: Settings, *, reasoning_role: str = "hekate") -> TaskExecutionConfig:
     limits = settings.policy.get("limits")
     profile = settings.models.get("hekate")
     if not isinstance(limits, dict) or not isinstance(profile, dict):
@@ -156,7 +158,9 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
     input_price = decimal_value(price.get("input_usd_per_million"), "input_usd_per_million", allow_zero=True)
     output_price = decimal_value(price.get("output_usd_per_million"), "output_usd_per_million", allow_zero=True)
     profile_kind = profile.get("execution_profile")
-    if settings.runtime_mode == "local" and profile_kind != "qwen35_native_json_schema_test_v2":
+    if settings.runtime_mode == "local" and profile_kind not in {
+        "qwen35_native_json_schema_test_v2", "qwen35_reviewed_native_json_schema_v1",
+    }:
         raise ValueError("local mode only accepts the frozen native-schema Qwen candidate profile")
     if profile_kind is None:
         if agent_system_prompt is not None:
@@ -168,18 +172,30 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
             input_usd_per_million=input_price, output_usd_per_million=output_price,
             pricing_effective_at=pricing_effective_at,
         )
-    elif profile_kind in {"qwen35_test_v1", "qwen35_native_json_schema_test_v2"}:
+    elif profile_kind in {
+        "qwen35_test_v1", "qwen35_native_json_schema_test_v2", "qwen35_reviewed_native_json_schema_v1",
+    }:
         from hekate.infrastructure.letta.qwen_ollama import (
             load_qwen_candidate_profile, qwen35_native_json_schema_test_execution_profile,
             qwen35_test_execution_profile,
         )
+        from hekate.infrastructure.letta.reviewed_qwen_profile import (
+            qwen35_reviewed_native_json_schema_test_execution_profile,
+            reviewed_critic_system_prompt,
+        )
 
         candidate = load_qwen_candidate_profile()
-        execution_profile, qwen_prices = (
-            qwen35_native_json_schema_test_execution_profile(candidate)
-            if profile_kind == "qwen35_native_json_schema_test_v2"
-            else qwen35_test_execution_profile(candidate)
-        )
+        if profile_kind == "qwen35_native_json_schema_test_v2":
+            execution_profile, qwen_prices = qwen35_native_json_schema_test_execution_profile(candidate)
+            expected_prompt = candidate.agent_system_prompt
+        elif profile_kind == "qwen35_reviewed_native_json_schema_v1":
+            execution_profile, qwen_prices = qwen35_reviewed_native_json_schema_test_execution_profile(candidate)
+            if reasoning_role not in {"hekate", "critic"} or profile.get("reasoning_role", "hekate") != reasoning_role:
+                raise ValueError("reviewed Qwen profile role does not match its trusted execution path")
+            expected_prompt = candidate.agent_system_prompt if reasoning_role == "hekate" else reviewed_critic_system_prompt()
+        else:
+            execution_profile, qwen_prices = qwen35_test_execution_profile(candidate)
+            expected_prompt = None
         if (
             profile_id != execution_profile.profile_id
             or model != execution_profile.model
@@ -192,7 +208,7 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
             or output_price != qwen_prices.output_usd_per_million
             or pricing_effective_at != qwen_prices.effective_at
             or letta_model != f"openai-compatible/{model}"
-            or agent_system_prompt != candidate.agent_system_prompt
+            or agent_system_prompt != expected_prompt
             or profile.get("letta_context_estimator_tokens") != candidate.letta_context_estimator_tokens
         ):
             raise ValueError("Qwen test settings differ from the frozen offline candidate contract")
@@ -220,6 +236,9 @@ def configured_task_execution(settings: Settings) -> TaskExecutionConfig:
         agent_system_prompt=agent_system_prompt,
         letta_context_estimator_tokens=letta_context_estimator_tokens,
         sdk_output_format=sdk_output_format,
+        max_generations_per_task=nonnegative_integer(
+            limits.get("max_generations_per_task", 0), "max_generations_per_task",
+        ),
     )
 
 
@@ -240,7 +259,7 @@ def configured_critic_execution(settings: Settings) -> TaskExecutionConfig | Non
     if not isinstance(profile, dict):
         raise ValueError("Critic is enabled without a fixed Critic model profile")
     profile_settings = replace(settings, models={"hekate": profile})
-    return configured_task_execution(profile_settings)
+    return configured_task_execution(profile_settings, reasoning_role="critic")
 
 
 _EXECUTION_CONFIG_FIELDS = frozenset({
@@ -270,6 +289,7 @@ def execution_config_snapshot(config: TaskExecutionConfig) -> dict[str, object]:
         "model_revision": config.model_revision,
         "profile_digest": config.profile_digest,
         "pricing_effective_at": config.pricing_effective_at,
+        "max_generations_per_task": config.max_generations_per_task,
     }
     if config.agent_system_prompt is not None:
         value["agent_system_prompt"] = config.agent_system_prompt
@@ -282,7 +302,7 @@ def execution_config_snapshot(config: TaskExecutionConfig) -> dict[str, object]:
 
 def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig:
     """Rebuild only a complete persisted server profile; never read model routing from output."""
-    optional_fields = {"agent_system_prompt", "letta_context_estimator_tokens", "sdk_output_format"}
+    optional_fields = {"agent_system_prompt", "letta_context_estimator_tokens", "sdk_output_format", "max_generations_per_task"}
     persisted_fields = frozenset(value)
     if not _EXECUTION_CONFIG_FIELDS <= persisted_fields or not (persisted_fields - _EXECUTION_CONFIG_FIELDS) <= optional_fields:
         raise ValueError("persisted workflow execution profile is incomplete or contains unknown fields")
@@ -299,6 +319,8 @@ def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig
     integer_names = {"deadline_seconds", "max_input_tokens", "max_output_tokens", "max_compaction_calls", "context_window_tokens"}
     if "letta_context_estimator_tokens" in value:
         integer_names.add("letta_context_estimator_tokens")
+    if "max_generations_per_task" in value:
+        integer_names.add("max_generations_per_task")
     if "sdk_output_format" in value and type(value["sdk_output_format"]) is not bool:
         raise ValueError("persisted workflow execution profile has an invalid SDK output-format setting")
     if any(not isinstance(value.get(name), str) or not value[name] for name in string_names):
@@ -334,6 +356,7 @@ def restore_execution_config(value: Mapping[str, object]) -> TaskExecutionConfig
         agent_system_prompt=agent_system_prompt,
         letta_context_estimator_tokens=value.get("letta_context_estimator_tokens"),
         sdk_output_format=value.get("sdk_output_format", True),
+        max_generations_per_task=value.get("max_generations_per_task", 0),
     )
 
 
@@ -413,6 +436,26 @@ def validate_local_settings(settings: Settings) -> None:
     paths = value.get("paths", {})
     if not isinstance(paths, dict) or not isinstance(paths.get("state_dir"), str) or not paths["state_dir"]:
         raise ValueError("local.yaml must define a separate local paths.state_dir")
+    workflow_mode = value.get("workflow_mode")
+    reviewed = workflow_mode == "reviewed_qwen_v1"
+    personal = workflow_mode == "personal_local_v1"
+    reviewed_capability = reviewed or personal
+    if workflow_mode not in {None, "reviewed_qwen_v1", "personal_local_v1"}:
+        raise ValueError("local workflow_mode is not supported")
+    if reviewed:
+        allowance = paths.get("generation_allowance")
+        if not isinstance(allowance, str) or not allowance:
+            raise ValueError("reviewed local mode requires a private generation_allowance path")
+        state_path = Path(paths["state_dir"]).expanduser()
+        if not state_path.is_absolute():
+            state_path = settings.config_dir / state_path
+        allowance_path = Path(allowance).expanduser()
+        if not allowance_path.is_absolute():
+            allowance_path = settings.config_dir / allowance_path
+        if not allowance_path.resolve().is_relative_to(state_path.resolve()) or allowance_path.resolve() == state_path.resolve():
+            raise ValueError("reviewed generation allowance must be stored under the isolated local state directory")
+    if personal and paths.get("generation_allowance") is not None:
+        raise ValueError("personal local mode uses PostgreSQL Task call accounting, not a probe allowance")
     if not settings.project_dir.is_dir():
         raise ValueError("HEKATE_PROJECT_DIR must point to the checkout containing the pinned bridge and assets")
     if not settings.database_url.startswith("postgresql+psycopg://"):
@@ -426,17 +469,44 @@ def validate_local_settings(settings: Settings) -> None:
     limits = settings.policy.get("limits")
     if not isinstance(limits, dict) or limits.get("task_deadline_seconds") != 900:
         raise ValueError("local Qwen run requires the explicit 900-second Task deadline")
+    if personal and limits.get("max_generations_per_task") != 3:
+        raise ValueError("personal local mode requires the durable three-generation Task cap")
+    if not personal and limits.get("max_generations_per_task", 0) != 0:
+        raise ValueError("the Task generation cap is enabled only by personal_local_v1")
     if settings.policy.get("tool_grants") != [] or settings.policy.get("allowed_actions") != [
         "answer", "request_information", "abstain", "commit",
     ]:
         raise ValueError("local policy must disable tools and keep the bounded HEKATE action set")
     critic = settings.policy.get("critic")
     deliberation = settings.policy.get("deliberation")
-    if not isinstance(critic, dict) or critic.get("enabled") is not False or not isinstance(deliberation, dict) or deliberation.get("enabled") is not False:
-        raise ValueError("local execution requires Critic and automatic continuation to remain disabled")
+    if not isinstance(critic, dict) or not isinstance(deliberation, dict) or deliberation.get("enabled") is not False:
+        raise ValueError("local execution requires an explicit Critic policy and disabled automatic continuation")
+    expected_local_caps = {
+        "critic_agents_per_task": 1 if reviewed_capability else 0,
+        "review_rounds": 1 if reviewed_capability else 0,
+        "max_syntheses_per_task": 1 if reviewed_capability else 0,
+        "schema_repairs": 0,
+        "transient_retries": 0,
+    }
+    if any(type(limits.get(key)) is not int or limits.get(key) != expected for key, expected in expected_local_caps.items()):
+        raise ValueError("local Qwen workflow caps differ from the selected simple or reviewed mode")
+    if reviewed_capability:
+        if (
+            critic.get("enabled") is not True
+            or critic.get("max_agents_per_task") != 1
+            or critic.get("max_review_rounds") != 1
+            or critic.get("max_syntheses_per_task") != 1
+            or deliberation.get("enabled") is not False
+        ):
+            raise ValueError("reviewed local mode must enable exactly one Critic review and one synthesis")
+    elif critic.get("enabled") is not False:
+        raise ValueError("simple local execution keeps Critic disabled; select reviewed_qwen_v1 explicitly")
     config = configured_task_execution(settings)
     if (
-        config.profile_id != "local-qwen35-native-json-schema-test-v2"
+        config.profile_id != (
+            "local-qwen35-reviewed-native-json-schema-v1"
+            if reviewed_capability else "local-qwen35-native-json-schema-test-v2"
+        )
         or config.model != "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs"
         or config.context_window_tokens != 8_192
         or config.max_input_tokens != 6_144
@@ -444,3 +514,13 @@ def validate_local_settings(settings: Settings) -> None:
         or config.max_compaction_calls != 0
     ):
         raise ValueError("local Qwen limits must remain fixed at 8192/6144/2048 with compaction disabled")
+    if reviewed_capability:
+        critic_config = configured_critic_execution(settings)
+        if critic_config is None or critic_config.profile_digest != config.profile_digest or critic_config.model != config.model:
+            raise ValueError("reviewed Critic must use the same pinned Qwen schema-bundle profile")
+        models = settings.models
+        critic_profile = models.get("critic") if isinstance(models, dict) else None
+        if not isinstance(critic_profile, dict) or critic_profile.get("reasoning_role") != "critic":
+            raise ValueError("reviewed Critic profile must explicitly select the Critic role")
+    elif settings.models.get("critic") is not None:
+        raise ValueError("simple local execution does not configure an enabled Critic model")

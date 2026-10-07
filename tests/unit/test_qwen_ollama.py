@@ -21,6 +21,14 @@ from hekate.infrastructure.letta.qwen_ollama import (
     validate_qwen_candidate_profile,
     validate_qwen35_native_json_schema_profile,
 )
+from hekate.infrastructure.letta.reviewed_qwen_profile import (
+    PROFILE_ID as REVIEWED_PROFILE_ID,
+    critic_turn_output_schema,
+    hekate_turn_output_schema as reviewed_hekate_turn_output_schema,
+    measure_reviewed_qwen35_request,
+    qwen35_reviewed_native_json_schema_test_execution_profile,
+)
+from hekate.infrastructure.letta.qwen_local_profile import qwen35_native_json_schema_local_execution_profile
 from hekate.domain.capsules import parse_hekate_turn_output
 from hekate.infrastructure.letta.token_accounting import validate_measurement, validate_profile
 from hekate.domain.models import TaskExecutionConfig
@@ -139,6 +147,51 @@ class QwenOllamaProfileTests(unittest.TestCase):
         drifted = profile.model_copy(update={"renderer_sha256": "f" * 64})
         with self.assertRaisesRegex(ValueError, "profile or synthetic tariff changed"):
             validate_qwen35_native_json_schema_profile(drifted, native_prices)
+
+    def test_reviewed_bundle_binds_role_contract_to_generated_schema_and_preserves_old_digest(self):
+        old_local, _ = qwen35_native_json_schema_local_execution_profile()
+        self.assertEqual(old_local.content_digest, "caaf40fcb793d2d7bc7fb65ae3497d6e9dfa6aa6c3ef2a549d0f2a1e1221cb81")
+
+        profile, prices = qwen35_reviewed_native_json_schema_test_execution_profile(self.candidate)
+        validate_profile(profile, prices, allow_test_profile=True)
+        self.assertEqual(profile.profile_id, REVIEWED_PROFILE_ID)
+        self.assertNotEqual(profile.content_digest, old_local.content_digest)
+        for contract, schema_loader in (
+            ("hekate_turn_output_v1", reviewed_hekate_turn_output_schema),
+            ("critic_turn_output_v1", critic_turn_output_schema),
+        ):
+            schema, digest = schema_loader()
+            source = {
+                "model": self.candidate.model,
+                "messages": [{"role": "user", "content": "bounded reviewed task"}],
+                "max_tokens": 128,
+                "reasoning_effort": "none",
+                "tools": [],
+            }
+            normalized, final_bytes, measurement = measure_reviewed_qwen35_request(
+                source, profile, 128, output_contract=contract,
+            )
+            self.assertEqual(normalized["response_format"], {
+                "type": "json_schema", "json_schema": {"schema": schema},
+            })
+            self.assertEqual(measurement.profile_digest, profile.content_digest)
+            self.assertEqual(measurement.request_digest, hashlib.sha256(final_bytes).hexdigest())
+            self.assertEqual(
+                hashlib.sha256(json.dumps(schema, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+                digest,
+            )
+        with self.assertRaisesRegex(ValueError, "cannot select its own reviewed output schema"):
+            measure_reviewed_qwen35_request(
+                {**source, "response_format": {"type": "json_object"}}, profile, 128,
+                output_contract="critic_turn_output_v1",
+            )
+        with self.assertRaisesRegex(ValueError, "unsupported profile or admitted output contract"):
+            measure_reviewed_qwen35_request(source, profile, 128, output_contract="unknown")
+        with self.assertRaisesRegex(ValueError, "unsupported profile or admitted output contract"):
+            measure_reviewed_qwen35_request(
+                source, profile.model_copy(update={"renderer_sha256": "f" * 64}), 128,
+                output_contract="critic_turn_output_v1",
+            )
 
     def test_strict_bridge_contract_accepts_complete_json_and_rejects_previous_fenced_truncation_shape(self):
         complete = {

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import fcntl
 import hashlib
 import json
 import logging
 import os
+import stat
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -43,6 +46,7 @@ from .token_accounting import measure_test_request, validate_measurement, valida
 from .qwen_ollama import (
     measure_qwen35_request,
 )
+from .reviewed_qwen_profile import is_qwen35_reviewed_native_json_schema_profile, measure_reviewed_qwen35_request
 
 MAX_REQUEST_BYTES = 2_097_152
 _LOG = logging.getLogger(__name__)
@@ -61,6 +65,9 @@ class ProviderGatewayProfile:
     permit_ttl_seconds: int = 30
     execution_mode: str = "synthetic_test"
     one_shot_attempt_ledger: Path | None = None
+    generation_allowance: Path | None = None
+    request_observation_file: Path | None = None
+    personal_local: bool = False
 
     def validate(self, *, allow_test_profile: bool = False) -> None:
         parsed = urlsplit(self.upstream_base_url)
@@ -80,9 +87,13 @@ class ProviderGatewayProfile:
         if self.execution_mode == "synthetic_test" and (not self.test_only or not self.price_table.synthetic):
             raise ValueError("synthetic provider calls require a test-only synthetic tariff")
         if self.execution_mode == "local_candidate":
+            local_profile_ids = {
+                "local-qwen35-native-json-schema-test-v2",
+                "local-qwen35-reviewed-native-json-schema-v1",
+            }
             if (
                 not self.test_only or self.price_table.synthetic
-                or self.profile_id != "local-qwen35-native-json-schema-test-v2"
+                or self.profile_id not in local_profile_ids
                 or self.price_table.version != "local-qwen35-external-tariff-v1"
                 or self.upstream_base_url.rstrip("/") != "http://127.0.0.1:19191"
                 or self.execution_profile is None
@@ -92,6 +103,22 @@ class ProviderGatewayProfile:
                 raise ValueError("local candidate mode requires the fixed loopback Qwen profile and external tariff")
         elif self.one_shot_attempt_ledger is not None:
             raise ValueError("the durable one-shot attempt gate is only valid for a local candidate")
+        reviewed_profile = self.profile_id == "local-qwen35-reviewed-native-json-schema-v1"
+        if reviewed_profile and self.personal_local:
+            if self.generation_allowance is not None or self.execution_mode not in {"local_candidate", "synthetic_test"}:
+                raise ValueError("personal reviewed Qwen mode uses only the durable PostgreSQL Task call cap")
+        elif reviewed_profile != (self.generation_allowance is not None):
+            raise ValueError("reviewed Qwen verification calls require their durable four-generation allowance")
+        if self.personal_local and not reviewed_profile:
+            raise ValueError("personal local mode requires the fixed reviewed Qwen profile")
+        if self.generation_allowance is not None and self.one_shot_attempt_ledger is not None:
+            raise ValueError("reviewed generation allowance cannot be combined with the Phase 6E one-shot ledger")
+        if self.generation_allowance is not None and self.execution_profile is not None and not self.execution_profile.test_only:
+            raise ValueError("reviewed Qwen generation allowance is limited to the explicit test-only candidate profile")
+        if self.request_observation_file is not None and (
+            not reviewed_profile or not self.test_only or self.execution_mode not in {"synthetic_test", "local_candidate"}
+        ):
+            raise ValueError("raw provider request capture is limited to the explicit reviewed Qwen test profile")
         if self.test_only and not allow_test_profile:
             raise ValueError("test provider profiles require explicit test-mode construction")
         if not self.test_only:
@@ -184,6 +211,7 @@ async def _trusted_call(factory: UowFactory, claims: dict[str, str], plan_profil
             raise ValueError("provider profile differs from admitted plan")
         attempt = await uow.tasks.get_attempt(binding.attempt_id)
         registry = await uow.agents.get_registry(binding.agent_registry_id)
+        request_key = await uow.tasks.get_submission_request_key(binding.scope, binding.task_id)
         if (
             registry is None
             or attempt.task_id != binding.task_id
@@ -214,7 +242,20 @@ async def _trusted_call(factory: UowFactory, claims: dict[str, str], plan_profil
         lease = await uow.agents.get_lease(binding.agent_registry_id)
         if lease is None or lease.fence != binding.fence or lease.expires_at <= datetime.now(UTC):
             raise ValueError("runtime registry lease is stale")
-        return binding, envelope, plan, lease.owner
+        trusted_generation = {
+            "scope_id": str(binding.scope),
+            "task_id": str(binding.task_id),
+            "task_request_key": request_key,
+            "attempt_id": str(binding.attempt_id),
+            "attempt_kind": str(attempt.kind),
+            "operation_id": str(operation_id),
+            "operation_kind": str(operation["kind"]),
+            "registry_id": str(binding.agent_registry_id),
+            "registry_kind": str(registry.kind),
+            "registry_persistence": str(registry.persistence),
+            "output_contract": plan.output_contract,
+        }
+        return binding, envelope, plan, lease.owner, trusted_generation
 
 
 def _no_redirect_handler():
@@ -260,6 +301,202 @@ def _claim_local_attempt(path: Path, claims: dict[str, str], request_digest: str
         # A partial file remains a consumed allowance. Never remove it and
         # accidentally make a retry look like the first attempt.
         raise
+
+
+def _claim_reviewed_generation(
+    path: Path, claims: dict[str, str], trusted: dict[str, object],
+    request_digest: str, profile_digest: str,
+) -> None:
+    """Atomically consume one of four role-bound local review generations.
+
+    The configured file limits one explicit scope to two request keys and one
+    DB-attested operation for each Phase 6F stage. A stable flock inode
+    serializes updates across gateway processes; the state file is atomically
+    replaced and fsynced while that lock is held.
+    """
+    path = path.expanduser().absolute()
+    if path.is_symlink() or not path.parent.is_dir() or path.parent.is_symlink():
+        raise ValueError("reviewed generation allowance path is not a private regular file")
+    if stat.S_IMODE(path.parent.stat().st_mode) & 0o077:
+        raise ValueError("reviewed generation state directory must be private")
+    lock_path = path.with_name(path.name + ".lock")
+    if lock_path.is_symlink():
+        raise ValueError("reviewed generation allowance lock cannot be a symlink")
+    flags = os.O_CREAT | os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
+    lock_fd = os.open(lock_path, flags, 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(lock_fd).st_mode) or stat.S_IMODE(os.fstat(lock_fd).st_mode) & 0o077:
+            raise ValueError("reviewed generation allowance lock must be a private regular file")
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(descriptor, "rb") as stream:
+            file_stat = os.fstat(stream.fileno())
+            if not stat.S_ISREG(file_stat.st_mode) or stat.S_IMODE(file_stat.st_mode) & 0o077:
+                raise ValueError("reviewed generation allowance must be a private regular file")
+            raw = stream.read(65_537)
+        if len(raw) > 65_536:
+            raise ValueError("reviewed generation allowance exceeds 64 KiB")
+        state = _strict_json(raw)
+        if not isinstance(state, dict) or set(state) != {
+            "schema_version", "run_id", "scope_id", "profile_id", "profile_digest",
+            "max_generations", "task_request_keys", "claims",
+        }:
+            raise ValueError("reviewed generation allowance has an invalid shape")
+        if (
+            state.get("schema_version") != "1"
+            or not isinstance(state.get("run_id"), str) or not state["run_id"]
+            or state.get("scope_id") != trusted.get("scope_id")
+            or state.get("profile_id") != "local-qwen35-reviewed-native-json-schema-v1"
+            or state.get("profile_digest") != profile_digest
+            or type(state.get("max_generations")) is not int or state["max_generations"] != 4
+            or not isinstance(state.get("task_request_keys"), dict)
+            or set(state["task_request_keys"]) != {"task_a", "task_b"}
+            or any(not isinstance(value, str) or not value for value in state["task_request_keys"].values())
+            or state["task_request_keys"]["task_a"] == state["task_request_keys"]["task_b"]
+            or not isinstance(state.get("claims"), dict)
+        ):
+            raise ValueError("reviewed generation allowance identity or limits are invalid")
+        task_request_key = trusted.get("task_request_key")
+        if not isinstance(task_request_key, str):
+            raise ValueError("reviewed inference Task has no persisted CLI request key")
+        task_a_key = state["task_request_keys"]["task_a"]
+        task_b_key = state["task_request_keys"]["task_b"]
+        operation_kind = trusted.get("operation_kind")
+        attempt_kind = trusted.get("attempt_kind")
+        output_contract = trusted.get("output_contract")
+        registry_kind = trusted.get("registry_kind")
+        persistence = trusted.get("registry_persistence")
+        if task_request_key == task_a_key:
+            if (operation_kind, attempt_kind, output_contract, registry_kind, persistence) == (
+                "hekate.turn", "planning", "hekate_turn_output_v1", "hekate", "persistent",
+            ):
+                stage = "task_a_planning"
+            elif (operation_kind, attempt_kind, output_contract, registry_kind, persistence) == (
+                "critic.review", "critic_review", "critic_turn_output_v1", "critic", "ephemeral",
+            ):
+                stage = "task_a_critic_review"
+            elif (operation_kind, attempt_kind, output_contract, registry_kind, persistence) == (
+                "hekate.synthesis", "synthesis", "hekate_turn_output_v1", "hekate", "persistent",
+            ):
+                stage = "task_a_synthesis"
+            else:
+                raise ValueError("Task A operation does not match an admitted review workflow stage")
+        elif task_request_key == task_b_key and (
+            operation_kind, attempt_kind, output_contract, registry_kind, persistence
+        ) == ("hekate.turn", "planning", "hekate_turn_output_v1", "hekate", "persistent"):
+            stage = "task_b_answer"
+        else:
+            raise ValueError("Task request key is outside the reviewed generation allowance")
+        if set(state["claims"]) - {"task_a_planning", "task_a_critic_review", "task_a_synthesis", "task_b_answer"}:
+            raise ValueError("reviewed generation allowance contains an unknown claimed stage")
+        if len(state["claims"]) >= state["max_generations"] or stage in state["claims"]:
+            raise FileExistsError("reviewed generation allowance for this stage is already consumed")
+        operation_id = trusted.get("operation_id")
+        if not isinstance(operation_id, str) or any(
+            isinstance(record, dict) and record.get("operation_id") == operation_id
+            for record in state["claims"].values()
+        ):
+            raise FileExistsError("reviewed generation operation has already consumed its allowance")
+        record = {
+            "stage": stage,
+            "scope_id": trusted["scope_id"],
+            "task_id": trusted["task_id"],
+            "task_request_key": task_request_key,
+            "attempt_id": trusted["attempt_id"],
+            "operation_id": operation_id,
+            "accounting_call_id": claims["accounting_call_id"],
+            "registry_id": trusted["registry_id"],
+            "registry_kind": registry_kind,
+            "profile_digest": profile_digest,
+            "request_digest": request_digest,
+            "claimed_at": datetime.now(UTC).isoformat(),
+            "state": "ATTEMPT_RESERVED",
+        }
+        state["claims"][stage] = record
+        raw_state = json.dumps(state, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8") + b"\n"
+        temp_fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+        try:
+            os.fchmod(temp_fd, 0o600)
+            with os.fdopen(temp_fd, "wb") as stream:
+                stream.write(raw_state)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temp_name, path)
+            dir_fd = os.open(path.parent, os.O_RDONLY)
+            try:
+                os.fsync(dir_fd)
+            finally:
+                os.close(dir_fd)
+        except BaseException:
+            try:
+                os.unlink(temp_name)
+            except FileNotFoundError:
+                pass
+            raise
+    finally:
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+        finally:
+            os.close(lock_fd)
+
+
+def _append_reviewed_request_observation(
+    path: Path,
+    claims: dict[str, str],
+    trusted: dict[str, object],
+    final_body: bytes,
+    request_digest: str,
+    profile_digest: str,
+) -> None:
+    """Capture the exact bounded JSON body about to be forwarded, without headers or credentials."""
+    path = path.expanduser().absolute()
+    if path.is_symlink() or not path.parent.is_dir() or path.parent.is_symlink():
+        raise ValueError("reviewed provider request capture path is not a private regular file")
+    if stat.S_IMODE(path.parent.stat().st_mode) & 0o077:
+        raise ValueError("reviewed provider request capture directory must be private")
+    if len(final_body) > MAX_REQUEST_BYTES:
+        raise ValueError("reviewed provider request capture exceeds the provider request bound")
+    decoded = _strict_json(final_body)
+    if not isinstance(decoded, dict):
+        raise ValueError("reviewed provider request capture must be a JSON object")
+    record = {
+        "schema_version": "1",
+        "scope_id": trusted.get("scope_id"),
+        "task_id": trusted.get("task_id"),
+        "task_request_key": trusted.get("task_request_key"),
+        "attempt_id": trusted.get("attempt_id"),
+        "operation_id": claims["operation_id"],
+        "accounting_call_id": claims["accounting_call_id"],
+        "registry_id": trusted.get("registry_id"),
+        "registry_kind": trusted.get("registry_kind"),
+        "registry_persistence": trusted.get("registry_persistence"),
+        "operation_kind": trusted.get("operation_kind"),
+        "attempt_kind": trusted.get("attempt_kind"),
+        "output_contract": trusted.get("output_contract"),
+        "request_digest": request_digest,
+        "profile_digest": profile_digest,
+        "request_body": decoded,
+        "captured_at": datetime.now(UTC).isoformat(),
+    }
+    line = json.dumps(record, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8") + b"\n"
+    flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        file_stat = os.fstat(descriptor)
+        if not stat.S_ISREG(file_stat.st_mode) or stat.S_IMODE(file_stat.st_mode) & 0o077:
+            raise ValueError("reviewed provider request capture must be a private regular file")
+        if file_stat.st_size + len(line) > 10 * 1024 * 1024:
+            raise ValueError("reviewed provider request capture file exceeds its 10 MiB bound")
+        offset = 0
+        while offset < len(line):
+            offset += os.write(descriptor, line[offset:])
+        os.fsync(descriptor)
+    finally:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+        finally:
+            os.close(descriptor)
 
 
 def _usage_from(value: object, source: str) -> dict[str, object] | None:
@@ -600,7 +837,7 @@ def create_provider_gateway(
                     )
             if profile.execution_profile is None:
                 raise ValueError("provider execution profile is unavailable")
-            binding, envelope, plan, lease_owner = await _trusted_call(
+            binding, envelope, plan, lease_owner, trusted_generation = await _trusted_call(
                 factory, claims, profile.profile_id, profile.execution_profile.content_digest,
             )
             if (
@@ -613,10 +850,15 @@ def create_provider_gateway(
             ):
                 raise ValueError("provider request exceeds the fixed profile or call plan")
             if profile.execution_profile.provider == "ollama-local":
-                _normalized_body, final_body, measurement = measure_qwen35_request(
-                    body, profile.execution_profile, output_limit,
-                    output_contract=plan.output_contract,
-                )
+                if is_qwen35_reviewed_native_json_schema_profile(profile.execution_profile):
+                    _normalized_body, final_body, measurement = measure_reviewed_qwen35_request(
+                        body, profile.execution_profile, output_limit, output_contract=plan.output_contract,
+                    )
+                else:
+                    _normalized_body, final_body, measurement = measure_qwen35_request(
+                        body, profile.execution_profile, output_limit,
+                        output_contract=plan.output_contract,
+                    )
             else:
                 final_body = raw_body
                 measurement = measure_test_request(raw_body, body, profile.execution_profile, output_limit)
@@ -627,6 +869,15 @@ def create_provider_gateway(
                 plan_max_output=plan.max_output_tokens,
                 envelope_max_output=envelope.max_output_tokens,
             )
+            if profile.generation_allowance is not None:
+                await asyncio.to_thread(
+                    _claim_reviewed_generation,
+                    profile.generation_allowance,
+                    claims,
+                    trusted_generation,
+                    measurement.request_digest,
+                    measurement.profile_digest,
+                )
             call_kind = claims["call_kind"]
             accounting_id = AccountingCallId(claims["accounting_call_id"])
             permit_id = PermitId(str(uuid5(NAMESPACE_URL, f"hekate:permit:{accounting_id}")))
@@ -666,6 +917,12 @@ def create_provider_gateway(
                 expected_request_digest=measurement.request_digest,
                 expected_profile_digest=measurement.profile_digest,
             )
+        except FileExistsError as error:
+            _LOG.warning("reviewed provider request denied by its durable generation allowance: %s", str(error)[:200])
+            return JSONResponse({"error": "reviewed generation allowance is already consumed"}, status_code=409)
+        except OSError as error:
+            _LOG.error("reviewed provider generation allowance could not be recorded: %s", type(error).__name__)
+            return JSONResponse({"error": "reviewed generation allowance unavailable"}, status_code=503)
         except (ValueError, ValidationError, HekateError, KeyError, TypeError) as error:
             _LOG.warning("provider request denied: %s: %s", type(error).__name__, str(error)[:240])
             return JSONResponse({"error": "provider request denied"}, status_code=402)
@@ -686,6 +943,20 @@ def create_provider_gateway(
             except OSError as error:
                 _LOG.error("local one-shot provider attempt allowance could not be recorded: %s", type(error).__name__)
                 return JSONResponse({"error": "local provider attempt allowance unavailable"}, status_code=503)
+        if profile.request_observation_file is not None:
+            try:
+                await asyncio.to_thread(
+                    _append_reviewed_request_observation,
+                    profile.request_observation_file,
+                    claims,
+                    trusted_generation,
+                    final_body,
+                    measurement.request_digest,
+                    measurement.profile_digest,
+                )
+            except (OSError, ValueError, TypeError) as error:
+                _LOG.error("reviewed provider request capture failed before upstream dispatch: %s", type(error).__name__)
+                return JSONResponse({"error": "reviewed provider request capture unavailable"}, status_code=503)
         upstream_request = urllib.request.Request(
             upstream_url,
             data=final_body,

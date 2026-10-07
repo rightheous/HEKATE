@@ -1,0 +1,119 @@
+{
+  "artifact_path": "integration/runtime/artifacts/p6f-reconciliation-20261007T013542Z-cbff8805-actual-action-mismatch.json",
+  "baseline_sha": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "branch": "phase6f-reviewed-qwen",
+  "code_changes_after_real_execution": {
+    "meaning": "Only probe failure accounting changed; application/profile/runtime request behavior did not change.",
+    "paths": [
+      "scripts/phase6f_reviewed_qwen_probe.py"
+    ]
+  },
+  "created_at": "2026-10-07T01:35:42Z",
+  "current_code_fingerprint_sha256": "d7a7081b1458924cb08ad93f67f414f13c73009d9e3e9b5b7664f46dabb1b6ba",
+  "fake_validation": {
+    "actual_provider_generations": 0,
+    "fake_provider_requests": 4,
+    "position_projection_readback_applied": true,
+    "production_dispatch": "BLOCKED",
+    "same_key_replay_unchanged": true,
+    "status": "PASS",
+    "task_a_then_critic_then_synthesis": true,
+    "worker_restart_and_task_b_memory_reuse": true
+  },
+  "head": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "limitations": [
+    "The actual Qwen execution did not perform Critic review, synthesis, memory read-back, worker restart, Task B, or actual same-key replay.",
+    "No additional real generation was sent after the output selected a direct commit. A new real run would require fresh explicit authorization."
+  ],
+  "probe": "phase6f-reviewed-qwen-real-result-reconciliation",
+  "provider_and_accounting": {
+    "actual_provider_calls": 1,
+    "actual_provider_generations": 1,
+    "allowance_claim_state": "ATTEMPT_RESERVED",
+    "budget_accounts": {
+      "held_amount": "0",
+      "spent_amount": "0"
+    },
+    "call_state": "QUIESCENT",
+    "configured_rates_usd_per_million": {
+      "input": "0",
+      "output": "0"
+    },
+    "evaluated_cost_usd": "0",
+    "execution_mode": "local_candidate",
+    "generation_allowance_claim_count": 1,
+    "input_tokens": 3256,
+    "max_authorized_generations": 4,
+    "note": "The zero evaluated amount follows the configured zero rate; it is not a provider-reported cost or a host/energy cost estimate.",
+    "output_tokens": 698,
+    "permit_state": "CONSUMED",
+    "price_synthetic": false,
+    "pricing_version": "local-qwen35-external-tariff-v1",
+    "provider_reported_cost": null,
+    "settlement_state": "SETTLED",
+    "total_tokens": 3954,
+    "usage_completeness": "COMPLETE"
+  },
+  "provider_policy": {
+    "automatic_retry": "none",
+    "production_dispatch": "BLOCKED",
+    "real_generations_sent_after_action_mismatch": 0
+  },
+  "real_execution": {
+    "accounting_call_id": "4c65acea-cc26-4d15-97f3-0db35a7c80f4",
+    "attempt_id": "2c1a6cd4-84bf-5b15-9bc6-1083affbdec0",
+    "confirmed_stream_responses": 1,
+    "critic_review_count": 0,
+    "critic_workflow_count": 0,
+    "operation_id": "bf119a0a-84ac-567d-98ff-fd84103e571b",
+    "position_projection": {
+      "applied_version": 0,
+      "desired_version": 1,
+      "pending_reason": "memory_projection_not_implemented",
+      "state": "PENDING_UNSUPPORTED"
+    },
+    "position_topic_id": "p6f-reviewed-topic-52Z-1619873d",
+    "position_versions": 1,
+    "provider_call_id": "chatcmpl-970",
+    "provider_output_sha256": "8127cae198064e71fa0bb5f5039b1aa63296a09e61c90959ec904ccdc7d3eeb8",
+    "provider_request_attempts": 1,
+    "registry_id": "e7fce37e-2a25-515e-8b4c-54465fe4ad5c",
+    "request_key": "p6f-real-p6f-real-20261007T012852Z-1619873d-task-a",
+    "response": "Position v1 was committed and returned. No synthesis or Task B request was sent.",
+    "result": "HEKATE returned a direct Position commit without a SpawnProposal. The stored Position statement mentions a one-time review, but the database has no Critic workflow; that text is not evidence that review occurred.",
+    "stream_done_seen": true,
+    "synthesis_count": 0,
+    "task_b_count": 0,
+    "task_id": "26d21672-4f87-4922-b7dd-69d775a8624c",
+    "task_outcome": "POSITION_COMMITTED",
+    "task_revision": 1,
+    "task_status": "COMPLETED"
+  },
+  "real_execution_code_fingerprint_sha256": "3ba1cb6c3ea44e9bc5845727706e7e18ba3054a215e0287226af904adc7a894a",
+  "run_id": "p6f-reconciliation-20261007T013542Z-cbff8805",
+  "runtime": {
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "loaded_context_tokens": 65536,
+    "migration_head": "0014_local_dispatch_identity",
+    "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+    "model_manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a",
+    "node_version": "v22.19.0",
+    "ollama_version": "0.34.0",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+    "profile_id": "local-qwen35-reviewed-native-json-schema-v1",
+    "required_context_tokens": 8192,
+    "runtime_image": "hekate/letta-code-p1:0bb6f741-0c6a0fc3",
+    "runtime_image_id": "sha256:2bb944f697a17adf70263285fc1e99b5dd4043b6a94dedf940c6bc332047dfbd",
+    "runtime_patch_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "source_artifacts": {
+    "fake_code_fingerprint_sha256": "d7a7081b1458924cb08ad93f67f414f13c73009d9e3e9b5b7664f46dabb1b6ba",
+    "latest_fake_full_path_pass": "integration/runtime/artifacts/p6f-fake-20261007T013325Z-2919d524-reviewed-qwen.json",
+    "real_run": "integration/runtime/artifacts/p6f-real-20261007T012852Z-1619873d-reviewed-qwen.json"
+  },
+  "status": "INCOMPLETE_ACTION_MISMATCH"
+}

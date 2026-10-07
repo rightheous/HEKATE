@@ -40,6 +40,7 @@ class Task(ContractModel):
     evidence_refs: tuple[EvidenceId, ...] = Field(default=(), max_length=MAX_CONTRACT_ITEMS)
     base_position_version: int = 0
     deadline: datetime
+    max_provider_calls: int = 0
     created_at: datetime | None = None
     cancel_requested_at: datetime | None = None
     counters: TaskCounters = Field(default_factory=TaskCounters)
@@ -76,6 +77,7 @@ class TaskExecutionConfig:
     agent_system_prompt: str | None = None
     letta_context_estimator_tokens: int | None = None
     sdk_output_format: bool = True
+    max_generations_per_task: int = 0
 
 
 def snapshot_task(

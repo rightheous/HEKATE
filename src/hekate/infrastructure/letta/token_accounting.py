@@ -170,6 +170,10 @@ def validate_profile(
             validate_qwen35_native_json_schema_profile,
             validate_qwen_test_profile,
         )
+        from .reviewed_qwen_profile import (
+            is_qwen35_reviewed_native_json_schema_profile,
+            validate_qwen35_reviewed_native_json_schema_profile,
+        )
 
         if is_qwen35_native_json_schema_profile(profile):
             if allow_local_tariff:
@@ -178,6 +182,13 @@ def validate_profile(
                 validate_qwen35_native_json_schema_local_profile(profile, price_table)
             else:
                 validate_qwen35_native_json_schema_profile(profile, price_table)
+        elif is_qwen35_reviewed_native_json_schema_profile(profile):
+            if allow_local_tariff:
+                from .qwen_local_profile import validate_qwen35_reviewed_native_json_schema_local_profile
+
+                validate_qwen35_reviewed_native_json_schema_local_profile(profile, price_table)
+            else:
+                validate_qwen35_reviewed_native_json_schema_profile(profile, price_table)
         else:
             validate_qwen_test_profile(profile, price_table)
         return

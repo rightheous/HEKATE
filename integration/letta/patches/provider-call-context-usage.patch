@@ -686,7 +686,7 @@ index c610d91..6ec644a 100644
          authPolicy,
 diff --git a/src/websocket/hekate-memory-projection.ts b/src/websocket/hekate-memory-projection.ts
 new file mode 100644
-index 0000000..3000ce7
+index 0000000..2df828c
 --- /dev/null
 +++ b/src/websocket/hekate-memory-projection.ts
 @@ -0,0 +1,335 @@
@@ -777,7 +777,7 @@ index 0000000..3000ce7
 +async function projectionGuardRequest(action: "authorize" | "complete", value: Record<string, unknown>): Promise<Record<string, unknown>> {
 +  const base = process.env.HEKATE_PROJECTION_GUARD_URL;
 +  if (!base || !/^http:\/\//u.test(base)) throw new ProjectionHttpError(503, "control-plane projection write guard is not configured");
-+  const token = (await readFile("/run/secrets/hekate-ws-token", "utf8")).trim();
++  const token = (process.env.HEKATE_PROJECTION_GUARD_TOKEN || (await readFile("/run/secrets/hekate-ws-token", "utf8"))).trim();
 +  if (!token) throw new ProjectionHttpError(503, "control-plane projection guard credential is unavailable");
 +  let response: Response;
 +  try {

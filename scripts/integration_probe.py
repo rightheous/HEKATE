@@ -844,6 +844,22 @@ def build_patched_runtime_image(base_image: str) -> tuple[str, str]:
             capture_output=True,
             check=True,
         ).stdout
+        # `git apply` leaves newly added patch files untracked. Include their
+        # binary diff without staging anything in this pinned source checkout.
+        untracked = subprocess.run(
+            ["git", "-C", str(source_path), "ls-files", "--others", "--exclude-standard", "-z"],
+            capture_output=True,
+            check=True,
+        ).stdout
+        for relative in sorted(item for item in untracked.split(b"\0") if item):
+            addition = subprocess.run(
+                ["git", "-C", str(source_path), "diff", "--binary", "--no-index", "/dev/null", relative.decode()],
+                capture_output=True,
+                check=False,
+            )
+            if addition.returncode not in {0, 1}:
+                raise ProbeError("could not inspect a new file in the pinned runtime patch")
+            diff += addition.stdout
         if diff != patch_path.read_bytes():
             raise ProbeError("Letta Code checkout has changes outside the pinned runtime patch")
 

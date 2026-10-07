@@ -7,6 +7,12 @@ local tariff is an explicit `$0` external tariff; it does not claim that host,
 GPU, or energy use is free. Missing or conflicting provider usage remains
 unsettled.
 
+For an owner-oriented interactive workflow with `hekate chat`, foreground
+`hekate run`, owner-scoped status, reconciliation, and backup/restore guidance,
+see [Personal local use](personal-use.md). It uses the separate
+`config/personal-local.example` profile and keeps the Phase 6F historical
+generation-limit record below unchanged.
+
 ## 1. Prepare the checkout and services
 
 Use Python 3.12+, `uv`, Docker, and the pinned Node.js 22.19.0 runtime. Point
@@ -107,11 +113,11 @@ umask 077
 printf '%s' "$HEKATE_LETTA_TOKEN" > config/local/state/letta/app-server-token
 docker run --rm --name hekate-local-letta --network host \
   --env HEKATE_REQUIRE_PROVIDER_BINDING=1 \
-  --env "HEKATE_PROJECTION_GUARD_URL=http://127.0.0.1:8765/internal/memory-projection/authorize" \
+  --env "HEKATE_PROJECTION_GUARD_URL=http://127.0.0.1:8765/internal/memory-projection" \
   --env "HEKATE_PROJECTION_GUARD_TOKEN=$HEKATE_PROVIDER_GATEWAY_TOKEN" \
   --mount "type=bind,source=$PWD/config/local/state/letta,target=/root/.letta" \
   --mount "type=bind,source=$PWD/config/local/state/letta/app-server-token,target=/run/secrets/hekate-ws-token,readonly" \
-  hekate/letta-code-p1:0bb6f741-70e39563 \
+  hekate/letta-code-p1:0bb6f741-0c6a0fc3 \
   letta --backend local server --listen ws://127.0.0.1:8283 \
   --ws-auth capability-token --ws-token-file /run/secrets/hekate-ws-token
 ```
@@ -172,5 +178,62 @@ These commands stop processes only. They do not delete the PostgreSQL database,
 local state, archive, completed Tasks, or unresolved accounting records.
 
 This setup does not enable production dispatch or validate Qwen Critic,
-Position commit, or memory projection. HTTP product APIs and G7/G8 recovery are
-also outside this supported local path.
+Position commit, or memory projection when using the simple Phase 6E profile.
+The bounded reviewed profile is documented separately below. HTTP product APIs
+and G7/G8 recovery are outside this supported local path.
+
+## 8. Bounded Qwen review profile
+
+Phase 6F adds a separate opt-in configuration. It preserves the simple
+`config/local.example` profile and enables one Critic review, one synthesis,
+and one Position commit through the ordinary CLI and worker. The generated
+HEKATE and Critic schemas are selected from the stored operation, attempt, and
+registry binding. Production dispatch remains blocked.
+
+For the fully isolated verification, build the bridge with the pinned Node
+22.19.0 binary and use the checked-in runtime image. The driver defaults to
+fake mode and provisions a new PostgreSQL volume, scope, runtime directory,
+Evidence pair, and four-stage allowance:
+
+```bash
+HEKATE_NODE_BIN=/absolute/path/to/node-v22.19.0/bin/node \
+  uv run --locked python scripts/phase6f_reviewed_qwen_probe.py --mode fake
+```
+
+The historical real-mode procedure below was intended to follow a passing fake
+artifact and allowed four stages in one private run. The Phase 6F request set a
+four-generation limit for the entire Goal, however. The recorded Phase 6F work
+used one generation in the first run and four in a later run, so the total is
+five and exceeds the limit by one. A fresh database, scope, or allowance file
+does not reset that Goal-wide limit. Do not use this command to send another
+real request for the completed Phase 6F work. A failed or UNKNOWN generation
+must not be retried with another request key or session.
+
+The command is retained as a record of the real-mode invocation; it was not
+executed during the report correction.
+
+```bash
+HEKATE_NODE_BIN=/absolute/path/to/node-v22.19.0/bin/node \
+  uv run --locked python scripts/phase6f_reviewed_qwen_probe.py \
+  --mode real --fake-artifact integration/runtime/artifacts/FAKE_ARTIFACT.json
+```
+
+The `real` mode checks the installed model and loaded runner before it creates
+the Task. It may make one empty model-only load if the model is not already
+loaded; that load must report zero generated tokens. Both modes preserve their
+new database volume and private runtime state for inspection, then stop the
+processes they started. The real run is still a test-only, non-production
+execution.
+
+For a future separately authorized run, copy `config/local-reviewed.example`
+to a private `config/local-reviewed` directory and use that directory in
+`HEKATE_CONFIG_DIR`. Set `workflow_mode: reviewed_qwen_v1`, keep its exact
+one-Critic/one-review/one-synthesis caps, and create a fresh mode-0600
+`paths.generation_allowance` file under its private `state_dir`. The allowance
+is a mechanical per-run guard, not permission to exceed a Goal-wide limit. It
+must bind the current scope and reviewed profile digest to two distinct Task
+request keys (`task_a` and `task_b`); it is consumed before the gateway opens
+the upstream socket and survives gateway restarts. Do not reuse the probe's
+allowance or the Phase 6E one-shot ledger. See
+[the Phase 6F implementation and artifact](implementation/phase6f-reviewed-qwen.md)
+for the exact fields, observed requests, profile digest, and run results.

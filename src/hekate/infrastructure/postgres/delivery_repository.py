@@ -593,10 +593,10 @@ class PostgresDeliveryRepository:
             tables.inbox.c.processed_at.is_(None),
         ).values(processed_at=aware_now(), pending_reason=None, rejection_reason=reason))
 
-    async def pending_inbox(self, limit: int = 100):
+    async def pending_inbox(self, limit: int = 100, owner_scope: ScopeId | None = None):
         if not 1 <= limit <= 1_000:
             raise ValueError("inbox limit must be between 1 and 1000")
-        return (await self.connection.execute(select(
+        query = select(
             tables.inbox.c.id,
             tables.inbox.c.provider_scope,
             tables.inbox.c.stable_event_key,
@@ -604,7 +604,13 @@ class PostgresDeliveryRepository:
         ).where(
             tables.inbox.c.processed_at.is_(None),
             tables.inbox.c.next_attempt_at <= aware_now(),
-        ).order_by(
+        )
+        if owner_scope is not None:
+            query = query.join(
+                tables.operations,
+                tables.operations.c.id == tables.inbox.c.payload["operation_id"].astext,
+            ).where(tables.operations.c.owner_scope == owner_scope)
+        return (await self.connection.execute(query.order_by(
             tables.inbox.c.next_attempt_at, tables.inbox.c.received_at, tables.inbox.c.id,
         ).limit(limit))).mappings().all()
 

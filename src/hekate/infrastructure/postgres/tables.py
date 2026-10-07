@@ -58,11 +58,13 @@ tasks = Table(
     Column("transient_retries", Integer, nullable=False, server_default="0"),
     Column("tool_calls", Integer, nullable=False, server_default="0"),
     Column("provider_calls", Integer, nullable=False, server_default="0"),
+    Column("max_provider_calls", Integer, nullable=False, server_default="0"),
     Column("created_at", instant, nullable=False, server_default=text("now()")),
     CheckConstraint("input_revision >= 1", name="ck_tasks_revision"),
     CheckConstraint("base_position_version >= 0", name="ck_tasks_position_version"),
     CheckConstraint("status IN ('QUEUED','RUNNING','WAITING','STOPPING','COMPLETED','FAILED','CANCELLED')", name="ck_tasks_status"),
     CheckConstraint("critic_agents >= 0 AND review_rounds >= 0 AND schema_repairs >= 0 AND transient_retries >= 0 AND tool_calls >= 0 AND provider_calls >= 0", name="ck_tasks_counters"),
+    CheckConstraint("max_provider_calls >= 0", name="ck_tasks_max_provider_calls"),
     CheckConstraint("hekate_continuations >= 0", name="ck_tasks_hekate_continuations"),
 )
 

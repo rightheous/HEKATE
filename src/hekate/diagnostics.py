@@ -22,9 +22,13 @@ from hekate.infrastructure.letta.qwen_ollama import (
     load_qwen_candidate_profile,
     qwen35_native_json_schema_test_execution_profile,
 )
+from hekate.infrastructure.letta.reviewed_qwen_profile import (
+    critic_turn_output_schema,
+    qwen35_reviewed_native_json_schema_test_execution_profile,
+)
 from hekate.infrastructure.postgres.database import check_database, create_engine
 from hekate.settings import (
-    Settings, configured_local_actor, configured_task_execution,
+    Settings, configured_critic_execution, configured_local_actor, configured_task_execution,
     validate_local_settings, validate_settings,
 )
 
@@ -159,6 +163,10 @@ async def doctor(settings: Settings) -> dict[str, object]:
             "profile_digest": task_config.profile_digest,
             "execution_mode": profile.execution_mode,
             "price_synthetic": profile.price_table.synthetic,
+            "critic_enabled": bool(
+                isinstance(settings.policy.get("critic"), dict)
+                and settings.policy["critic"].get("enabled") is True
+            ),
             "production_dispatch_approved": False,
         }
     except Exception as error:
@@ -167,6 +175,7 @@ async def doctor(settings: Settings) -> dict[str, object]:
 
     try:
         schema, schema_digest = hekate_turn_output_schema()
+        critic_schema, critic_digest = critic_turn_output_schema()
         lock_path = settings.project_dir / "integration/letta/versions.lock.json"
         lock = json.loads(lock_path.read_text(encoding="utf-8"))
         patch_spec = lock["patches"][0]
@@ -174,6 +183,8 @@ async def doctor(settings: Settings) -> dict[str, object]:
         patch_digest = hashlib.sha256(patch_path.read_bytes()).hexdigest()
         if settings.runtime_mode == "local":
             candidate = load_qwen_candidate_profile()
+            reviewed = task_config.profile_id == "local-qwen35-reviewed-native-json-schema-v1"
+            critic_config = configured_critic_execution(settings) if reviewed else None
             identity_ok = (
                 candidate.model == profile.price_table.model
                 and candidate.model_manifest_digest == task_config.model_revision
@@ -181,17 +192,35 @@ async def doctor(settings: Settings) -> dict[str, object]:
                 and profile.execution_profile.content_digest == task_config.profile_digest
                 and schema_digest in profile.execution_profile.evidence_digests
             )
+            if reviewed:
+                identity_ok = bool(
+                    identity_ok and critic_digest in profile.execution_profile.evidence_digests
+                    and critic_config is not None
+                    and critic_config.profile_digest == task_config.profile_digest
+                )
             identity = {
                 "candidate_profile_digest": candidate.content_digest,
                 "model_manifest_digest": candidate.model_manifest_digest,
                 "tokenizer_asset_sha256": candidate.tokenizer_asset_sha256,
                 "renderer_sha256": candidate.renderer_sha256,
+                "role_schema_digests": {
+                    "hekate_turn_output_v1": schema_digest,
+                    "critic_turn_output_v1": critic_digest if reviewed else None,
+                },
+                "reviewed_workflow": reviewed,
             }
         else:
             test_profile_config = settings.models.get("hekate")
-            if isinstance(test_profile_config, dict) and test_profile_config.get("execution_profile") == "qwen35_native_json_schema_test_v2":
+            if isinstance(test_profile_config, dict) and test_profile_config.get("execution_profile") in {
+                "qwen35_native_json_schema_test_v2", "qwen35_reviewed_native_json_schema_v1",
+            }:
                 candidate = load_qwen_candidate_profile()
-                expected_test_profile, _ = qwen35_native_json_schema_test_execution_profile(candidate)
+                reviewed = test_profile_config.get("execution_profile") == "qwen35_reviewed_native_json_schema_v1"
+                expected_test_profile, _ = (
+                    qwen35_reviewed_native_json_schema_test_execution_profile(candidate)
+                    if reviewed else qwen35_native_json_schema_test_execution_profile(candidate)
+                )
+                critic_config = configured_critic_execution(settings) if reviewed else None
                 identity_ok = bool(
                     profile.execution_profile is not None
                     and profile.execution_profile.content_digest == task_config.profile_digest
@@ -202,11 +231,22 @@ async def doctor(settings: Settings) -> dict[str, object]:
                     and task_config.model_revision == candidate.model_manifest_digest
                     and schema_digest in profile.execution_profile.evidence_digests
                 )
+                if reviewed:
+                    identity_ok = bool(
+                        identity_ok and critic_digest in profile.execution_profile.evidence_digests
+                        and critic_config is not None
+                        and critic_config.profile_digest == task_config.profile_digest
+                    )
                 identity = {
                     "synthetic_qwen_fixture": True,
                     "candidate_profile_digest": candidate.content_digest,
                     "model_manifest_digest": candidate.model_manifest_digest,
                     "synthetic_tariff": profile.price_table.synthetic,
+                    "role_schema_digests": {
+                        "hekate_turn_output_v1": schema_digest,
+                        "critic_turn_output_v1": critic_digest if reviewed else None,
+                    },
+                    "reviewed_workflow": reviewed,
                 }
             else:
                 identity_ok = bool(
@@ -224,6 +264,7 @@ async def doctor(settings: Settings) -> dict[str, object]:
             "status": "READY" if identity_ok else "MISMATCH",
             **identity,
             "output_schema_sha256": schema_digest,
+            "critic_output_schema_sha256": critic_digest,
             "runtime_patch_sha256": patch_digest,
             "runtime_patch_matches_lock": patch_digest == patch_spec["sha256"],
             "expected_app_server_image": f"{lock['app_server']['image']}@{lock['app_server']['image_digest']}",

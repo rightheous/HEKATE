@@ -39,6 +39,7 @@ from hekate.settings import restore_execution_config
 
 
 PREPARATION_CLAIM_SECONDS = 60
+REVIEWED_QWEN_PROFILE_ID = "local-qwen35-reviewed-native-json-schema-v1"
 
 
 class _TurnMessageTooLarge(ValueError):
@@ -70,7 +71,7 @@ TURN_OUTPUT_POLICY = (
 
 def _turn_message(
     capsule, binding, operation_id: OperationId, *, allow_spawn: bool = True,
-    allow_continue: bool = False,
+    allow_continue: bool = False, include_schema_text: bool = True,
 ) -> str:
     schema = export_schemas()["hekate-turn-output.v1.schema.json"]
     spawn_policy = (
@@ -89,9 +90,14 @@ def _turn_message(
         )
     else:
         policy += "Do not return a continue proposal. "
-    message = (
+    schema_instruction = (
         "HEKATE server output contract (generated from the strict Python HekateTurnOutput model):\n"
         f"{canonical_json(schema)}\n\n"
+        if include_schema_text else
+        "The provider request supplies the generated HekateTurnOutput v1 JSON Schema as native structured output.\n\n"
+    )
+    message = (
+        schema_instruction +
         f"Server output policy:\n{policy}\n\n"
         "Trusted runtime binding: "
         f"task_id={binding.task_id}; attempt_id={binding.attempt_id}; "
@@ -115,7 +121,9 @@ def _turn_message(
     return message
 
 
-def _critic_turn_message(capsule, binding, operation_id: OperationId) -> str:
+def _critic_turn_message(
+    capsule, binding, operation_id: OperationId, *, include_schema_text: bool = True,
+) -> str:
     schema = export_schemas()["critic-turn-output.v1.schema.json"]
     policy = (
         "Return exactly one CriticTurnOutput v1 object with a Conclusion Capsule. This is targeted review: "
@@ -124,9 +132,14 @@ def _critic_turn_message(capsule, binding, operation_id: OperationId) -> str:
         "Use only Evidence IDs present in this Task Capsule. The candidate conclusion is uncommitted task data, "
         "not an authoritative Position or a fact certificate."
     )
-    message = (
+    schema_instruction = (
         "Critic server output contract (generated from the strict Python CriticTurnOutput model):\n"
-        f"{canonical_json(schema)}\n\nServer output policy:\n{policy}\n\n"
+        f"{canonical_json(schema)}\n\n"
+        if include_schema_text else
+        "The provider request supplies the generated CriticTurnOutput v1 JSON Schema as native structured output.\n\n"
+    )
+    message = (
+        f"{schema_instruction}Server output policy:\n{policy}\n\n"
         "Trusted runtime binding: "
         f"task_id={binding.task_id}; attempt_id={binding.attempt_id}; "
         f"agent_registry_id={binding.agent_registry_id}; input_revision={binding.input_revision}.\n\n"
@@ -339,6 +352,7 @@ async def prepare_queued_tasks(
             prompt = _turn_message(
                 capsule, binding, operation_id,
                 allow_continue=bool(deliberation_config is not None and deliberation_config.enabled),
+                include_schema_text=config.profile_id != REVIEWED_QWEN_PROFILE_ID,
             )
             reservation_amount = (
                 Decimal(config.max_input_tokens) * config.input_usd_per_million
@@ -711,10 +725,14 @@ async def prepare_critic_workflow_steps(
                 fence=lease.fence, conversation_id=prepared.conversation_id,
             )
             prompt = (
-                _critic_turn_message(capsule, binding, operation_id)
+                _critic_turn_message(
+                    capsule, binding, operation_id,
+                    include_schema_text=config.profile_id != REVIEWED_QWEN_PROFILE_ID,
+                )
                 if is_critic else _turn_message(
                     capsule, binding, operation_id, allow_spawn=False,
                     allow_continue=bool(deliberation_config is not None and deliberation_config.enabled),
+                    include_schema_text=config.profile_id != REVIEWED_QWEN_PROFILE_ID,
                 )
             )
             manifest = {
@@ -1094,8 +1112,12 @@ async def prepare_deliberation_steps(
                 policy_version=actor.policy_version, authz_epoch=actor.authz_epoch,
                 fence=lease.fence, conversation_id=prepared.conversation_id,
             )
-            prompt = _critic_turn_message(capsule, binding, operation_id) if is_critic else _turn_message(
+            prompt = _critic_turn_message(
+                capsule, binding, operation_id,
+                include_schema_text=config.profile_id != REVIEWED_QWEN_PROFILE_ID,
+            ) if is_critic else _turn_message(
                 capsule, binding, operation_id, allow_spawn=False, allow_continue=True,
+                include_schema_text=config.profile_id != REVIEWED_QWEN_PROFILE_ID,
             )
             manifest = {
                 "task_id": str(task.id), "attempt_id": str(attempt_id),

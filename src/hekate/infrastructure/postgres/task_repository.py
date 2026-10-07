@@ -97,6 +97,13 @@ class PostgresTaskRepository:
         if result.rowcount not in {0, 1}:
             raise Conflict("task submission receipt changed")
 
+    async def get_submission_request_key(self, scope: ScopeId, task_id: TaskId) -> str | None:
+        row = (await self.connection.execute(select(tables.task_submissions.c.request_key).where(
+            tables.task_submissions.c.owner_scope == scope,
+            tables.task_submissions.c.task_id == task_id,
+        ))).scalar_one_or_none()
+        return str(row) if row is not None else None
+
     async def lock_scope(self, scope: ScopeId) -> AuthorizationSnapshot:
         state = await self.lock_scope_for_observation(scope)
         if not state.active:
@@ -145,6 +152,7 @@ class PostgresTaskRepository:
             transient_retries=counters.transient_retries,
             tool_calls=counters.tool_calls,
             provider_calls=counters.provider_calls,
+            max_provider_calls=task.max_provider_calls,
             outcome=task.outcome,
             stop_reason=task.stop_reason,
         ))
@@ -505,13 +513,21 @@ class PostgresTaskRepository:
             return None
         return task.model_copy(update={"status": status, "outcome": outcome, "stop_reason": stop_reason})
 
-    async def list_pending_turn_results(self, limit: int = 100):
+    async def list_pending_turn_results(self, limit: int = 100, owner_scope: ScopeId | None = None):
         if not 1 <= limit <= 1_000:
             raise ValueError("result batch must be between 1 and 1000")
-        return (await self.connection.execute(select(tables.turn_results.c.inbox_id).where(
+        query = select(tables.turn_results.c.inbox_id).where(
             tables.turn_results.c.processing_state.in_(["WAITING_EXECUTION", "VALIDATED"]),
             tables.turn_results.c.next_attempt_at <= datetime.now(timezone.utc),
-        ).order_by(tables.turn_results.c.created_at, tables.turn_results.c.inbox_id).limit(limit))).scalars().all()
+        )
+        if owner_scope is not None:
+            query = query.join(
+                tables.operations,
+                tables.operations.c.id == tables.turn_results.c.operation_id,
+            ).where(tables.operations.c.owner_scope == owner_scope)
+        return (await self.connection.execute(query.order_by(
+            tables.turn_results.c.created_at, tables.turn_results.c.inbox_id,
+        ).limit(limit))).scalars().all()
 
     @staticmethod
     def _task(row) -> Task:
@@ -539,6 +555,7 @@ class PostgresTaskRepository:
             ),
             outcome=row["outcome"],
             stop_reason=row["stop_reason"],
+            max_provider_calls=row["max_provider_calls"],
         )
 
     async def get_attempt(self, attempt_id: AttemptId, for_update: bool = False) -> Attempt:

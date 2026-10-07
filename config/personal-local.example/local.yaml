@@ -1,0 +1,20 @@
+schema_version: '1'
+enabled: true
+workflow_mode: personal_local_v1
+identity:
+  principal_id: replace-with-private-owner-id
+  scope_id: replace-with-private-scope-id
+  policy_version: personal-local-v1
+  authz_epoch: 1
+runtime:
+  execution_mode: local_candidate
+  worker_id: personal-local-worker
+  letta_turn_timeout_ms: 240000
+gateway:
+  host: 127.0.0.1
+  port: 8765
+  upstream_base_url: http://127.0.0.1:19191
+  upstream_api_key: local-no-auth
+paths:
+  state_dir: state
+  archive_dir: state/archive

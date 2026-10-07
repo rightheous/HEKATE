@@ -1,0 +1,423 @@
+{
+  "artifact_path": "integration/runtime/artifacts/p6f-real-final-20261007T022149Z-ed55f657-reviewed-qwen.json",
+  "baseline_sha": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "branch": "phase6f-reviewed-qwen",
+  "commit_push_pr_merge": "not performed",
+  "database": {
+    "container": "hekate-p6f-b30b6924",
+    "database_name": "hekate_p6f_real",
+    "migration_head": "0014_local_dispatch_identity",
+    "postgres_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+    "preserved_and_stopped_after_read": true,
+    "volume": "hekate-p6f-b30b6924"
+  },
+  "evidence": {
+    "all_available": true,
+    "records": [
+      {
+        "access_epoch": 1,
+        "artifact_ref": "sha256:26ff5f595d3eb764e622a3a7a2b9539babbd6149fdd0672333228918589cc8a9",
+        "availability": "AVAILABLE",
+        "content_hash": "26ff5f595d3eb764e622a3a7a2b9539babbd6149fdd0672333228918589cc8a9",
+        "content_version": "sha256:26ff5f595d3eb764e622a3a7a2b9539babbd6149fdd0672333228918589cc8a9",
+        "expiry_at": "2026-11-06T01:47:22.587550+00:00",
+        "id": "584bd667-d46e-49ea-a598-55a87c8e50ba",
+        "kind": "document",
+        "retention_class": "fixture-retained"
+      },
+      {
+        "access_epoch": 1,
+        "artifact_ref": "sha256:7457d7a6ec3c9a87d24f23e740addba59e7c3242d04e90064671e10956d975a5",
+        "availability": "AVAILABLE",
+        "content_hash": "7457d7a6ec3c9a87d24f23e740addba59e7c3242d04e90064671e10956d975a5",
+        "content_version": "sha256:7457d7a6ec3c9a87d24f23e740addba59e7c3242d04e90064671e10956d975a5",
+        "expiry_at": "2026-11-06T01:47:22.587550+00:00",
+        "id": "a1aef6f7-967b-42dc-8bfc-0e60af7cb82d",
+        "kind": "document",
+        "retention_class": "fixture-retained"
+      }
+    ],
+    "source_bytes_imported_by_cli": true
+  },
+  "final_code_fingerprint_sha256": "f3e7a970e8ed36fd1444f8df2c1bd4e044534b07b54877d5293a2bee010d2049",
+  "final_fake_artifact": "integration/runtime/artifacts/p6f-fake-20261007T021533Z-c4d3fa51-reviewed-qwen.json",
+  "final_fake_fingerprint_matches": true,
+  "final_fake_status": "PASS",
+  "finished_at": "2026-10-07T02:21:49Z",
+  "g7": "out of scope",
+  "g8": "out of scope",
+  "head": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "legacy_state": "older Phase 4/5/6E databases and prior UNKNOWN/unsettled fixtures were not accessed or modified",
+  "normal_cli_path": {
+    "evidence_ids": [
+      "584bd667-d46e-49ea-a598-55a87c8e50ba",
+      "a1aef6f7-967b-42dc-8bfc-0e60af7cb82d"
+    ],
+    "evidence_registration": "two evidence import CLI submissions",
+    "provider_request_stages": {
+      "critic_review": {
+        "accounting_call_id": "133f8ec6-9988-41c4-9c00-16e45f95f7e0",
+        "attempt_id": "bf23dcd7-1293-5593-aae8-c8ca7b44d9b1",
+        "context_checked": true,
+        "input_schema_sha256": "04999c20c69e1bba70ff3b42d3b5fa3483ee2dafea71d094fee9f47889ea3d02",
+        "messages_sha256": "ccb761c3510c5b76118a6268cfa41cd81a40a1db1e90bda5312772a8f83111ce",
+        "operation_id": "3f4848fc-fb68-5f70-948d-060ddf6e7c07",
+        "output_contract": "critic_turn_output_v1",
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "registry_id": "75de0b6a-59b1-59c9-bc39-58b4a690bb97",
+        "request_digest": "c73436fb176e66ba2182b7347e72214b05876044a8d5f780d4604e6f1671cb94",
+        "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854"
+      },
+      "planning": {
+        "accounting_call_id": "e36ce946-0e32-4d59-b447-3404177e9d81",
+        "attempt_id": "e1b84db8-0502-5986-82f2-0d6a4e94f540",
+        "context_checked": true,
+        "input_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "messages_sha256": "05bfbbb154296f513ee604b328bde8c30f701f5205ce0546a3bb9596d76324e9",
+        "operation_id": "926ebe57-5274-5c04-8d83-e801fb723888",
+        "output_contract": "hekate_turn_output_v1",
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+        "request_digest": "1cc39a8a8805e2c700fbb4e6e74510539e1a33f2d05c741539c7e4980d68ee6c",
+        "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854"
+      },
+      "synthesis": {
+        "accounting_call_id": "641a8ccc-cebe-4e48-839e-821eda61e67d",
+        "attempt_id": "c36dd92c-78b8-5b0a-a7ea-a0dfdeec8c0a",
+        "context_checked": true,
+        "critic_objection_count": 0,
+        "durable_dissent_count": 0,
+        "input_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "messages_sha256": "51c4d46fe11cabced1a9d4c4aa6aa706485f496ab13128da8b35213a4499d855",
+        "operation_id": "699303b2-f7f6-59b1-b6fc-e758fa0236f1",
+        "output_contract": "hekate_turn_output_v1",
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+        "request_digest": "472ddcb34263e3dbf993dee054186e36376e06dfb62124ce0f6f2edd569b6b05",
+        "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854"
+      },
+      "task_b_answer": {
+        "accounting_call_id": "eb97480c-2021-46a2-a6cd-86dc3b0c30fb",
+        "attempt_id": "5977f19e-2971-5d74-bf6f-98d734bd8b9d",
+        "context_checked": true,
+        "input_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "messages_sha256": "f90e6840fdd7fa62687ecaad4524ecf08625abcfef0eae07c00569eb11f21fd9",
+        "operation_id": "9c5f0256-cc27-583b-a547-76d05b2be2a6",
+        "output_contract": "hekate_turn_output_v1",
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+        "request_digest": "404945f3bbd94adfc751a785ea6b16dcb96b9762fe9c62f419ff9226d3f3c406",
+        "task_id": "3621cf56-8187-4a80-9fa8-52bd2dc031fe"
+      }
+    },
+    "task_a": "ask CLI; persistent HEKATE planning -> spawned Critic review -> same HEKATE synthesis -> Position v1 commit",
+    "task_a_id": "18029ea5-1901-45d6-8a0b-315d94af4854",
+    "task_a_question": "두 근거의 수치는 테스트 가정입니다. 첫 응답은 반드시 proposal.action=spawn, role=critic으로 한 명의 Critic 검토를 요청하세요. 이 planning 응답에서는 answer, request_information, abstain, commit을 제출하지 마세요. Critic 결과를 받은 뒤 같은 HEKATE가 검토를 반영해 후보와 적용 조건을 Position으로 저장하세요. 추가 검토나 continuation은 요청하지 마세요.",
+    "task_a_result": {
+      "outcome": "POSITION_COMMITTED",
+      "response": "Position saved for p6f-reviewed-topic-47Z-b30b6924 as version 1: Under the stated test assumptions, Candidate A (monthly cost 10, p95 latency 120 ms) satisfies both decision limits (cost ≤ 12, p95 ≤ 150 ms), while Candidate B (monthly cost 14, p95 latency 80 ms) violates the cost limit. The evidence is synthetic and must be treated as test assumptions, not service facts or performance guarantees.",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED"
+    },
+    "task_b": "after worker and App Server restart, ask CLI answer reuses DB Position v1 and projection memory",
+    "task_b_actual_capsule_position_version": 1,
+    "task_b_actual_request_digest": "404945f3bbd94adfc751a785ea6b16dcb96b9762fe9c62f419ff9226d3f3c406",
+    "task_b_id": "3621cf56-8187-4a80-9fa8-52bd2dc031fe",
+    "task_b_memory_block_outside_capsule_verified": true,
+    "task_b_question": "현재 저장한 판단과 적용 조건을 짧게 설명해 주세요. 추가 Critic 검토나 Position 변경은 요청하지 마세요.",
+    "task_b_request_capture_sha256": "212f77c43864467772114c07458c6a2cd94ff0a0fb0c73b191d85836e1b6674c",
+    "task_b_result": {
+      "outcome": "PROVISIONAL_ANSWER",
+      "response": "저장된 판단은 주어진 테스트 가정 하에서 Candidate A(월 비용 10, p95 120 ms)가 두 한계(비용 ≤ 12, p95 ≤ 150 ms)를 모두 만족하고, Candidate B(월 비용 14, p95 80 ms)는 비용 한계를 위반한다는 것입니다. 적용 조건은 이 수치가 실제 서비스 사실이나 성능 보증이 아니라 합성 평가 픽스처의 테스트 가정으로만 해석되어야 한다는 것입니다.",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED"
+    },
+    "topic_id": "p6f-reviewed-topic-47Z-b30b6924"
+  },
+  "pinned_runtime": {
+    "app_server_image": "hekate/letta-code-p1:0bb6f741-0c6a0fc3",
+    "app_server_version": "0.33.8",
+    "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+    "model_manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a",
+    "node": {
+      "path": "/tmp/p6d-node-v22.19.0-linux-x64/node-v22.19.0-linux-x64/bin/node",
+      "version": "v22.19.0"
+    },
+    "ollama_version": "0.34.0",
+    "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+    "profile_id": "local-qwen35-reviewed-native-json-schema-v1",
+    "protocol_version": "1",
+    "qwen_model_only_load_generation_count": 0,
+    "runtime_patch_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+    "sdk_version": "0.8.25"
+  },
+  "position": {
+    "base_version": 0,
+    "body": {
+      "applicability": [],
+      "assumptions": [],
+      "confidence": {
+        "basis": [
+          "584bd667-d46e-49ea-a598-55a87c8e50ba",
+          "a1aef6f7-967b-42dc-8bfc-0e60af7cb82d"
+        ],
+        "level": "high",
+        "missing_evidence": []
+      },
+      "dissent_refs": [],
+      "evidence_refs": [],
+      "statement": "Under the stated test assumptions, Candidate A (monthly cost 10, p95 latency 120 ms) satisfies both decision limits (cost ≤ 12, p95 ≤ 150 ms), while Candidate B (monthly cost 14, p95 latency 80 ms) violates the cost limit. The evidence is synthetic and must be treated as test assumptions, not service facts or performance guarantees.",
+      "uncertainty": null
+    },
+    "commit_receipts": [
+      {
+        "operation_id": "699303b2-f7f6-59b1-b6fc-e758fa0236f1:position.commit",
+        "receipt": {
+          "conflict": false,
+          "current_version": null,
+          "operation_id": "699303b2-f7f6-59b1-b6fc-e758fa0236f1:position.commit",
+          "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+          "replayed": false,
+          "request_hash": "b26ad1f57a0e37f307fa19ce99bfb4a1dcef23efc15f72791b595b3dc9aa9df8",
+          "response_text": "Position saved for p6f-reviewed-topic-47Z-b30b6924 as version 1: Under the stated test assumptions, Candidate A (monthly cost 10, p95 latency 120 ms) satisfies both decision limits (cost ≤ 12, p95 ≤ 150 ms), while Candidate B (monthly cost 14, p95 latency 80 ms) violates the cost limit. The evidence is synthetic and must be treated as test assumptions, not service facts or performance guarantees.",
+          "scope": "p6f-real-47Z-b30b6924",
+          "topic_id": "p6f-reviewed-topic-47Z-b30b6924",
+          "version": 1
+        },
+        "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+        "request_hash": "b26ad1f57a0e37f307fa19ce99bfb4a1dcef23efc15f72791b595b3dc9aa9df8"
+      }
+    ],
+    "conclusion_id": "9c98ed3d-f16b-5105-9f06-e61bddb49ffe",
+    "current_version": 1,
+    "history_count": 1,
+    "input_revision": 1,
+    "operation_id": "699303b2-f7f6-59b1-b6fc-e758fa0236f1:position.commit",
+    "reason_for_change": "Critic review confirmed that Candidate A is the only candidate satisfying both test-assumption limits; storing the candidate and application conditions as a Position.",
+    "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+    "task_b_created_no_second_position": true,
+    "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854",
+    "topic_id": "p6f-reviewed-topic-47Z-b30b6924",
+    "version": 1
+  },
+  "post_run_probe_only_changed_files": [
+    "scripts/phase6f_reviewed_qwen_probe.py"
+  ],
+  "prior_continuation_artifact": "integration/runtime/artifacts/p6f-real-continuation-20261007T020150Z-0b69db56-task-b-readback.json",
+  "probe": "phase6f-real-final-reconciliation",
+  "probe_harness_reconciliation": {
+    "fix": "Task B validation now compares its server-bound Position statement with the actual request memory block; this changed only the Phase 6F probe file after real execution",
+    "historical_real_artifacts_status": "initial artifact and continuation were marked FAILED after valid runtime outputs because the harness observed fake-only callback state and compared Task B against a fake fixture statement",
+    "real_capture_revalidated_with_final_probe": true,
+    "real_runtime_code_unchanged": true,
+    "validated_actual_stages": [
+      "critic_review",
+      "planning",
+      "synthesis",
+      "task_b_answer"
+    ]
+  },
+  "production_dispatch": "BLOCKED",
+  "projection": {
+    "app_server_restarted_with_same_state": true,
+    "applied_version": 1,
+    "desired_version": 1,
+    "history_count_after_restart": 1,
+    "observed_memory_version": 1,
+    "observed_payload_digest": "1e18133a253ae7da31849d0920c9a8c43df769b9a99fa6af39201a72f18acdc5",
+    "payload_digest": "1e18133a253ae7da31849d0920c9a8c43df769b9a99fa6af39201a72f18acdc5",
+    "readback_digest_matches": true,
+    "state": "APPLIED",
+    "worker_restarted_before_task_b": true
+  },
+  "projection_scope": "private pinned local Letta runtime only; PostgreSQL remains authoritative",
+  "provider_accounting": {
+    "all_calls_quiescent_consumed_measured_complete_settled": true,
+    "calls": [
+      {
+        "accounting_call_id": "e36ce946-0e32-4d59-b447-3404177e9d81",
+        "attempt_id": "e1b84db8-0502-5986-82f2-0d6a4e94f540",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_tokens": 3279,
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "operation_id": "926ebe57-5274-5c04-8d83-e801fb723888",
+        "output_tokens": 560,
+        "permit_state": "CONSUMED",
+        "price_synthetic": false,
+        "provider_call_id": "chatcmpl-926",
+        "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+        "reported_cost_usd": null,
+        "settlement_state": "SETTLED",
+        "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854",
+        "total_tokens": 3839,
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "133f8ec6-9988-41c4-9c00-16e45f95f7e0",
+        "attempt_id": "bf23dcd7-1293-5593-aae8-c8ca7b44d9b1",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_tokens": 3467,
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "operation_id": "3f4848fc-fb68-5f70-948d-060ddf6e7c07",
+        "output_tokens": 479,
+        "permit_state": "CONSUMED",
+        "price_synthetic": false,
+        "provider_call_id": "chatcmpl-624",
+        "registry_id": "75de0b6a-59b1-59c9-bc39-58b4a690bb97",
+        "reported_cost_usd": null,
+        "settlement_state": "SETTLED",
+        "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854",
+        "total_tokens": 3946,
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "641a8ccc-cebe-4e48-839e-821eda61e67d",
+        "attempt_id": "c36dd92c-78b8-5b0a-a7ea-a0dfdeec8c0a",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_tokens": 4534,
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "operation_id": "699303b2-f7f6-59b1-b6fc-e758fa0236f1",
+        "output_tokens": 867,
+        "permit_state": "CONSUMED",
+        "price_synthetic": false,
+        "provider_call_id": "chatcmpl-188",
+        "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+        "reported_cost_usd": null,
+        "settlement_state": "SETTLED",
+        "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854",
+        "total_tokens": 5401,
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "eb97480c-2021-46a2-a6cd-86dc3b0c30fb",
+        "attempt_id": "5977f19e-2971-5d74-bf6f-98d734bd8b9d",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_tokens": 4506,
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "operation_id": "9c5f0256-cc27-583b-a547-76d05b2be2a6",
+        "output_tokens": 542,
+        "permit_state": "CONSUMED",
+        "price_synthetic": false,
+        "provider_call_id": "chatcmpl-893",
+        "registry_id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+        "reported_cost_usd": null,
+        "settlement_state": "SETTLED",
+        "task_id": "3621cf56-8187-4a80-9fa8-52bd2dc031fe",
+        "total_tokens": 5048,
+        "usage_completeness": "COMPLETE"
+      }
+    ],
+    "captured_actual_request_count": 4,
+    "db_provider_call_count": 4,
+    "durable_allowance_claim_count": 4,
+    "durable_claim_stages": [
+      "task_a_critic_review",
+      "task_a_planning",
+      "task_a_synthesis",
+      "task_b_answer"
+    ],
+    "evaluated_cost_usd": "0.0",
+    "external_provider_calls": 0,
+    "input_tokens": 15786,
+    "max_generations": 4,
+    "model_only_load_generation_count": 0,
+    "output_tokens": 2448,
+    "provider_reported_cost_present": false,
+    "source_task_a_gateway_forwards": 3,
+    "task_a_and_b_held_amounts": [
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "task_a_generation_count": 3,
+    "task_b_generation_count": 1,
+    "total_local_qwen_generations": 4,
+    "total_tokens": 18234,
+    "unknown_calls": 0
+  },
+  "real_execution_code_fingerprint_sha256": "fa4f74c3258677ef9f3667c44246037f406085ab264e0cca4942396068b37bab",
+  "real_runtime_code_unchanged_since_execution": true,
+  "same_key_replay": {
+    "accounting_unchanged": true,
+    "allowance_and_capture_unchanged": true,
+    "new_provider_generations": 0,
+    "task_b_cli_replay_returned_same_completed_task": true,
+    "task_snapshot_unchanged": true,
+    "worker_and_gateway_stopped_during_replay": true
+  },
+  "schema_version": "1",
+  "source_real_artifact": "integration/runtime/artifacts/p6f-real-20261007T014647Z-b30b6924-reviewed-qwen.json",
+  "started_at": "2026-10-07T02:21:49Z",
+  "status": "PASS",
+  "superseded_reconciliation_artifact": "integration/runtime/artifacts/p6f-real-reconciliation-20261007T021014Z-b0c47acf-task-b-replay.json",
+  "verification": {
+    "commands": [
+      "HEKATE_NODE_BIN=/tmp/p6d-node-v22.19.0-linux64/node-v22.19.0-linux64/bin/node uv run --locked python scripts/phase6f_reviewed_qwen_probe.py --mode fake",
+      "uv run --locked --with pytest==8.4.2 pytest -q tests/unit/test_phase6f_generation_allowance.py tests/unit/test_phase6e_local_settings.py tests/unit/test_qwen_ollama.py",
+      "uv run --locked python -m compileall -q src/hekate scripts/phase6f_reviewed_qwen_probe.py",
+      "git diff --check"
+    ],
+    "results": {
+      "final_code_fake_full_path": "PASS; 4 fake requests; zero real Qwen generations",
+      "focused_tests": "20 passed",
+      "python_compile": "PASS",
+      "saved_actual_capture_validation": "PASS; planning, critic_review, synthesis, task_b_answer",
+      "whitespace": "PASS"
+    }
+  },
+  "workflow": {
+    "agent_registry": [
+      {
+        "creation_operation_id": "d88b63ce-ed43-5771-9004-fa7908bff7fe",
+        "id": "75de0b6a-59b1-59c9-bc39-58b4a690bb97",
+        "intended_state": "DELETED",
+        "observed_state": "ABSENT",
+        "owner_scope": "p6f-real-47Z-b30b6924",
+        "persistence": "ephemeral",
+        "provider_agent_id": "agent-local-08bcbcda-bd36-42f4-a5ee-507dc394fdc7",
+        "role": "critic"
+      },
+      {
+        "creation_operation_id": "a174f6ad-13d6-51ea-8067-1da5eb3f0853",
+        "id": "1c0887d3-b748-5d54-a2b6-9739c8b97769",
+        "intended_state": "READY",
+        "observed_state": "PRESENT",
+        "owner_scope": "p6f-real-47Z-b30b6924",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-41f9d0ad-8549-4be7-a4dc-67bd855bb4f8",
+        "role": "hekate"
+      }
+    ],
+    "critic_conclusion": {
+      "durable_dissent_count": 0,
+      "eligible": true,
+      "empty_objections_are_permitted_and_were_preserved": true,
+      "id": "dee8517d-6417-53b0-9d48-61f69cf7a759",
+      "objection_count": 0,
+      "registry_id": "75de0b6a-59b1-59c9-bc39-58b4a690bb97",
+      "validation_status": "VALIDATED"
+    },
+    "critic_conclusion_id": "dee8517d-6417-53b0-9d48-61f69cf7a759",
+    "critic_create_operation_id": "d88b63ce-ed43-5771-9004-fa7908bff7fe",
+    "critic_registry_id": "75de0b6a-59b1-59c9-bc39-58b4a690bb97",
+    "critic_review_attempt_id": "bf23dcd7-1293-5593-aae8-c8ca7b44d9b1",
+    "critic_review_operation_id": "3f4848fc-fb68-5f70-948d-060ddf6e7c07",
+    "critic_state": "DELETED",
+    "delete_operation_id": "03f852ec-e1e8-5b36-95d9-d3972dbe58a1",
+    "planning_attempt_id": "e1b84db8-0502-5986-82f2-0d6a4e94f540",
+    "planning_operation_id": "926ebe57-5274-5c04-8d83-e801fb723888",
+    "stage": "COMPLETE",
+    "synthesis_attempt_id": "c36dd92c-78b8-5b0a-a7ea-a0dfdeec8c0a",
+    "synthesis_operation_id": "699303b2-f7f6-59b1-b6fc-e758fa0236f1",
+    "synthesis_received_stored_critic_conclusion": true
+  }
+}
