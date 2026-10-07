@@ -9,7 +9,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from hekate.application.budgets import _restore_binding
 from hekate.domain.contracts import canonical_json_hash
-from hekate.domain.errors import Conflict, PolicyDenied, StaleInput, UnknownExecution
+from hekate.domain.errors import BudgetDenied, Conflict, PolicyDenied, StaleInput, UnknownExecution
 from hekate.domain.models import (
     AdmissionReceipt, AgentRecord, Attempt, CreateObservation, CriticWorkflow,
     DeleteObservation, OutboxJob, ReservationRequest, RetirementReceipt,
@@ -978,7 +978,8 @@ async def request_critic(
     planning_conclusion_id: DomainId,
     hekate_config: TaskExecutionConfig,
     critic_config: TaskExecutionConfig | None,
-) -> CriticWorkflow:
+    *, validate_only: bool = False,
+) -> CriticWorkflow | None:
     """Approve one concrete planning spawn and durably reserve its child steps."""
     task = await uow.tasks.lock_task(proposal.task_id)
     workflow_hash = canonical_json_hash({
@@ -1028,6 +1029,16 @@ async def request_critic(
         or planning_operation.get("execution_state") != "QUIESCENT"
     ):
         raise PolicyDenied("planning result is not eligible for Critic spawn")
+
+    if validate_only:
+        period = (task.created_at or datetime.now(UTC)).astimezone(UTC).strftime("%Y-%m-%d")
+        task_account = f"task-budget:{task.id}"
+        system_account = f"system-budget:{period}"
+        required = _reservation_amount(critic_config) + _reservation_amount(hekate_config)
+        accounts = await uow.budgets.lock_accounts([task_account, system_account])
+        if len(accounts) != 2 or any(account.available < required for account in accounts):
+            raise BudgetDenied("task or system budget is insufficient")
+        return None
 
     critic_registry = RegistryId(str(uuid5(NAMESPACE_URL, f"hekate:critic-registry:{task.id}")))
     create_operation = _operation_id("critic-create", task.id)

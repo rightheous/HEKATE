@@ -158,8 +158,11 @@ uv run hekate reconcile --apply
 
 Apply reconciles persisted, bound observations, terminal execution facts,
 eligible usage, and final HEKATE answers or Position commits through the
-existing validation and atomic adoption paths. A valid result that needs a new
-Critic, review, synthesis, or continuation stays pending for the normal Worker;
+existing validation and atomic adoption paths. Deferral happens only after the
+current Task, revision, authorization, Evidence, binding, and saved execution
+state pass their normal checks. Policy-invalid, stale, or over-budget results
+follow the existing rejection path. A valid result that needs a new Critic,
+review, synthesis, or continuation stays pending for the normal Worker;
 the report lists its result, Task, operation, stage, and
 `followup_inference_requires_worker` reason. The stored result and binding stay
 available, and running `reconcile --apply` again does not approve that follow-up.

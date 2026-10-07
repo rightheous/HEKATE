@@ -1079,6 +1079,11 @@ async def apply_turn_result(
             except BudgetDenied:
                 await uow.rollback()
                 return await _record_commit_failure(factory, inbox_id, "budget_critic_and_synthesis_unavailable", current_time)
+            except Conflict as error:
+                await uow.rollback()
+                return await _record_commit_failure(
+                    factory, inbox_id, str(error) or "critic_spawn_conflict", current_time,
+                )
             except PolicyDenied as error:
                 await uow.rollback()
                 failure = str(error) or "critic_spawn_policy_rejected"

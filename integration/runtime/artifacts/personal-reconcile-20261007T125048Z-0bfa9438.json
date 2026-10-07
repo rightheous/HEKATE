@@ -1,0 +1,850 @@
+{
+  "actual_model_generations": 0,
+  "artifact_path": "integration/runtime/artifacts/personal-reconcile-20261007T125048Z-0bfa9438.json",
+  "baseline_head": "6173b0232f35402a00a412278d0302a947696135",
+  "branch": "phase6f-reviewed-qwen",
+  "calls_and_inference": {
+    "actual_model_generations": 0,
+    "external_provider_calls": 0,
+    "fake_provider_requests": 0,
+    "model_load_requests": 0,
+    "pinned_runtime_used_for": [
+      "persistent HEKATE identity",
+      "Critic agent.create only"
+    ],
+    "synthetic_accounting_fixture_rows": 1
+  },
+  "canceled_followup_result": {
+    "after": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "7621f9e7-820a-57ed-87d5-6ece53f2adbc",
+          "inbox_id": "1b1ec8df-5335-472e-aecb-013f4382236d",
+          "processing_state": "LATE",
+          "rejection_reason": "task_cancelled"
+        }
+      ],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": "CANCELLED",
+        "review_rounds": 0,
+        "status": "CANCELLED",
+        "stop_reason": "USER_CANCELLED"
+      },
+      "workflow": []
+    },
+    "before": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 0,
+      "result": [],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": []
+    },
+    "cancel_receipt": {
+      "state": "STOPPING",
+      "stop_reason": "USER_CANCELLED",
+      "task_id": "e0083b1b-818c-4e74-82f3-85927861f9c1"
+    },
+    "inbox_id": "1b1ec8df-5335-472e-aecb-013f4382236d",
+    "reason": [],
+    "reported_deferred": [],
+    "result_state": "LATE",
+    "task_id": "e0083b1b-818c-4e74-82f3-85927861f9c1"
+  },
+  "cli_invocations": [
+    {
+      "argv": [
+        "hekate",
+        "init-local"
+      ],
+      "elapsed_seconds": 5.105,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    },
+    {
+      "argv": [
+        "hekate",
+        "reconcile",
+        "--apply",
+        "--limit",
+        "100"
+      ],
+      "elapsed_seconds": 4.654,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    },
+    {
+      "argv": [
+        "hekate",
+        "reconcile",
+        "--apply",
+        "--limit",
+        "100"
+      ],
+      "elapsed_seconds": 3.502,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    },
+    {
+      "argv": [
+        "hekate",
+        "reconcile",
+        "--apply",
+        "--limit",
+        "100"
+      ],
+      "elapsed_seconds": 6.572,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    },
+    {
+      "argv": [
+        "hekate",
+        "reconcile",
+        "--apply",
+        "--limit",
+        "100"
+      ],
+      "elapsed_seconds": 4.765,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    },
+    {
+      "argv": [
+        "hekate",
+        "reconcile",
+        "--apply",
+        "--limit",
+        "100"
+      ],
+      "elapsed_seconds": 6.916,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    },
+    {
+      "argv": [
+        "hekate",
+        "reconcile",
+        "--apply",
+        "--limit",
+        "100"
+      ],
+      "elapsed_seconds": 5.898,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    },
+    {
+      "argv": [
+        "hekate",
+        "reconcile",
+        "--apply",
+        "--limit",
+        "100"
+      ],
+      "elapsed_seconds": 3.236,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    },
+    {
+      "argv": [
+        "hekate",
+        "reconcile",
+        "--apply",
+        "--limit",
+        "100"
+      ],
+      "elapsed_seconds": 3.385,
+      "exit_code": 0,
+      "result": "OK",
+      "stdin_sha256": null,
+      "task_id": null,
+      "task_state": null,
+      "timed_out": null
+    }
+  ],
+  "code_fingerprint_sha256": "0f8a74c3149f7478e25f127795d05f668054c6727f523fcddfda2d1bc83abdd9",
+  "commands": [
+    "HEKATE_NODE_BIN=/tmp/hekate-personal-reconcile-node22.19.0/node-v22.19.0-linux-x64/bin/node uv run --locked python scripts/personal_reconcile_guard_probe.py",
+    "python -m hekate init-local",
+    "python -m hekate reconcile --apply --limit 100",
+    "process_pending_results(... mode default WORKER)"
+  ],
+  "continuation_reconciliation": {
+    "after_reconcile": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "758551cc-15c7-514b-abc6-586cfb8279c3",
+          "inbox_id": "be8935fb-d256-4d65-a5b7-6d40c5478a37",
+          "processing_state": "WAITING_EXECUTION",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": []
+    },
+    "after_worker": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [
+        {
+          "state": "READY",
+          "step_slot": "hekate_reasoning_1"
+        }
+      ],
+      "dissent_count": 0,
+      "operation_count": 2,
+      "outbox_count": 1,
+      "reservation_count": 2,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "758551cc-15c7-514b-abc6-586cfb8279c3",
+          "inbox_id": "be8935fb-d256-4d65-a5b7-6d40c5478a37",
+          "processing_state": "ACCEPTED",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 1,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "WAITING",
+        "stop_reason": null
+      },
+      "workflow": []
+    },
+    "before": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 0,
+      "result": [],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": []
+    },
+    "inbox_id": "be8935fb-d256-4d65-a5b7-6d40c5478a37",
+    "reported_deferred": [
+      {
+        "inbox_id": "be8935fb-d256-4d65-a5b7-6d40c5478a37",
+        "operation_id": "reconcile-probe:2c0f6bb1-1fe7-4294-9a83-ba9d0a017851:5bcb2c20-e4d9-4917-a814-7d7d6a50a75f",
+        "reason": "followup_inference_requires_worker",
+        "result_kind": "continuation",
+        "stage": "continuation",
+        "task_id": "2c0f6bb1-1fe7-4294-9a83-ba9d0a017851"
+      }
+    ],
+    "task_id": "2c0f6bb1-1fe7-4294-9a83-ba9d0a017851",
+    "worker_result_count": 1
+  },
+  "critic_reconciliation": {
+    "after_reconcile": {
+      "critic_registry_count": 1,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 3,
+      "outbox_count": 2,
+      "reservation_count": 3,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "68de5c9c-ea8b-5ac6-a49b-855a5124a92a",
+          "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+          "processing_state": "ACCEPTED",
+          "rejection_reason": null
+        },
+        {
+          "conclusion_id": "16ae5b18-d653-5576-af06-a4a56144120b",
+          "inbox_id": "be04f3b8-3448-49a3-b576-615abce420bf",
+          "processing_state": "WAITING_EXECUTION",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 1,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 1,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": [
+        {
+          "stage": "REVIEW_ADMITTED"
+        }
+      ]
+    },
+    "after_worker": {
+      "critic_registry_count": 1,
+      "deliberation_steps": [],
+      "dissent_count": 1,
+      "operation_count": 3,
+      "outbox_count": 2,
+      "reservation_count": 3,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "68de5c9c-ea8b-5ac6-a49b-855a5124a92a",
+          "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+          "processing_state": "ACCEPTED",
+          "rejection_reason": null
+        },
+        {
+          "conclusion_id": "16ae5b18-d653-5576-af06-a4a56144120b",
+          "inbox_id": "be04f3b8-3448-49a3-b576-615abce420bf",
+          "processing_state": "ACCEPTED",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 1,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 1,
+        "status": "WAITING",
+        "stop_reason": null
+      },
+      "workflow": [
+        {
+          "stage": "SYNTHESIS_PENDING"
+        }
+      ]
+    },
+    "apply_inbox_outcomes": [
+      {
+        "conflict": false,
+        "duplicate": false,
+        "id": "67223e91-8e6b-4c93-ae71-467df3336be0",
+        "inbox_id": "67223e91-8e6b-4c93-ae71-467df3336be0",
+        "processed": true
+      },
+      {
+        "deferred": true,
+        "id": "be04f3b8-3448-49a3-b576-615abce420bf",
+        "inbox_id": "be04f3b8-3448-49a3-b576-615abce420bf",
+        "operation_id": "d0d0e659-c501-5c62-9848-869c11db8d3b",
+        "pending": true,
+        "processed": false,
+        "reason": "followup_inference_requires_worker",
+        "result_kind": "critic_review",
+        "stage": "critic_review",
+        "task_id": "79a9b76b-414c-4473-9134-ab1ffc4c0954"
+      }
+    ],
+    "before": {
+      "critic_registry_count": 1,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 3,
+      "outbox_count": 2,
+      "reservation_count": 3,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "68de5c9c-ea8b-5ac6-a49b-855a5124a92a",
+          "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+          "processing_state": "ACCEPTED",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 1,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 1,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": [
+        {
+          "stage": "REVIEW_ADMITTED"
+        }
+      ]
+    },
+    "inbox_id": "be04f3b8-3448-49a3-b576-615abce420bf",
+    "operation_id": "d0d0e659-c501-5c62-9848-869c11db8d3b",
+    "reported_deferred": [
+      {
+        "inbox_id": "be04f3b8-3448-49a3-b576-615abce420bf",
+        "operation_id": "d0d0e659-c501-5c62-9848-869c11db8d3b",
+        "reason": "followup_inference_requires_worker",
+        "result_kind": "critic_review",
+        "stage": "critic_review",
+        "task_id": "79a9b76b-414c-4473-9134-ab1ffc4c0954"
+      }
+    ],
+    "runtime_create_observation": {
+      "present": true,
+      "provider_agent_id": "agent-local-ee0bb460-0b7b-4cdc-8be2-beae1e650f67",
+      "runtime_create_only_no_inference": true
+    },
+    "worker_result_count": 1
+  },
+  "database": {
+    "migration_head": "0015_personal_task_cap",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "database_isolation": {
+    "container": "hekate-p6f-0bfa9438",
+    "database": "hekate_p6f_fake",
+    "volume": "hekate-p6f-0bfa9438"
+  },
+  "existing_untracked_artifacts_preserved": true,
+  "external_provider_calls": 0,
+  "fake_provider_requests": 0,
+  "final_answer_and_usage": {
+    "after": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 1,
+      "result": [
+        {
+          "conclusion_id": "413b3f05-7c79-586f-932d-97a37d8a011c",
+          "inbox_id": "1dcd33c9-6f7d-481c-99c0-88e3ddfecc3f",
+          "processing_state": "ACCEPTED",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": "PROVISIONAL_ANSWER",
+        "review_rounds": 0,
+        "status": "COMPLETED",
+        "stop_reason": "COMPLETED"
+      },
+      "workflow": []
+    },
+    "answer_inbox_id": "1dcd33c9-6f7d-481c-99c0-88e3ddfecc3f",
+    "before": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 0,
+      "result": [],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": []
+    },
+    "inbox_outcomes": [
+      {
+        "conflict": false,
+        "duplicate": true,
+        "id": "01c28f3e-9a16-42e6-84c5-8683a250311a",
+        "inbox_id": "01c28f3e-9a16-42e6-84c5-8683a250311a",
+        "processed": true
+      },
+      {
+        "conflict": false,
+        "duplicate": true,
+        "id": "945d6744-a32a-447c-9293-693696496f80",
+        "inbox_id": "945d6744-a32a-447c-9293-693696496f80",
+        "processed": true
+      },
+      {
+        "id": "1dcd33c9-6f7d-481c-99c0-88e3ddfecc3f",
+        "inbox_id": "1dcd33c9-6f7d-481c-99c0-88e3ddfecc3f",
+        "processed": true,
+        "state": "ACCEPTED"
+      },
+      {
+        "conflict": false,
+        "duplicate": true,
+        "id": "14e29dc9-be37-4ba7-a0c7-8b8c3e8910e5",
+        "inbox_id": "14e29dc9-be37-4ba7-a0c7-8b8c3e8910e5",
+        "processed": true
+      }
+    ],
+    "operation_id": "reconcile-probe:77b945f6-637b-4866-8776-76e3b8d85f7c:4c619913-f3f9-4cf8-b4fb-a60ea6a30412",
+    "replay_apply": {
+      "deferred_followup_results": [],
+      "inbox": [],
+      "settlements": [],
+      "turn_result_outcomes": [],
+      "turn_results_processed": 0
+    },
+    "response_once": true,
+    "settlement_once": true,
+    "settlement_rows_after_apply": 2,
+    "settlement_rows_after_replay": 2,
+    "task_id": "77b945f6-637b-4866-8776-76e3b8d85f7c",
+    "usage_after": [
+      {
+        "accounting_call_id": "reconcile-usage:e12ff189-db4b-4eaa-b053-67d3cc6ac8f4",
+        "completeness": "COMPLETE",
+        "evaluated_cost_usd": "0.000012",
+        "measurement_status": "LEGACY_UNMEASURED",
+        "settlement_state": "SETTLED",
+        "status": "QUIESCENT"
+      }
+    ],
+    "usage_after_replay": [
+      {
+        "accounting_call_id": "reconcile-usage:e12ff189-db4b-4eaa-b053-67d3cc6ac8f4",
+        "completeness": "COMPLETE",
+        "evaluated_cost_usd": "0.000012",
+        "measurement_status": "LEGACY_UNMEASURED",
+        "settlement_state": "SETTLED",
+        "status": "QUIESCENT"
+      }
+    ],
+    "usage_inbox_id": "14e29dc9-be37-4ba7-a0c7-8b8c3e8910e5"
+  },
+  "fingerprinted_files": [
+    {
+      "path": "src/hekate/__main__.py",
+      "sha256": "2f968fce3d731a7a676c2d1d7c4ff79e3480983e2bbc7d7eb6c17c950461d62e"
+    },
+    {
+      "path": "src/hekate/application/lifecycle.py",
+      "sha256": "3292cf35ade98564f97046ff92fa0bd9a8e0bb2d1a1afc71b7f7a320edaa725f"
+    },
+    {
+      "path": "src/hekate/application/results.py",
+      "sha256": "1e3a1e95f2152a47871ab44547717b5e4223ac53f31503b07e43091ce10ea46e"
+    },
+    {
+      "path": "src/hekate/worker/service.py",
+      "sha256": "669bd5e0a8cf494218f374c7ee6fe931ef5485ef8c329c82ae87286d7d97f558"
+    },
+    {
+      "path": "docs/personal-use.md",
+      "sha256": "4cf9bd6b5b92ca3f912dd5fd0bc0c00e231b1b7a75f0df62f45146434a5b28c6"
+    },
+    {
+      "path": "scripts/personal_reconcile_guard_probe.py",
+      "sha256": "a0cf52b00fab8f10462231d29ee72f8c9fed29fd5718ffb8176acf655b377e29"
+    }
+  ],
+  "finished_at": "2026-10-07T12:51:43Z",
+  "head": "1e70a248460d346eee94916eb920e2eac82f2664",
+  "init_local": {
+    "authz_epoch": 1,
+    "initialized": true,
+    "letta_provider_config": "/home/hekate/.local/share/hekate/personal-reconcile/personal-reconcile-20261007T125048Z-0bfa9438/state/letta/lc-local-backend/providers/auth.json",
+    "migration_head": "0015_personal_task_cap",
+    "policy_version": "p6f-fake-policy-v1-fa9438",
+    "postgres_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu",
+    "principal_id": "p6f-fake-operator-0bfa9438",
+    "scope_created": true,
+    "scope_id": "p6f-fake-48Z-0bfa9438"
+  },
+  "model_load_requests": 0,
+  "node": {
+    "path": "/tmp/hekate-personal-reconcile-node22.19.0/node-v22.19.0-linux-x64/bin/node",
+    "version": "v22.19.0"
+  },
+  "pinned_runtime": {
+    "app_server_version": "0.33.8",
+    "base_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "base_image_id": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "image": "hekate/letta-code-p1:0bb6f741-0c6a0fc3",
+    "image_id": "sha256:2bb944f697a17adf70263285fc1e99b5dd4043b6a94dedf940c6bc332047dfbd",
+    "protocol_version": "1",
+    "runtime_patch_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+    "sdk_version": "0.8.25",
+    "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+  },
+  "probe": "personal-reconcile-apply-boundary",
+  "production_dispatch": "BLOCKED",
+  "projection_status": "PENDING_UNSUPPORTED was not modified by this probe",
+  "provider_isolation": {
+    "gateway_started": false,
+    "local_model_profile_loaded": "configuration only; no model weights or provider session",
+    "runtime_mode": "test",
+    "unreachable_upstream": "http://127.0.0.1:1"
+  },
+  "run_id": "personal-reconcile-20261007T125048Z-0bfa9438",
+  "run_root": "/home/hekate/.local/share/hekate/personal-reconcile/personal-reconcile-20261007T125048Z-0bfa9438",
+  "runtime_agent": {
+    "identity_create_confirmed": true,
+    "inference_calls": 0,
+    "provider_agent_id": "agent-local-72168453-6804-4081-9981-67886692d535",
+    "registry_id": "dd24dbfd-ea46-5705-a2ea-3878686879e9"
+  },
+  "schema_version": "1",
+  "spawn_reconciliation": {
+    "after_first_apply": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "68de5c9c-ea8b-5ac6-a49b-855a5124a92a",
+          "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+          "processing_state": "WAITING_EXECUTION",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": []
+    },
+    "after_replay": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "68de5c9c-ea8b-5ac6-a49b-855a5124a92a",
+          "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+          "processing_state": "WAITING_EXECUTION",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": []
+    },
+    "before": {
+      "critic_registry_count": 0,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 1,
+      "outbox_count": 1,
+      "reservation_count": 1,
+      "response_count": 0,
+      "result": [],
+      "task": {
+        "critic_agents": 0,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "RUNNING",
+        "stop_reason": null
+      },
+      "workflow": []
+    },
+    "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+    "operation_id": "reconcile-probe:79a9b76b-414c-4473-9134-ab1ffc4c0954:b271bbe3-02a8-4e7b-81da-40652c07f6e6",
+    "reported_deferred": [
+      {
+        "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+        "operation_id": "reconcile-probe:79a9b76b-414c-4473-9134-ab1ffc4c0954:b271bbe3-02a8-4e7b-81da-40652c07f6e6",
+        "reason": "followup_inference_requires_worker",
+        "result_kind": "planning_spawn",
+        "stage": "planning",
+        "task_id": "79a9b76b-414c-4473-9134-ab1ffc4c0954"
+      }
+    ],
+    "second_apply": {
+      "deferred_followup_results": [
+        {
+          "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+          "operation_id": "reconcile-probe:79a9b76b-414c-4473-9134-ab1ffc4c0954:b271bbe3-02a8-4e7b-81da-40652c07f6e6",
+          "reason": "followup_inference_requires_worker",
+          "result_kind": "planning_spawn",
+          "stage": "planning",
+          "task_id": "79a9b76b-414c-4473-9134-ab1ffc4c0954"
+        }
+      ],
+      "inbox": [],
+      "settlements": [],
+      "turn_result_outcomes": [
+        {
+          "deferred": true,
+          "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+          "operation_id": "reconcile-probe:79a9b76b-414c-4473-9134-ab1ffc4c0954:b271bbe3-02a8-4e7b-81da-40652c07f6e6",
+          "pending": true,
+          "processed": false,
+          "reason": "followup_inference_requires_worker",
+          "result_kind": "planning_spawn",
+          "stage": "planning",
+          "task_id": "79a9b76b-414c-4473-9134-ab1ffc4c0954"
+        }
+      ],
+      "turn_results_processed": 0
+    },
+    "task_id": "79a9b76b-414c-4473-9134-ab1ffc4c0954",
+    "worker_result_count": 1,
+    "worker_state": {
+      "critic_registry_count": 1,
+      "deliberation_steps": [],
+      "dissent_count": 0,
+      "operation_count": 3,
+      "outbox_count": 1,
+      "reservation_count": 3,
+      "response_count": 0,
+      "result": [
+        {
+          "conclusion_id": "68de5c9c-ea8b-5ac6-a49b-855a5124a92a",
+          "inbox_id": "620e515d-9792-430e-a299-34c3a675aa61",
+          "processing_state": "ACCEPTED",
+          "rejection_reason": null
+        }
+      ],
+      "task": {
+        "critic_agents": 1,
+        "hekate_continuations": 0,
+        "input_revision": 1,
+        "outcome": null,
+        "review_rounds": 0,
+        "status": "WAITING",
+        "stop_reason": null
+      },
+      "workflow": [
+        {
+          "stage": "CREATE_PENDING"
+        }
+      ]
+    }
+  },
+  "started_at": "2026-10-07T12:50:48Z",
+  "status": "PASS",
+  "submission_candidate_files": [
+    "src/hekate/application/lifecycle.py",
+    "src/hekate/application/results.py",
+    "docs/personal-use.md",
+    "scripts/personal_reconcile_guard_probe.py",
+    "integration/runtime/artifacts/personal-reconcile-20261007T125048Z-0bfa9438.json"
+  ],
+  "unexecuted": [
+    "No model inference or provider gateway request was performed.",
+    "No separate production Worker process was started; normal result handling was invoked through its application entry point.",
+    "No schema or migration changes were made."
+  ],
+  "unknown_preservation": {
+    "after": {
+      "execution_state": "UNKNOWN",
+      "hold_state": "UNKNOWN",
+      "quiescent_at": null,
+      "state": "UNKNOWN"
+    },
+    "apply": {
+      "deferred_followup_results": [],
+      "inbox": [],
+      "settlements": [],
+      "turn_result_outcomes": [],
+      "turn_results_processed": 0
+    },
+    "before": {
+      "execution_state": "UNKNOWN",
+      "hold_state": "UNKNOWN",
+      "quiescent_at": null,
+      "state": "UNKNOWN"
+    },
+    "operation_id": "reconcile-probe:02b4dbbc-ddf0-46f1-99e2-501dd90ecd8b:65f7ca1b-8bda-43c5-b4f3-cafc4c7a4b8d",
+    "task_id": "02b4dbbc-ddf0-46f1-99e2-501dd90ecd8b"
+  }
+}
