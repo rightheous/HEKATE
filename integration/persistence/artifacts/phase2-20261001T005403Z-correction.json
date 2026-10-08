@@ -1,0 +1,62 @@
+{
+  "schema_version": "1",
+  "executed_at": "2026-10-01T00:54:03Z",
+  "branch": "phase2-persistence-ledger",
+  "base_revision": "5de8bc6367506610695bd17bacaa98f5ebd11fe6",
+  "postgres": {
+    "version": "16.14",
+    "database": "hekate_phase2_test",
+    "host_scope": "loopback disposable test database",
+    "migration_head": "0002_budget",
+    "migration_changes": 0
+  },
+  "correction_tests": {
+    "command": "uv run --locked python -m unittest tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_ta_public_settlement_entrypoints_keep_complete_and_pending_distinct tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_ta_malformed_persisted_binding_fails_all_settlement_entrypoints tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_tb_new_call_after_first_call_settlement_uses_remaining_hold tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_tb_billing_pending_allows_next_call_but_execution_unknown_blocks tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_tb_usage_conflict_keeps_hold_and_blocks_new_allocation tests.persistence.test_phase2_postgres.Phase2PostgresTests.test_t_terminal_admission_replay_is_side_effect_free -v",
+    "result": "pass",
+    "passed": 6,
+    "failed": 0,
+    "scenarios": {
+      "public_settlement_entrypoints": "settle_call, settle, and reconcile_pending preserve completed versus billing-pending results; empty batches return empty tuples",
+      "malformed_persisted_binding": "missing or extra binding fields fail all three settlement entrypoints without spend or settlement ledger effects",
+      "remaining_hold_allocation_usd": {
+        "reservation": "8.00",
+        "call_a_allocation": "4.00",
+        "call_a_cost": "3.00",
+        "after_a_task_and_system_spent_each": "3.00",
+        "after_a_task_and_system_held_each": "4.00",
+        "call_b_allocation": "4.00",
+        "call_b_cost": "2.00",
+        "after_b_task_and_system_spent_each": "5.00",
+        "after_b_task_and_system_held_each": "0.00",
+        "settlement_ledger": "one per account per call; duplicate settlement does not repeat effects"
+      },
+      "billing_pending_and_execution_unknown": "active operation can allocate call B while call A billing is partial; after execution becomes UNKNOWN, call C is denied with hold, allocation, and ledger effects unchanged",
+      "usage_conflict": "conflicting projection blocks another call allocation and retains the hold",
+      "terminal_admission_replay": "identical request replays original ADMITTED receipt after COMPLETED and FAILED without changing operation, budget, attempt, outbox, provider-call, or permit state; changed request/scope/binding/envelope conflicts; missing receipt fails; UNKNOWN remains blocked"
+    }
+  },
+  "database_tests": {
+    "command": "uv run --locked python -m unittest tests.persistence.test_phase2_postgres -v",
+    "result": "pass",
+    "passed": 18,
+    "failed": 0
+  },
+  "other_checks": {
+    "python_compileall": "pass",
+    "git_diff_check": "pass",
+    "source_design_documents_changed": 0
+  },
+  "real_provider_calls": 0,
+  "phase3_started": false,
+  "not_run": [
+    "Letta or TypeScript bridge integration/build",
+    "production provider calls",
+    "production database and failure testing",
+    "migration upgrade/downgrade verification"
+  ],
+  "remaining_gates": [
+    "Production bridge is not connected to PostgreSQL permit issuance/consumption.",
+    "G7 same-execution resume and G8 exact input-token bounding remain unresolved.",
+    "No production model, tokenizer, or verified pricing profile is enabled."
+  ]
+}

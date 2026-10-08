@@ -1,0 +1,1911 @@
+{
+  "actual_provider_calls": 0,
+  "artifact_path": "integration/runtime/artifacts/p6e-revoke-20261006T215635Z-4afc1fba-revocation-doctor.json",
+  "baseline_sha": "0b9f80918bb628298349909921a1197747f6b35d",
+  "branch": "phase6e-local-cli",
+  "bridge": "bridge/letta/dist/main.js",
+  "code_fingerprint_sha256": "58a53233379d2d43e9a7fa2be553f025a202aa8d2a4cb50576798e56182a96d1",
+  "commands": [
+    "HEKATE_NODE_BIN=<pinned-22.19.0> uv run --locked python scripts/phase6e_revocation_doctor_probe.py"
+  ],
+  "container_cleanup": {
+    "container": "hekate-p6e-revoke-4afc1fba",
+    "removed": true,
+    "volume": "hekate-p6e-revoke-4afc1fba"
+  },
+  "database_instance": {
+    "container": "hekate-p6e-revoke-4afc1fba",
+    "host": "127.0.0.1",
+    "image": "postgres:16.15",
+    "port": 47629,
+    "prior_database_used": false,
+    "volume": "hekate-p6e-revoke-4afc1fba"
+  },
+  "doctor_fixtures": {
+    "command": "uv run --locked python -m unittest discover -s tests/unit -p 'test_phase6e_doctor_context.py' -v",
+    "exit_code": 0,
+    "status": "PASS",
+    "stderr_tail": "test_whole_doctor_distinguishes_runner_context_and_identity (test_phase6e_doctor_context.Phase6EDoctorContextTests.test_whole_doctor_distinguishes_runner_context_and_identity) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 18.862s\n\nOK\n",
+    "stdout_tail": ""
+  },
+  "excluded": [
+    "Qwen model load or generation",
+    "Critic",
+    "Position/projection Qwen integration",
+    "G7/G8",
+    "production dispatch"
+  ],
+  "executed_at": "2026-10-06T21:56:35Z",
+  "fake_provider_flow": {
+    "after_revoked_result": {
+      "attempts": [
+        {
+          "id": "73462a70-28af-5692-89fb-5e1a21cdeb9c",
+          "kind": "planning",
+          "operation_id": "881c5c59-6402-5710-b06d-73d326d928e2",
+          "status": "SUCCEEDED"
+        }
+      ],
+      "budget_accounts": [
+        {
+          "held_amount": "0.000000",
+          "scope_kind": "TASK",
+          "scope_ref": "2af1c86f-4bb3-425c-bf85-983381f74543",
+          "spent_amount": "0.000045"
+        }
+      ],
+      "budget_ledger": [
+        {
+          "effect_type": "HOLD",
+          "held_delta": "0.073728",
+          "rows": 2,
+          "spent_delta": "0"
+        },
+        {
+          "effect_type": "SETTLE",
+          "held_delta": "-0.073728",
+          "rows": 2,
+          "spent_delta": "0.000090"
+        }
+      ],
+      "operation": [
+        {
+          "dispatch_state": "QUIESCENT",
+          "execution_state": "QUIESCENT",
+          "id": "881c5c59-6402-5710-b06d-73d326d928e2",
+          "last_error": null,
+          "state": "COMPLETED"
+        }
+      ],
+      "position_version_count": 0,
+      "provider_calls": [
+        {
+          "accounting_call_id": "b7130d2c-47c0-4751-9774-b27502007bec",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "evaluated_cost_usd": "0.000045",
+          "input_tokens": 37,
+          "output_tokens": 4,
+          "permit_state": "CONSUMED",
+          "settlement_state": "SETTLED"
+        }
+      ],
+      "response": [
+        {
+          "attempt_id": "73462a70-28af-5692-89fb-5e1a21cdeb9c",
+          "operation_id": "881c5c59-6402-5710-b06d-73d326d928e2",
+          "outcome": "FAILED",
+          "proposal": {
+            "action": "answer",
+            "answer": "Fake-only response: Return one brief answer from the isolated fake provider.",
+            "schema_version": "1"
+          },
+          "registry_id": "2ae53b79-340d-59c2-96d1-42bb9e9a4084",
+          "response_text": "HEKATE could not complete this request (authorization_scope_revoked).",
+          "stop_reason": "POLICY"
+        }
+      ],
+      "task": [
+        {
+          "id": "2af1c86f-4bb3-425c-bf85-983381f74543",
+          "input_revision": 1,
+          "outcome": "FAILED",
+          "owner_scope": "p6e-revoke-35Z-4afc1fba",
+          "provider_calls": 1,
+          "status": "FAILED",
+          "stop_reason": "POLICY"
+        }
+      ],
+      "turn_results": [
+        {
+          "conclusion_eligible": false,
+          "conclusion_id": "498a6ad4-f4af-51f7-89b1-b18e1e878dbd",
+          "inbox_id": "c9617d85-4781-4e50-8113-7afbe1ca4430",
+          "processing_state": "REJECTED",
+          "rejection_reason": "authorization_scope_revoked"
+        }
+      ]
+    },
+    "ask_client_after_revoke": {
+      "exit_code": 1,
+      "revoked_task_read_denied": true,
+      "stderr_tail": " _task_command\n    view = await tasks.get_task(factory, actor, task_id)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase6e-local-cli/src/hekate/application/tasks.py\", line 120, in get_task\n    authorization = await uow.tasks.lock_scope(actor.scope)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase6e-local-cli/src/hekate/infrastructure/postgres/task_repository.py\", line 103, in lock_scope\n    raise PolicyDenied(\"authorization scope is revoked\")\nhekate.domain.errors.PolicyDenied: authorization scope is revoked\n",
+      "task_failed_policy_in_database": true
+    },
+    "at_provider_barrier": {
+      "attempts": [
+        {
+          "id": "73462a70-28af-5692-89fb-5e1a21cdeb9c",
+          "kind": "planning",
+          "operation_id": "881c5c59-6402-5710-b06d-73d326d928e2",
+          "status": "DISPATCHED"
+        }
+      ],
+      "budget_accounts": [
+        {
+          "held_amount": "0.036864",
+          "scope_kind": "TASK",
+          "scope_ref": "2af1c86f-4bb3-425c-bf85-983381f74543",
+          "spent_amount": "0"
+        }
+      ],
+      "budget_ledger": [
+        {
+          "effect_type": "HOLD",
+          "held_delta": "0.073728",
+          "rows": 2,
+          "spent_delta": "0"
+        }
+      ],
+      "operation": [
+        {
+          "dispatch_state": "DISPATCHED",
+          "execution_state": "PENDING",
+          "id": "881c5c59-6402-5710-b06d-73d326d928e2",
+          "last_error": null,
+          "state": "ADMITTED"
+        }
+      ],
+      "position_version_count": 0,
+      "provider_calls": [
+        {
+          "accounting_call_id": "b7130d2c-47c0-4751-9774-b27502007bec",
+          "call_status": "CONSUMED",
+          "completeness": null,
+          "evaluated_cost_usd": null,
+          "input_tokens": null,
+          "output_tokens": null,
+          "permit_state": "CONSUMED",
+          "settlement_state": null
+        }
+      ],
+      "response": [],
+      "task": [
+        {
+          "id": "2af1c86f-4bb3-425c-bf85-983381f74543",
+          "input_revision": 1,
+          "outcome": null,
+          "owner_scope": "p6e-revoke-35Z-4afc1fba",
+          "provider_calls": 1,
+          "status": "RUNNING",
+          "stop_reason": null
+        }
+      ],
+      "turn_results": []
+    },
+    "budget_at_provider_barrier": {
+      "held_amount": "0.036864",
+      "scope_kind": "TASK",
+      "scope_ref": "2af1c86f-4bb3-425c-bf85-983381f74543",
+      "spent_amount": "0"
+    },
+    "fake_execution_profile": {
+      "compaction_limit": 0,
+      "model": "phase6e-fake-chat-v1",
+      "model_revision": "phase6e-fake-chat-contract-v1",
+      "pricing_version": "phase6e-revocation-synthetic-v1",
+      "profile_id": "phase6e-revocation-fake-v1",
+      "real_model_load": false,
+      "synthetic_prices_usd_per_million": {
+        "input": "1",
+        "output": "2"
+      }
+    },
+    "fake_requests_at_barrier": 1,
+    "fake_runtime_doctor": {
+      "database_counts_unchanged": true,
+      "database_modified": false,
+      "inference_requested": false,
+      "ollama_checked": true,
+      "status": "READY"
+    },
+    "gateway_metrics_at_revocation": {
+      "observation_conflicts": 0,
+      "observation_write_attempts": 0,
+      "observation_write_failures": 0,
+      "provider_stream_observations": [],
+      "upstream_forward_attempts": 1
+    },
+    "init_local": {
+      "authz_epoch": 1,
+      "initialized": true,
+      "letta_provider_config": "/tmp/p6e-revoke-20261006T215635Z-4afc1fba-v77j_6bt/state-revoked/letta/lc-local-backend/providers/auth.json",
+      "migration_head": "0014_local_dispatch_identity",
+      "policy_version": "local-policy-v1",
+      "postgres_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu",
+      "principal_id": "revoked-operator",
+      "scope_created": true,
+      "scope_id": "p6e-revoke-35Z-4afc1fba"
+    },
+    "postgres": {
+      "migration_head": "0014_local_dispatch_identity",
+      "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+    },
+    "request_key": "p6e-revoke-p6e-revoke-20261006T215635Z-4afc1fba",
+    "restart_observation_replay": {
+      "events": [
+        {
+          "conflict": false,
+          "duplicate": true,
+          "event_type": "execution",
+          "processed": true
+        },
+        {
+          "conflict": false,
+          "duplicate": true,
+          "event_type": "provider_call",
+          "processed": true
+        },
+        {
+          "conflict": false,
+          "duplicate": true,
+          "event_type": "provider_call",
+          "processed": true
+        },
+        {
+          "conflict": false,
+          "duplicate": true,
+          "event_type": "execution",
+          "processed": true
+        }
+      ],
+      "fake_upstream_requests": 1,
+      "gateway_forward_attempts": 1,
+      "settle_call_after_revoke": {
+        "actual_cost": "0.000045",
+        "pending_reason": null,
+        "settled": true
+      },
+      "state_unchanged": true,
+      "worker_restarted": true
+    },
+    "revocation_gates": {
+      "fake_requests_before_and_after": [
+        1,
+        1
+      ],
+      "init_local_replay_rejected": true,
+      "new_task_rejected": true,
+      "provider_auth_unchanged": true,
+      "scope_remained_inactive": true,
+      "submission_rows": 1
+    },
+    "scope_id": "p6e-revoke-35Z-4afc1fba",
+    "settlement_observation": {
+      "complete_usage": "COMPLETE",
+      "evaluated_cost_usd": "0.000045",
+      "position_versions": 0,
+      "provider_usage_tokens": {
+        "input": 37,
+        "output": 4
+      },
+      "settlement": "SETTLED",
+      "synthetic_spent_nonzero": true,
+      "task_budget_after": {
+        "held": "0.000000",
+        "spent": "0.000045"
+      },
+      "task_budget_before": {
+        "held": "0.036864",
+        "spent": "0"
+      },
+      "task_response_is_server_policy": true,
+      "unused_hold_released": true
+    },
+    "status": "PASS",
+    "task_id": "2af1c86f-4bb3-425c-bf85-983381f74543"
+  },
+  "finalized_at": "2026-10-06T21:57:34Z",
+  "fingerprinted_files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "138cce63b995c9f1aea37fe4bf8d2d8f02442ad41ff8fcd5a248b6a7c7223bcf"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "be31780560d84f468a2866bca8bcb4448b839cd896ecfe8dc2b1c8468c006aa7"
+    },
+    {
+      "path": "README.md",
+      "sha256": "d9ccd3a09e504c984dfdd2d5d07d292cb82879bd9ee6d3056995857561925ea1"
+    },
+    {
+      "path": "alembic.ini",
+      "sha256": "611bf468393e9a81339ffbc7e20ebce02154600f0878932851d66ef278432754"
+    },
+    {
+      "path": "bridge/letta/package-lock.json",
+      "sha256": "6f152a0fab62f9820657e86af2621cd57e7422334d4bf37b7294eb8970e08ae9"
+    },
+    {
+      "path": "bridge/letta/package.json",
+      "sha256": "348546b3777a33daafcd086b88ecc9aa14c2ec0ffe6e95b64a09998b36e19ede"
+    },
+    {
+      "path": "bridge/letta/src/agents.ts",
+      "sha256": "8f5e7e17500c71055a0f811d1e1463cd7f73d6af2a2c14b2a905fc2ff17df7f0"
+    },
+    {
+      "path": "bridge/letta/src/events.ts",
+      "sha256": "25f3ab85471e0b898587e9c4bfacdbbcdf7e1f94d2fa69649ba57d962c1ca219"
+    },
+    {
+      "path": "bridge/letta/src/limits.ts",
+      "sha256": "e644a74eaf222675bf1b1a9fe0c473fb814a71baee78a5fc2c9094d6e334ac97"
+    },
+    {
+      "path": "bridge/letta/src/main.ts",
+      "sha256": "b1bc30daa2985944d29e98b76f0e5e3b08e3d65dc6405358967c0a5317acf9e0"
+    },
+    {
+      "path": "bridge/letta/src/memory.ts",
+      "sha256": "2808f4668a8abb51c8aca8fd1876f37bbe735530aad8c7acac21829529daad10"
+    },
+    {
+      "path": "bridge/letta/src/protocol.ts",
+      "sha256": "8332ee2e22239654f6c9ba55f4bced997648a0793cd1f9f4162b9adf9b1331d3"
+    },
+    {
+      "path": "bridge/letta/src/sessions.ts",
+      "sha256": "d7923d59631685797256f57f8901c8ccce6ec9811210887ad7ff47f91160445f"
+    },
+    {
+      "path": "bridge/letta/src/tools.ts",
+      "sha256": "ece1bdb0ec6c7b5701d10e50ecace778b7b7564606368d740b52ba80c553071e"
+    },
+    {
+      "path": "bridge/letta/src/usage.ts",
+      "sha256": "4a7d38865cb317586b608e30e82d9d08e4812310b9861ed30e4294ccd134a36d"
+    },
+    {
+      "path": "bridge/letta/tests/bridge-contract.test.js",
+      "sha256": "7f74f4fcdd7b2a0206d1295d27a13c4c643a678b7239ab3d4f6e794517187c00"
+    },
+    {
+      "path": "bridge/letta/tests/limits.test.ts",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bridge/letta/tests/protocol.test.ts",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bridge/letta/tests/route-state.test.js",
+      "sha256": "6f54c65c53a87ac04c62b046fa9c67f74462062c173c04a9eff6fca6164dffef"
+    },
+    {
+      "path": "bridge/letta/tests/sessions.test.ts",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bridge/letta/tests/tools.test.ts",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bridge/letta/tests/usage.test.js",
+      "sha256": "079e36a6af22f100bf9a223614499f7452b5b4db06da802cbb22596fd878066f"
+    },
+    {
+      "path": "bridge/letta/tsconfig.json",
+      "sha256": "8ee8a4ae0b816d5ce6ebeccf45d39b7d38ee95fb01a6512ca24524f2abfc4ef9"
+    },
+    {
+      "path": "config/evaluation.yaml",
+      "sha256": "b40095997249f8b382572f99a54faca2b5c71d50e68018d64038b9b387c91eaa"
+    },
+    {
+      "path": "config/local-candidates.yaml",
+      "sha256": "16b43c49b7fa70756a8bf3e5d6f8aed9e383c0a1c62936f13ff0412161b4b1e8"
+    },
+    {
+      "path": "config/local.example/local.env.example",
+      "sha256": "02193af0fe508f1a87a3622effd432a00e2011d3b0397589fb2f1e6c13e6fae1"
+    },
+    {
+      "path": "config/local.example/local.yaml",
+      "sha256": "bbda4b78f22bc3533309866ee52a46f497741149beeabb76ab3f0aaa5da51872"
+    },
+    {
+      "path": "config/local.example/models.yaml",
+      "sha256": "839c50c3c189fa8e23d05b6dbd91b1218de42a1ec66b37e45a173035a63419f0"
+    },
+    {
+      "path": "config/local.example/policy.yaml",
+      "sha256": "a9fad808394eb7d33f6b3d120c586602e9154a8e7a2516a934152afa875106bf"
+    },
+    {
+      "path": "config/local.example/pricing.yaml",
+      "sha256": "af429d9759d1737133987fcedcf5f881327f36022f9cb432f95289114214f444"
+    },
+    {
+      "path": "config/models.yaml",
+      "sha256": "1bf9e3417a047f9d7ff19b7b56ee068358401ce0ea2091f8b91df571e2e2ffb6"
+    },
+    {
+      "path": "config/policy.yaml",
+      "sha256": "b68f48bef69aa36bfe140906820ef3c75a5886f1e4cc0964b0b6a4ec52ee6c7a"
+    },
+    {
+      "path": "config/pricing.yaml",
+      "sha256": "96a389fee417d6d50f4871de63fb2f92b65f5cf8aed8ddf9c96142e868071996"
+    },
+    {
+      "path": "contracts/generated/bridge.v1.schema.json",
+      "sha256": "87c60a59cb5ec3689e7653b716a594a149b934bf7d4e9143222da0af52bb0e33"
+    },
+    {
+      "path": "contracts/generated/conclusion-capsule.v1.schema.json",
+      "sha256": "b7526d25638200381591efafc7f20b7e7489c8d5c293746dddae33a2768ff8e6"
+    },
+    {
+      "path": "contracts/generated/critic-turn-output.v1.schema.json",
+      "sha256": "3a6fba3e269f1684d1c263aec30fdffbf33d413e66500bbafa16221ccdfd8076"
+    },
+    {
+      "path": "contracts/generated/hekate-proposal.v1.schema.json",
+      "sha256": "2acd16d5eaffc38a465d1e2a24d5ef64e8c85cb233c5b6e8039aef766bc34257"
+    },
+    {
+      "path": "contracts/generated/hekate-turn-output.v1.schema.json",
+      "sha256": "7e50a3c1de1b7297078e7e98f5882fe4f615fe6338c178f7f661e750a8c4d9c5"
+    },
+    {
+      "path": "contracts/generated/position-commit.v1.schema.json",
+      "sha256": "3f22497d632d4451605f10f066fd5a2cb0087e96b069a19e972b33f6f7acc40a"
+    },
+    {
+      "path": "contracts/generated/task-capsule.v1.schema.json",
+      "sha256": "7ffd5a3cca6b231ba72c4d6946cb07135c16145ea014e4b54691ddd520b18ab1"
+    },
+    {
+      "path": "deploy/bridge.Dockerfile",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy/compose.yaml",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy/control-plane.Dockerfile",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy/letta-settings.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy/network-policy.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/design/01-Letta-조사와-언어-판단.md",
+      "sha256": "7f486098b39463a99adfbc6ae7ae244e0d981f1584f05797119a64bb6579a929"
+    },
+    {
+      "path": "docs/design/02-구현-상세설계.md",
+      "sha256": "ddc2a90693e482344527d981bde93aebfa6dd3f334443e7c3eca22f2a9395469"
+    },
+    {
+      "path": "docs/design/03-통합검증과-구현순서.md",
+      "sha256": "68e74a506e1cda50d932062d31c86d872198f2ae4b0bfe33ddd8c0315c34dcb2"
+    },
+    {
+      "path": "docs/design/HEKATE_design_v0_1.md",
+      "sha256": "38d22e48b20b620442180a46bc97d65723e6ddbf09a2f614f7b7eb3595032cde"
+    },
+    {
+      "path": "docs/implementation/phase2.md",
+      "sha256": "6834e69000ecba40c913a80a235fea6843cb96fd5ff5c4e03c4d43559f6f3b30"
+    },
+    {
+      "path": "docs/implementation/phase3.md",
+      "sha256": "1c39fc744073c01fa69f9d7272a1175617384c940e36f22c7400e06dc0b26b59"
+    },
+    {
+      "path": "docs/implementation/phase3b.md",
+      "sha256": "dc519d1915926b0387a71dcfd866d0ae364226f6f1483d4d8239c824cc3b26d3"
+    },
+    {
+      "path": "docs/implementation/phase4-evidence-position.md",
+      "sha256": "4c7c95c5f76fddedff751fb798a3e6e93b84a7181cd77938885106bfdd3000d9"
+    },
+    {
+      "path": "docs/implementation/phase5a-critic-synthesis.md",
+      "sha256": "31865d63628b3901be6021c66587395f03674b64530c06a45612ae9d89f3b3bb"
+    },
+    {
+      "path": "docs/implementation/phase5b-bounded-deliberation.md",
+      "sha256": "790507bcd8ea288e59df1244bc10358c33e2dd0f08803e1f3e5b475345bd5d12"
+    },
+    {
+      "path": "docs/implementation/phase6a-memory-projection.md",
+      "sha256": "658bb7708e5ec9034f13988ed8b317289535f02903eb00776313ea8f615aff29"
+    },
+    {
+      "path": "docs/implementation/phase6b-token-accounting.md",
+      "sha256": "4ef6f374547393a4c7eedab214ffeb173a45b68a79385dfeca8cc79ebedbd123"
+    },
+    {
+      "path": "docs/implementation/phase6c-ollama-qwen-profile.md",
+      "sha256": "424666f0516723a8804213d4a7867c8dd6b2775ebaff88fcdada6eae94de612a"
+    },
+    {
+      "path": "docs/implementation/phase6cd-change-review.md",
+      "sha256": "77c2bbe902ed9043484825566ab4d9e3d19160610fef4582362d1425497b174c"
+    },
+    {
+      "path": "docs/implementation/phase6cd-submission-manifest.json",
+      "sha256": "9ccdbdc19280ad9574e679ab7ff9aed1de870a314681c027da4f04575d70e9ae"
+    },
+    {
+      "path": "docs/implementation/phase6d-local-qwen-smoke.md",
+      "sha256": "4b4b5d2a8f3d193fe1a687fe74c16faab73a706edd4dd1dec3e7f35918c4db9d"
+    },
+    {
+      "path": "docs/implementation/phase6e-local-cli.md",
+      "sha256": "3183e6df70d856113b3bbe5453e9116a81cce148627db8bc385b6f5c487d72c7"
+    },
+    {
+      "path": "docs/local-quickstart.md",
+      "sha256": "188c8fcf13887b7c897d553a6bd6898c7cce087cdb5bc72582a1780e7c034a0d"
+    },
+    {
+      "path": "evals/cases.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evals/rubric.yaml",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evals/thresholds.yaml",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json",
+      "sha256": "8945dec522f524993883adab302b03e9551e60cec8980ec8f72bff8205a57721"
+    },
+    {
+      "path": "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json",
+      "sha256": "5703f0a8ee4714907918a0f2e7e1a793ca1954cace826f19bf14308674d50ccd"
+    },
+    {
+      "path": "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json",
+      "sha256": "76fd2ea8d76a4e3d5b95b0e8dcc38db2d8a29211084cb64476a4d1d3d21e057b"
+    },
+    {
+      "path": "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json",
+      "sha256": "9dab1d9b0cbb52c6080c59812d3aa72244280e58c3be84791e132e060ad173bc"
+    },
+    {
+      "path": "integration/letta/capability-matrix.json",
+      "sha256": "4d31fadbed227237d0a1472ced675fb5fa41d107fa29389820c5036efc8bcaf3"
+    },
+    {
+      "path": "integration/letta/patches/README.md",
+      "sha256": "7caea7abf77e421193f4f6889d4ea83d1e61e6d2a371550ed73291221e1d1cea"
+    },
+    {
+      "path": "integration/letta/patches/provider-call-context-usage.patch",
+      "sha256": "70e395632b9899edd213a4bf2e52acaa0662443f954217c0eb6271461db4be05"
+    },
+    {
+      "path": "integration/letta/phase1-handoff.md",
+      "sha256": "cc67c6c38bed5e024730ab7303645b582c4da9486d3c6a52037ef0fbbe009fb0"
+    },
+    {
+      "path": "integration/letta/runtime-guard-contract.md",
+      "sha256": "04faa20f1f4df1b8173caedf62f3122a7ff5fa760471ce9d77387ed75a91628a"
+    },
+    {
+      "path": "integration/letta/versions.lock.json",
+      "sha256": "760cbce19a44ce787738b2d7e8e9287f0a89724a6e72476526b31e8988307e1f"
+    },
+    {
+      "path": "integration/persistence/artifacts/phase2-20260930.json",
+      "sha256": "c675e5a9a72039b7d706f10741113f382754afd3d40309305ebaf7cd2aa049b6"
+    },
+    {
+      "path": "integration/persistence/artifacts/phase2-20261001T005403Z-correction.json",
+      "sha256": "ebc540da950ce64f2e425ef4ef466f36e28fb0f5591409486523e6c1adbbcfcb"
+    },
+    {
+      "path": "integration/persistence/artifacts/phase2-20261001T011324Z-correction.json",
+      "sha256": "84a6ec0fac4debe02388299bb995b943b2e8d860fdab38c40f7b8f2014c49494"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261001T033633Z-63d438e4.json",
+      "sha256": "aa0846e99eacf95a82774d6a65310f73bdbccaaa2863f81183bda8ef8a3aec6b"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261001T073347Z-916d84bd.json",
+      "sha256": "b0f125526cbf54d2ba9b5e497f3c2da38be7724eb1cebb4beae215fd9e81ceef"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261001T074952Z-11c58ae0.json",
+      "sha256": "6e3e4473cb6ac2a16912a66d319bc95d68c8e3afb290a921edd935f977b3f4fb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261002T051845Z-035de352.json",
+      "sha256": "d10a41ad1a46170046c9218a8aab1ea9883bbb93f48a29f54ea69bc1ab0c7b74"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261002T053719Z-9e6c468f.json",
+      "sha256": "2feaf24348d11b38af52bcb57a966ec1ed35e374bd29585cac4cf2a186d29988"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261002T083636Z-6894ae6e.json",
+      "sha256": "59f92c8fe062873d2287c1e7e62e90a0b6475c5e405bb2f3ce43536666ae02f5"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261004T180726Z-b5af8b70.json",
+      "sha256": "809e6395b890051c6bc63aef1ab6293be13a6d9a90ef4c104549ddcfbde4040e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261005T135809Z-adb3ad1e.json",
+      "sha256": "a4c8a011693b6ce819e101ebe2f08be7fe9aeb1f893d2970d6c0e6ded3788fa9"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261001T073404Z-58d4681b.json",
+      "sha256": "613ba78800b83936acb66f3d8d36d40d61affe5de48d9905f34a1f939f6f7f32"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261001T075010Z-74f05f86.json",
+      "sha256": "09e65dde09e4aa95cf9a19d749911abdd351426f3b4e62fc11f339631d1b7abe"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261002T051902Z-9b037265.json",
+      "sha256": "23164b95b90a387bd4169f18452b449056e9e5e891443fc55d68c023a3fb77d5"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261002T053735Z-85ecad6a.json",
+      "sha256": "02641e32bf24cf14c414f86c0294fc6e485d902c87ffb4410bd1681857f9fbf5"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261002T083652Z-7690ced3.json",
+      "sha256": "60b71332d18de6e3848f3f1ca5faaab030c69eca1e8f55cb571d2104a60f0198"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261004T180742Z-cd3ec2a4.json",
+      "sha256": "4b7fe47a772c9bb4728a138538daa0ee5d9f6ac86b4af42ea18c368568e09c01"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261005T135833Z-795ff18f.json",
+      "sha256": "b6559c3177bb0bacff5ae0aaa71d592ec63dcd3141d5fc57d8df807cfe49d054"
+    },
+    {
+      "path": "integration/runtime/artifacts/p4-20261002T084850Z-78ad2a7d.json",
+      "sha256": "b3a9f9ed6b14275be4bb8688ff2a6ca560e6b29abb57d248625ba10c9e121abf"
+    },
+    {
+      "path": "integration/runtime/artifacts/p4-20261003T122338Z-91d88833-archive-cancel-full.json",
+      "sha256": "6c3150fb8e4dfde2a9bfbfc26d7bb45219069a0ff386cadc636c34655f3cdc5e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p4-20261003T165018Z-b67da98c.json",
+      "sha256": "458bdbec2f356b415c336325b92c68aa98a0f5f5e9cc36b0119ac793293d4dc8"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261003T172744Z-9c99d9a1.json",
+      "sha256": "d504e958901ada2e23cb909beed9df2522b97702eab699205c06aea551539e45"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261003T193348Z-40e88886.json",
+      "sha256": "e0158df97a17ad74bcf0c978d1b9cd1b630d8adb38d327208e4f50080cc38c06"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261004T081107Z-719917a0.json",
+      "sha256": "a4b00e65f1cda057ae97283e1953853a01a30b4b127224692aa173e308319a6e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261004T132502Z-d8cdea18.json",
+      "sha256": "a3e82221cae48c66c8efa6c41bcfb02370c9e9cad5d549387272ecf31b47108c"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261004T180912Z-2651b371.json",
+      "sha256": "461ad3baa38c0c9569f0383fd74ba9dd6651896b1d1f91f8f6ed434ba8dc7547"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261004T210250Z-c0512d55.json",
+      "sha256": "01ec25f05ed919a649b0b9beb6c010a6dd1dc9c3f18d71442e28baed2b20dd47"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261005T045009Z-1582dc8c.json",
+      "sha256": "36c3e7f9c269a9f7b6ecc8a6f203286d3f6f96bed06e0b68375ab25f126d2c42"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261005T071448Z-4830ea1b.json",
+      "sha256": "5762f03a8d62c90dafd5d5c06b16bacd7b8ca050a3cbafca806dc6e695d82f29"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-baseline-20261004T090022Z-38167ca2.json",
+      "sha256": "c339e170888a0701e9a583fc9ae2d81284ab5a9e19789dd6014271f7b93885b8"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T202707Z-c4735bbc.json",
+      "sha256": "27cda2b58fd7eb5166b227bb5437a412fbc2c5c4965e8ea5451c0fa39ac6811c"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T202813Z-40dd65e7.json",
+      "sha256": "81313e33067455436f92fd3853fe8b23d117865fd46d0f4f279e4ff24e9f9f5f"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T203405Z-5d014960.json",
+      "sha256": "b14cebcfad90e9fa0c6194f640553dce4fc0040df546a510042911edbcb441fb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T203534Z-84e3a76d.json",
+      "sha256": "9eb6fb96b26aedfaa1928bee5dcdf9e5b2eff204e29681143707ef27a28ebd7b"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T204005Z-dee3cd25.json",
+      "sha256": "daa86279bacb211bcdb440a23445790de35518aa859c88f4e3a057323e8bf9c7"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T204246Z-57798b11.json",
+      "sha256": "8cd30514da86cd51c417ed56f92cb960482aecb16d34efd7d825a8a118ae8f13"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T204455Z-f6d990fb.json",
+      "sha256": "1b446472405dc74c72079e4b9f7240738ccd84538063a4e9e2e73a014c62c456"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T204708Z-8cbd700c.json",
+      "sha256": "fba9a4c779f790ceb963159ff54272c4541b6720d8f8bd62545d072a6eee5c9a"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T205238Z-5e979863.json",
+      "sha256": "eab688f54b3c792880c95c45b0c2c1525d1a7cff527060d16870b7c14ffb7ad2"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T205408Z-709003e4.json",
+      "sha256": "8213215baacb74730ccd8feb1d89689e74873c82f6c6b85e084d7dfb9bee72ad"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T205701Z-48bd2581.json",
+      "sha256": "41b076aa514be08c2bed325a35dbc8ca727fd873a0ae1c74df00f346cd408526"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T205938Z-2669dac1.json",
+      "sha256": "184166fececa57f8b45d10b20a28c8210b4c5fc8f8615ea7d35c5b8b9f0f22fe"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T210129Z-b592cf6c.json",
+      "sha256": "8948f95ea3406d925637402515c54ca5e32af93d94e1092948090d8499404371"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T044029Z-d617031e.json",
+      "sha256": "e5f6534fa3e94257120b8968cf761d515e95551c526a8576866c4d467b381d2a"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T044214Z-69257bb7.json",
+      "sha256": "ce0925b323b91ae429554b9e4138a2810c6c6507d5f01ebbd43cc265fd6585fe"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T044405Z-33ad871e.json",
+      "sha256": "c1f25f472f238e4fafa731bfdf0db2e1b1ff2e1eb4621388fdb44b45afe7e0fe"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T044533Z-302a5412.json",
+      "sha256": "a400b71034b9d2f737dcf3909b38507d72e8ba7e3766ab27a033d826eb55d758"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T045417Z-31eb9cd7.json",
+      "sha256": "1f07eba2f19a4be998419d0c0efb77cde6d41b15be4e4d2ee4c58daf25f34207"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T071135Z-92eba6b0.json",
+      "sha256": "497ccf54f2110caf7af110e550318a8344ceaacbca6fe6fd71948d7a5a37f2e3"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-baseline-20261004T184731Z-f941096c.json",
+      "sha256": "a281013ebf76b4d48969cea0936eb60e2ce6c109ea7c99aa9270b1cd8b30c665"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase3.json",
+      "sha256": "4e0294edf1b5e04f0d92fb144dd2b2d1bb672d7bf5e84663ded8bee9bfef63b9"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase5b.json",
+      "sha256": "98ca0e2c6a65fa59187a97d844ea3e042fe123588af85e26f9abc35fac2c04d9"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase6a.json",
+      "sha256": "c01cbfb8f9f86d46e30ce22a156a0ce912a6dfdc6677e07f4c5805309840c048"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-20261005T140059Z-7544031b.json",
+      "sha256": "31ac9a7db4714b6bdd0bd6f0a7b89e9b129aa8f0a5f165ae7869ab4c256b0e89"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-legacy-20261005T144610Z-3bf23853.json",
+      "sha256": "00d8b998808271e7bcd688e18797f0bf5e9ba06d83b00db94c8f28f95395a66d"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-legacy-c469d211.json",
+      "sha256": "26057797c95fa4ce6c9f17416f29ea54ab4956653d0d7083a3a41e8bb348c703"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6c-20261005T200837Z-60478a24-ollama-qwen-runtime.json",
+      "sha256": "b3fa69c7617990919bd168d033b9f54f8fdf59962fe01cc7bced30be93e21913"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6c-permit-guard-20261005T201406Z-ce684841.json",
+      "sha256": "57b273e2bc260661c236acb213de9769fec285b2d0ee4e09e259c6c857c23ce9"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/provider-choice-0.txt",
+      "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/provider-response.sse",
+      "sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery.json",
+      "sha256": "a8cfb2e876965e5ca92e6c6263346c78423e6e1e9ddb0f027abb2d72d239ad60"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms.json",
+      "sha256": "7b7a51c5b21a85be6bb8c0d782fc8e3bba16f5be7ece9b1b5d3ee2fcf61e23ab"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms.json",
+      "sha256": "e7fb99e253ce8fd67066027ccd435476fe32e5e7144807b4042fab8bc3e61a61"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193535Z-9c58f9a2-qwen-output-diagnosis.json",
+      "sha256": "aa9afe334653065fcd218b4b992342ddc2dfbabef34405190fed9ec085baae8b"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/adapter-observations.jsonl",
+      "sha256": "2480401cddc6ffcf659b45e671a42ea04d7992f92faff8c79c8ea1c6e3c4009e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/app-server-assistant.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/bridge-observations.jsonl",
+      "sha256": "cfb83eddc22e77b8ec5c992b200d2bdbd122773893a3d711a942f5497a0c3434"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/bridge-raw-output.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/fake-complete-response.sse",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/fake-incomplete-response.sse",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/postgres-raw-output.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/provider-choice-0.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/provider-response.sse",
+      "sha256": "b75304b91316305af181b50126d39e6663546209d064dc5e466f1163707f579a"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/sdk-assistant.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/sdk-result.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup.json",
+      "sha256": "85c4df3887910c0b8cd6addedd2950b5941ce2003ca256f0f3ddeda1e35bc59c"
+    },
+    {
+      "path": "integration/runtime/fixtures/qwen35-renderer-tokenizer-v1.json",
+      "sha256": "18767749bad4b998bb1fd7322c9904c9ade72de09821686bd03661a1e74f3e41"
+    },
+    {
+      "path": "migrations/__pycache__/env.cpython-312.pyc",
+      "sha256": "b88c88fba1acf72ad51ec709dd297da6417b95beb7c74da44ddc36368bbbfdd1"
+    },
+    {
+      "path": "migrations/env.py",
+      "sha256": "b225c893983a746820204d7695e24c5861d12c9e2c99bef34b5df17da9f989dd"
+    },
+    {
+      "path": "migrations/script.py.mako",
+      "sha256": "aba7021487d96d92940c16d7caf85988796ad075d09f18f1b254f6319e784c36"
+    },
+    {
+      "path": "migrations/versions/0001_operations.py",
+      "sha256": "402e8f9e75a03f6c19eaae70991948439e31711bc060356535a6a39fe621cf2a"
+    },
+    {
+      "path": "migrations/versions/0001_operations.sql",
+      "sha256": "2d20209755f15fc9aeab773425a5d26aefdc8c81b7ba5accef200f5fa9edaa41"
+    },
+    {
+      "path": "migrations/versions/0002_budget.py",
+      "sha256": "7f67eea625ab33bdc0fb0297ba0364be38e7b3395efab68548c7597f0253079b"
+    },
+    {
+      "path": "migrations/versions/0002_budget.sql",
+      "sha256": "c67ea6485a4672ebc2d0043580ecf60fc0bc574cb4a400143b5e9a99922982d9"
+    },
+    {
+      "path": "migrations/versions/0003_runtime_dispatch.py",
+      "sha256": "7fd6e361c746a29da9a75a232438b9eb192fecd84967c15e1ffe0b89f8c6389a"
+    },
+    {
+      "path": "migrations/versions/0004_terminal_inbox.py",
+      "sha256": "d487a6c053cf69c9921517f19fbd3ad462b038b1ad4c2eecd0ee22f6139202c0"
+    },
+    {
+      "path": "migrations/versions/0005_phase3b.py",
+      "sha256": "ba521737e0c8cad4ba961053c2c55152e7d15c3d1a7064681111f1d44253a4d3"
+    },
+    {
+      "path": "migrations/versions/0006_phase4_knowledge.py",
+      "sha256": "816ddbdbfcc13746e87bc23cf3582713a7b8361008a876f00b93277e7fe31f7c"
+    },
+    {
+      "path": "migrations/versions/0007_phase5a_critic_workflows.py",
+      "sha256": "6f988a5d89a288560a393faad2ae9cb12e4f1585defcfdfb4e0218e73d474caa"
+    },
+    {
+      "path": "migrations/versions/0008_phase5b_deliberation_steps.py",
+      "sha256": "f5af1fe16db89be05b4adf98216688e26bb16fc662956aaa2000027198f321be"
+    },
+    {
+      "path": "migrations/versions/0009_phase5b_parent_attempt_identity.py",
+      "sha256": "4d003e16591a123b14a831779c8af9c51b8982bdbcec1c4dab4ac617952f94c4"
+    },
+    {
+      "path": "migrations/versions/0010_p5b_delib_maint.py",
+      "sha256": "337ee1937a92ec3a79d614199036e26eb413679ad9dda4b426aaff02e266eb07"
+    },
+    {
+      "path": "migrations/versions/0011_phase6a_memory_projection.py",
+      "sha256": "5ca44feed5da3b6a592c7d52156218ff5d50d5c47e2050ceaf53f9d12656a56c"
+    },
+    {
+      "path": "migrations/versions/0012_projection_write_guard.py",
+      "sha256": "a5b0d128bf4542b3e90919566b6c718b1d70df56ede05b0af454f6883459d779"
+    },
+    {
+      "path": "migrations/versions/0013_provider_request_measurements.py",
+      "sha256": "b000f455c1dd124c8c1360aebf170a51a3f6dbdca32fc0acf49b11ec031d3d72"
+    },
+    {
+      "path": "migrations/versions/0014_local_dispatch_identity.py",
+      "sha256": "4d9a004742dbeebcefed0be6dad79121cacb11d0e64999b07a5937067ddb627b"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0001_operations.cpython-312.pyc",
+      "sha256": "662e36a7fffd46e61bbed717e58c480bf26f54f7cd25a450731247cbb070620f"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0002_budget.cpython-312.pyc",
+      "sha256": "caa740220a082675d67d69da74fcc242c97f0c3d7afe8f954b7668250179a0b8"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0003_runtime_dispatch.cpython-312.pyc",
+      "sha256": "89996bc931518dc4004fcbe42f4b30208c5ad2b1da81661bb6d4ec2bc6eb2b2e"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0004_terminal_inbox.cpython-312.pyc",
+      "sha256": "ed9415c173700464c8357702ef97fae4b83bbfa5a530083fa271948482a41c88"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0005_phase3b.cpython-312.pyc",
+      "sha256": "e0dd818a5008bb858f782d9367b7efa9bff88a2b27d57e61b54a0f4f8da59c73"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0006_phase4_knowledge.cpython-312.pyc",
+      "sha256": "9f3728068dbf7ee18d4e0d912ea09e5893a398c84f729cf86a2b582a6916e635"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0007_phase5a_critic_workflows.cpython-312.pyc",
+      "sha256": "cae4e828a57f5c429559318cf53b93afc8cbd4bf5e940e3ae6b2c46c59c09f0e"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0008_phase5b_deliberation_steps.cpython-312.pyc",
+      "sha256": "be2c44c0eaff8bba28fd56150e6e4598739c434744c55f1ea81282de5931d967"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0009_phase5b_parent_attempt_identity.cpython-312.pyc",
+      "sha256": "aec017863712baed40027811bc2edc485be1d9248f5f9e62f6d8569d624ef466"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0010_p5b_delib_maint.cpython-312.pyc",
+      "sha256": "652f0abe21891aabe89897708545e27bd76fe9cd8df6565d35e34cec7ba7234d"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0011_phase6a_memory_projection.cpython-312.pyc",
+      "sha256": "41cbd6639d654a5d3fcc4883df02fa2849764d37170c7e279813b70de6adc76c"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0012_projection_write_guard.cpython-312.pyc",
+      "sha256": "2bfd76d1b77c37f7aeda01208f26ba458cae3392fe25961e2ad4b27c69ac9b12"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0013_provider_request_measurements.cpython-312.pyc",
+      "sha256": "d0f0df4ca4af536eba2bd9ec15980935c64a4d4b5d13fcdaed809e118ab6cb71"
+    },
+    {
+      "path": "migrations/versions/__pycache__/0014_local_dispatch_identity.cpython-312.pyc",
+      "sha256": "45a0e3b153c635cebaa72fec1a102acbbdc2d1b0d8d18fae7d99e6624d10ff5d"
+    },
+    {
+      "path": "prompts/critic_review.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prompts/hekate_identity.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prompts/hekate_planning.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prompts/hekate_synthesis.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prompts/schema_repair.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "6ac20065ee3e9423930601eea8af1092df857895c5ceb2d9e6f0e91da3f66232"
+    },
+    {
+      "path": "scripts/build_qwen35_unicode_flags.py",
+      "sha256": "141acd43566d8f0eff98751d21503dbf5576e9b5fab6da3a7c7ea309bdc8a54a"
+    },
+    {
+      "path": "scripts/export_contracts.py",
+      "sha256": "a5e2ce3586c266829e7fe8fa4fa4b92342f000e7d617c606baaf5c39b47f6df5"
+    },
+    {
+      "path": "scripts/integration_probe.py",
+      "sha256": "4d54cbb767148bc66e9a8ff8d395579c75113aa5358597d8ff09bd2c2daf3186"
+    },
+    {
+      "path": "scripts/phase3_runtime_probe.py",
+      "sha256": "a87e6e46f7c3430d2bb8ee5719a630aba91744fa8b183ccb59d2f1ae906953db"
+    },
+    {
+      "path": "scripts/phase3_verify.py",
+      "sha256": "2f93565b0e7edda0e960ef67c2b5727ac7786ce2559920ac2c5e85dca0baad42"
+    },
+    {
+      "path": "scripts/phase3b_single_hekate_probe.py",
+      "sha256": "30c6b5a6f14cd301cd41d1e6a019550a6f5af50675daa8e3298343f5ad18e908"
+    },
+    {
+      "path": "scripts/phase4_evidence_position_probe.py",
+      "sha256": "277087eff38594c337b0814b7c1c4cdd3f081c7bc90c7a721ba68f61f98d9d89"
+    },
+    {
+      "path": "scripts/phase5a_critic_synthesis_probe.py",
+      "sha256": "56bfe4ad23b603485fb9b25291fce5a50a59b2b09837cf2ee1d794dabd6622bb"
+    },
+    {
+      "path": "scripts/phase5b_bounded_deliberation_probe.py",
+      "sha256": "87690f750afa0bba63b786499ece0cc403d184c8291c9e383884ad4a90148b5b"
+    },
+    {
+      "path": "scripts/phase6a_memory_projection_probe.py",
+      "sha256": "5650387b6dbb5fb5421a58cc7c73551f7570d652ebfb184616761bbd928e0980"
+    },
+    {
+      "path": "scripts/phase6b_legacy_settlement_probe.py",
+      "sha256": "91df242a45ac7cd834af8aec8e1992ac5035a0dada6252adb2796e939b1735a4"
+    },
+    {
+      "path": "scripts/phase6b_token_accounting_probe.py",
+      "sha256": "218aea19db02879c9647b83e0ee875e1d7c64eca573bf7cf3020ee25172ae3c9"
+    },
+    {
+      "path": "scripts/phase6c_ollama_qwen_probe.py",
+      "sha256": "9efdd31d610032f1dc0b39dd2f057e42f2a80678041df722241b844656869df5"
+    },
+    {
+      "path": "scripts/phase6e_local_cli_probe.py",
+      "sha256": "ac72925e86209459b3cdaeaadb1db75fdba85b4e309fa1992c011272a653acfc"
+    },
+    {
+      "path": "scripts/phase6e_revocation_doctor_probe.py",
+      "sha256": "845ff131932f62d2938423cab051d96243b2c658ed8610c14e9d9f6b289b00b5"
+    },
+    {
+      "path": "scripts/run_evaluation.py",
+      "sha256": "134db5072d15d33dda032c4b676f719371d63f0f9f0a69728de9ed927c6d9ca4"
+    },
+    {
+      "path": "src/hekate/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/hekate/__main__.py",
+      "sha256": "9f23bda921432fdcc7d83e2a964d68078bbbf38a7e45ffdf1d75ea55a23a001c"
+    },
+    {
+      "path": "src/hekate/__pycache__/__init__.cpython-312.pyc",
+      "sha256": "90a4c36cf1295127c1462f797ac4a8ecb2623ee43167cf7cdf590e41552de6dd"
+    },
+    {
+      "path": "src/hekate/__pycache__/__main__.cpython-312.pyc",
+      "sha256": "6c64e4d081562444fe576181677f5a5d226d58c2eb85b1cddf5caa688cfa3d20"
+    },
+    {
+      "path": "src/hekate/__pycache__/bootstrap.cpython-312.pyc",
+      "sha256": "cfbc7f2f1cb624beca19103f0da596ff9e4e94d9a534a0ec68e6ae268c98d2bc"
+    },
+    {
+      "path": "src/hekate/__pycache__/diagnostics.cpython-312.pyc",
+      "sha256": "1bc02fcc580fa7d31406bcc572fcc3efd6d4df198447f792521bc9831124804b"
+    },
+    {
+      "path": "src/hekate/__pycache__/settings.cpython-312.pyc",
+      "sha256": "e6523dc980dedd22f3fd7f2b17def1452fd183f2d8dd6d9508915316b7f27312"
+    },
+    {
+      "path": "src/hekate/api/__pycache__/app.cpython-312.pyc",
+      "sha256": "a54ce3922d96b8980cbe9a635b679df73be9b9cbcc498b7ae0805ed62d0feb58"
+    },
+    {
+      "path": "src/hekate/api/__pycache__/auth.cpython-312.pyc",
+      "sha256": "abb9c8c39af6ac24299718bc2edd1685cce7cfb132c0495f1de40e49e14a2b44"
+    },
+    {
+      "path": "src/hekate/api/__pycache__/routes.cpython-312.pyc",
+      "sha256": "5c6fba2aa12a12550d37c9ecb6570a6eb27930b735021278b50e1b2bf44a9a6b"
+    },
+    {
+      "path": "src/hekate/api/app.py",
+      "sha256": "7e0619d2061cac81c0e6dc1fcecadfc44f4343f215d5b32aa6f02d0c7760543b"
+    },
+    {
+      "path": "src/hekate/api/auth.py",
+      "sha256": "2461895f55336b62d90b9953002deb23ca35a1c29050c598e7df77505d3c33f5"
+    },
+    {
+      "path": "src/hekate/api/routes.py",
+      "sha256": "392d1c59bedff7dfdf2cfaab7cc567833aaaacc74859d2690b4fbb005dc1eb4a"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/budgets.cpython-312.pyc",
+      "sha256": "9d12375a5e98d33fe87563b91c61c99426de85f943e99270af7a084edacc5e39"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/evidence.cpython-312.pyc",
+      "sha256": "d03f2b360b1e6e239b7b4d6752be33850c99364d436f698c163aaa05db639468"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/lifecycle.cpython-312.pyc",
+      "sha256": "015672a871208066d11620c30d1c8dfd933fd901f332af7055b6364b58662e63"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/local_setup.cpython-312.pyc",
+      "sha256": "b730d0efa3a66118d2d4ac8fa323d91d20c69d8806205ce9fc4c693fd407cdb2"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/operations.cpython-312.pyc",
+      "sha256": "1f0c1c861c7da365abb75c8d92ecd31e4a36782b3fb333c5f718e0c7c4b4e67e"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/positions.cpython-312.pyc",
+      "sha256": "3a03c0109d7cc889817b2ce85f6891e65a93a8ffeae3e3ac42d9927ce405d4f4"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/projections.cpython-312.pyc",
+      "sha256": "3daeea55d482824fcb37470e6c3b0b86306bcae852f3efb9448365410285463b"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/recovery.cpython-312.pyc",
+      "sha256": "256195f68e833e9c89159c1e5475e7066695c9041f56d8611ece2ce175e1c53c"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/results.cpython-312.pyc",
+      "sha256": "7afc2f67e979e3040f1273dad6fdce7ce9e98de8e33b11ecaa37bc73cd13714e"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/runtime_inbox.cpython-312.pyc",
+      "sha256": "721b32cc7cd2e0b0b4ba1dbde29a8095a1786cadb6795a5be9ef9e60dffc1fe6"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/scheduler.cpython-312.pyc",
+      "sha256": "f146bc0318e2e9a5f1b9511c5bb6d511fa877dc8865f576e57c279e831e364e9"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/tasks.cpython-312.pyc",
+      "sha256": "1949b56e3a0adf68b2f2525130452342d1b021f043f66d72110babb621559ce2"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/tools.cpython-312.pyc",
+      "sha256": "2ab8206922feea6473c89c7ac9958f1f7f1f0fa140f379dea81d213411967392"
+    },
+    {
+      "path": "src/hekate/application/__pycache__/turns.cpython-312.pyc",
+      "sha256": "80784aad1e0ae9c1513061d2f367e4033fed6ff267f01297a63d277cd018e7fa"
+    },
+    {
+      "path": "src/hekate/application/budgets.py",
+      "sha256": "86e5724f985a3e9694089737433006ba92b24a0c161eda7766c95b2ef57e03eb"
+    },
+    {
+      "path": "src/hekate/application/evidence.py",
+      "sha256": "a174ad8dfd26be4663c3456f93f9b5f51b822dd0b81e2e0021e5a2ed969e34e9"
+    },
+    {
+      "path": "src/hekate/application/lifecycle.py",
+      "sha256": "ff69faf8dd14406cf228441701f5e86d28944a55ebcfefea4f678f752fea16cf"
+    },
+    {
+      "path": "src/hekate/application/local_setup.py",
+      "sha256": "efe1caa2612dd27f8bd22b285ee8dbf5db09329b54be14107cdff247035cb1dd"
+    },
+    {
+      "path": "src/hekate/application/operations.py",
+      "sha256": "784cfcdda0db5b35a4f823ed30ed474993925287c10862955f85155c9b86d549"
+    },
+    {
+      "path": "src/hekate/application/positions.py",
+      "sha256": "833c9b6a36510d77d94f8bcf3653034b2f9c16da2211258f2f68475b018eed1e"
+    },
+    {
+      "path": "src/hekate/application/projections.py",
+      "sha256": "8f3c7daed6c177f7080d4830aca262cbe98b30499ffa9337ab794cabadb63876"
+    },
+    {
+      "path": "src/hekate/application/recovery.py",
+      "sha256": "fa0ff49aaad0ca8923f5ae6de40fb06f0ca48c88dfc0151026dfb10a25807b85"
+    },
+    {
+      "path": "src/hekate/application/results.py",
+      "sha256": "67870d3adf578a012c400012a7059ce02993f70d67261dcb1f525b7925f3f96f"
+    },
+    {
+      "path": "src/hekate/application/runtime_inbox.py",
+      "sha256": "c0c6f9b7537c97dadfd1b2942ea6d88630ba39705e70c1900bb7f8dbc7f32347"
+    },
+    {
+      "path": "src/hekate/application/scheduler.py",
+      "sha256": "14a801301700bc510b6de9d8788f155b571eddad18e3f0664edeb3fc2a269c50"
+    },
+    {
+      "path": "src/hekate/application/tasks.py",
+      "sha256": "26fc075a6353a39f41d770a25cf60c47ebcf5300955614dfc7c02e21290e8203"
+    },
+    {
+      "path": "src/hekate/application/tools.py",
+      "sha256": "31347b180f5a57f0fd9a85d465d03c3dce4d8aa4d58ba40e51fdd1afa0ae06ef"
+    },
+    {
+      "path": "src/hekate/application/turns.py",
+      "sha256": "1b0a18148a20828819f98fb07811a1348908f4a7dc07049296d58c8cb3f0187b"
+    },
+    {
+      "path": "src/hekate/bootstrap.py",
+      "sha256": "1dac3122a4b55f736c7409916449146f9dbeb8b5e207412170898be6e565f7b0"
+    },
+    {
+      "path": "src/hekate/diagnostics.py",
+      "sha256": "4caac74514d105d5b43cbfb67026dfe9ef3861ee57001011d6d20c862647f1cf"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/bridge_contracts.cpython-312.pyc",
+      "sha256": "7cebe6155ca586e78a9200d5e43c348c3bd82395697dc9f215bc7074bbf25d08"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/budget_math.cpython-312.pyc",
+      "sha256": "da1609bbcccc3619e945763fa5ab3046eb48baacdf74880b0cde32c5ac299412"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/capsules.cpython-312.pyc",
+      "sha256": "dc0ece8dce982a7daa5f3a0c725755c504aa12ec6a4983b983d245656b081a64"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/contracts.cpython-312.pyc",
+      "sha256": "2c4c31abc060b2c993563d0e0d1171f52cf2d83f041b7a797ed13f5a1e654bef"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/errors.cpython-312.pyc",
+      "sha256": "ad5c2203bf8ef73a3be230094b6e8407f335b059f63265ea026a0c6c2eb922e2"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/models.cpython-312.pyc",
+      "sha256": "1c0a86ab6995de4aa514699b2678a9b1892e168d2d7bb5706debeee2794927f6"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/policy.cpython-312.pyc",
+      "sha256": "c8875a8e3e72038ba744e03f817f6277d4db1817484ee6ba9677392e22680f2f"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/proposals.cpython-312.pyc",
+      "sha256": "87fcd66c9ff4af46be1f00cff7ee1adb7d0cccd10d78cec96213da630b9c28fe"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/transitions.cpython-312.pyc",
+      "sha256": "6be97a6a9fc16bae26c38f2374f21d497499bf2d4776e29e209af97b9ce96c42"
+    },
+    {
+      "path": "src/hekate/domain/__pycache__/types.cpython-312.pyc",
+      "sha256": "f233ca1f8fcaeed1b11a0913217fae6e2d6f96a84b8a9fc136930c0b5ed55057"
+    },
+    {
+      "path": "src/hekate/domain/bridge_contracts.py",
+      "sha256": "e7be903b0c095d7e900315e52bb66053d3e2b0387b22d6d6024121869777d9c8"
+    },
+    {
+      "path": "src/hekate/domain/budget_math.py",
+      "sha256": "70a569d36d720b2464ecda40ac3389a3c3cccf70002b7aee407fb1068571bcbe"
+    },
+    {
+      "path": "src/hekate/domain/capsules.py",
+      "sha256": "5ffe1d5a18cb5516d2634ef5fb5f8e3761ff13bd18c92a0fb62357bf969bc7a3"
+    },
+    {
+      "path": "src/hekate/domain/contracts.py",
+      "sha256": "51c639364768c256622d152e4c91767cb8cedc541053e1b8eed78aa1efa0c76f"
+    },
+    {
+      "path": "src/hekate/domain/errors.py",
+      "sha256": "fcdf8d67b504a656245a0d72187ca2f7018a51ca1a3f3a41bdf3e03537b2d146"
+    },
+    {
+      "path": "src/hekate/domain/models.py",
+      "sha256": "f62965f6febf6367994cd24c158614fc0b987ec1523436bdb8d4023a0ead4058"
+    },
+    {
+      "path": "src/hekate/domain/policy.py",
+      "sha256": "1b6e0ea5cc80a7448397001061f4bda2c48e537b2c135f4cd44741104b804381"
+    },
+    {
+      "path": "src/hekate/domain/proposals.py",
+      "sha256": "04a17d460a96aaae1aff375d845e5a522c67ee3cbef1e2ecc902835d8583ac22"
+    },
+    {
+      "path": "src/hekate/domain/transitions.py",
+      "sha256": "7a1f895d5e13f96be64e61708576560e19178bc5f3a6f6908e167ff5e671b32a"
+    },
+    {
+      "path": "src/hekate/domain/types.py",
+      "sha256": "43e64ad65ace3b7c965dfded67bc5060e990d1b235fc0cc21a9a9c0924d244f3"
+    },
+    {
+      "path": "src/hekate/evaluation/__pycache__/runner.cpython-312.pyc",
+      "sha256": "232be846a8a9133f8277b532f97d89b630d996b939312484791d483dc2292985"
+    },
+    {
+      "path": "src/hekate/evaluation/__pycache__/scoring.cpython-312.pyc",
+      "sha256": "8f068ec44cda90623c5c4fe16764404b0a1b3f0bbd58118b0b9b9e0d9c0d767f"
+    },
+    {
+      "path": "src/hekate/evaluation/runner.py",
+      "sha256": "610dededc85cfe5f9cf29071e2f5b5be9e7586543648f29d450c9df7a8878d06"
+    },
+    {
+      "path": "src/hekate/evaluation/scoring.py",
+      "sha256": "9abace65fe5f58b8d1d1d50e8b8713e21c7b859608d8fba6aace9389b91bad6b"
+    },
+    {
+      "path": "src/hekate/infrastructure/__pycache__/archive.cpython-312.pyc",
+      "sha256": "231e4c26bfd3f777d400b957ebe45be890759f1865d01c94141c632a5e64dcc4"
+    },
+    {
+      "path": "src/hekate/infrastructure/__pycache__/observability.cpython-312.pyc",
+      "sha256": "af3a97d7b99deba3d0104e0a34cfec9c3dfbf71d6c2674db58896897e5e29e3b"
+    },
+    {
+      "path": "src/hekate/infrastructure/archive.py",
+      "sha256": "c2272e6d3c350f6ed4e1f4d835f60d6ef57cd9077ce3e9c83c2f3b3852bc1e94"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/__pycache__/adapter.cpython-312.pyc",
+      "sha256": "a7c50febd048b73b86e139b63b75a23ce0722ef12b4bb9b0c19aff8b11907e0b"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/__pycache__/bridge_protocol.cpython-312.pyc",
+      "sha256": "4c2271eaf5de01a188d3dabf6b66edc7331e560e6186a71926febb5d074adaf6"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/__pycache__/gateway_entry.cpython-312.pyc",
+      "sha256": "3a6392d661626a353c19df63a9d564ee7a4b71deabec379fc505b8134013a4a3"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/__pycache__/provider_gateway.cpython-312.pyc",
+      "sha256": "d570a4831e110b499f3a838cf44206a858148360ed94fcbb1adc2356b6a3a8c7"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/__pycache__/qwen_local_profile.cpython-312.pyc",
+      "sha256": "b74af142ae8dd2c6b954a7de6fdd4fff98f6e005a64dc59ea99b6e1357141654"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/__pycache__/qwen_ollama.cpython-312.pyc",
+      "sha256": "26dd9d9b1a38505352577351f727e9c747db49a535ebe2bf029746dac310beec"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/__pycache__/token_accounting.cpython-312.pyc",
+      "sha256": "409b15702e19b8879ce09ae9844d0b7d4ed8c3231a5044efd14a4b0b94f5a90a"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/adapter.py",
+      "sha256": "be3a4d2a1a160a4a2172e69b2ad3ae93c1e4c5b1eeffdb6f55718b634c631a9e"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/assets/cl100k_base.tiktoken",
+      "sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/assets/qwen35_installed_tokenizer.v1.json",
+      "sha256": "136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/assets/qwen35_unicode_flags.v1.json",
+      "sha256": "3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/assets/test_chat_contract.v1.json",
+      "sha256": "b085b61a959742d3cf33d50169d3895a1f15dd5bc3f6539aadfd0e8128622373"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/bridge_protocol.py",
+      "sha256": "49ab2cb1d3df23df1cac93d5758a5e9132d38bc7cffbb436dd52b6cef552cd0a"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/gateway_entry.py",
+      "sha256": "610bba5e6f1f1a0b60a04492f63e41fcd0f67082c3a2b181c91635f37c2e5c6f"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+      "sha256": "819e8e88a51525ddc54e0d5ee50da9e15b19367decb212a79386670a7b8c3c11"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/qwen_local_profile.py",
+      "sha256": "6981f83cde9102df0acfa3edd765823673ba8bec6ce4a5b57c195393c64b08f4"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/qwen_ollama.py",
+      "sha256": "2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/token_accounting.py",
+      "sha256": "dff86b5535b21ba31bccedb222fdcb989cb8cc6398000ac754924268ac554c89"
+    },
+    {
+      "path": "src/hekate/infrastructure/observability.py",
+      "sha256": "cfd98aaa5afd62cc64e67272d2a073a098e3444e7ab4299b740b481bea14931d"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/agent_repository.cpython-312.pyc",
+      "sha256": "3e0a075bf72851ea5dd51146e1a96477548aa6a40f6f3438a5d1654a735f1d80"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/budget_repository.cpython-312.pyc",
+      "sha256": "65f8e399877571110dd87dd3cc4f78e3975df76ddbdd93a89f934310cb2573c0"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/common.cpython-312.pyc",
+      "sha256": "5a43c44a1c8da19f3cfb1a2874f9db96589f34a94490425f13ff38795c3c6b30"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/critic_workflow_repository.cpython-312.pyc",
+      "sha256": "69b79def1a5f92d183c881faeca97d637432c45c4752243aa636d0bd6f79867a"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/database.cpython-312.pyc",
+      "sha256": "35196bdaf8bfca51a7b6067950610d44d783682f63202db298fab506c282f2d0"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/deliberation_repository.cpython-312.pyc",
+      "sha256": "0d0d94534ac263262b569f7e725f6db22c340c35944489a567d3b4dc9903d686"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/delivery_repository.cpython-312.pyc",
+      "sha256": "2f9d19a74926ff5f2a52e8d302e4f1d9258d839d4f7638b365868d7e2d28e94f"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/knowledge_repository.cpython-312.pyc",
+      "sha256": "7da543fc4d8c1d6eabe40a87f6407e8d674fe690fed0b4cae9b9c5b35be06289"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/projection_repository.cpython-312.pyc",
+      "sha256": "2db9c502a2e84313133c779fac33610d4b8d7412ea798efa19f2a95cf26b2189"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/tables.cpython-312.pyc",
+      "sha256": "e4f1803ff234165457c0c1ef70cffdf58de95993007c0ad9cb9f724aa18547c3"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/__pycache__/task_repository.cpython-312.pyc",
+      "sha256": "82182e87c2c8d966c6130a7c226a324d22868fe27b0f6f0f33b2d422f48cafe7"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/agent_repository.py",
+      "sha256": "2ec251250bf042a7d7c0ec91810d7721c7c1906d20442d7591691719ba3bbdd5"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/budget_repository.py",
+      "sha256": "cfb90cd3cd558c021fff6336ae3ef4d08ed25b123077fb0d3e95063fc1548a16"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/common.py",
+      "sha256": "eea38fffde5df8bfcb0fa8410f1fa946841fab1ded9cb7969d23ac6901ddb4c2"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/critic_workflow_repository.py",
+      "sha256": "238d8c31fd8ba5705ff1000d2b4201b5039411244f6489ba69cbcbdcf19f5cc6"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/database.py",
+      "sha256": "dde9b2e9238b125380d98da9e3234540eaf94ca158624ba305768d749cff273d"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/deliberation_repository.py",
+      "sha256": "e80538d235d5f619a48810c9973da92ef74a76f8f809b267a90108dac318c2b3"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/delivery_repository.py",
+      "sha256": "38454f3c57302b8dd3c089162dd0bf4fb9ff6890698017512b13f4c20f2760d0"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/knowledge_repository.py",
+      "sha256": "a3049defe7f751d5a54c4cd40fa7194783d0da82306fc1213d1da0b498624cb1"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/projection_repository.py",
+      "sha256": "e8436ee210da0253f8ed45ad1b394a6e75d1a8d07bd8e0e61603e93252b0a9b7"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/tables.py",
+      "sha256": "5c505f399626a7f8d3c06728fe913fd73c4188a36ae04ace7e1cb9661ba93d9f"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/task_repository.py",
+      "sha256": "18c87eb820a65719abe68476a1554ac5b144541f4728cfe84c0457a4a9746963"
+    },
+    {
+      "path": "src/hekate/ports/__pycache__/resources.cpython-312.pyc",
+      "sha256": "6725511569899d28b9e0e0149f837f3d6de81c9f28cce01ff79c71dc86bfd66c"
+    },
+    {
+      "path": "src/hekate/ports/__pycache__/runtime.cpython-312.pyc",
+      "sha256": "49ca32de27d7cf69f366d8ff9331c76e72bec8c9c49663e7db0ce5ad1e0b3a52"
+    },
+    {
+      "path": "src/hekate/ports/__pycache__/store.cpython-312.pyc",
+      "sha256": "02917d7164a1734d8cdc90241a32c7036f8dffedb4962c6978685b2f3192ddb8"
+    },
+    {
+      "path": "src/hekate/ports/resources.py",
+      "sha256": "0c50d59d1f063fddfd164f0102268389c7758ac6515c7c95ba93a76df8c3610d"
+    },
+    {
+      "path": "src/hekate/ports/runtime.py",
+      "sha256": "5b83330c93b5c5a2e81e2685a07b7f5beaf8eae06b3ba84ebd4402579cf8d8fe"
+    },
+    {
+      "path": "src/hekate/ports/store.py",
+      "sha256": "7a96613937ddd2229d400dce77bc4a28c96c467cfa4703afbce09d0e9d342139"
+    },
+    {
+      "path": "src/hekate/settings.py",
+      "sha256": "f47382ec348adf39740af7115a44d7c3525c3287dc8d83fed3f7e8afeb8b3f7a"
+    },
+    {
+      "path": "src/hekate/worker/__pycache__/service.cpython-312.pyc",
+      "sha256": "cd0740dd9164ba746a59f67a62f56f4cfdfd7eac532f87b5ea28b41a086d5c15"
+    },
+    {
+      "path": "src/hekate/worker/service.py",
+      "sha256": "e8c066fc6cd88ed7feeb3384494333a2853125241bd8304235e36e70bf3cc00c"
+    },
+    {
+      "path": "tests/conftest.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contract/test_billable_guard.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contract/test_letta_capabilities.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contract/test_phase3_bridge_and_gateway.py",
+      "sha256": "7770dc57130d3a46b7d50c532585fa35dd5c92128be55cf8d5adeb5399440443"
+    },
+    {
+      "path": "tests/contract/test_schema_compatibility.py",
+      "sha256": "e170821243d7d2a57e60d66549a76a80dcadf0aad7c1e741692c31b6323a8d7e"
+    },
+    {
+      "path": "tests/fakes/clock.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fakes/runtime.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_budget_failure.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_cancel_and_revision.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_lifecycle_recovery.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_result_delivery.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_security_and_storage.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/test_budget_concurrency.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/test_position_commit.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/test_probe_usage_reconciliation.py",
+      "sha256": "a042c986b4c6ac60c7d7402dcbee2c0af4b200c1bbfe32c15947c8321202e344"
+    },
+    {
+      "path": "tests/integration/test_store_atomicity.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/test_turn_serialization.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/persistence/__pycache__/test_phase2_postgres.cpython-312.pyc",
+      "sha256": "99fb99c6449301cfb21d5da28f68678940bcf65a7c29aba08aba94c13114d793"
+    },
+    {
+      "path": "tests/persistence/test_phase2_postgres.py",
+      "sha256": "11d106c64f7e3e690c2f23054503dc31e6a431842744f4f7b7e1cc69e17afd4e"
+    },
+    {
+      "path": "tests/unit/__pycache__/test_phase6d_local_probe_guard.cpython-312-pytest-9.1.1.pyc",
+      "sha256": "ad90f4e2cfc9321468fb15201ef7d4a13e82dbdf85cca76e66e050a44505d3ed"
+    },
+    {
+      "path": "tests/unit/__pycache__/test_phase6e_doctor_context.cpython-312.pyc",
+      "sha256": "6cf1e05828a214439d1d72d01dd78cf07cb8b4134296d0859350d2062978bef1"
+    },
+    {
+      "path": "tests/unit/__pycache__/test_phase6e_local_settings.cpython-312-pytest-9.1.1.pyc",
+      "sha256": "3fc9213702a22b9a45c49011f4fd792e3da4ab62767119bd4e4f92f190bc517b"
+    },
+    {
+      "path": "tests/unit/__pycache__/test_provider_gateway_sse.cpython-312-pytest-9.1.1.pyc",
+      "sha256": "6187cf4189c07f6c22918c0b89e6e84f416e920a31800aabbe865a856214ae2e"
+    },
+    {
+      "path": "tests/unit/__pycache__/test_qwen_ollama.cpython-312-pytest-9.1.1.pyc",
+      "sha256": "065da747b8b3af6aa388fd97ca82b0034f6fcba0cd0b0d0df6d58d89de13caea"
+    },
+    {
+      "path": "tests/unit/test_budget_math.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/unit/test_capsules.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/unit/test_phase6d_local_probe_guard.py",
+      "sha256": "116a545e294e7e7d561b645ebf33e106a29ab8340954bb52b19175c0b7eb6486"
+    },
+    {
+      "path": "tests/unit/test_phase6e_doctor_context.py",
+      "sha256": "47b925c79f98902de755e82b34a9aae144c3ef198c91e152ec454df88050639b"
+    },
+    {
+      "path": "tests/unit/test_phase6e_local_settings.py",
+      "sha256": "46da1c5fe0cbea8858648777240d55dcfbd1e9895bf481ec2f8c42da375858ce"
+    },
+    {
+      "path": "tests/unit/test_policy.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/unit/test_provider_gateway_sse.py",
+      "sha256": "feca18b5d64ab0530b9f5ab145c75d2ac59a9a3b45f2023891e06fd65a02c4d1"
+    },
+    {
+      "path": "tests/unit/test_qwen_ollama.py",
+      "sha256": "b8ad2456a2566e01a6abfddb557c2ff89ac9cb5dde6456a63d14e594140ccfa8"
+    },
+    {
+      "path": "tests/unit/test_token_accounting.py",
+      "sha256": "a2f488d3de05327ddc6770bcf3ac3d9111a605b6b3d34aae4fdcfec29a16acb1"
+    },
+    {
+      "path": "tests/unit/test_transitions.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "a8b04942943c44f4ae8228b2511a08e7924c56d34fe2efe002ad30e0b812024a"
+    }
+  ],
+  "focused_postgres_tests": [
+    {
+      "command": [
+        "/home/hekate/hekate-phase6e-local-cli/.venv/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/persistence",
+        "-p",
+        "test_phase2_postgres.py",
+        "-k",
+        "phase6e_revocation",
+        "-v"
+      ],
+      "exit_code": 0,
+      "filter": "phase6e_revocation",
+      "status": "PASS",
+      "stderr_tail": "test_phase6e_revocation_blocks_admission_and_both_permit_edges (test_phase2_postgres.Phase2PostgresTests.test_phase6e_revocation_blocks_admission_and_both_permit_edges) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.918s\n\nOK\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "/home/hekate/hekate-phase6e-local-cli/.venv/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/persistence",
+        "-p",
+        "test_phase2_postgres.py",
+        "-k",
+        "phase6e_revoked",
+        "-v"
+      ],
+      "exit_code": 0,
+      "filter": "phase6e_revoked",
+      "status": "PASS",
+      "stderr_tail": "test_phase6e_revoked_policy_response_rolls_back_and_replays_once (test_phase2_postgres.Phase2PostgresTests.test_phase6e_revoked_policy_response_rolls_back_and_replays_once) ... ok\ntest_phase6e_revoked_scope_accepts_quiescent_usage_and_settlement (test_phase2_postgres.Phase2PostgresTests.test_phase6e_revoked_scope_accepts_quiescent_usage_and_settlement) ... ok\ntest_phase6e_revoked_usage_conflict_and_unknown_hold_stay_unsettled (test_phase2_postgres.Phase2PostgresTests.test_phase6e_revoked_usage_conflict_and_unknown_hold_stay_unsettled) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 2.987s\n\nOK\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "/home/hekate/hekate-phase6e-local-cli/.venv/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/persistence",
+        "-p",
+        "test_phase2_postgres.py",
+        "-k",
+        "t5_unknown_hold_survives_reconnect_and_new_fence",
+        "-v"
+      ],
+      "exit_code": 0,
+      "filter": "t5_unknown_hold_survives_reconnect_and_new_fence",
+      "status": "PASS",
+      "stderr_tail": "test_t5_unknown_hold_survives_reconnect_and_new_fence (test_phase2_postgres.Phase2PostgresTests.test_t5_unknown_hold_survives_reconnect_and_new_fence) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.930s\n\nOK\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "/home/hekate/hekate-phase6e-local-cli/.venv/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/persistence",
+        "-p",
+        "test_phase2_postgres.py",
+        "-k",
+        "t6_conflicting_usage_keeps_pending_hold",
+        "-v"
+      ],
+      "exit_code": 0,
+      "filter": "t6_conflicting_usage_keeps_pending_hold",
+      "status": "PASS",
+      "stderr_tail": "test_t6_conflicting_usage_keeps_pending_hold (test_phase2_postgres.Phase2PostgresTests.test_t6_conflicting_usage_keeps_pending_hold) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 1.134s\n\nOK\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "/home/hekate/hekate-phase6e-local-cli/.venv/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/persistence",
+        "-p",
+        "test_phase2_postgres.py",
+        "-k",
+        "ta_malformed_persisted_binding_fails_all_settlement_entrypoints",
+        "-v"
+      ],
+      "exit_code": 0,
+      "filter": "ta_malformed_persisted_binding_fails_all_settlement_entrypoints",
+      "status": "PASS",
+      "stderr_tail": "test_ta_malformed_persisted_binding_fails_all_settlement_entrypoints (test_phase2_postgres.Phase2PostgresTests.test_ta_malformed_persisted_binding_fails_all_settlement_entrypoints) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 1.073s\n\nOK\n",
+      "stdout_tail": ""
+    }
+  ],
+  "head": "0b9f80918bb628298349909921a1197747f6b35d",
+  "isolated_persistence_db": {
+    "metadata_check": "PASS",
+    "migration": "PASS",
+    "migration_head": "0014_local_dispatch_identity"
+  },
+  "node_version": "v22.19.0",
+  "postgres_runtime": {
+    "migration_head": "0014_local_dispatch_identity",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "prior_phase6d_and_phase6e_databases": "not selected, queried, or modified",
+  "prior_qwen_one_shot_authorization": "not read, used, or modified",
+  "probe": "phase6e-revocation-doctor",
+  "production_dispatch": "BLOCKED",
+  "qwen_generation_attempts": 0,
+  "run_id": "p6e-revoke-20261006T215635Z-4afc1fba",
+  "runtime": {
+    "app_server_version": "0.33.8",
+    "base_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "base_image_id": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "image": "hekate/letta-code-p1:0bb6f741-70e39563",
+    "image_id": "sha256:f56d530fbbc0cf5c827f6c3d51e9cbccf68ffa39a79a8072409e896e211d45e6",
+    "protocol_version": "1",
+    "runtime_patch_sha256": "70e395632b9899edd213a4bf2e52acaa0662443f954217c0eb6271461db4be05",
+    "sdk_version": "0.8.25",
+    "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+  },
+  "schema_version": "1",
+  "status": "PASS",
+  "unexecuted": [
+    "actual Ollama metadata/load checks",
+    "Qwen model load/generation",
+    "Critic, Position, memory projection Qwen path",
+    "G7/G8 and production dispatch"
+  ]
+}

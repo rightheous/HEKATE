@@ -1,0 +1,35 @@
+{
+  "contract_id": "hekate.fake.chat-json.v1",
+  "tokenizer": {
+    "implementation": "tiktoken",
+    "version": "0.14.0",
+    "encoding": "cl100k_base",
+    "asset_revision": "openai-tiktoken-cl100k-2024-08-06",
+    "asset_sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7"
+  },
+  "renderer": {
+    "id": "hekate.fake.chat-renderer.v1",
+    "revision": "1",
+    "document_format": "hekate.chat-input.v1",
+    "included": ["messages", "tools", "tool_choice", "response_format"],
+    "validated_non_input_controls": ["store"],
+    "unsupported": ["multimodal", "unknown-token-bearing-fields"],
+    "special_tokens": "literal-text"
+  },
+  "output_ceiling": {
+    "includes_reasoning_tokens": true,
+    "additional_reserved_tokens": 0
+  },
+  "pricing": {
+    "currency": "USD",
+    "unit": "USD_PER_MILLION_AGGREGATE_TOKENS",
+    "usage_semantics": "aggregate_input_output_v1",
+    "cache_tokens": "unsupported",
+    "reasoning_tokens": "unsupported"
+  },
+  "vectors": [
+    {"text": "hello", "tokens": 1},
+    {"text": "Hello, world!", "tokens": 4},
+    {"text": "한글 토큰 계수🙂", "tokens": 11}
+  ]
+}

@@ -1,0 +1,3587 @@
+{
+  "actual_provider_generations": 0,
+  "artifact_path": "integration/runtime/artifacts/p6f-fake-20261007T021533Z-c4d3fa51-reviewed-qwen.json",
+  "baseline_sha": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "branch": "phase6f-reviewed-qwen",
+  "bridge_build": "existing pinned bridge artifact used",
+  "candidate": {
+    "critic_schema_sha256": "04999c20c69e1bba70ff3b42d3b5fa3483ee2dafea71d094fee9f47889ea3d02",
+    "hekate_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+    "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+    "model_manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a",
+    "ollama_source_revision": "d8ab4b4f0ca24b51d3a46b3bf4f462e58ce66b1f",
+    "ollama_version": "0.34.0",
+    "pricing_synthetic": false,
+    "pricing_version": "local-qwen35-external-tariff-v1",
+    "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+    "profile_id": "local-qwen35-reviewed-native-json-schema-v1"
+  },
+  "code_fingerprint_sha256": "f3e7a970e8ed36fd1444f8df2c1bd4e044534b07b54877d5293a2bee010d2049",
+  "database": {
+    "container": "hekate-p6f-c4d3fa51",
+    "database": "hekate_p6f_fake",
+    "host": "127.0.0.1",
+    "port": 48621,
+    "volume": "hekate-p6f-c4d3fa51"
+  },
+  "doctor_prestart": {
+    "checks": {
+      "authorization": {
+        "active": true,
+        "epoch_matches": true,
+        "policy_matches": true,
+        "principal_matches": true,
+        "scope_id": "p6f-fake-33Z-c4d3fa51",
+        "status": "READY"
+      },
+      "configuration": {
+        "critic_enabled": true,
+        "execution_mode": "local_candidate",
+        "price_synthetic": false,
+        "production_dispatch_approved": false,
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "profile_id": "local-qwen35-reviewed-native-json-schema-v1",
+        "runtime_mode": "local",
+        "status": "READY"
+      },
+      "letta_runtime": {
+        "capabilities": {
+          "agent_create": true,
+          "agent_delete": true,
+          "agent_get": true,
+          "agent_list": true,
+          "event_collection": true,
+          "memory_projection": true,
+          "pre_provider_call": false,
+          "provider_usage_by_call_id": false,
+          "session_prepare": true,
+          "session_turn": true
+        },
+        "generation_requested": false,
+        "protocol_version": "1",
+        "sdk_version": "0.8.25",
+        "status": "READY"
+      },
+      "node_bridge": {
+        "bridge_built": true,
+        "bridge_entry": "/home/hekate/hekate-phase6f-reviewed-qwen/bridge/letta/dist/main.js",
+        "expected_version": "22.19.0",
+        "node_bin": "/tmp/p6d-node-v22.19.0-linux-x64/node-v22.19.0-linux-x64/bin/node",
+        "status": "READY",
+        "version": "v22.19.0"
+      },
+      "ollama": {
+        "context_sufficient": false,
+        "context_verified": false,
+        "expected_version": "0.34.0",
+        "generation_requested": false,
+        "identity_status": "READY",
+        "loaded": false,
+        "loaded_context_status": "NOT_LOADED",
+        "loaded_context_tokens": null,
+        "manifest_matches": true,
+        "model_metadata_context_tokens": 262144,
+        "model_present": true,
+        "required_context_tokens": 8192,
+        "status": "NOT_LOADED",
+        "version": "0.34.0"
+      },
+      "postgres": {
+        "migration_head": "0014_local_dispatch_identity",
+        "status": "READY",
+        "version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu"
+      },
+      "profile_assets": {
+        "app_server_image_observation": "not exposed by the pinned bridge hello protocol",
+        "candidate_profile_digest": "84791c7a4ab479f92542d3200d967c547688a04f54910656045b2a3800f3ae60",
+        "critic_output_schema_sha256": "04999c20c69e1bba70ff3b42d3b5fa3483ee2dafea71d094fee9f47889ea3d02",
+        "expected_app_server_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+        "model_manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a",
+        "output_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "renderer_sha256": "a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23",
+        "reviewed_workflow": true,
+        "role_schema_digests": {
+          "critic_turn_output_v1": "04999c20c69e1bba70ff3b42d3b5fa3483ee2dafea71d094fee9f47889ea3d02",
+          "hekate_turn_output_v1": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a"
+        },
+        "runtime_patch_matches_lock": true,
+        "runtime_patch_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+        "status": "READY",
+        "tokenizer_asset_sha256": "136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f"
+      },
+      "provider_gateway": {
+        "endpoint": "http://127.0.0.1:48461",
+        "reason": "URLError",
+        "status": "NOT_RUNNING"
+      }
+    },
+    "database_modified": false,
+    "inference_requested": false,
+    "status": "PRESTART_OK"
+  },
+  "doctor_running": {
+    "checks": {
+      "authorization": {
+        "active": true,
+        "epoch_matches": true,
+        "policy_matches": true,
+        "principal_matches": true,
+        "scope_id": "p6f-fake-33Z-c4d3fa51",
+        "status": "READY"
+      },
+      "configuration": {
+        "critic_enabled": true,
+        "execution_mode": "synthetic_test",
+        "price_synthetic": true,
+        "production_dispatch_approved": false,
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "profile_id": "local-qwen35-reviewed-native-json-schema-v1",
+        "runtime_mode": "test",
+        "status": "READY"
+      },
+      "letta_runtime": {
+        "capabilities": {
+          "agent_create": true,
+          "agent_delete": true,
+          "agent_get": true,
+          "agent_list": true,
+          "event_collection": true,
+          "memory_projection": true,
+          "pre_provider_call": false,
+          "provider_usage_by_call_id": false,
+          "session_prepare": true,
+          "session_turn": true
+        },
+        "generation_requested": false,
+        "protocol_version": "1",
+        "sdk_version": "0.8.25",
+        "status": "READY"
+      },
+      "node_bridge": {
+        "bridge_built": true,
+        "bridge_entry": "/home/hekate/hekate-phase6f-reviewed-qwen/bridge/letta/dist/main.js",
+        "expected_version": "22.19.0",
+        "node_bin": "/tmp/p6d-node-v22.19.0-linux-x64/node-v22.19.0-linux-x64/bin/node",
+        "status": "READY",
+        "version": "v22.19.0"
+      },
+      "ollama": {
+        "generation_requested": false,
+        "reason": "HTTPError",
+        "status": "UNAVAILABLE"
+      },
+      "postgres": {
+        "migration_head": "0014_local_dispatch_identity",
+        "status": "READY",
+        "version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu"
+      },
+      "profile_assets": {
+        "app_server_image_observation": "not exposed by the pinned bridge hello protocol",
+        "candidate_profile_digest": "84791c7a4ab479f92542d3200d967c547688a04f54910656045b2a3800f3ae60",
+        "critic_output_schema_sha256": "04999c20c69e1bba70ff3b42d3b5fa3483ee2dafea71d094fee9f47889ea3d02",
+        "expected_app_server_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+        "model_manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a",
+        "output_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "reviewed_workflow": true,
+        "role_schema_digests": {
+          "critic_turn_output_v1": "04999c20c69e1bba70ff3b42d3b5fa3483ee2dafea71d094fee9f47889ea3d02",
+          "hekate_turn_output_v1": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a"
+        },
+        "runtime_patch_matches_lock": true,
+        "runtime_patch_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+        "status": "READY",
+        "synthetic_qwen_fixture": true,
+        "synthetic_tariff": true
+      },
+      "provider_gateway": {
+        "endpoint": "http://127.0.0.1:48461",
+        "model_route_matches": true,
+        "status": "READY"
+      }
+    },
+    "database_modified": false,
+    "inference_requested": false,
+    "status": "READY"
+  },
+  "executed_at": "2026-10-07T02:15:35Z",
+  "fake_provider_port": 34539,
+  "fake_provider_requests": 4,
+  "finalized_at": "2026-10-07T02:16:42Z",
+  "fingerprinted_files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "138cce63b995c9f1aea37fe4bf8d2d8f02442ad41ff8fcd5a248b6a7c7223bcf"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "be31780560d84f468a2866bca8bcb4448b839cd896ecfe8dc2b1c8468c006aa7"
+    },
+    {
+      "path": "README.md",
+      "sha256": "d9ccd3a09e504c984dfdd2d5d07d292cb82879bd9ee6d3056995857561925ea1"
+    },
+    {
+      "path": "alembic.ini",
+      "sha256": "611bf468393e9a81339ffbc7e20ebce02154600f0878932851d66ef278432754"
+    },
+    {
+      "path": "bridge/letta/package-lock.json",
+      "sha256": "6f152a0fab62f9820657e86af2621cd57e7422334d4bf37b7294eb8970e08ae9"
+    },
+    {
+      "path": "bridge/letta/package.json",
+      "sha256": "348546b3777a33daafcd086b88ecc9aa14c2ec0ffe6e95b64a09998b36e19ede"
+    },
+    {
+      "path": "bridge/letta/src/agents.ts",
+      "sha256": "8f5e7e17500c71055a0f811d1e1463cd7f73d6af2a2c14b2a905fc2ff17df7f0"
+    },
+    {
+      "path": "bridge/letta/src/events.ts",
+      "sha256": "25f3ab85471e0b898587e9c4bfacdbbcdf7e1f94d2fa69649ba57d962c1ca219"
+    },
+    {
+      "path": "bridge/letta/src/limits.ts",
+      "sha256": "e644a74eaf222675bf1b1a9fe0c473fb814a71baee78a5fc2c9094d6e334ac97"
+    },
+    {
+      "path": "bridge/letta/src/main.ts",
+      "sha256": "b1bc30daa2985944d29e98b76f0e5e3b08e3d65dc6405358967c0a5317acf9e0"
+    },
+    {
+      "path": "bridge/letta/src/memory.ts",
+      "sha256": "2808f4668a8abb51c8aca8fd1876f37bbe735530aad8c7acac21829529daad10"
+    },
+    {
+      "path": "bridge/letta/src/protocol.ts",
+      "sha256": "8332ee2e22239654f6c9ba55f4bced997648a0793cd1f9f4162b9adf9b1331d3"
+    },
+    {
+      "path": "bridge/letta/src/sessions.ts",
+      "sha256": "d7923d59631685797256f57f8901c8ccce6ec9811210887ad7ff47f91160445f"
+    },
+    {
+      "path": "bridge/letta/src/tools.ts",
+      "sha256": "ece1bdb0ec6c7b5701d10e50ecace778b7b7564606368d740b52ba80c553071e"
+    },
+    {
+      "path": "bridge/letta/src/usage.ts",
+      "sha256": "4a7d38865cb317586b608e30e82d9d08e4812310b9861ed30e4294ccd134a36d"
+    },
+    {
+      "path": "bridge/letta/tests/bridge-contract.test.js",
+      "sha256": "7f74f4fcdd7b2a0206d1295d27a13c4c643a678b7239ab3d4f6e794517187c00"
+    },
+    {
+      "path": "bridge/letta/tests/limits.test.ts",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bridge/letta/tests/protocol.test.ts",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bridge/letta/tests/route-state.test.js",
+      "sha256": "6f54c65c53a87ac04c62b046fa9c67f74462062c173c04a9eff6fca6164dffef"
+    },
+    {
+      "path": "bridge/letta/tests/sessions.test.ts",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bridge/letta/tests/tools.test.ts",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bridge/letta/tests/usage.test.js",
+      "sha256": "079e36a6af22f100bf9a223614499f7452b5b4db06da802cbb22596fd878066f"
+    },
+    {
+      "path": "bridge/letta/tsconfig.json",
+      "sha256": "8ee8a4ae0b816d5ce6ebeccf45d39b7d38ee95fb01a6512ca24524f2abfc4ef9"
+    },
+    {
+      "path": "config/evaluation.yaml",
+      "sha256": "b40095997249f8b382572f99a54faca2b5c71d50e68018d64038b9b387c91eaa"
+    },
+    {
+      "path": "config/local-candidates.yaml",
+      "sha256": "16b43c49b7fa70756a8bf3e5d6f8aed9e383c0a1c62936f13ff0412161b4b1e8"
+    },
+    {
+      "path": "config/local-reviewed.example/local.env.example",
+      "sha256": "a44953ace337f7d7f6f2072028345679641d281bce201cda32a38c0f8fd31b22"
+    },
+    {
+      "path": "config/local-reviewed.example/local.yaml",
+      "sha256": "f884f3efc094c0b96d1b6b187c7d6d78f3d3256a1656615948deac36b5e3f6d7"
+    },
+    {
+      "path": "config/local-reviewed.example/models.yaml",
+      "sha256": "a193cfd01180f137e8884425c2dc542ad3a4494e76417abc0e1249c0c4424d04"
+    },
+    {
+      "path": "config/local-reviewed.example/policy.yaml",
+      "sha256": "9fe969e218045e950a4497e386b712198f94019c461f9e9cf81e9d12541b98b0"
+    },
+    {
+      "path": "config/local-reviewed.example/pricing.yaml",
+      "sha256": "af429d9759d1737133987fcedcf5f881327f36022f9cb432f95289114214f444"
+    },
+    {
+      "path": "config/local.example/local.env.example",
+      "sha256": "02193af0fe508f1a87a3622effd432a00e2011d3b0397589fb2f1e6c13e6fae1"
+    },
+    {
+      "path": "config/local.example/local.yaml",
+      "sha256": "bbda4b78f22bc3533309866ee52a46f497741149beeabb76ab3f0aaa5da51872"
+    },
+    {
+      "path": "config/local.example/models.yaml",
+      "sha256": "839c50c3c189fa8e23d05b6dbd91b1218de42a1ec66b37e45a173035a63419f0"
+    },
+    {
+      "path": "config/local.example/policy.yaml",
+      "sha256": "a9fad808394eb7d33f6b3d120c586602e9154a8e7a2516a934152afa875106bf"
+    },
+    {
+      "path": "config/local.example/pricing.yaml",
+      "sha256": "af429d9759d1737133987fcedcf5f881327f36022f9cb432f95289114214f444"
+    },
+    {
+      "path": "config/models.yaml",
+      "sha256": "1bf9e3417a047f9d7ff19b7b56ee068358401ce0ea2091f8b91df571e2e2ffb6"
+    },
+    {
+      "path": "config/policy.yaml",
+      "sha256": "b68f48bef69aa36bfe140906820ef3c75a5886f1e4cc0964b0b6a4ec52ee6c7a"
+    },
+    {
+      "path": "config/pricing.yaml",
+      "sha256": "96a389fee417d6d50f4871de63fb2f92b65f5cf8aed8ddf9c96142e868071996"
+    },
+    {
+      "path": "contracts/generated/bridge.v1.schema.json",
+      "sha256": "87c60a59cb5ec3689e7653b716a594a149b934bf7d4e9143222da0af52bb0e33"
+    },
+    {
+      "path": "contracts/generated/conclusion-capsule.v1.schema.json",
+      "sha256": "b7526d25638200381591efafc7f20b7e7489c8d5c293746dddae33a2768ff8e6"
+    },
+    {
+      "path": "contracts/generated/critic-turn-output.v1.schema.json",
+      "sha256": "3a6fba3e269f1684d1c263aec30fdffbf33d413e66500bbafa16221ccdfd8076"
+    },
+    {
+      "path": "contracts/generated/hekate-proposal.v1.schema.json",
+      "sha256": "2acd16d5eaffc38a465d1e2a24d5ef64e8c85cb233c5b6e8039aef766bc34257"
+    },
+    {
+      "path": "contracts/generated/hekate-turn-output.v1.schema.json",
+      "sha256": "7e50a3c1de1b7297078e7e98f5882fe4f615fe6338c178f7f661e750a8c4d9c5"
+    },
+    {
+      "path": "contracts/generated/position-commit.v1.schema.json",
+      "sha256": "3f22497d632d4451605f10f066fd5a2cb0087e96b069a19e972b33f6f7acc40a"
+    },
+    {
+      "path": "contracts/generated/task-capsule.v1.schema.json",
+      "sha256": "7ffd5a3cca6b231ba72c4d6946cb07135c16145ea014e4b54691ddd520b18ab1"
+    },
+    {
+      "path": "deploy/bridge.Dockerfile",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy/compose.yaml",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy/control-plane.Dockerfile",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy/letta-settings.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy/network-policy.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/design/01-Letta-조사와-언어-판단.md",
+      "sha256": "7f486098b39463a99adfbc6ae7ae244e0d981f1584f05797119a64bb6579a929"
+    },
+    {
+      "path": "docs/design/02-구현-상세설계.md",
+      "sha256": "ddc2a90693e482344527d981bde93aebfa6dd3f334443e7c3eca22f2a9395469"
+    },
+    {
+      "path": "docs/design/03-통합검증과-구현순서.md",
+      "sha256": "68e74a506e1cda50d932062d31c86d872198f2ae4b0bfe33ddd8c0315c34dcb2"
+    },
+    {
+      "path": "docs/design/HEKATE_design_v0_1.md",
+      "sha256": "38d22e48b20b620442180a46bc97d65723e6ddbf09a2f614f7b7eb3595032cde"
+    },
+    {
+      "path": "docs/implementation/phase2.md",
+      "sha256": "6834e69000ecba40c913a80a235fea6843cb96fd5ff5c4e03c4d43559f6f3b30"
+    },
+    {
+      "path": "docs/implementation/phase3.md",
+      "sha256": "1c39fc744073c01fa69f9d7272a1175617384c940e36f22c7400e06dc0b26b59"
+    },
+    {
+      "path": "docs/implementation/phase3b.md",
+      "sha256": "dc519d1915926b0387a71dcfd866d0ae364226f6f1483d4d8239c824cc3b26d3"
+    },
+    {
+      "path": "docs/implementation/phase4-evidence-position.md",
+      "sha256": "4c7c95c5f76fddedff751fb798a3e6e93b84a7181cd77938885106bfdd3000d9"
+    },
+    {
+      "path": "docs/implementation/phase5a-critic-synthesis.md",
+      "sha256": "31865d63628b3901be6021c66587395f03674b64530c06a45612ae9d89f3b3bb"
+    },
+    {
+      "path": "docs/implementation/phase5b-bounded-deliberation.md",
+      "sha256": "790507bcd8ea288e59df1244bc10358c33e2dd0f08803e1f3e5b475345bd5d12"
+    },
+    {
+      "path": "docs/implementation/phase6a-memory-projection.md",
+      "sha256": "658bb7708e5ec9034f13988ed8b317289535f02903eb00776313ea8f615aff29"
+    },
+    {
+      "path": "docs/implementation/phase6b-token-accounting.md",
+      "sha256": "4ef6f374547393a4c7eedab214ffeb173a45b68a79385dfeca8cc79ebedbd123"
+    },
+    {
+      "path": "docs/implementation/phase6c-ollama-qwen-profile.md",
+      "sha256": "424666f0516723a8804213d4a7867c8dd6b2775ebaff88fcdada6eae94de612a"
+    },
+    {
+      "path": "docs/implementation/phase6cd-change-review.md",
+      "sha256": "77c2bbe902ed9043484825566ab4d9e3d19160610fef4582362d1425497b174c"
+    },
+    {
+      "path": "docs/implementation/phase6cd-submission-manifest.json",
+      "sha256": "9ccdbdc19280ad9574e679ab7ff9aed1de870a314681c027da4f04575d70e9ae"
+    },
+    {
+      "path": "docs/implementation/phase6d-local-qwen-smoke.md",
+      "sha256": "4b4b5d2a8f3d193fe1a687fe74c16faab73a706edd4dd1dec3e7f35918c4db9d"
+    },
+    {
+      "path": "docs/implementation/phase6e-local-cli.md",
+      "sha256": "3183e6df70d856113b3bbe5453e9116a81cce148627db8bc385b6f5c487d72c7"
+    },
+    {
+      "path": "docs/local-quickstart.md",
+      "sha256": "79015304a78f6957060b9468f2ef6cb1182b3621dc00357b6aa65a435ce0886d"
+    },
+    {
+      "path": "evals/cases.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evals/rubric.yaml",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evals/thresholds.yaml",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "integration/letta/artifacts/p1-20260930T072230Z-4235d5eb.json",
+      "sha256": "8945dec522f524993883adab302b03e9551e60cec8980ec8f72bff8205a57721"
+    },
+    {
+      "path": "integration/letta/artifacts/p1-20260930T085856Z-c8fc25fd.json",
+      "sha256": "5703f0a8ee4714907918a0f2e7e1a793ca1954cace826f19bf14308674d50ccd"
+    },
+    {
+      "path": "integration/letta/artifacts/p1-20260930T093540Z-21f6965e.json",
+      "sha256": "76fd2ea8d76a4e3d5b95b0e8dcc38db2d8a29211084cb64476a4d1d3d21e057b"
+    },
+    {
+      "path": "integration/letta/artifacts/p1-20260930T132408Z-907c3d1d.json",
+      "sha256": "9dab1d9b0cbb52c6080c59812d3aa72244280e58c3be84791e132e060ad173bc"
+    },
+    {
+      "path": "integration/letta/capability-matrix.json",
+      "sha256": "4d31fadbed227237d0a1472ced675fb5fa41d107fa29389820c5036efc8bcaf3"
+    },
+    {
+      "path": "integration/letta/patches/README.md",
+      "sha256": "7caea7abf77e421193f4f6889d4ea83d1e61e6d2a371550ed73291221e1d1cea"
+    },
+    {
+      "path": "integration/letta/patches/provider-call-context-usage.patch",
+      "sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d"
+    },
+    {
+      "path": "integration/letta/phase1-handoff.md",
+      "sha256": "cc67c6c38bed5e024730ab7303645b582c4da9486d3c6a52037ef0fbbe009fb0"
+    },
+    {
+      "path": "integration/letta/runtime-guard-contract.md",
+      "sha256": "04faa20f1f4df1b8173caedf62f3122a7ff5fa760471ce9d77387ed75a91628a"
+    },
+    {
+      "path": "integration/letta/versions.lock.json",
+      "sha256": "5ffbc65f57edea21f5eda382e50510268f1b236ff6b74ca98147a9ac3907ad42"
+    },
+    {
+      "path": "integration/persistence/artifacts/phase2-20260930.json",
+      "sha256": "c675e5a9a72039b7d706f10741113f382754afd3d40309305ebaf7cd2aa049b6"
+    },
+    {
+      "path": "integration/persistence/artifacts/phase2-20261001T005403Z-correction.json",
+      "sha256": "ebc540da950ce64f2e425ef4ef466f36e28fb0f5591409486523e6c1adbbcfcb"
+    },
+    {
+      "path": "integration/persistence/artifacts/phase2-20261001T011324Z-correction.json",
+      "sha256": "84a6ec0fac4debe02388299bb995b943b2e8d860fdab38c40f7b8f2014c49494"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261001T033633Z-63d438e4.json",
+      "sha256": "aa0846e99eacf95a82774d6a65310f73bdbccaaa2863f81183bda8ef8a3aec6b"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261001T073347Z-916d84bd.json",
+      "sha256": "b0f125526cbf54d2ba9b5e497f3c2da38be7724eb1cebb4beae215fd9e81ceef"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261001T074952Z-11c58ae0.json",
+      "sha256": "6e3e4473cb6ac2a16912a66d319bc95d68c8e3afb290a921edd935f977b3f4fb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261002T051845Z-035de352.json",
+      "sha256": "d10a41ad1a46170046c9218a8aab1ea9883bbb93f48a29f54ea69bc1ab0c7b74"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261002T053719Z-9e6c468f.json",
+      "sha256": "2feaf24348d11b38af52bcb57a966ec1ed35e374bd29585cac4cf2a186d29988"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261002T083636Z-6894ae6e.json",
+      "sha256": "59f92c8fe062873d2287c1e7e62e90a0b6475c5e405bb2f3ce43536666ae02f5"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261004T180726Z-b5af8b70.json",
+      "sha256": "809e6395b890051c6bc63aef1ab6293be13a6d9a90ef4c104549ddcfbde4040e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261005T135809Z-adb3ad1e.json",
+      "sha256": "a4c8a011693b6ce819e101ebe2f08be7fe9aeb1f893d2970d6c0e6ded3788fa9"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261001T073404Z-58d4681b.json",
+      "sha256": "613ba78800b83936acb66f3d8d36d40d61affe5de48d9905f34a1f939f6f7f32"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261001T075010Z-74f05f86.json",
+      "sha256": "09e65dde09e4aa95cf9a19d749911abdd351426f3b4e62fc11f339631d1b7abe"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261002T051902Z-9b037265.json",
+      "sha256": "23164b95b90a387bd4169f18452b449056e9e5e891443fc55d68c023a3fb77d5"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261002T053735Z-85ecad6a.json",
+      "sha256": "02641e32bf24cf14c414f86c0294fc6e485d902c87ffb4410bd1681857f9fbf5"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261002T083652Z-7690ced3.json",
+      "sha256": "60b71332d18de6e3848f3f1ca5faaab030c69eca1e8f55cb571d2104a60f0198"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261004T180742Z-cd3ec2a4.json",
+      "sha256": "4b7fe47a772c9bb4728a138538daa0ee5d9f6ac86b4af42ea18c368568e09c01"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261005T135833Z-795ff18f.json",
+      "sha256": "b6559c3177bb0bacff5ae0aaa71d592ec63dcd3141d5fc57d8df807cfe49d054"
+    },
+    {
+      "path": "integration/runtime/artifacts/p4-20261002T084850Z-78ad2a7d.json",
+      "sha256": "b3a9f9ed6b14275be4bb8688ff2a6ca560e6b29abb57d248625ba10c9e121abf"
+    },
+    {
+      "path": "integration/runtime/artifacts/p4-20261003T122338Z-91d88833-archive-cancel-full.json",
+      "sha256": "6c3150fb8e4dfde2a9bfbfc26d7bb45219069a0ff386cadc636c34655f3cdc5e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p4-20261003T165018Z-b67da98c.json",
+      "sha256": "458bdbec2f356b415c336325b92c68aa98a0f5f5e9cc36b0119ac793293d4dc8"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261003T172744Z-9c99d9a1.json",
+      "sha256": "d504e958901ada2e23cb909beed9df2522b97702eab699205c06aea551539e45"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261003T193348Z-40e88886.json",
+      "sha256": "e0158df97a17ad74bcf0c978d1b9cd1b630d8adb38d327208e4f50080cc38c06"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261004T081107Z-719917a0.json",
+      "sha256": "a4b00e65f1cda057ae97283e1953853a01a30b4b127224692aa173e308319a6e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261004T132502Z-d8cdea18.json",
+      "sha256": "a3e82221cae48c66c8efa6c41bcfb02370c9e9cad5d549387272ecf31b47108c"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261004T180912Z-2651b371.json",
+      "sha256": "461ad3baa38c0c9569f0383fd74ba9dd6651896b1d1f91f8f6ed434ba8dc7547"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261004T210250Z-c0512d55.json",
+      "sha256": "01ec25f05ed919a649b0b9beb6c010a6dd1dc9c3f18d71442e28baed2b20dd47"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261005T045009Z-1582dc8c.json",
+      "sha256": "36c3e7f9c269a9f7b6ecc8a6f203286d3f6f96bed06e0b68375ab25f126d2c42"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261005T071448Z-4830ea1b.json",
+      "sha256": "5762f03a8d62c90dafd5d5c06b16bacd7b8ca050a3cbafca806dc6e695d82f29"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-baseline-20261004T090022Z-38167ca2.json",
+      "sha256": "c339e170888a0701e9a583fc9ae2d81284ab5a9e19789dd6014271f7b93885b8"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T202707Z-c4735bbc.json",
+      "sha256": "27cda2b58fd7eb5166b227bb5437a412fbc2c5c4965e8ea5451c0fa39ac6811c"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T202813Z-40dd65e7.json",
+      "sha256": "81313e33067455436f92fd3853fe8b23d117865fd46d0f4f279e4ff24e9f9f5f"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T203405Z-5d014960.json",
+      "sha256": "b14cebcfad90e9fa0c6194f640553dce4fc0040df546a510042911edbcb441fb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T203534Z-84e3a76d.json",
+      "sha256": "9eb6fb96b26aedfaa1928bee5dcdf9e5b2eff204e29681143707ef27a28ebd7b"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T204005Z-dee3cd25.json",
+      "sha256": "daa86279bacb211bcdb440a23445790de35518aa859c88f4e3a057323e8bf9c7"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T204246Z-57798b11.json",
+      "sha256": "8cd30514da86cd51c417ed56f92cb960482aecb16d34efd7d825a8a118ae8f13"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T204455Z-f6d990fb.json",
+      "sha256": "1b446472405dc74c72079e4b9f7240738ccd84538063a4e9e2e73a014c62c456"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T204708Z-8cbd700c.json",
+      "sha256": "fba9a4c779f790ceb963159ff54272c4541b6720d8f8bd62545d072a6eee5c9a"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T205238Z-5e979863.json",
+      "sha256": "eab688f54b3c792880c95c45b0c2c1525d1a7cff527060d16870b7c14ffb7ad2"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T205408Z-709003e4.json",
+      "sha256": "8213215baacb74730ccd8feb1d89689e74873c82f6c6b85e084d7dfb9bee72ad"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T205701Z-48bd2581.json",
+      "sha256": "41b076aa514be08c2bed325a35dbc8ca727fd873a0ae1c74df00f346cd408526"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T205938Z-2669dac1.json",
+      "sha256": "184166fececa57f8b45d10b20a28c8210b4c5fc8f8615ea7d35c5b8b9f0f22fe"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261004T210129Z-b592cf6c.json",
+      "sha256": "8948f95ea3406d925637402515c54ca5e32af93d94e1092948090d8499404371"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T044029Z-d617031e.json",
+      "sha256": "e5f6534fa3e94257120b8968cf761d515e95551c526a8576866c4d467b381d2a"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T044214Z-69257bb7.json",
+      "sha256": "ce0925b323b91ae429554b9e4138a2810c6c6507d5f01ebbd43cc265fd6585fe"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T044405Z-33ad871e.json",
+      "sha256": "c1f25f472f238e4fafa731bfdf0db2e1b1ff2e1eb4621388fdb44b45afe7e0fe"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T044533Z-302a5412.json",
+      "sha256": "a400b71034b9d2f737dcf3909b38507d72e8ba7e3766ab27a033d826eb55d758"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T045417Z-31eb9cd7.json",
+      "sha256": "1f07eba2f19a4be998419d0c0efb77cde6d41b15be4e4d2ee4c58daf25f34207"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-20261005T071135Z-92eba6b0.json",
+      "sha256": "497ccf54f2110caf7af110e550318a8344ceaacbca6fe6fd71948d7a5a37f2e3"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6a-baseline-20261004T184731Z-f941096c.json",
+      "sha256": "a281013ebf76b4d48969cea0936eb60e2ce6c109ea7c99aa9270b1cd8b30c665"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase3.json",
+      "sha256": "4e0294edf1b5e04f0d92fb144dd2b2d1bb672d7bf5e84663ded8bee9bfef63b9"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase5b.json",
+      "sha256": "98ca0e2c6a65fa59187a97d844ea3e042fe123588af85e26f9abc35fac2c04d9"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-20261005T134246Z-ce252eee-phase6a.json",
+      "sha256": "c01cbfb8f9f86d46e30ce22a156a0ce912a6dfdc6677e07f4c5805309840c048"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-20261005T140059Z-7544031b.json",
+      "sha256": "31ac9a7db4714b6bdd0bd6f0a7b89e9b129aa8f0a5f165ae7869ab4c256b0e89"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-legacy-20261005T144610Z-3bf23853.json",
+      "sha256": "00d8b998808271e7bcd688e18797f0bf5e9ba06d83b00db94c8f28f95395a66d"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6b-legacy-c469d211.json",
+      "sha256": "26057797c95fa4ce6c9f17416f29ea54ab4956653d0d7083a3a41e8bb348c703"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6c-20261005T200837Z-60478a24-ollama-qwen-runtime.json",
+      "sha256": "b3fa69c7617990919bd168d033b9f54f8fdf59962fe01cc7bced30be93e21913"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6c-permit-guard-20261005T201406Z-ce684841.json",
+      "sha256": "57b273e2bc260661c236acb213de9769fec285b2d0ee4e09e259c6c857c23ce9"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/provider-choice-0.txt",
+      "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/provider-response.sse",
+      "sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery.json",
+      "sha256": "a8cfb2e876965e5ca92e6c6263346c78423e6e1e9ddb0f027abb2d72d239ad60"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms.json",
+      "sha256": "7b7a51c5b21a85be6bb8c0d782fc8e3bba16f5be7ece9b1b5d3ee2fcf61e23ab"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms.json",
+      "sha256": "e7fb99e253ce8fd67066027ccd435476fe32e5e7144807b4042fab8bc3e61a61"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193535Z-9c58f9a2-qwen-output-diagnosis.json",
+      "sha256": "aa9afe334653065fcd218b4b992342ddc2dfbabef34405190fed9ec085baae8b"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/adapter-observations.jsonl",
+      "sha256": "2480401cddc6ffcf659b45e671a42ea04d7992f92faff8c79c8ea1c6e3c4009e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/app-server-assistant.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/bridge-observations.jsonl",
+      "sha256": "cfb83eddc22e77b8ec5c992b200d2bdbd122773893a3d711a942f5497a0c3434"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/bridge-raw-output.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/fake-complete-response.sse",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/fake-incomplete-response.sse",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/postgres-raw-output.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/provider-choice-0.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/provider-response.sse",
+      "sha256": "b75304b91316305af181b50126d39e6663546209d064dc5e466f1163707f579a"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/sdk-assistant.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/sdk-result.txt",
+      "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup.json",
+      "sha256": "85c4df3887910c0b8cd6addedd2950b5941ce2003ca256f0f3ddeda1e35bc59c"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6e-20261006T211325Z-5ce05bfa-local-cli.json",
+      "sha256": "02d732e1fc79f7efa20db75c799e2ab12fd914b34616e612e884090081abd1fc"
+    },
+    {
+      "path": "integration/runtime/artifacts/p6e-revoke-20261006T215635Z-4afc1fba-revocation-doctor.json",
+      "sha256": "3e399985b53bc2790fc2c508defde9824e51479dcb5b408913650fa23922c76c"
+    },
+    {
+      "path": "integration/runtime/fixtures/qwen35-renderer-tokenizer-v1.json",
+      "sha256": "18767749bad4b998bb1fd7322c9904c9ade72de09821686bd03661a1e74f3e41"
+    },
+    {
+      "path": "migrations/env.py",
+      "sha256": "b225c893983a746820204d7695e24c5861d12c9e2c99bef34b5df17da9f989dd"
+    },
+    {
+      "path": "migrations/script.py.mako",
+      "sha256": "aba7021487d96d92940c16d7caf85988796ad075d09f18f1b254f6319e784c36"
+    },
+    {
+      "path": "migrations/versions/0001_operations.py",
+      "sha256": "402e8f9e75a03f6c19eaae70991948439e31711bc060356535a6a39fe621cf2a"
+    },
+    {
+      "path": "migrations/versions/0001_operations.sql",
+      "sha256": "2d20209755f15fc9aeab773425a5d26aefdc8c81b7ba5accef200f5fa9edaa41"
+    },
+    {
+      "path": "migrations/versions/0002_budget.py",
+      "sha256": "7f67eea625ab33bdc0fb0297ba0364be38e7b3395efab68548c7597f0253079b"
+    },
+    {
+      "path": "migrations/versions/0002_budget.sql",
+      "sha256": "c67ea6485a4672ebc2d0043580ecf60fc0bc574cb4a400143b5e9a99922982d9"
+    },
+    {
+      "path": "migrations/versions/0003_runtime_dispatch.py",
+      "sha256": "7fd6e361c746a29da9a75a232438b9eb192fecd84967c15e1ffe0b89f8c6389a"
+    },
+    {
+      "path": "migrations/versions/0004_terminal_inbox.py",
+      "sha256": "d487a6c053cf69c9921517f19fbd3ad462b038b1ad4c2eecd0ee22f6139202c0"
+    },
+    {
+      "path": "migrations/versions/0005_phase3b.py",
+      "sha256": "ba521737e0c8cad4ba961053c2c55152e7d15c3d1a7064681111f1d44253a4d3"
+    },
+    {
+      "path": "migrations/versions/0006_phase4_knowledge.py",
+      "sha256": "816ddbdbfcc13746e87bc23cf3582713a7b8361008a876f00b93277e7fe31f7c"
+    },
+    {
+      "path": "migrations/versions/0007_phase5a_critic_workflows.py",
+      "sha256": "6f988a5d89a288560a393faad2ae9cb12e4f1585defcfdfb4e0218e73d474caa"
+    },
+    {
+      "path": "migrations/versions/0008_phase5b_deliberation_steps.py",
+      "sha256": "f5af1fe16db89be05b4adf98216688e26bb16fc662956aaa2000027198f321be"
+    },
+    {
+      "path": "migrations/versions/0009_phase5b_parent_attempt_identity.py",
+      "sha256": "4d003e16591a123b14a831779c8af9c51b8982bdbcec1c4dab4ac617952f94c4"
+    },
+    {
+      "path": "migrations/versions/0010_p5b_delib_maint.py",
+      "sha256": "337ee1937a92ec3a79d614199036e26eb413679ad9dda4b426aaff02e266eb07"
+    },
+    {
+      "path": "migrations/versions/0011_phase6a_memory_projection.py",
+      "sha256": "5ca44feed5da3b6a592c7d52156218ff5d50d5c47e2050ceaf53f9d12656a56c"
+    },
+    {
+      "path": "migrations/versions/0012_projection_write_guard.py",
+      "sha256": "a5b0d128bf4542b3e90919566b6c718b1d70df56ede05b0af454f6883459d779"
+    },
+    {
+      "path": "migrations/versions/0013_provider_request_measurements.py",
+      "sha256": "b000f455c1dd124c8c1360aebf170a51a3f6dbdca32fc0acf49b11ec031d3d72"
+    },
+    {
+      "path": "migrations/versions/0014_local_dispatch_identity.py",
+      "sha256": "4d9a004742dbeebcefed0be6dad79121cacb11d0e64999b07a5937067ddb627b"
+    },
+    {
+      "path": "prompts/critic_review.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prompts/hekate_identity.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prompts/hekate_planning.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prompts/hekate_synthesis.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prompts/schema_repair.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "6ac20065ee3e9423930601eea8af1092df857895c5ceb2d9e6f0e91da3f66232"
+    },
+    {
+      "path": "scripts/build_pinned_letta_runtime.py",
+      "sha256": "6ebdb7415ffe44a3be9a42695569445f1563d011445754a3ab94e4b77d6a4b30"
+    },
+    {
+      "path": "scripts/build_qwen35_unicode_flags.py",
+      "sha256": "141acd43566d8f0eff98751d21503dbf5576e9b5fab6da3a7c7ea309bdc8a54a"
+    },
+    {
+      "path": "scripts/export_contracts.py",
+      "sha256": "a5e2ce3586c266829e7fe8fa4fa4b92342f000e7d617c606baaf5c39b47f6df5"
+    },
+    {
+      "path": "scripts/integration_probe.py",
+      "sha256": "a7793342b03491f2e8741a75be619865587c7f8edabf000a09a2a860694bf664"
+    },
+    {
+      "path": "scripts/phase3_runtime_probe.py",
+      "sha256": "a87e6e46f7c3430d2bb8ee5719a630aba91744fa8b183ccb59d2f1ae906953db"
+    },
+    {
+      "path": "scripts/phase3_verify.py",
+      "sha256": "2f93565b0e7edda0e960ef67c2b5727ac7786ce2559920ac2c5e85dca0baad42"
+    },
+    {
+      "path": "scripts/phase3b_single_hekate_probe.py",
+      "sha256": "30c6b5a6f14cd301cd41d1e6a019550a6f5af50675daa8e3298343f5ad18e908"
+    },
+    {
+      "path": "scripts/phase4_evidence_position_probe.py",
+      "sha256": "277087eff38594c337b0814b7c1c4cdd3f081c7bc90c7a721ba68f61f98d9d89"
+    },
+    {
+      "path": "scripts/phase5a_critic_synthesis_probe.py",
+      "sha256": "56bfe4ad23b603485fb9b25291fce5a50a59b2b09837cf2ee1d794dabd6622bb"
+    },
+    {
+      "path": "scripts/phase5b_bounded_deliberation_probe.py",
+      "sha256": "87690f750afa0bba63b786499ece0cc403d184c8291c9e383884ad4a90148b5b"
+    },
+    {
+      "path": "scripts/phase6a_memory_projection_probe.py",
+      "sha256": "5650387b6dbb5fb5421a58cc7c73551f7570d652ebfb184616761bbd928e0980"
+    },
+    {
+      "path": "scripts/phase6b_legacy_settlement_probe.py",
+      "sha256": "91df242a45ac7cd834af8aec8e1992ac5035a0dada6252adb2796e939b1735a4"
+    },
+    {
+      "path": "scripts/phase6b_token_accounting_probe.py",
+      "sha256": "218aea19db02879c9647b83e0ee875e1d7c64eca573bf7cf3020ee25172ae3c9"
+    },
+    {
+      "path": "scripts/phase6c_ollama_qwen_probe.py",
+      "sha256": "9efdd31d610032f1dc0b39dd2f057e42f2a80678041df722241b844656869df5"
+    },
+    {
+      "path": "scripts/phase6e_local_cli_probe.py",
+      "sha256": "596821c6eeba13073861c6905aa9fcfce066c32af92a8c6794d26c8b90f3d6ab"
+    },
+    {
+      "path": "scripts/phase6e_revocation_doctor_probe.py",
+      "sha256": "845ff131932f62d2938423cab051d96243b2c658ed8610c14e9d9f6b289b00b5"
+    },
+    {
+      "path": "scripts/phase6f_reviewed_qwen_probe.py",
+      "sha256": "a6d6f6806ca6036b4129443e7a30be85e7d424e9e561bff5302c52312cd63854"
+    },
+    {
+      "path": "scripts/run_evaluation.py",
+      "sha256": "134db5072d15d33dda032c4b676f719371d63f0f9f0a69728de9ed927c6d9ca4"
+    },
+    {
+      "path": "src/hekate/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/hekate/__main__.py",
+      "sha256": "9f23bda921432fdcc7d83e2a964d68078bbbf38a7e45ffdf1d75ea55a23a001c"
+    },
+    {
+      "path": "src/hekate/api/app.py",
+      "sha256": "7e0619d2061cac81c0e6dc1fcecadfc44f4343f215d5b32aa6f02d0c7760543b"
+    },
+    {
+      "path": "src/hekate/api/auth.py",
+      "sha256": "2461895f55336b62d90b9953002deb23ca35a1c29050c598e7df77505d3c33f5"
+    },
+    {
+      "path": "src/hekate/api/routes.py",
+      "sha256": "392d1c59bedff7dfdf2cfaab7cc567833aaaacc74859d2690b4fbb005dc1eb4a"
+    },
+    {
+      "path": "src/hekate/application/budgets.py",
+      "sha256": "86e5724f985a3e9694089737433006ba92b24a0c161eda7766c95b2ef57e03eb"
+    },
+    {
+      "path": "src/hekate/application/evidence.py",
+      "sha256": "a174ad8dfd26be4663c3456f93f9b5f51b822dd0b81e2e0021e5a2ed969e34e9"
+    },
+    {
+      "path": "src/hekate/application/lifecycle.py",
+      "sha256": "ff69faf8dd14406cf228441701f5e86d28944a55ebcfefea4f678f752fea16cf"
+    },
+    {
+      "path": "src/hekate/application/local_setup.py",
+      "sha256": "efe1caa2612dd27f8bd22b285ee8dbf5db09329b54be14107cdff247035cb1dd"
+    },
+    {
+      "path": "src/hekate/application/operations.py",
+      "sha256": "784cfcdda0db5b35a4f823ed30ed474993925287c10862955f85155c9b86d549"
+    },
+    {
+      "path": "src/hekate/application/positions.py",
+      "sha256": "833c9b6a36510d77d94f8bcf3653034b2f9c16da2211258f2f68475b018eed1e"
+    },
+    {
+      "path": "src/hekate/application/projections.py",
+      "sha256": "8f3c7daed6c177f7080d4830aca262cbe98b30499ffa9337ab794cabadb63876"
+    },
+    {
+      "path": "src/hekate/application/recovery.py",
+      "sha256": "fa0ff49aaad0ca8923f5ae6de40fb06f0ca48c88dfc0151026dfb10a25807b85"
+    },
+    {
+      "path": "src/hekate/application/results.py",
+      "sha256": "67870d3adf578a012c400012a7059ce02993f70d67261dcb1f525b7925f3f96f"
+    },
+    {
+      "path": "src/hekate/application/runtime_inbox.py",
+      "sha256": "c0c6f9b7537c97dadfd1b2942ea6d88630ba39705e70c1900bb7f8dbc7f32347"
+    },
+    {
+      "path": "src/hekate/application/scheduler.py",
+      "sha256": "14a801301700bc510b6de9d8788f155b571eddad18e3f0664edeb3fc2a269c50"
+    },
+    {
+      "path": "src/hekate/application/tasks.py",
+      "sha256": "26fc075a6353a39f41d770a25cf60c47ebcf5300955614dfc7c02e21290e8203"
+    },
+    {
+      "path": "src/hekate/application/tools.py",
+      "sha256": "31347b180f5a57f0fd9a85d465d03c3dce4d8aa4d58ba40e51fdd1afa0ae06ef"
+    },
+    {
+      "path": "src/hekate/application/turns.py",
+      "sha256": "7b9d83284e0ca49960acccfcb73fd8690a3dc9ba0c15ed6f96fbb7281e65d323"
+    },
+    {
+      "path": "src/hekate/bootstrap.py",
+      "sha256": "1dac3122a4b55f736c7409916449146f9dbeb8b5e207412170898be6e565f7b0"
+    },
+    {
+      "path": "src/hekate/diagnostics.py",
+      "sha256": "48a9fe8d6cb2bb1db0e910cc65b05ae1e49e787dccc0dfa59797356f2f49fab8"
+    },
+    {
+      "path": "src/hekate/domain/bridge_contracts.py",
+      "sha256": "e7be903b0c095d7e900315e52bb66053d3e2b0387b22d6d6024121869777d9c8"
+    },
+    {
+      "path": "src/hekate/domain/budget_math.py",
+      "sha256": "70a569d36d720b2464ecda40ac3389a3c3cccf70002b7aee407fb1068571bcbe"
+    },
+    {
+      "path": "src/hekate/domain/capsules.py",
+      "sha256": "5ffe1d5a18cb5516d2634ef5fb5f8e3761ff13bd18c92a0fb62357bf969bc7a3"
+    },
+    {
+      "path": "src/hekate/domain/contracts.py",
+      "sha256": "51c639364768c256622d152e4c91767cb8cedc541053e1b8eed78aa1efa0c76f"
+    },
+    {
+      "path": "src/hekate/domain/errors.py",
+      "sha256": "fcdf8d67b504a656245a0d72187ca2f7018a51ca1a3f3a41bdf3e03537b2d146"
+    },
+    {
+      "path": "src/hekate/domain/models.py",
+      "sha256": "f62965f6febf6367994cd24c158614fc0b987ec1523436bdb8d4023a0ead4058"
+    },
+    {
+      "path": "src/hekate/domain/policy.py",
+      "sha256": "1b6e0ea5cc80a7448397001061f4bda2c48e537b2c135f4cd44741104b804381"
+    },
+    {
+      "path": "src/hekate/domain/proposals.py",
+      "sha256": "04a17d460a96aaae1aff375d845e5a522c67ee3cbef1e2ecc902835d8583ac22"
+    },
+    {
+      "path": "src/hekate/domain/transitions.py",
+      "sha256": "7a1f895d5e13f96be64e61708576560e19178bc5f3a6f6908e167ff5e671b32a"
+    },
+    {
+      "path": "src/hekate/domain/types.py",
+      "sha256": "43e64ad65ace3b7c965dfded67bc5060e990d1b235fc0cc21a9a9c0924d244f3"
+    },
+    {
+      "path": "src/hekate/evaluation/runner.py",
+      "sha256": "610dededc85cfe5f9cf29071e2f5b5be9e7586543648f29d450c9df7a8878d06"
+    },
+    {
+      "path": "src/hekate/evaluation/scoring.py",
+      "sha256": "9abace65fe5f58b8d1d1d50e8b8713e21c7b859608d8fba6aace9389b91bad6b"
+    },
+    {
+      "path": "src/hekate/infrastructure/archive.py",
+      "sha256": "c2272e6d3c350f6ed4e1f4d835f60d6ef57cd9077ce3e9c83c2f3b3852bc1e94"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/adapter.py",
+      "sha256": "be3a4d2a1a160a4a2172e69b2ad3ae93c1e4c5b1eeffdb6f55718b634c631a9e"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/assets/cl100k_base.tiktoken",
+      "sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/assets/qwen35_installed_tokenizer.v1.json",
+      "sha256": "136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/assets/qwen35_unicode_flags.v1.json",
+      "sha256": "3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/assets/test_chat_contract.v1.json",
+      "sha256": "b085b61a959742d3cf33d50169d3895a1f15dd5bc3f6539aadfd0e8128622373"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/bridge_protocol.py",
+      "sha256": "49ab2cb1d3df23df1cac93d5758a5e9132d38bc7cffbb436dd52b6cef552cd0a"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/gateway_entry.py",
+      "sha256": "05a84089f5cf63745c1c679c435f2814c4cb43c4cac210914aeef1452c748f48"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+      "sha256": "946d7c4e298045ac0cfc45423b0fbc7444fd803db3349a1b3112911de4d13feb"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/qwen_local_profile.py",
+      "sha256": "9cc0131c2b20a3060199769f62a8cd348753542cf940f98d68c21cf26f78b154"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/qwen_ollama.py",
+      "sha256": "2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/reviewed_qwen_profile.py",
+      "sha256": "58162e4a5d46f942c4de3a387ed49bf82509ae0477ce5dd479db189838fe7147"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/token_accounting.py",
+      "sha256": "11b6e587b8248bd6851f298c2291d762fa7b152902dd319fc21899aaa6ef292e"
+    },
+    {
+      "path": "src/hekate/infrastructure/observability.py",
+      "sha256": "cfd98aaa5afd62cc64e67272d2a073a098e3444e7ab4299b740b481bea14931d"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/agent_repository.py",
+      "sha256": "2ec251250bf042a7d7c0ec91810d7721c7c1906d20442d7591691719ba3bbdd5"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/budget_repository.py",
+      "sha256": "cfb90cd3cd558c021fff6336ae3ef4d08ed25b123077fb0d3e95063fc1548a16"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/common.py",
+      "sha256": "eea38fffde5df8bfcb0fa8410f1fa946841fab1ded9cb7969d23ac6901ddb4c2"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/critic_workflow_repository.py",
+      "sha256": "238d8c31fd8ba5705ff1000d2b4201b5039411244f6489ba69cbcbdcf19f5cc6"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/database.py",
+      "sha256": "dde9b2e9238b125380d98da9e3234540eaf94ca158624ba305768d749cff273d"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/deliberation_repository.py",
+      "sha256": "e80538d235d5f619a48810c9973da92ef74a76f8f809b267a90108dac318c2b3"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/delivery_repository.py",
+      "sha256": "38454f3c57302b8dd3c089162dd0bf4fb9ff6890698017512b13f4c20f2760d0"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/knowledge_repository.py",
+      "sha256": "a3049defe7f751d5a54c4cd40fa7194783d0da82306fc1213d1da0b498624cb1"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/projection_repository.py",
+      "sha256": "e8436ee210da0253f8ed45ad1b394a6e75d1a8d07bd8e0e61603e93252b0a9b7"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/tables.py",
+      "sha256": "5c505f399626a7f8d3c06728fe913fd73c4188a36ae04ace7e1cb9661ba93d9f"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/task_repository.py",
+      "sha256": "7585b88e035bc4d6cf113bbbf3177c156b04a7209623896713ac32cce192caca"
+    },
+    {
+      "path": "src/hekate/ports/resources.py",
+      "sha256": "0c50d59d1f063fddfd164f0102268389c7758ac6515c7c95ba93a76df8c3610d"
+    },
+    {
+      "path": "src/hekate/ports/runtime.py",
+      "sha256": "5b83330c93b5c5a2e81e2685a07b7f5beaf8eae06b3ba84ebd4402579cf8d8fe"
+    },
+    {
+      "path": "src/hekate/ports/store.py",
+      "sha256": "2a567aec01eb8c71b07dd69a85d3f0932d46178f5bcdd6d6b475e1f50893f72b"
+    },
+    {
+      "path": "src/hekate/settings.py",
+      "sha256": "5012ec6c6f46643babd1e6375a3f40fdcffb5ac4bfb77626d8abaf15c99c8a94"
+    },
+    {
+      "path": "src/hekate/worker/service.py",
+      "sha256": "e8c066fc6cd88ed7feeb3384494333a2853125241bd8304235e36e70bf3cc00c"
+    },
+    {
+      "path": "tests/conftest.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contract/test_billable_guard.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contract/test_letta_capabilities.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contract/test_phase3_bridge_and_gateway.py",
+      "sha256": "7770dc57130d3a46b7d50c532585fa35dd5c92128be55cf8d5adeb5399440443"
+    },
+    {
+      "path": "tests/contract/test_schema_compatibility.py",
+      "sha256": "e170821243d7d2a57e60d66549a76a80dcadf0aad7c1e741692c31b6323a8d7e"
+    },
+    {
+      "path": "tests/fakes/clock.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fakes/runtime.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_budget_failure.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_cancel_and_revision.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_lifecycle_recovery.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_result_delivery.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fault/test_security_and_storage.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/test_budget_concurrency.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/test_position_commit.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/test_probe_usage_reconciliation.py",
+      "sha256": "a042c986b4c6ac60c7d7402dcbee2c0af4b200c1bbfe32c15947c8321202e344"
+    },
+    {
+      "path": "tests/integration/test_store_atomicity.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/test_turn_serialization.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/persistence/test_phase2_postgres.py",
+      "sha256": "11d106c64f7e3e690c2f23054503dc31e6a431842744f4f7b7e1cc69e17afd4e"
+    },
+    {
+      "path": "tests/unit/test_budget_math.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/unit/test_capsules.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/unit/test_phase6d_local_probe_guard.py",
+      "sha256": "116a545e294e7e7d561b645ebf33e106a29ab8340954bb52b19175c0b7eb6486"
+    },
+    {
+      "path": "tests/unit/test_phase6e_doctor_context.py",
+      "sha256": "47b925c79f98902de755e82b34a9aae144c3ef198c91e152ec454df88050639b"
+    },
+    {
+      "path": "tests/unit/test_phase6e_local_settings.py",
+      "sha256": "b1a18097103509554ff67996a6e8378702a687eb2776d4237b875190486592fc"
+    },
+    {
+      "path": "tests/unit/test_phase6f_generation_allowance.py",
+      "sha256": "b29e0b6a702b9138355b51fbbccc1d0aa20232f2ba5bab7eeffc378f93b84810"
+    },
+    {
+      "path": "tests/unit/test_policy.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/unit/test_provider_gateway_sse.py",
+      "sha256": "feca18b5d64ab0530b9f5ab145c75d2ac59a9a3b45f2023891e06fd65a02c4d1"
+    },
+    {
+      "path": "tests/unit/test_qwen_ollama.py",
+      "sha256": "361fbbad00282a0bc683b1061b672a31195fe1bc0fbb90d40d902fa2404954c4"
+    },
+    {
+      "path": "tests/unit/test_token_accounting.py",
+      "sha256": "a2f488d3de05327ddc6770bcf3ac3d9111a605b6b3d34aae4fdcfec29a16acb1"
+    },
+    {
+      "path": "tests/unit/test_transitions.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "a8b04942943c44f4ae8228b2511a08e7924c56d34fe2efe002ad30e0b812024a"
+    }
+  ],
+  "gateway_port": 48461,
+  "generation_allowance": {
+    "claim_count": 4,
+    "claim_stages": [
+      "task_a_critic_review",
+      "task_a_planning",
+      "task_a_synthesis",
+      "task_b_answer"
+    ],
+    "file_mode": "0o600",
+    "max_generations": 4,
+    "path": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-fake-20261007T021533Z-c4d3fa51/fake/state/generation-allowance.json",
+    "request_capture_file_mode": "0o600",
+    "request_capture_path": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-fake-20261007T021533Z-c4d3fa51/fake/state/provider-requests.jsonl",
+    "request_capture_sha256": "ae8019ef0dc5309a1419be0122a1b07f539f5498c8a9ac670c2396775b907d5c"
+  },
+  "head": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "init_local": {
+    "authz_epoch": 1,
+    "initialized": true,
+    "letta_provider_config": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-fake-20261007T021533Z-c4d3fa51/fake/state/letta/lc-local-backend/providers/auth.json",
+    "migration_head": "0014_local_dispatch_identity",
+    "policy_version": "p6f-fake-policy-v1-d3fa51",
+    "postgres_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu",
+    "principal_id": "p6f-fake-operator-c4d3fa51",
+    "scope_created": true,
+    "scope_id": "p6f-fake-33Z-c4d3fa51"
+  },
+  "legacy_state": {
+    "Phase 6D/6E databases and prior UNKNOWN calls": "not queried or modified",
+    "Phase 6E allowance and state": "not read, reset, or reused",
+    "old local Qwen profile": "preserved and separately validated"
+  },
+  "mode": "fake",
+  "node": {
+    "path": "/tmp/p6d-node-v22.19.0-linux-x64/node-v22.19.0-linux-x64/bin/node",
+    "version": "v22.19.0"
+  },
+  "normal_cli_path": {
+    "accounting_checks": [
+      {
+        "accounting_call_id": "7a5daaee-4e04-4489-8dcf-eb75e6de25c7",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_usage_matches_measurement": false,
+        "measured_input_tokens": 3263,
+        "measurement_status": "MEASURED",
+        "operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+        "passed": true,
+        "permit_state": "CONSUMED",
+        "price_synthetic": true,
+        "provider_input_tokens": 37,
+        "settlement_state": "SETTLED",
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "390e4665-4cee-454d-b57a-eab42c4f5302",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_usage_matches_measurement": false,
+        "measured_input_tokens": 3406,
+        "measurement_status": "MEASURED",
+        "operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+        "passed": true,
+        "permit_state": "CONSUMED",
+        "price_synthetic": true,
+        "provider_input_tokens": 37,
+        "settlement_state": "SETTLED",
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "1f1d8a58-4f68-4509-9abd-881959ed4e48",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_usage_matches_measurement": false,
+        "measured_input_tokens": 4628,
+        "measurement_status": "MEASURED",
+        "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+        "passed": true,
+        "permit_state": "CONSUMED",
+        "price_synthetic": true,
+        "provider_input_tokens": 37,
+        "settlement_state": "SETTLED",
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "09402c2d-ae84-4446-99e9-9c84678e752c",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "input_usage_matches_measurement": false,
+        "measured_input_tokens": 4550,
+        "measurement_status": "MEASURED",
+        "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+        "passed": true,
+        "permit_state": "CONSUMED",
+        "price_synthetic": true,
+        "provider_input_tokens": 37,
+        "settlement_state": "SETTLED",
+        "usage_completeness": "COMPLETE"
+      }
+    ],
+    "critic_cleanup": "DELETED",
+    "evidence_ids": [
+      "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564",
+      "8129ff45-c8ca-46c5-8c66-227a48d11bd6"
+    ],
+    "fake_provider_requests": 4,
+    "gateway_forward_attempts": 4,
+    "position_version": 1,
+    "projection": {
+      "applied_version": 1,
+      "attempt_count": 1,
+      "critic_state": "DELETED",
+      "desired_version": 1,
+      "observed_memory_version": 1,
+      "observed_payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+      "payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+      "pending_reason": null,
+      "stage": "COMPLETE",
+      "state": "APPLIED"
+    },
+    "provider_calls": [
+      {
+        "accounting_call_id": "7a5daaee-4e04-4489-8dcf-eb75e6de25c7",
+        "attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "execution_mode": "synthetic_test",
+        "input_tokens": 37,
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 8192,
+          "measured_at": "2026-10-07T02:16:08.372345Z",
+          "measured_input_tokens": 3263,
+          "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+          "pricing_version": "local-qwen35-external-tariff-v1",
+          "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+          "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+          "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+          "requested_output_tokens": 2048,
+          "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+        "output_tokens": 4,
+        "permit_id": "c5dfc022-70fa-5494-8786-a90465ca515b",
+        "permit_state": "CONSUMED",
+        "price_synthetic": true,
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "provider_call_id": "fake-response-1",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "reported_cost_usd": null,
+        "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+        "settlement_state": "SETTLED",
+        "total_tokens": 41,
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "390e4665-4cee-454d-b57a-eab42c4f5302",
+        "attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "execution_mode": "synthetic_test",
+        "input_tokens": 37,
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 8192,
+          "measured_at": "2026-10-07T02:16:12.147228Z",
+          "measured_input_tokens": 3406,
+          "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+          "pricing_version": "local-qwen35-external-tariff-v1",
+          "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+          "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+          "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+          "requested_output_tokens": 1190,
+          "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+        "output_tokens": 4,
+        "permit_id": "b1e5493a-3c28-580a-9a2c-c40f1f28181a",
+        "permit_state": "CONSUMED",
+        "price_synthetic": true,
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "provider_call_id": "fake-response-2",
+        "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+        "reported_cost_usd": null,
+        "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+        "settlement_state": "SETTLED",
+        "total_tokens": 41,
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "1f1d8a58-4f68-4509-9abd-881959ed4e48",
+        "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "execution_mode": "synthetic_test",
+        "input_tokens": 37,
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 8192,
+          "measured_at": "2026-10-07T02:16:16.504956Z",
+          "measured_input_tokens": 4628,
+          "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+          "pricing_version": "local-qwen35-external-tariff-v1",
+          "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+          "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+          "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+          "requested_output_tokens": 2048,
+          "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+        "output_tokens": 4,
+        "permit_id": "8e7f2f0d-ad13-5acd-a021-9c8b5b2c98d5",
+        "permit_state": "CONSUMED",
+        "price_synthetic": true,
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "provider_call_id": "fake-response-3",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "reported_cost_usd": null,
+        "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+        "settlement_state": "SETTLED",
+        "total_tokens": 41,
+        "usage_completeness": "COMPLETE"
+      },
+      {
+        "accounting_call_id": "09402c2d-ae84-4446-99e9-9c84678e752c",
+        "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+        "call_status": "QUIESCENT",
+        "evaluated_cost_usd": "0",
+        "execution_mode": "synthetic_test",
+        "input_tokens": 37,
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 8192,
+          "measured_at": "2026-10-07T02:16:29.648362Z",
+          "measured_input_tokens": 4550,
+          "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+          "pricing_version": "local-qwen35-external-tariff-v1",
+          "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+          "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+          "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+          "requested_output_tokens": 2048,
+          "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+        "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+        "output_tokens": 4,
+        "permit_id": "3bcb0f4f-d25b-568a-bb79-057c4174bb6e",
+        "permit_state": "CONSUMED",
+        "price_synthetic": true,
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "provider_call_id": "fake-response-4",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "reported_cost_usd": null,
+        "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+        "settlement_state": "SETTLED",
+        "total_tokens": 41,
+        "usage_completeness": "COMPLETE"
+      }
+    ],
+    "provider_request_stages": {
+      "critic_review": {
+        "accounting_call_id": "390e4665-4cee-454d-b57a-eab42c4f5302",
+        "attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+        "context_checked": true,
+        "input_schema_sha256": "04999c20c69e1bba70ff3b42d3b5fa3483ee2dafea71d094fee9f47889ea3d02",
+        "messages_sha256": "9e840371d3b0724121f31134b4c9c0907fbf8c0d4cb3ad263e4fe4477ffe3025",
+        "operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+        "output_contract": "critic_turn_output_v1",
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+        "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+        "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6"
+      },
+      "planning": {
+        "accounting_call_id": "7a5daaee-4e04-4489-8dcf-eb75e6de25c7",
+        "attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+        "context_checked": true,
+        "input_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "messages_sha256": "9531db3a24e19da56184298ae11b72362fce62cc5032f8683b324c4eb746b0b4",
+        "operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+        "output_contract": "hekate_turn_output_v1",
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+        "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6"
+      },
+      "synthesis": {
+        "accounting_call_id": "1f1d8a58-4f68-4509-9abd-881959ed4e48",
+        "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+        "context_checked": true,
+        "critic_objection_count": 1,
+        "durable_dissent_count": 1,
+        "input_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "messages_sha256": "31727679e5368d9489f4ccc159767c83af9f9c3a52e933d90f0d17b7f1043818",
+        "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+        "output_contract": "hekate_turn_output_v1",
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+        "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6"
+      },
+      "task_b_answer": {
+        "accounting_call_id": "09402c2d-ae84-4446-99e9-9c84678e752c",
+        "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+        "context_checked": true,
+        "input_schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+        "messages_sha256": "de2d7544832e5e7aed1531295b1709a38da561f0a05d0d621894468209e8be86",
+        "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+        "output_contract": "hekate_turn_output_v1",
+        "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+        "task_id": "9c3299d1-4dcf-4021-9060-7b3e068ab9e2"
+      }
+    },
+    "task_a_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+    "task_b_id": "9c3299d1-4dcf-4021-9060-7b3e068ab9e2",
+    "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51"
+  },
+  "pinned_runtime": {
+    "app_server_version": "0.33.8",
+    "base_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "base_image_id": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "image": "hekate/letta-code-p1:0bb6f741-0c6a0fc3",
+    "image_id": "sha256:2bb944f697a17adf70263285fc1e99b5dd4043b6a94dedf940c6bc332047dfbd",
+    "protocol_version": "1",
+    "runtime_patch_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+    "sdk_version": "0.8.25",
+    "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+  },
+  "postgres": {
+    "migration_head": "0014_local_dispatch_identity",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "preserved_run_root": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-fake-20261007T021533Z-c4d3fa51",
+  "private_state_dir": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-fake-20261007T021533Z-c4d3fa51/fake/state",
+  "probe": "phase6f-reviewed-qwen",
+  "production_dispatch": "BLOCKED",
+  "projection": {
+    "applied_version": 1,
+    "database_authoritative": true,
+    "desired_version": 1,
+    "observed_memory_version": 1,
+    "observed_payload_digest_matches": true,
+    "state": "APPLIED",
+    "task_b_actual_request_reused_projection": true,
+    "worker_restarted_before_task_b": true
+  },
+  "projection_after_task_a": {
+    "applied_version": 1,
+    "attempt_count": 1,
+    "critic_state": "DELETED",
+    "desired_version": 1,
+    "observed_memory_version": 1,
+    "observed_payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+    "payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+    "pending_reason": null,
+    "stage": "COMPLETE",
+    "state": "APPLIED"
+  },
+  "provider_gateway_metrics": {
+    "observation_conflicts": 0,
+    "observation_write_attempts": 8,
+    "observation_write_failures": 0,
+    "provider_stream_observations": [
+      {
+        "accounting_call_id": "7a5daaee-4e04-4489-8dcf-eb75e6de25c7",
+        "choices": [
+          {
+            "content_delta_events": 1,
+            "content_sha256": "fac157bc3710b39803f1ad38eebe6c5905d2c1244b19bf4a866ead2f56c9b141",
+            "content_utf8_bytes": 1266,
+            "finish_reason": "stop",
+            "index": 0,
+            "reasoning_channels": {}
+          }
+        ],
+        "done_seen": true,
+        "event_count": 3,
+        "operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+        "provider_call_id": "fake-response-1",
+        "wire_bytes": 1993,
+        "wire_sha256": "64c155241eefa46382d283103f5548655ed0873744eec85e72a27783f3a409aa"
+      },
+      {
+        "accounting_call_id": "390e4665-4cee-454d-b57a-eab42c4f5302",
+        "choices": [
+          {
+            "content_delta_events": 1,
+            "content_sha256": "9a78a87d112e9e61874f9cc2968898f98b19e425a810e632cdca1a2866dbce95",
+            "content_utf8_bytes": 1043,
+            "finish_reason": "stop",
+            "index": 0,
+            "reasoning_channels": {}
+          }
+        ],
+        "done_seen": true,
+        "event_count": 3,
+        "operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+        "provider_call_id": "fake-response-2",
+        "wire_bytes": 1760,
+        "wire_sha256": "717722b7f4d42d9e6e8eae59f31cd764c4a6904c10ec976e2c15ca58cd2f2fc7"
+      },
+      {
+        "accounting_call_id": "1f1d8a58-4f68-4509-9abd-881959ed4e48",
+        "choices": [
+          {
+            "content_delta_events": 1,
+            "content_sha256": "7d6e39cc5d5cd16653135f44b5a7fada64c4107bdf8f7034867dd205dfcbf745",
+            "content_utf8_bytes": 1855,
+            "finish_reason": "stop",
+            "index": 0,
+            "reasoning_channels": {}
+          }
+        ],
+        "done_seen": true,
+        "event_count": 3,
+        "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+        "provider_call_id": "fake-response-3",
+        "wire_bytes": 2622,
+        "wire_sha256": "8461d5e1c3368622660bc847a7c5d9c985e407d58ab35900a4a847c6c5dedcb3"
+      },
+      {
+        "accounting_call_id": "09402c2d-ae84-4446-99e9-9c84678e752c",
+        "choices": [
+          {
+            "content_delta_events": 1,
+            "content_sha256": "347f0a10a24f46557c5757dfa8e7be6053d5cf4488f7261af7a83697e4a17ea9",
+            "content_utf8_bytes": 982,
+            "finish_reason": "stop",
+            "index": 0,
+            "reasoning_channels": {}
+          }
+        ],
+        "done_seen": true,
+        "event_count": 3,
+        "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+        "provider_call_id": "fake-response-4",
+        "wire_bytes": 1693,
+        "wire_sha256": "9ae93beb1cd4df9955cd9d2a2741a3a6b99cd9fa0e66b5c32d14b6b76e00ba1c"
+      }
+    ],
+    "upstream_forward_attempts": 4
+  },
+  "real_provider_calls": 0,
+  "reviewed_request_observations": [
+    {
+      "attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+      "critic_dissent_ids_in_synthesis": [],
+      "evidence_excerpt_sha256": [
+        "26ff5f595d3eb764e622a3a7a2b9539babbd6149fdd0672333228918589cc8a9",
+        "7457d7a6ec3c9a87d24f23e740addba59e7c3242d04e90064671e10956d975a5"
+      ],
+      "evidence_ids": [
+        "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+        "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+      ],
+      "output_contract": "hekate_turn_output_v1",
+      "projection_memory_readback_in_actual_task_b_request": false,
+      "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+      "schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+      "stage": "task_a_planning",
+      "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6"
+    },
+    {
+      "attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+      "critic_dissent_ids_in_synthesis": [],
+      "evidence_excerpt_sha256": [
+        "26ff5f595d3eb764e622a3a7a2b9539babbd6149fdd0672333228918589cc8a9",
+        "7457d7a6ec3c9a87d24f23e740addba59e7c3242d04e90064671e10956d975a5"
+      ],
+      "evidence_ids": [
+        "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+        "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+      ],
+      "output_contract": "critic_turn_output_v1",
+      "projection_memory_readback_in_actual_task_b_request": false,
+      "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+      "schema_sha256": "04999c20c69e1bba70ff3b42d3b5fa3483ee2dafea71d094fee9f47889ea3d02",
+      "stage": "task_a_critic_review",
+      "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6"
+    },
+    {
+      "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+      "critic_dissent_ids_in_synthesis": [
+        "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+      ],
+      "evidence_excerpt_sha256": [
+        "26ff5f595d3eb764e622a3a7a2b9539babbd6149fdd0672333228918589cc8a9",
+        "7457d7a6ec3c9a87d24f23e740addba59e7c3242d04e90064671e10956d975a5"
+      ],
+      "evidence_ids": [
+        "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+        "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+      ],
+      "output_contract": "hekate_turn_output_v1",
+      "projection_memory_readback_in_actual_task_b_request": false,
+      "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+      "schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+      "stage": "task_a_synthesis",
+      "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6"
+    },
+    {
+      "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+      "critic_dissent_ids_in_synthesis": [],
+      "evidence_excerpt_sha256": [
+        "26ff5f595d3eb764e622a3a7a2b9539babbd6149fdd0672333228918589cc8a9",
+        "7457d7a6ec3c9a87d24f23e740addba59e7c3242d04e90064671e10956d975a5"
+      ],
+      "evidence_ids": [
+        "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+        "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+      ],
+      "output_contract": "hekate_turn_output_v1",
+      "projection_memory_readback_in_actual_task_b_request": true,
+      "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+      "schema_sha256": "571098e90cb3597d768f15ce4c89f9b57ee328a39a747b0597657018fe9be54a",
+      "stage": "task_b_answer",
+      "task_id": "9c3299d1-4dcf-4021-9060-7b3e068ab9e2"
+    }
+  ],
+  "run_id": "p6f-fake-20261007T021533Z-c4d3fa51",
+  "runtime_image_preflight": {
+    "app_server_version": "0.33.8",
+    "base_image": "ghcr.io/letta-ai/letta-code@sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "base_image_id": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "image": "hekate/letta-code-p1:0bb6f741-0c6a0fc3",
+    "image_id": "sha256:2bb944f697a17adf70263285fc1e99b5dd4043b6a94dedf940c6bc332047dfbd",
+    "protocol_version": "1",
+    "runtime_patch_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+    "sdk_version": "0.8.25",
+    "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+  },
+  "runtime_lock": {
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "node_version": "22.19.0",
+    "protocol_version": "1",
+    "runtime_patch_sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+    "sdk_version": "0.8.25"
+  },
+  "runtime_state": "isolated new state directory; persisted for review",
+  "same_key_replay": {
+    "after": {
+      "9c3299d1-4dcf-4021-9060-7b3e068ab9e2": {
+        "calls": [
+          {
+            "accounting_call_id": "09402c2d-ae84-4446-99e9-9c84678e752c",
+            "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+            "call_status": "QUIESCENT",
+            "evaluated_cost_usd": "0",
+            "execution_mode": "synthetic_test",
+            "input_tokens": 37,
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 8192,
+              "measured_at": "2026-10-07T02:16:29.648362Z",
+              "measured_input_tokens": 4550,
+              "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+              "pricing_version": "local-qwen35-external-tariff-v1",
+              "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+              "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+              "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+              "requested_output_tokens": 2048,
+              "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+            "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+            "output_tokens": 4,
+            "permit_id": "3bcb0f4f-d25b-568a-bb79-057c4174bb6e",
+            "permit_state": "CONSUMED",
+            "price_synthetic": true,
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "provider_call_id": "fake-response-4",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "reported_cost_usd": null,
+            "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+            "settlement_state": "SETTLED",
+            "total_tokens": 41,
+            "usage_completeness": "COMPLETE"
+          }
+        ],
+        "ledger": [
+          {
+            "effect_type": "HOLD",
+            "entries": 2,
+            "held_delta": "0",
+            "spent_delta": "0"
+          },
+          {
+            "effect_type": "SETTLE",
+            "entries": 2,
+            "held_delta": "0",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": [
+          {
+            "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+            "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+            "outcome": "PROVISIONAL_ANSWER",
+            "proposal": {
+              "action": "answer",
+              "answer": "Candidate A fits the stated test limits, but its cost and latency values must be checked in the target environment.",
+              "schema_version": "1"
+            },
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "response_text": "Candidate A fits the stated test limits, but its cost and latency values must be checked in the target environment.",
+            "stop_reason": "COMPLETED"
+          }
+        ],
+        "task": {
+          "id": "9c3299d1-4dcf-4021-9060-7b3e068ab9e2",
+          "input_revision": 1,
+          "outcome": "PROVISIONAL_ANSWER",
+          "owner_scope": "p6f-fake-33Z-c4d3fa51",
+          "provider_calls": 1,
+          "status": "COMPLETED",
+          "stop_reason": "COMPLETED"
+        }
+      },
+      "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6": {
+        "calls": [
+          {
+            "accounting_call_id": "7a5daaee-4e04-4489-8dcf-eb75e6de25c7",
+            "attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+            "call_status": "QUIESCENT",
+            "evaluated_cost_usd": "0",
+            "execution_mode": "synthetic_test",
+            "input_tokens": 37,
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 8192,
+              "measured_at": "2026-10-07T02:16:08.372345Z",
+              "measured_input_tokens": 3263,
+              "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+              "pricing_version": "local-qwen35-external-tariff-v1",
+              "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+              "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+              "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+              "requested_output_tokens": 2048,
+              "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+            "operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+            "output_tokens": 4,
+            "permit_id": "c5dfc022-70fa-5494-8786-a90465ca515b",
+            "permit_state": "CONSUMED",
+            "price_synthetic": true,
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "provider_call_id": "fake-response-1",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "reported_cost_usd": null,
+            "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+            "settlement_state": "SETTLED",
+            "total_tokens": 41,
+            "usage_completeness": "COMPLETE"
+          },
+          {
+            "accounting_call_id": "390e4665-4cee-454d-b57a-eab42c4f5302",
+            "attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+            "call_status": "QUIESCENT",
+            "evaluated_cost_usd": "0",
+            "execution_mode": "synthetic_test",
+            "input_tokens": 37,
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 8192,
+              "measured_at": "2026-10-07T02:16:12.147228Z",
+              "measured_input_tokens": 3406,
+              "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+              "pricing_version": "local-qwen35-external-tariff-v1",
+              "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+              "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+              "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+              "requested_output_tokens": 1190,
+              "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+            "operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+            "output_tokens": 4,
+            "permit_id": "b1e5493a-3c28-580a-9a2c-c40f1f28181a",
+            "permit_state": "CONSUMED",
+            "price_synthetic": true,
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "provider_call_id": "fake-response-2",
+            "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+            "reported_cost_usd": null,
+            "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+            "settlement_state": "SETTLED",
+            "total_tokens": 41,
+            "usage_completeness": "COMPLETE"
+          },
+          {
+            "accounting_call_id": "1f1d8a58-4f68-4509-9abd-881959ed4e48",
+            "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+            "call_status": "QUIESCENT",
+            "evaluated_cost_usd": "0",
+            "execution_mode": "synthetic_test",
+            "input_tokens": 37,
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 8192,
+              "measured_at": "2026-10-07T02:16:16.504956Z",
+              "measured_input_tokens": 4628,
+              "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+              "pricing_version": "local-qwen35-external-tariff-v1",
+              "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+              "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+              "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+              "requested_output_tokens": 2048,
+              "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+            "output_tokens": 4,
+            "permit_id": "8e7f2f0d-ad13-5acd-a021-9c8b5b2c98d5",
+            "permit_state": "CONSUMED",
+            "price_synthetic": true,
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "provider_call_id": "fake-response-3",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "reported_cost_usd": null,
+            "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+            "settlement_state": "SETTLED",
+            "total_tokens": 41,
+            "usage_completeness": "COMPLETE"
+          }
+        ],
+        "ledger": [
+          {
+            "effect_type": "HOLD",
+            "entries": 6,
+            "held_delta": "0",
+            "spent_delta": "0"
+          },
+          {
+            "effect_type": "SETTLE",
+            "entries": 6,
+            "held_delta": "0",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": [
+          {
+            "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+            "outcome": "POSITION_COMMITTED",
+            "proposal": {
+              "action": "commit",
+              "base_version": 0,
+              "input_revision": 1,
+              "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+              "proposed_position": {
+                "applicability": [
+                  "Only to the supplied synthetic candidate metrics and decision thresholds."
+                ],
+                "assumptions": [
+                  "fixture metrics are test assumptions"
+                ],
+                "confidence": {
+                  "basis": [
+                    "the two selected Evidence records",
+                    "the stored Critic review"
+                  ],
+                  "level": "medium",
+                  "missing_evidence": []
+                },
+                "dissent_refs": [
+                  "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+                ],
+                "evidence_refs": [
+                  "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+                  "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+                ],
+                "statement": "Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+                "uncertainty": "Validate cost and p95 latency against the target environment before operational use."
+              },
+              "reason_for_change": "Persist the candidate decision with the Critic's validation condition.",
+              "schema_version": "1",
+              "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+              "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51"
+            },
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "response_text": "Position saved for p6f-reviewed-topic-33Z-c4d3fa51 as version 1: Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+            "stop_reason": "COMPLETED"
+          }
+        ],
+        "task": {
+          "id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+          "input_revision": 1,
+          "outcome": "POSITION_COMMITTED",
+          "owner_scope": "p6f-fake-33Z-c4d3fa51",
+          "provider_calls": 3,
+          "status": "COMPLETED",
+          "stop_reason": "COMPLETED"
+        }
+      },
+      "financial": {
+        "accounts": [
+          {
+            "held_amount": "0",
+            "limit_amount": "5.00",
+            "period_id": "2026-10-07",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0"
+          },
+          {
+            "held_amount": "0",
+            "limit_amount": "1.00",
+            "period_id": "lifetime",
+            "scope_kind": "TASK",
+            "scope_ref": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+            "spent_amount": "0"
+          }
+        ],
+        "position_commit_receipts": [
+          {
+            "created_at": "2026-10-07T02:16:17.979472+00:00",
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+            "receipt": {
+              "conflict": false,
+              "current_version": null,
+              "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+              "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+              "replayed": false,
+              "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b",
+              "response_text": "Position saved for p6f-reviewed-topic-33Z-c4d3fa51 as version 1: Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+              "scope": "p6f-fake-33Z-c4d3fa51",
+              "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+              "version": 1
+            },
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0",
+            "held_amount": "0",
+            "operation_kind": "critic.review",
+            "purpose": "operation_envelope",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0",
+            "held_amount": "0",
+            "operation_kind": "hekate.synthesis",
+            "purpose": "operation_envelope",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0",
+            "held_amount": "0",
+            "operation_kind": "hekate.turn",
+            "purpose": "operation_envelope",
+            "status": "SETTLED"
+          }
+        ]
+      },
+      "projection": {
+        "applied_version": 1,
+        "attempt_count": 1,
+        "desired_version": 1,
+        "observed_memory_version": 1,
+        "observed_payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+        "operation_id": "8c290132-b814-5cc6-aa1d-0525e839a0ea",
+        "payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+        "pending_reason": null,
+        "request_hash": "3133dadae9c90d572c9b2c25f8d6327096edb6ce3d2ebba3b30efca0a46baf34",
+        "state": "APPLIED"
+      },
+      "workflow": {
+        "agents": [
+          {
+            "intended_state": "DELETED",
+            "persistence": "ephemeral",
+            "provider_agent_id": "agent-local-abf4bff4-d2e1-4cdb-8f2d-3178fa7c59e9",
+            "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+            "role": "critic"
+          },
+          {
+            "intended_state": "READY",
+            "persistence": "persistent",
+            "provider_agent_id": "agent-local-f619a70a-d214-44ae-bc54-e5ffa302eee9",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "role": "hekate"
+          }
+        ],
+        "dissent": [
+          {
+            "body": {
+              "claim": "Test assumptions need independent validation before operational use.",
+              "condition": "if the fixture values are used to make a live service decision",
+              "id": "O1",
+              "severity": "high",
+              "suggested_validation": "measure monthly cost and p95 latency in the target environment"
+            },
+            "id": "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+          }
+        ],
+        "workflow": {
+          "create_operation_id": "4c48411c-b6f8-5026-9a35-adb8142b1354",
+          "critic_conclusion_id": "d68aa798-681c-5a44-90f8-3af66ff83989",
+          "critic_registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+          "critic_state": "DELETED",
+          "delete_operation_id": "401bcf85-6638-5629-9516-dfc6993b3dba",
+          "input_revision": 1,
+          "parent_attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+          "planning_operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+          "provider_agent_id": "agent-local-abf4bff4-d2e1-4cdb-8f2d-3178fa7c59e9",
+          "review_attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+          "review_operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+          "stage": "COMPLETE",
+          "synthesis_attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+          "synthesis_operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179"
+        }
+      }
+    },
+    "allowance_unchanged": true,
+    "before": {
+      "9c3299d1-4dcf-4021-9060-7b3e068ab9e2": {
+        "calls": [
+          {
+            "accounting_call_id": "09402c2d-ae84-4446-99e9-9c84678e752c",
+            "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+            "call_status": "QUIESCENT",
+            "evaluated_cost_usd": "0",
+            "execution_mode": "synthetic_test",
+            "input_tokens": 37,
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 8192,
+              "measured_at": "2026-10-07T02:16:29.648362Z",
+              "measured_input_tokens": 4550,
+              "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+              "pricing_version": "local-qwen35-external-tariff-v1",
+              "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+              "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+              "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+              "requested_output_tokens": 2048,
+              "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+            "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+            "output_tokens": 4,
+            "permit_id": "3bcb0f4f-d25b-568a-bb79-057c4174bb6e",
+            "permit_state": "CONSUMED",
+            "price_synthetic": true,
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "provider_call_id": "fake-response-4",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "reported_cost_usd": null,
+            "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+            "settlement_state": "SETTLED",
+            "total_tokens": 41,
+            "usage_completeness": "COMPLETE"
+          }
+        ],
+        "ledger": [
+          {
+            "effect_type": "HOLD",
+            "entries": 2,
+            "held_delta": "0",
+            "spent_delta": "0"
+          },
+          {
+            "effect_type": "SETTLE",
+            "entries": 2,
+            "held_delta": "0",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": [
+          {
+            "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+            "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+            "outcome": "PROVISIONAL_ANSWER",
+            "proposal": {
+              "action": "answer",
+              "answer": "Candidate A fits the stated test limits, but its cost and latency values must be checked in the target environment.",
+              "schema_version": "1"
+            },
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "response_text": "Candidate A fits the stated test limits, but its cost and latency values must be checked in the target environment.",
+            "stop_reason": "COMPLETED"
+          }
+        ],
+        "task": {
+          "id": "9c3299d1-4dcf-4021-9060-7b3e068ab9e2",
+          "input_revision": 1,
+          "outcome": "PROVISIONAL_ANSWER",
+          "owner_scope": "p6f-fake-33Z-c4d3fa51",
+          "provider_calls": 1,
+          "status": "COMPLETED",
+          "stop_reason": "COMPLETED"
+        }
+      },
+      "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6": {
+        "calls": [
+          {
+            "accounting_call_id": "7a5daaee-4e04-4489-8dcf-eb75e6de25c7",
+            "attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+            "call_status": "QUIESCENT",
+            "evaluated_cost_usd": "0",
+            "execution_mode": "synthetic_test",
+            "input_tokens": 37,
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 8192,
+              "measured_at": "2026-10-07T02:16:08.372345Z",
+              "measured_input_tokens": 3263,
+              "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+              "pricing_version": "local-qwen35-external-tariff-v1",
+              "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+              "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+              "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+              "requested_output_tokens": 2048,
+              "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+            "operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+            "output_tokens": 4,
+            "permit_id": "c5dfc022-70fa-5494-8786-a90465ca515b",
+            "permit_state": "CONSUMED",
+            "price_synthetic": true,
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "provider_call_id": "fake-response-1",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "reported_cost_usd": null,
+            "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+            "settlement_state": "SETTLED",
+            "total_tokens": 41,
+            "usage_completeness": "COMPLETE"
+          },
+          {
+            "accounting_call_id": "390e4665-4cee-454d-b57a-eab42c4f5302",
+            "attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+            "call_status": "QUIESCENT",
+            "evaluated_cost_usd": "0",
+            "execution_mode": "synthetic_test",
+            "input_tokens": 37,
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 8192,
+              "measured_at": "2026-10-07T02:16:12.147228Z",
+              "measured_input_tokens": 3406,
+              "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+              "pricing_version": "local-qwen35-external-tariff-v1",
+              "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+              "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+              "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+              "requested_output_tokens": 1190,
+              "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+            "operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+            "output_tokens": 4,
+            "permit_id": "b1e5493a-3c28-580a-9a2c-c40f1f28181a",
+            "permit_state": "CONSUMED",
+            "price_synthetic": true,
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "provider_call_id": "fake-response-2",
+            "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+            "reported_cost_usd": null,
+            "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+            "settlement_state": "SETTLED",
+            "total_tokens": 41,
+            "usage_completeness": "COMPLETE"
+          },
+          {
+            "accounting_call_id": "1f1d8a58-4f68-4509-9abd-881959ed4e48",
+            "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+            "call_status": "QUIESCENT",
+            "evaluated_cost_usd": "0",
+            "execution_mode": "synthetic_test",
+            "input_tokens": 37,
+            "measurement_data": {
+              "additional_reserved_tokens": 0,
+              "context_window_tokens": 8192,
+              "measured_at": "2026-10-07T02:16:16.504956Z",
+              "measured_input_tokens": 4628,
+              "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+              "pricing_version": "local-qwen35-external-tariff-v1",
+              "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+              "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+              "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+              "requested_output_tokens": 2048,
+              "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+              "usage_semantics": "aggregate_input_output_v1",
+              "verification_state": "TEST_CONTRACT_VERIFIED"
+            },
+            "measurement_status": "MEASURED",
+            "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+            "output_tokens": 4,
+            "permit_id": "8e7f2f0d-ad13-5acd-a021-9c8b5b2c98d5",
+            "permit_state": "CONSUMED",
+            "price_synthetic": true,
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "provider_call_id": "fake-response-3",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "reported_cost_usd": null,
+            "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+            "settlement_state": "SETTLED",
+            "total_tokens": 41,
+            "usage_completeness": "COMPLETE"
+          }
+        ],
+        "ledger": [
+          {
+            "effect_type": "HOLD",
+            "entries": 6,
+            "held_delta": "0",
+            "spent_delta": "0"
+          },
+          {
+            "effect_type": "SETTLE",
+            "entries": 6,
+            "held_delta": "0",
+            "spent_delta": "0"
+          }
+        ],
+        "responses": [
+          {
+            "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+            "outcome": "POSITION_COMMITTED",
+            "proposal": {
+              "action": "commit",
+              "base_version": 0,
+              "input_revision": 1,
+              "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+              "proposed_position": {
+                "applicability": [
+                  "Only to the supplied synthetic candidate metrics and decision thresholds."
+                ],
+                "assumptions": [
+                  "fixture metrics are test assumptions"
+                ],
+                "confidence": {
+                  "basis": [
+                    "the two selected Evidence records",
+                    "the stored Critic review"
+                  ],
+                  "level": "medium",
+                  "missing_evidence": []
+                },
+                "dissent_refs": [
+                  "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+                ],
+                "evidence_refs": [
+                  "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+                  "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+                ],
+                "statement": "Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+                "uncertainty": "Validate cost and p95 latency against the target environment before operational use."
+              },
+              "reason_for_change": "Persist the candidate decision with the Critic's validation condition.",
+              "schema_version": "1",
+              "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+              "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51"
+            },
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "response_text": "Position saved for p6f-reviewed-topic-33Z-c4d3fa51 as version 1: Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+            "stop_reason": "COMPLETED"
+          }
+        ],
+        "task": {
+          "id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+          "input_revision": 1,
+          "outcome": "POSITION_COMMITTED",
+          "owner_scope": "p6f-fake-33Z-c4d3fa51",
+          "provider_calls": 3,
+          "status": "COMPLETED",
+          "stop_reason": "COMPLETED"
+        }
+      },
+      "financial": {
+        "accounts": [
+          {
+            "held_amount": "0",
+            "limit_amount": "5.00",
+            "period_id": "2026-10-07",
+            "scope_kind": "SYSTEM",
+            "scope_ref": "hekate",
+            "spent_amount": "0"
+          },
+          {
+            "held_amount": "0",
+            "limit_amount": "1.00",
+            "period_id": "lifetime",
+            "scope_kind": "TASK",
+            "scope_ref": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+            "spent_amount": "0"
+          }
+        ],
+        "position_commit_receipts": [
+          {
+            "created_at": "2026-10-07T02:16:17.979472+00:00",
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+            "receipt": {
+              "conflict": false,
+              "current_version": null,
+              "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+              "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+              "replayed": false,
+              "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b",
+              "response_text": "Position saved for p6f-reviewed-topic-33Z-c4d3fa51 as version 1: Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+              "scope": "p6f-fake-33Z-c4d3fa51",
+              "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+              "version": 1
+            },
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b"
+          }
+        ],
+        "reservations": [
+          {
+            "amount": "0",
+            "held_amount": "0",
+            "operation_kind": "critic.review",
+            "purpose": "operation_envelope",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0",
+            "held_amount": "0",
+            "operation_kind": "hekate.synthesis",
+            "purpose": "operation_envelope",
+            "status": "SETTLED"
+          },
+          {
+            "amount": "0",
+            "held_amount": "0",
+            "operation_kind": "hekate.turn",
+            "purpose": "operation_envelope",
+            "status": "SETTLED"
+          }
+        ]
+      },
+      "projection": {
+        "applied_version": 1,
+        "attempt_count": 1,
+        "desired_version": 1,
+        "observed_memory_version": 1,
+        "observed_payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+        "operation_id": "8c290132-b814-5cc6-aa1d-0525e839a0ea",
+        "payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+        "pending_reason": null,
+        "request_hash": "3133dadae9c90d572c9b2c25f8d6327096edb6ce3d2ebba3b30efca0a46baf34",
+        "state": "APPLIED"
+      },
+      "workflow": {
+        "agents": [
+          {
+            "intended_state": "DELETED",
+            "persistence": "ephemeral",
+            "provider_agent_id": "agent-local-abf4bff4-d2e1-4cdb-8f2d-3178fa7c59e9",
+            "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+            "role": "critic"
+          },
+          {
+            "intended_state": "READY",
+            "persistence": "persistent",
+            "provider_agent_id": "agent-local-f619a70a-d214-44ae-bc54-e5ffa302eee9",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "role": "hekate"
+          }
+        ],
+        "dissent": [
+          {
+            "body": {
+              "claim": "Test assumptions need independent validation before operational use.",
+              "condition": "if the fixture values are used to make a live service decision",
+              "id": "O1",
+              "severity": "high",
+              "suggested_validation": "measure monthly cost and p95 latency in the target environment"
+            },
+            "id": "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+          }
+        ],
+        "workflow": {
+          "create_operation_id": "4c48411c-b6f8-5026-9a35-adb8142b1354",
+          "critic_conclusion_id": "d68aa798-681c-5a44-90f8-3af66ff83989",
+          "critic_registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+          "critic_state": "DELETED",
+          "delete_operation_id": "401bcf85-6638-5629-9516-dfc6993b3dba",
+          "input_revision": 1,
+          "parent_attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+          "planning_operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+          "provider_agent_id": "agent-local-abf4bff4-d2e1-4cdb-8f2d-3178fa7c59e9",
+          "review_attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+          "review_operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+          "stage": "COMPLETE",
+          "synthesis_attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+          "synthesis_operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179"
+        }
+      }
+    },
+    "database_effects_unchanged": true,
+    "provider_request_count": 4
+  },
+  "schema_version": "1",
+  "scope_id": "p6f-fake-33Z-c4d3fa51",
+  "status": "PASS",
+  "task_a": {
+    "call_states": [
+      {
+        "operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+        "permit_state": "CONSUMED",
+        "status": "QUIESCENT"
+      },
+      {
+        "operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+        "permit_state": "CONSUMED",
+        "status": "QUIESCENT"
+      },
+      {
+        "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+        "permit_state": "CONSUMED",
+        "status": "QUIESCENT"
+      }
+    ],
+    "operation_states": [
+      {
+        "id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+        "kind": "hekate.turn",
+        "state": "COMPLETED"
+      },
+      {
+        "id": "77b2e8b4-6416-5e83-b50f-735779427374",
+        "kind": "critic.review",
+        "state": "COMPLETED"
+      },
+      {
+        "id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+        "kind": "hekate.synthesis",
+        "state": "COMPLETED"
+      }
+    ],
+    "question": "두 근거의 수치는 테스트 가정입니다. 첫 응답은 반드시 proposal.action=spawn, role=critic으로 한 명의 Critic 검토를 요청하세요. 이 planning 응답에서는 answer, request_information, abstain, commit을 제출하지 마세요. Critic 결과를 받은 뒤 같은 HEKATE가 검토를 반영해 후보와 적용 조건을 Position으로 저장하세요. 추가 검토나 continuation은 요청하지 마세요.",
+    "request_key": "p6f-fake-p6f-fake-20261007T021533Z-c4d3fa51-task-a",
+    "task": {
+      "outcome": "POSITION_COMMITTED",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED"
+    },
+    "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+    "workflow": {
+      "critic_conclusion_id": "d68aa798-681c-5a44-90f8-3af66ff83989",
+      "critic_registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+      "critic_state": "DELETED",
+      "delete_operation_id": "401bcf85-6638-5629-9516-dfc6993b3dba",
+      "input_revision": 1,
+      "planning_operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+      "stage": "COMPLETE",
+      "synthesis_operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+      "task_revision": 1
+    }
+  },
+  "task_a_financial_state": {
+    "accounts": [
+      {
+        "held_amount": "0",
+        "limit_amount": "5.00",
+        "period_id": "2026-10-07",
+        "scope_kind": "SYSTEM",
+        "scope_ref": "hekate",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "0",
+        "limit_amount": "1.00",
+        "period_id": "lifetime",
+        "scope_kind": "TASK",
+        "scope_ref": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+        "spent_amount": "0"
+      }
+    ],
+    "position_commit_receipts": [
+      {
+        "created_at": "2026-10-07T02:16:17.979472+00:00",
+        "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+        "receipt": {
+          "conflict": false,
+          "current_version": null,
+          "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+          "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+          "replayed": false,
+          "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b",
+          "response_text": "Position saved for p6f-reviewed-topic-33Z-c4d3fa51 as version 1: Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+          "scope": "p6f-fake-33Z-c4d3fa51",
+          "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+          "version": 1
+        },
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b"
+      }
+    ],
+    "reservations": [
+      {
+        "amount": "0",
+        "held_amount": "0",
+        "operation_kind": "critic.review",
+        "purpose": "operation_envelope",
+        "status": "SETTLED"
+      },
+      {
+        "amount": "0",
+        "held_amount": "0",
+        "operation_kind": "hekate.synthesis",
+        "purpose": "operation_envelope",
+        "status": "SETTLED"
+      },
+      {
+        "amount": "0",
+        "held_amount": "0",
+        "operation_kind": "hekate.turn",
+        "purpose": "operation_envelope",
+        "status": "SETTLED"
+      }
+    ]
+  },
+  "task_a_history": {
+    "after_version": 0,
+    "items": [
+      {
+        "base_version": 0,
+        "body": {
+          "applicability": [
+            "Only to the supplied synthetic candidate metrics and decision thresholds."
+          ],
+          "assumptions": [
+            "fixture metrics are test assumptions"
+          ],
+          "confidence": {
+            "basis": [
+              "the two selected Evidence records",
+              "the stored Critic review"
+            ],
+            "level": "medium",
+            "missing_evidence": []
+          },
+          "dissent_refs": [
+            "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+          ],
+          "evidence_refs": [
+            "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+            "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+          ],
+          "statement": "Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+          "uncertainty": "Validate cost and p95 latency against the target environment before operational use."
+        },
+        "conclusion_id": "96450c72-6542-5152-9050-25b42e5e7dfd",
+        "created_at": "2026-10-07T02:16:18.016983Z",
+        "dissent_refs": [
+          "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+        ],
+        "evidence_refs": [
+          "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+          "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+        ],
+        "input_revision": 1,
+        "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+        "projection_applied_version": 1,
+        "projection_desired_version": 1,
+        "projection_next_retry_at": null,
+        "projection_observed_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+        "projection_observed_version": 1,
+        "projection_operation_id": "8c290132-b814-5cc6-aa1d-0525e839a0ea",
+        "projection_payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+        "projection_pending_reason": null,
+        "projection_state": "APPLIED",
+        "reason_for_change": "Persist the candidate decision with the Critic's validation condition.",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "scope": "p6f-fake-33Z-c4d3fa51",
+        "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+        "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+        "version": 1
+      }
+    ],
+    "limit": 50,
+    "next_after_version": null
+  },
+  "task_a_position": {
+    "current": {
+      "base_version": 0,
+      "body": {
+        "applicability": [
+          "Only to the supplied synthetic candidate metrics and decision thresholds."
+        ],
+        "assumptions": [
+          "fixture metrics are test assumptions"
+        ],
+        "confidence": {
+          "basis": [
+            "the two selected Evidence records",
+            "the stored Critic review"
+          ],
+          "level": "medium",
+          "missing_evidence": []
+        },
+        "dissent_refs": [
+          "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+        ],
+        "evidence_refs": [
+          "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+          "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+        ],
+        "statement": "Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+        "uncertainty": "Validate cost and p95 latency against the target environment before operational use."
+      },
+      "conclusion_id": "96450c72-6542-5152-9050-25b42e5e7dfd",
+      "created_at": "2026-10-07T02:16:18.016983Z",
+      "dissent_refs": [
+        "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+      ],
+      "evidence_refs": [
+        "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+        "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+      ],
+      "input_revision": 1,
+      "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+      "projection_applied_version": 1,
+      "projection_desired_version": 1,
+      "projection_next_retry_at": null,
+      "projection_observed_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+      "projection_observed_version": 1,
+      "projection_operation_id": "8c290132-b814-5cc6-aa1d-0525e839a0ea",
+      "projection_payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+      "projection_pending_reason": null,
+      "projection_state": "APPLIED",
+      "reason_for_change": "Persist the candidate decision with the Critic's validation condition.",
+      "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+      "scope": "p6f-fake-33Z-c4d3fa51",
+      "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+      "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+      "version": 1
+    },
+    "current_version": 1,
+    "scope": "p6f-fake-33Z-c4d3fa51",
+    "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51"
+  },
+  "task_a_workflow": {
+    "agents": [
+      {
+        "intended_state": "DELETED",
+        "persistence": "ephemeral",
+        "provider_agent_id": "agent-local-abf4bff4-d2e1-4cdb-8f2d-3178fa7c59e9",
+        "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+        "role": "critic"
+      },
+      {
+        "intended_state": "READY",
+        "persistence": "persistent",
+        "provider_agent_id": "agent-local-f619a70a-d214-44ae-bc54-e5ffa302eee9",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "role": "hekate"
+      }
+    ],
+    "dissent": [
+      {
+        "body": {
+          "claim": "Test assumptions need independent validation before operational use.",
+          "condition": "if the fixture values are used to make a live service decision",
+          "id": "O1",
+          "severity": "high",
+          "suggested_validation": "measure monthly cost and p95 latency in the target environment"
+        },
+        "id": "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+      }
+    ],
+    "workflow": {
+      "create_operation_id": "4c48411c-b6f8-5026-9a35-adb8142b1354",
+      "critic_conclusion_id": "d68aa798-681c-5a44-90f8-3af66ff83989",
+      "critic_registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+      "critic_state": "DELETED",
+      "delete_operation_id": "401bcf85-6638-5629-9516-dfc6993b3dba",
+      "input_revision": 1,
+      "parent_attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+      "planning_operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+      "provider_agent_id": "agent-local-abf4bff4-d2e1-4cdb-8f2d-3178fa7c59e9",
+      "review_attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+      "review_operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+      "stage": "COMPLETE",
+      "synthesis_attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+      "synthesis_operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179"
+    }
+  },
+  "task_b": {
+    "call_states": [
+      {
+        "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+        "permit_state": "CONSUMED",
+        "status": "QUIESCENT"
+      }
+    ],
+    "operation_states": [
+      {
+        "id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+        "kind": "hekate.turn",
+        "state": "COMPLETED"
+      }
+    ],
+    "question": "현재 저장한 판단과 적용 조건을 짧게 설명해 주세요. 추가 Critic 검토나 Position 변경은 요청하지 마세요.",
+    "request_key": "p6f-fake-p6f-fake-20261007T021533Z-c4d3fa51-task-b",
+    "task": {
+      "outcome": "PROVISIONAL_ANSWER",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED"
+    },
+    "task_id": "9c3299d1-4dcf-4021-9060-7b3e068ab9e2"
+  },
+  "task_b_history": {
+    "after_version": 0,
+    "items": [
+      {
+        "base_version": 0,
+        "body": {
+          "applicability": [
+            "Only to the supplied synthetic candidate metrics and decision thresholds."
+          ],
+          "assumptions": [
+            "fixture metrics are test assumptions"
+          ],
+          "confidence": {
+            "basis": [
+              "the two selected Evidence records",
+              "the stored Critic review"
+            ],
+            "level": "medium",
+            "missing_evidence": []
+          },
+          "dissent_refs": [
+            "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+          ],
+          "evidence_refs": [
+            "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+            "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+          ],
+          "statement": "Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+          "uncertainty": "Validate cost and p95 latency against the target environment before operational use."
+        },
+        "conclusion_id": "96450c72-6542-5152-9050-25b42e5e7dfd",
+        "created_at": "2026-10-07T02:16:18.016983Z",
+        "dissent_refs": [
+          "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+        ],
+        "evidence_refs": [
+          "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+          "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+        ],
+        "input_revision": 1,
+        "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+        "projection_applied_version": 1,
+        "projection_desired_version": 1,
+        "projection_next_retry_at": null,
+        "projection_observed_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+        "projection_observed_version": 1,
+        "projection_operation_id": "8c290132-b814-5cc6-aa1d-0525e839a0ea",
+        "projection_payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+        "projection_pending_reason": null,
+        "projection_state": "APPLIED",
+        "reason_for_change": "Persist the candidate decision with the Critic's validation condition.",
+        "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+        "scope": "p6f-fake-33Z-c4d3fa51",
+        "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+        "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+        "version": 1
+      }
+    ],
+    "limit": 50,
+    "next_after_version": null
+  },
+  "task_b_position": {
+    "current": {
+      "base_version": 0,
+      "body": {
+        "applicability": [
+          "Only to the supplied synthetic candidate metrics and decision thresholds."
+        ],
+        "assumptions": [
+          "fixture metrics are test assumptions"
+        ],
+        "confidence": {
+          "basis": [
+            "the two selected Evidence records",
+            "the stored Critic review"
+          ],
+          "level": "medium",
+          "missing_evidence": []
+        },
+        "dissent_refs": [
+          "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+        ],
+        "evidence_refs": [
+          "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+          "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+        ],
+        "statement": "Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+        "uncertainty": "Validate cost and p95 latency against the target environment before operational use."
+      },
+      "conclusion_id": "96450c72-6542-5152-9050-25b42e5e7dfd",
+      "created_at": "2026-10-07T02:16:18.016983Z",
+      "dissent_refs": [
+        "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+      ],
+      "evidence_refs": [
+        "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+        "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+      ],
+      "input_revision": 1,
+      "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+      "projection_applied_version": 1,
+      "projection_desired_version": 1,
+      "projection_next_retry_at": null,
+      "projection_observed_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+      "projection_observed_version": 1,
+      "projection_operation_id": "8c290132-b814-5cc6-aa1d-0525e839a0ea",
+      "projection_payload_digest": "7ad9b4d07e69b34b701fa76f1f8e466a8ee339d1cf5d57c8b5d8c19942e1a4cd",
+      "projection_pending_reason": null,
+      "projection_state": "APPLIED",
+      "reason_for_change": "Persist the candidate decision with the Critic's validation condition.",
+      "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+      "scope": "p6f-fake-33Z-c4d3fa51",
+      "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+      "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+      "version": 1
+    },
+    "current_version": 1,
+    "scope": "p6f-fake-33Z-c4d3fa51",
+    "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51"
+  },
+  "task_calls_and_cost_state": {
+    "9c3299d1-4dcf-4021-9060-7b3e068ab9e2": {
+      "calls": [
+        {
+          "accounting_call_id": "09402c2d-ae84-4446-99e9-9c84678e752c",
+          "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+          "call_status": "QUIESCENT",
+          "evaluated_cost_usd": "0",
+          "execution_mode": "synthetic_test",
+          "input_tokens": 37,
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 8192,
+            "measured_at": "2026-10-07T02:16:29.648362Z",
+            "measured_input_tokens": 4550,
+            "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+            "pricing_version": "local-qwen35-external-tariff-v1",
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+            "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+            "requested_output_tokens": 2048,
+            "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+          "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+          "output_tokens": 4,
+          "permit_id": "3bcb0f4f-d25b-568a-bb79-057c4174bb6e",
+          "permit_state": "CONSUMED",
+          "price_synthetic": true,
+          "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+          "provider_call_id": "fake-response-4",
+          "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+          "reported_cost_usd": null,
+          "request_digest": "fdecd7d94ba1e8b39ce8aed428112d5f00261ef100353f376de80fc73e251293",
+          "settlement_state": "SETTLED",
+          "total_tokens": 41,
+          "usage_completeness": "COMPLETE"
+        }
+      ],
+      "ledger": [
+        {
+          "effect_type": "HOLD",
+          "entries": 2,
+          "held_delta": "0",
+          "spent_delta": "0"
+        },
+        {
+          "effect_type": "SETTLE",
+          "entries": 2,
+          "held_delta": "0",
+          "spent_delta": "0"
+        }
+      ],
+      "responses": [
+        {
+          "attempt_id": "c8f51173-8e91-5c5b-8675-19f96ab830ed",
+          "operation_id": "9ff9e431-5310-5e7f-9661-7c08a7226b20",
+          "outcome": "PROVISIONAL_ANSWER",
+          "proposal": {
+            "action": "answer",
+            "answer": "Candidate A fits the stated test limits, but its cost and latency values must be checked in the target environment.",
+            "schema_version": "1"
+          },
+          "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+          "response_text": "Candidate A fits the stated test limits, but its cost and latency values must be checked in the target environment.",
+          "stop_reason": "COMPLETED"
+        }
+      ],
+      "task": {
+        "id": "9c3299d1-4dcf-4021-9060-7b3e068ab9e2",
+        "input_revision": 1,
+        "outcome": "PROVISIONAL_ANSWER",
+        "owner_scope": "p6f-fake-33Z-c4d3fa51",
+        "provider_calls": 1,
+        "status": "COMPLETED",
+        "stop_reason": "COMPLETED"
+      }
+    },
+    "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6": {
+      "calls": [
+        {
+          "accounting_call_id": "7a5daaee-4e04-4489-8dcf-eb75e6de25c7",
+          "attempt_id": "d7d453b6-b0f9-5268-b195-d2636fbff725",
+          "call_status": "QUIESCENT",
+          "evaluated_cost_usd": "0",
+          "execution_mode": "synthetic_test",
+          "input_tokens": 37,
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 8192,
+            "measured_at": "2026-10-07T02:16:08.372345Z",
+            "measured_input_tokens": 3263,
+            "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+            "pricing_version": "local-qwen35-external-tariff-v1",
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+            "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+            "requested_output_tokens": 2048,
+            "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+          "operation_id": "6c70a210-8244-5f47-8c8e-b3dfa1b9ef99",
+          "output_tokens": 4,
+          "permit_id": "c5dfc022-70fa-5494-8786-a90465ca515b",
+          "permit_state": "CONSUMED",
+          "price_synthetic": true,
+          "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+          "provider_call_id": "fake-response-1",
+          "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+          "reported_cost_usd": null,
+          "request_digest": "4867d6a4efad30a1ea45fcbb7024e933e2490ce01f1c70ef3fec6e7b6fd88bb8",
+          "settlement_state": "SETTLED",
+          "total_tokens": 41,
+          "usage_completeness": "COMPLETE"
+        },
+        {
+          "accounting_call_id": "390e4665-4cee-454d-b57a-eab42c4f5302",
+          "attempt_id": "fcc34b71-de56-50b1-b8dd-1aca2f8eccc5",
+          "call_status": "QUIESCENT",
+          "evaluated_cost_usd": "0",
+          "execution_mode": "synthetic_test",
+          "input_tokens": 37,
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 8192,
+            "measured_at": "2026-10-07T02:16:12.147228Z",
+            "measured_input_tokens": 3406,
+            "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+            "pricing_version": "local-qwen35-external-tariff-v1",
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+            "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+            "requested_output_tokens": 1190,
+            "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+          "operation_id": "77b2e8b4-6416-5e83-b50f-735779427374",
+          "output_tokens": 4,
+          "permit_id": "b1e5493a-3c28-580a-9a2c-c40f1f28181a",
+          "permit_state": "CONSUMED",
+          "price_synthetic": true,
+          "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+          "provider_call_id": "fake-response-2",
+          "registry_id": "e470d555-a548-564f-8461-14e067d217bf",
+          "reported_cost_usd": null,
+          "request_digest": "4ee5c677c782acceb5e692cd358d812b3ab5840ef5859a130ff221ae27d6d0b2",
+          "settlement_state": "SETTLED",
+          "total_tokens": 41,
+          "usage_completeness": "COMPLETE"
+        },
+        {
+          "accounting_call_id": "1f1d8a58-4f68-4509-9abd-881959ed4e48",
+          "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+          "call_status": "QUIESCENT",
+          "evaluated_cost_usd": "0",
+          "execution_mode": "synthetic_test",
+          "input_tokens": 37,
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 8192,
+            "measured_at": "2026-10-07T02:16:16.504956Z",
+            "measured_input_tokens": 4628,
+            "pricing_digest": "14bf8606946fa2dfa202dfd5c5fd7c9253e8fb81535777416d77d464c50461d2",
+            "pricing_version": "local-qwen35-external-tariff-v1",
+            "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+            "renderer_identity": "ollama/0.34.0:qwen3.5:a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23:2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+            "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+            "requested_output_tokens": 2048,
+            "tokenizer_identity": "gguf-gpt2/qwen35:136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f:3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69:llama.cpp-b10760",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+          "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+          "output_tokens": 4,
+          "permit_id": "8e7f2f0d-ad13-5acd-a021-9c8b5b2c98d5",
+          "permit_state": "CONSUMED",
+          "price_synthetic": true,
+          "profile_digest": "bb04afde958c61344f9b33667b24de6d2b539ef4000a9d029d84eaac70f39103",
+          "provider_call_id": "fake-response-3",
+          "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+          "reported_cost_usd": null,
+          "request_digest": "a2c2dfd09ad51c72afa753593a766a0fe16bd3b6987f6ae544dee28b7b11d449",
+          "settlement_state": "SETTLED",
+          "total_tokens": 41,
+          "usage_completeness": "COMPLETE"
+        }
+      ],
+      "ledger": [
+        {
+          "effect_type": "HOLD",
+          "entries": 6,
+          "held_delta": "0",
+          "spent_delta": "0"
+        },
+        {
+          "effect_type": "SETTLE",
+          "entries": 6,
+          "held_delta": "0",
+          "spent_delta": "0"
+        }
+      ],
+      "responses": [
+        {
+          "attempt_id": "a7c4846b-4922-5b11-b113-091d03133a11",
+          "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179",
+          "outcome": "POSITION_COMMITTED",
+          "proposal": {
+            "action": "commit",
+            "base_version": 0,
+            "input_revision": 1,
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+            "proposed_position": {
+              "applicability": [
+                "Only to the supplied synthetic candidate metrics and decision thresholds."
+              ],
+              "assumptions": [
+                "fixture metrics are test assumptions"
+              ],
+              "confidence": {
+                "basis": [
+                  "the two selected Evidence records",
+                  "the stored Critic review"
+                ],
+                "level": "medium",
+                "missing_evidence": []
+              },
+              "dissent_refs": [
+                "e049f5f0-238e-5d49-860f-1a5133e5a4fc"
+              ],
+              "evidence_refs": [
+                "8129ff45-c8ca-46c5-8c66-227a48d11bd6",
+                "f9fd44d1-7a3e-4a8f-9dc9-1475283fd564"
+              ],
+              "statement": "Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+              "uncertainty": "Validate cost and p95 latency against the target environment before operational use."
+            },
+            "reason_for_change": "Persist the candidate decision with the Critic's validation condition.",
+            "schema_version": "1",
+            "task_id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+            "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51"
+          },
+          "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+          "response_text": "Position saved for p6f-reviewed-topic-33Z-c4d3fa51 as version 1: Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+          "stop_reason": "COMPLETED"
+        }
+      ],
+      "task": {
+        "id": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+        "input_revision": 1,
+        "outcome": "POSITION_COMMITTED",
+        "owner_scope": "p6f-fake-33Z-c4d3fa51",
+        "provider_calls": 3,
+        "status": "COMPLETED",
+        "stop_reason": "COMPLETED"
+      }
+    }
+  },
+  "task_financial_state": {
+    "9c3299d1-4dcf-4021-9060-7b3e068ab9e2": {
+      "accounts": [
+        {
+          "held_amount": "0",
+          "limit_amount": "5.00",
+          "period_id": "2026-10-07",
+          "scope_kind": "SYSTEM",
+          "scope_ref": "hekate",
+          "spent_amount": "0"
+        },
+        {
+          "held_amount": "0",
+          "limit_amount": "1.00",
+          "period_id": "lifetime",
+          "scope_kind": "TASK",
+          "scope_ref": "9c3299d1-4dcf-4021-9060-7b3e068ab9e2",
+          "spent_amount": "0"
+        }
+      ],
+      "position_commit_receipts": [
+        {
+          "created_at": "2026-10-07T02:16:17.979472+00:00",
+          "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+          "receipt": {
+            "conflict": false,
+            "current_version": null,
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "replayed": false,
+            "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b",
+            "response_text": "Position saved for p6f-reviewed-topic-33Z-c4d3fa51 as version 1: Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+            "scope": "p6f-fake-33Z-c4d3fa51",
+            "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+            "version": 1
+          },
+          "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+          "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b"
+        }
+      ],
+      "reservations": [
+        {
+          "amount": "0",
+          "held_amount": "0",
+          "operation_kind": "hekate.turn",
+          "purpose": "operation_envelope",
+          "status": "SETTLED"
+        }
+      ]
+    },
+    "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6": {
+      "accounts": [
+        {
+          "held_amount": "0",
+          "limit_amount": "5.00",
+          "period_id": "2026-10-07",
+          "scope_kind": "SYSTEM",
+          "scope_ref": "hekate",
+          "spent_amount": "0"
+        },
+        {
+          "held_amount": "0",
+          "limit_amount": "1.00",
+          "period_id": "lifetime",
+          "scope_kind": "TASK",
+          "scope_ref": "c9ca0331-f5ff-4c3a-aa9d-1173c37d56f6",
+          "spent_amount": "0"
+        }
+      ],
+      "position_commit_receipts": [
+        {
+          "created_at": "2026-10-07T02:16:17.979472+00:00",
+          "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+          "receipt": {
+            "conflict": false,
+            "current_version": null,
+            "operation_id": "27d771f7-9c3a-5674-a353-a1015b18d179:position.commit",
+            "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+            "replayed": false,
+            "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b",
+            "response_text": "Position saved for p6f-reviewed-topic-33Z-c4d3fa51 as version 1: Under the submitted test assumptions, candidate A fits the monthly budget and p95 limit; verify these values against the target environment before relying on them.",
+            "scope": "p6f-fake-33Z-c4d3fa51",
+            "topic_id": "p6f-reviewed-topic-33Z-c4d3fa51",
+            "version": 1
+          },
+          "registry_id": "abfba515-50dc-5ddc-9a9a-c4cb8eaa1fd9",
+          "request_hash": "e66131ab5955cd93c0d3d7e553468f27db2c5e295e3392d38de07b847c89489b"
+        }
+      ],
+      "reservations": [
+        {
+          "amount": "0",
+          "held_amount": "0",
+          "operation_kind": "critic.review",
+          "purpose": "operation_envelope",
+          "status": "SETTLED"
+        },
+        {
+          "amount": "0",
+          "held_amount": "0",
+          "operation_kind": "hekate.synthesis",
+          "purpose": "operation_envelope",
+          "status": "SETTLED"
+        },
+        {
+          "amount": "0",
+          "held_amount": "0",
+          "operation_kind": "hekate.turn",
+          "purpose": "operation_envelope",
+          "status": "SETTLED"
+        }
+      ]
+    }
+  },
+  "unexecuted": [],
+  "unsettled_or_unknown": [],
+  "worktree_changes": [
+    " M docs/local-quickstart.md",
+    " M integration/letta/patches/provider-call-context-usage.patch",
+    " M integration/letta/versions.lock.json",
+    " M scripts/integration_probe.py",
+    " M scripts/phase6e_local_cli_probe.py",
+    " M src/hekate/application/turns.py",
+    " M src/hekate/diagnostics.py",
+    " M src/hekate/infrastructure/letta/gateway_entry.py",
+    " M src/hekate/infrastructure/letta/provider_gateway.py",
+    " M src/hekate/infrastructure/letta/qwen_local_profile.py",
+    " M src/hekate/infrastructure/letta/token_accounting.py",
+    " M src/hekate/infrastructure/postgres/task_repository.py",
+    " M src/hekate/ports/store.py",
+    " M src/hekate/settings.py",
+    " M tests/unit/test_phase6e_local_settings.py",
+    " M tests/unit/test_qwen_ollama.py",
+    "?? config/local-reviewed.example/",
+    "?? docs/implementation/phase6f-reviewed-qwen.md",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T011123Z-28e9cea9-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T011648Z-67aca025-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T012057Z-d0db0453-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T012541Z-e01852d6-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T012658Z-c9f2a53c-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T013325Z-2919d524-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T013750Z-a1f07bf9-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T014514Z-a32790e9-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-fake-20261007T015718Z-1f0aeecb-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-real-20261007T012852Z-1619873d-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-real-20261007T014451Z-00bf2b19-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-real-20261007T014647Z-b30b6924-reviewed-qwen.json",
+    "?? integration/runtime/artifacts/p6f-real-continuation-20261007T020150Z-0b69db56-task-b-readback.json",
+    "?? integration/runtime/artifacts/p6f-real-reconciliation-20261007T021014Z-b0c47acf-task-b-replay.json",
+    "?? integration/runtime/artifacts/p6f-reconciliation-20261007T013542Z-cbff8805-actual-action-mismatch.json",
+    "?? integration/runtime/artifacts/p6f-reconciliation-20261007T013919Z-f1161c10-latest-fake-and-real-mismatch.json",
+    "?? scripts/phase6f_reviewed_qwen_probe.py",
+    "?? src/hekate/infrastructure/letta/reviewed_qwen_profile.py",
+    "?? tests/unit/test_phase6f_generation_allowance.py"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "app_server": {
+    "backend": "local",
+    "image": "ghcr.io/letta-ai/letta-code",
+    "image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "letta_code_version": "0.33.8",
+    "protocol_version": "1",
+    "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+  },
+  "bridge": {
+    "node_version": "22.19.0",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "sdk": {
+      "name": "@letta-ai/letta-agent-sdk",
+      "version": "0.8.25",
+      "source_commit": "07180877b65b4c2633150316dc504c39159a45ca",
+      "npm_integrity": "sha512-DDp7PFgwd3W7H/hJW+hA7iRAOCtYdx7aVuRQrQbNcM3UqqzgsEiuVVQgRFYhVI+ktviWfweStnpJDVM9PU/OgQ=="
+    },
+    "transport": "private JSONL over stdin/stdout",
+    "bridge_protocol_schema": "contracts/generated/bridge.v1.schema.json"
+  },
+  "patches": [
+    {
+      "file": "integration/letta/patches/provider-call-context-usage.patch",
+      "name": "provider-call-context-and-memory-projection",
+      "sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+      "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+version: personal-local-v1
+limits:
+  critic_agents_per_task: 1
+  review_rounds: 1
+  max_syntheses_per_task: 1
+  schema_repairs: 0
+  transient_retries: 0
+  task_budget_usd: '1.00'
+  system_daily_budget_usd: '5.00'
+  task_deadline_seconds: 900
+  max_generations_per_task: 3
+tool_grants: []
+allowed_actions:
+- answer
+- request_information
+- abstain
+- commit
+retention: {}
+critic:
+  enabled: true
+  max_agents_per_task: 1
+  max_review_rounds: 1
+  max_syntheses_per_task: 1
+deliberation:
+  enabled: false
+  max_critic_agents: 1
+  max_review_rounds: 2
+  max_hekate_continuations: 0
+  max_syntheses_per_task: 1

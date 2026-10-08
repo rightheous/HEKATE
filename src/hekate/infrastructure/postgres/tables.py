@@ -1,8 +1,825 @@
-from sqlalchemy import MetaData
+from __future__ import annotations
+
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    Integer,
+    MetaData,
+    Numeric,
+    PrimaryKeyConstraint,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+    text,
+)
+from sqlalchemy.dialects.postgresql import JSONB
 
 _metadata = MetaData()
+money = Numeric(asdecimal=True)
+instant = DateTime(timezone=True)
+json_default = text("'{}'::jsonb")
+
+authorization_scopes = Table(
+    "authorization_scopes", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("principal_id", Text, nullable=False),
+    Column("policy_version", Text, nullable=False),
+    Column("authz_epoch", Integer, nullable=False, server_default="0"),
+    Column("active", Boolean, nullable=False, server_default=text("true")),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("authz_epoch >= 0", name="ck_authorization_scopes_epoch"),
+)
+
+tasks = Table(
+    "tasks", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("owner_scope", Text, ForeignKey("authorization_scopes.id"), nullable=False),
+    Column("question", Text, nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("constraints_hash", String(64), nullable=False),
+    Column("status", String(16), nullable=False),
+    Column("topic_id", Text),
+    Column("evidence_refs", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("base_position_version", Integer, nullable=False, server_default="0"),
+    Column("deadline", instant, nullable=False),
+    Column("outcome", Text),
+    Column("stop_reason", Text),
+    Column("cancel_requested_at", instant),
+    Column("critic_agents", Integer, nullable=False, server_default="0"),
+    Column("review_rounds", Integer, nullable=False, server_default="0"),
+    Column("hekate_continuations", Integer, nullable=False, server_default="0"),
+    Column("schema_repairs", Integer, nullable=False, server_default="0"),
+    Column("transient_retries", Integer, nullable=False, server_default="0"),
+    Column("tool_calls", Integer, nullable=False, server_default="0"),
+    Column("provider_calls", Integer, nullable=False, server_default="0"),
+    Column("max_provider_calls", Integer, nullable=False, server_default="0"),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1", name="ck_tasks_revision"),
+    CheckConstraint("base_position_version >= 0", name="ck_tasks_position_version"),
+    CheckConstraint("status IN ('QUEUED','RUNNING','WAITING','STOPPING','COMPLETED','FAILED','CANCELLED')", name="ck_tasks_status"),
+    CheckConstraint("critic_agents >= 0 AND review_rounds >= 0 AND schema_repairs >= 0 AND transient_retries >= 0 AND tool_calls >= 0 AND provider_calls >= 0", name="ck_tasks_counters"),
+    CheckConstraint("max_provider_calls >= 0", name="ck_tasks_max_provider_calls"),
+    CheckConstraint("hekate_continuations >= 0", name="ck_tasks_hekate_continuations"),
+)
+
+task_inputs = Table(
+    "task_inputs", _metadata,
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("revision", Integer, nullable=False),
+    Column("question", Text, nullable=False),
+    Column("constraints", JSONB, nullable=False, server_default=json_default),
+    Column("constraints_hash", String(64), nullable=False),
+    Column("topic_id", Text),
+    Column("evidence_refs", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("accepted_at", instant, nullable=False, server_default=text("now()")),
+    PrimaryKeyConstraint("task_id", "revision", name="pk_task_inputs"),
+    CheckConstraint("revision >= 1", name="ck_task_inputs_revision"),
+)
+
+operations = Table(
+    "operations", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("owner_scope", Text, ForeignKey("authorization_scopes.id"), nullable=False),
+    Column("task_id", Text, ForeignKey("tasks.id")),
+    Column("kind", Text, nullable=False),
+    Column("request_hash", String(64), nullable=False),
+    Column("state", String(20), nullable=False),
+    Column("dispatch_state", String(24), nullable=False, server_default="NOT_STARTED"),
+    Column("execution_state", String(16), nullable=False, server_default="PENDING"),
+    Column("binding", JSONB, nullable=False),
+    Column("envelope", JSONB, nullable=False),
+    Column("receipt", JSONB),
+    Column("observation", JSONB, nullable=False, server_default=json_default),
+    Column("last_error", Text),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("state IN ('CLAIMED','ADMITTED','COMPLETED','FAILED','UNKNOWN')", name="ck_operations_state"),
+    CheckConstraint("dispatch_state IN ('NOT_STARTED','INTENT_RECORDED','SEND_INTENT','DISPATCHED','UNKNOWN','QUIESCENT')", name="ck_operations_dispatch_state"),
+    CheckConstraint("execution_state IN ('PENDING','RUNNING','UNKNOWN','QUIESCENT')", name="ck_operations_execution_state"),
+)
+
+agent_registry = Table(
+    "agent_registry", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("owner_scope", Text, ForeignKey("authorization_scopes.id"), nullable=False),
+    Column("task_id", Text, ForeignKey("tasks.id")),
+    Column("role", String(12), nullable=False),
+    Column("persistence", String(12), nullable=False, server_default="ephemeral"),
+    Column("creation_operation_id", Text, ForeignKey("operations.id"), nullable=False),
+    Column("provider_agent_id", Text, unique=True),
+    Column("intended_state", String(20), nullable=False),
+    Column("observed_state", String(16), nullable=False, server_default="UNKNOWN"),
+    Column("observed_at", instant),
+    Column("active_attempt_id", Text),
+    Column("policy_version", Text, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("role IN ('hekate','critic')", name="ck_agent_registry_role"),
+    CheckConstraint("persistence IN ('persistent','ephemeral')", name="ck_agent_registry_persistence"),
+    CheckConstraint("observed_state IN ('PRESENT','ABSENT','RUNNING','STOPPED','UNKNOWN')", name="ck_agent_registry_observation"),
+)
+Index(
+    "uq_agent_registry_persistent_hekate",
+    agent_registry.c.owner_scope,
+    unique=True,
+    postgresql_where=(agent_registry.c.role == "hekate") & (agent_registry.c.persistence == "persistent"),
+)
+Index(
+    "uq_agent_registry_critic_per_task",
+    agent_registry.c.task_id,
+    unique=True,
+    postgresql_where=(agent_registry.c.role == "critic") & (agent_registry.c.task_id.is_not(None)),
+)
+
+agent_leases = Table(
+    "agent_leases", _metadata,
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="CASCADE"), primary_key=True),
+    Column("owner_worker", Text, nullable=False),
+    Column("fence", Integer, nullable=False),
+    Column("expires_at", instant, nullable=False),
+    CheckConstraint("fence >= 1", name="ck_agent_leases_fence"),
+)
+
+attempts = Table(
+    "attempts", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("parent_attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT")),
+    Column("review_round", Integer, nullable=False, server_default="0"),
+    Column("input_revision", Integer, nullable=False),
+    Column("agent_registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("status", String(16), nullable=False),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("reservation_id", Text),
+    Column("deadline", instant, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1 AND review_round >= 0", name="ck_attempts_revision_round"),
+    CheckConstraint("status IN ('PENDING','DISPATCHED','RUNNING','SUCCEEDED','FAILED','TIMED_OUT','CANCELLED')", name="ck_attempts_status"),
+)
+agent_registry.append_constraint(ForeignKeyConstraint(
+    ["active_attempt_id"], ["attempts.id"], ondelete="SET NULL",
+    name="fk_agent_registry_active_attempt", use_alter=True,
+))
+Index("ix_attempts_task_status", attempts.c.task_id, attempts.c.status)
+
+agent_execution_holds = Table(
+    "agent_execution_holds", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("state", String(16), nullable=False),
+    Column("reason", Text),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("quiescent_at", instant),
+    CheckConstraint("state IN ('PENDING','RUNNING','UNKNOWN','QUIESCENT')", name="ck_agent_execution_holds_state"),
+)
+Index(
+    "uq_agent_execution_hold_active_registry",
+    agent_execution_holds.c.registry_id,
+    unique=True,
+    postgresql_where=agent_execution_holds.c.quiescent_at.is_(None),
+)
+
+outbox = Table(
+    "outbox", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("generation", Integer, nullable=False, server_default="0"),
+    Column("payload", JSONB, nullable=False, server_default=json_default),
+    Column("status", String(12), nullable=False, server_default="PENDING"),
+    Column("available_at", instant, nullable=False, server_default=text("now()")),
+    Column("claim_owner", Text),
+    Column("claim_fence", Integer),
+    Column("claim_expires_at", instant),
+    Column("send_intent_at", instant),
+    Column("send_intent_owner", Text),
+    Column("send_intent_fence", Integer),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("acked_at", instant),
+    UniqueConstraint("operation_id", "kind", "generation", name="uq_outbox_generation"),
+    CheckConstraint("generation >= 0", name="ck_outbox_generation"),
+    CheckConstraint("status IN ('PENDING','CLAIMED','ACKED','FAILED')", name="ck_outbox_status"),
+)
+Index("ix_outbox_due", outbox.c.status, outbox.c.available_at)
+
+inbox = Table(
+    "inbox", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("provider_scope", Text, nullable=False),
+    Column("stable_event_key", Text, nullable=False),
+    Column("payload_hash", String(64), nullable=False),
+    Column("payload", JSONB, nullable=False),
+    Column("received_at", instant, nullable=False, server_default=text("now()")),
+    Column("processed_at", instant),
+    Column("next_attempt_at", instant, nullable=False, server_default=text("now()")),
+    Column("pending_reason", Text),
+    Column("rejection_reason", Text),
+    UniqueConstraint("provider_scope", "stable_event_key", "payload_hash", name="uq_inbox_same_observation"),
+)
+Index("ix_inbox_event_identity", inbox.c.provider_scope, inbox.c.stable_event_key)
+Index("ix_inbox_pending", inbox.c.next_attempt_at, inbox.c.received_at, postgresql_where=inbox.c.processed_at.is_(None))
+
+task_submissions = Table(
+    "task_submissions", _metadata,
+    Column("owner_scope", Text, ForeignKey("authorization_scopes.id"), primary_key=True),
+    Column("request_key", String(128), primary_key=True),
+    Column("request_hash", String(64), nullable=False),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), unique=True),
+    Column("receipt", JSONB),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+)
+
+task_preparations = Table(
+    "task_preparations", _metadata,
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), primary_key=True),
+    Column("input_revision", Integer, primary_key=True),
+    Column("operation_id", Text, nullable=False, unique=True),
+    Column("attempt_id", Text, nullable=False, unique=True),
+    Column("reservation_id", Text, nullable=False, unique=True),
+    Column("claim_owner", Text),
+    Column("claim_expires_at", instant),
+    Column("conversation_id", Text),
+    Column("fence", Integer),
+    Column("state", String(16), nullable=False, server_default="PREPARING"),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1 AND (fence IS NULL OR fence >= 1)", name="ck_task_preparations_identity"),
+    CheckConstraint("state IN ('PREPARING','ADMITTED')", name="ck_task_preparations_state"),
+)
+Index("ix_task_preparations_claim", task_preparations.c.state, task_preparations.c.claim_expires_at)
+
+critic_workflows = Table(
+    "critic_workflows", _metadata,
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), primary_key=True),
+    Column("owner_scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("stage", Text, nullable=False),
+    Column("spawn_request_hash", String(64), nullable=False),
+    Column("proposal", JSONB, nullable=False),
+    Column("critic_profile", JSONB, nullable=False),
+    Column("hekate_profile", JSONB, nullable=False),
+    # The Phase 5A workflow parent is the already-admitted planning attempt.
+    Column("parent_attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT"), nullable=False),
+    Column("planning_operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("planning_conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT"), nullable=False),
+    Column("critic_registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("create_operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("review_attempt_id", Text, nullable=False, unique=True),
+    Column("review_operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("review_reservation_id", Text, ForeignKey("budget_reservations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("synthesis_attempt_id", Text, nullable=False, unique=True),
+    Column("synthesis_operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("synthesis_reservation_id", Text, ForeignKey("budget_reservations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("critic_conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT"), unique=True),
+    Column("delete_operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), unique=True),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1", name="ck_critic_workflows_revision"),
+    CheckConstraint("stage IN ('CREATE_PENDING','CREATE_UNKNOWN','CRITIC_READY','REVIEW_ADMITTED','SYNTHESIS_PENDING','SYNTHESIS_ADMITTED','DELETE_PENDING','COMPLETE','FAILED')", name="ck_critic_workflows_stage"),
+)
+Index("ix_critic_workflows_stage", critic_workflows.c.stage, critic_workflows.c.updated_at)
+
+deliberation_steps = Table(
+    "deliberation_steps", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("owner_scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("step_order", Integer, nullable=False),
+    Column("step_kind", String(24), nullable=False),
+    Column("step_slot", String(40), nullable=False),
+    Column("review_round", Integer, nullable=False, server_default="0"),
+    # Approved child step IDs may precede admission of their parent attempt.
+    # Migration 0009 deliberately removes this FK; repository validation keeps
+    # the durable identity tied to its operation/result binding.
+    Column("parent_attempt_id", Text, nullable=False),
+    Column("parent_operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("parent_conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT"), nullable=False),
+    Column("previous_step_id", Text, ForeignKey("deliberation_steps.id", ondelete="RESTRICT")),
+    Column("proposal", JSONB, nullable=False),
+    Column("proposal_hash", String(64), nullable=False),
+    Column("request_hash", String(64), nullable=False),
+    Column("work_fingerprint", String(64)),
+    Column("state", String(24), nullable=False),
+    Column("attempt_id", Text, nullable=False, unique=True),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("reservation_id", Text, ForeignKey("budget_reservations.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("profile", JSONB, nullable=False),
+    Column("context", JSONB, nullable=False, server_default=json_default),
+    Column("conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT"), unique=True),
+    Column("stop_reason", Text),
+    Column("maintenance_completed_at", instant),
+    Column("maintenance_retry_after", instant),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("task_id", "step_slot", name="uq_deliberation_task_slot"),
+    UniqueConstraint("task_id", "parent_operation_id", "proposal_hash", name="uq_deliberation_parent_proposal"),
+    UniqueConstraint("task_id", "work_fingerprint", name="uq_deliberation_task_work_fingerprint"),
+    CheckConstraint("input_revision >= 1 AND step_order >= 1 AND review_round >= 0", name="ck_deliberation_step_identity"),
+    CheckConstraint("step_kind IN ('hekate_reasoning','critic_review','synthesis')", name="ck_deliberation_step_kind"),
+    CheckConstraint("state IN ('READY','WAITING_PARENT','ADMITTED','RESULT_ACCEPTED','COMPLETE','STOPPED','REJECTED')", name="ck_deliberation_step_state"),
+)
+Index("ix_deliberation_steps_ready", deliberation_steps.c.state, deliberation_steps.c.created_at)
+Index(
+    "ix_delib_maintenance_due",
+    deliberation_steps.c.maintenance_retry_after,
+    deliberation_steps.c.created_at,
+    postgresql_where=deliberation_steps.c.maintenance_completed_at.is_(None),
+)
+
+conclusions = Table(
+    "conclusions", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT"), nullable=False),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("payload_hash", String(64), nullable=False),
+    Column("capsule", JSONB, nullable=False),
+    Column("validation_status", String(24), nullable=False),
+    Column("eligible", Boolean, nullable=False),
+    Column("provider_provenance", JSONB, nullable=False, server_default=json_default),
+    Column("rejection_reason", Text),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("attempt_id", "payload_hash", name="uq_conclusions_attempt_payload"),
+    CheckConstraint("input_revision >= 1", name="ck_conclusions_revision"),
+)
+
+turn_results = Table(
+    "turn_results", _metadata,
+    Column("inbox_id", Text, ForeignKey("inbox.id", ondelete="RESTRICT"), primary_key=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT"), nullable=False),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("output_hash", String(64), nullable=False),
+    Column("raw_output", Text),
+    Column("structured_output", JSONB),
+    Column("proposal", JSONB),
+    Column("conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT")),
+    Column("processing_state", String(24), nullable=False),
+    Column("next_attempt_at", instant, nullable=False, server_default=text("now()")),
+    Column("rejection_reason", Text),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1", name="ck_turn_results_revision"),
+    CheckConstraint("processing_state IN ('WAITING_EXECUTION','VALIDATED','REJECTED','ACCEPTED','LATE')", name="ck_turn_results_state"),
+)
+Index("ix_turn_results_pending", turn_results.c.processing_state, turn_results.c.next_attempt_at)
+
+task_responses = Table(
+    "task_responses", _metadata,
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), primary_key=True),
+    Column("input_revision", Integer, nullable=False),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("source_inbox_id", Text, ForeignKey("inbox.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("proposal", JSONB, nullable=False),
+    Column("response_text", Text, nullable=False),
+    Column("outcome", String(32), nullable=False),
+    Column("stop_reason", String(32), nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1", name="ck_task_responses_revision"),
+)
+
+audit_events = Table(
+    "audit_events", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("owner_scope", Text, ForeignKey("authorization_scopes.id")),
+    Column("task_id", Text, ForeignKey("tasks.id")),
+    Column("attempt_id", Text, ForeignKey("attempts.id")),
+    Column("operation_id", Text, ForeignKey("operations.id")),
+    Column("registry_id", Text, ForeignKey("agent_registry.id")),
+    Column("event_kind", Text, nullable=False),
+    Column("safe_payload", JSONB, nullable=False, server_default=json_default),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+)
+
+recovery_cases = Table(
+    "recovery_cases", _metadata,
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), primary_key=True),
+    Column("reason", Text, nullable=False),
+    Column("observations", JSONB, nullable=False, server_default=json_default),
+    Column("resolution", Text),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+)
+
+budget_accounts = Table(
+    "budget_accounts", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("scope_kind", String(8), nullable=False),
+    Column("scope_ref", Text, nullable=False),
+    Column("period_id", Text, nullable=False),
+    Column("limit_amount", money, nullable=False),
+    Column("spent_amount", money, nullable=False, server_default="0"),
+    Column("held_amount", money, nullable=False, server_default="0"),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("scope_kind", "scope_ref", "period_id", name="uq_budget_account_period"),
+    CheckConstraint("scope_kind IN ('TASK','SYSTEM')", name="ck_budget_account_scope_kind"),
+    CheckConstraint("limit_amount >= 0 AND spent_amount >= 0 AND held_amount >= 0", name="ck_budget_account_nonnegative"),
+    CheckConstraint("limit_amount < 'Infinity'::numeric AND limit_amount > '-Infinity'::numeric AND spent_amount < 'Infinity'::numeric AND spent_amount > '-Infinity'::numeric AND held_amount < 'Infinity'::numeric AND held_amount > '-Infinity'::numeric", name="ck_budget_account_finite"),
+)
+
+budget_reservations = Table(
+    "budget_reservations", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("purpose", Text, nullable=False),
+    Column("amount", money, nullable=False),
+    Column("status", String(24), nullable=False),
+    Column("pricing_version", Text, nullable=False),
+    Column("system_period_id", Text, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("settled_at", instant),
+    UniqueConstraint("operation_id", "purpose", name="uq_budget_reservation_purpose"),
+    CheckConstraint("purpose IN ('operation_envelope','final_response')", name="ck_budget_reservation_purpose"),
+    CheckConstraint("status IN ('RESERVED','PENDING_SETTLEMENT','SETTLED','RELEASED')", name="ck_budget_reservation_status"),
+    CheckConstraint("amount >= 0 AND amount < 'Infinity'::numeric AND amount > '-Infinity'::numeric", name="ck_budget_reservation_finite"),
+)
+attempts.append_constraint(ForeignKeyConstraint(
+    ["reservation_id"], ["budget_reservations.id"], ondelete="RESTRICT",
+    name="fk_attempts_reservation", use_alter=True,
+))
+
+reservation_accounts = Table(
+    "reservation_accounts", _metadata,
+    Column("reservation_id", Text, ForeignKey("budget_reservations.id", ondelete="RESTRICT"), nullable=False),
+    Column("account_id", Text, ForeignKey("budget_accounts.id", ondelete="RESTRICT"), nullable=False),
+    Column("held_amount", money, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    PrimaryKeyConstraint("reservation_id", "account_id", name="pk_reservation_accounts"),
+    CheckConstraint("held_amount >= 0 AND held_amount < 'Infinity'::numeric AND held_amount > '-Infinity'::numeric", name="ck_reservation_accounts_finite"),
+)
+
+provider_calls = Table(
+    "provider_calls", _metadata,
+    Column("accounting_call_id", Text, primary_key=True),
+    Column("permit_id", Text, nullable=False, unique=True),
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("attempt_id", Text, ForeignKey("attempts.id", ondelete="RESTRICT"), nullable=False),
+    Column("reservation_id", Text, ForeignKey("budget_reservations.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("call_kind", Text, nullable=False),
+    Column("slot_key", Text, nullable=False),
+    Column("intent_hash", String(64), nullable=False),
+    Column("model", Text, nullable=False),
+    Column("status", String(16), nullable=False),
+    Column("max_input_tokens", Integer, nullable=False),
+    Column("max_output_tokens", Integer, nullable=False),
+    Column("allocation_amount", money, nullable=False),
+    Column("pricing_version", Text, nullable=False),
+    Column("input_usd_per_million", money, nullable=False),
+    Column("output_usd_per_million", money, nullable=False),
+    Column("model_profile_verified", Boolean, nullable=False, server_default=text("false")),
+    Column("pricing_verified", Boolean, nullable=False, server_default=text("false")),
+    Column("tokenizer_verified", Boolean, nullable=False, server_default=text("false")),
+    Column("test_only", Boolean, nullable=False, server_default=text("false")),
+    Column("execution_mode", String(24), nullable=False, server_default=text("'synthetic_test'")),
+    Column("price_synthetic", Boolean, nullable=False, server_default=text("true")),
+    Column("input_revision", Integer, nullable=False),
+    Column("fence", Integer, nullable=False),
+    Column("conversation_id", Text),
+    Column("lease_owner", Text, nullable=False),
+    Column("expires_at", instant, nullable=False),
+    Column("measurement_status", String(24), nullable=False, server_default=text("'LEGACY_UNMEASURED'")),
+    Column("request_digest", String(64)),
+    Column("profile_digest", String(64)),
+    Column("measurement_data", JSONB),
+    Column("consumed_at", instant),
+    Column("dispatched_at", instant),
+    Column("provider_call_id", Text),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("operation_id", "slot_key", name="uq_provider_call_slot"),
+    CheckConstraint("execution_mode IN ('synthetic_test','local_candidate','production')", name="ck_provider_calls_execution_mode"),
+    CheckConstraint("status IN ('ALLOCATED','CONSUMED','DISPATCHED','RUNNING','UNKNOWN','QUIESCENT','EXPIRED','REVOKED')", name="ck_provider_calls_status"),
+    CheckConstraint("max_input_tokens >= 0 AND max_output_tokens >= 0 AND input_revision >= 1 AND fence >= 1", name="ck_provider_calls_limits"),
+    CheckConstraint("allocation_amount >= 0 AND input_usd_per_million >= 0 AND output_usd_per_million >= 0", name="ck_provider_calls_amounts"),
+    CheckConstraint("measurement_status IN ('LEGACY_UNMEASURED','MEASURED')", name="ck_provider_calls_measurement_status"),
+    CheckConstraint(
+        "(measurement_status = 'LEGACY_UNMEASURED' AND request_digest IS NULL AND profile_digest IS NULL AND measurement_data IS NULL) "
+        "OR (measurement_status = 'MEASURED' AND length(request_digest) = 64 AND length(profile_digest) = 64 AND measurement_data IS NOT NULL)",
+        name="ck_provider_calls_measurement_data",
+    ),
+)
+Index("ix_provider_calls_operation", provider_calls.c.operation_id)
+
+call_permits = Table(
+    "call_permits", _metadata,
+    Column("permit_id", Text, primary_key=True),
+    Column("accounting_call_id", Text, ForeignKey("provider_calls.accounting_call_id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("state", String(12), nullable=False),
+    Column("issued_at", instant, nullable=False, server_default=text("now()")),
+    Column("expires_at", instant, nullable=False),
+    Column("measurement_status", String(24), nullable=False, server_default=text("'LEGACY_UNMEASURED'")),
+    Column("request_digest", String(64)),
+    Column("profile_digest", String(64)),
+    Column("measurement_data", JSONB),
+    Column("consumed_at", instant),
+    Column("revoked_at", instant),
+    CheckConstraint("state IN ('ISSUED','CONSUMED','REVOKED','EXPIRED')", name="ck_call_permits_state"),
+    CheckConstraint("measurement_status IN ('LEGACY_UNMEASURED','MEASURED')", name="ck_call_permits_measurement_status"),
+    CheckConstraint(
+        "(measurement_status = 'LEGACY_UNMEASURED' AND request_digest IS NULL AND profile_digest IS NULL AND measurement_data IS NULL) "
+        "OR (measurement_status = 'MEASURED' AND length(request_digest) = 64 AND length(profile_digest) = 64 AND measurement_data IS NOT NULL)",
+        name="ck_call_permits_measurement_data",
+    ),
+)
+provider_calls.append_constraint(ForeignKeyConstraint(
+    ["permit_id"], ["call_permits.permit_id"], name="fk_provider_calls_permit_id",
+    use_alter=True, deferrable=True, initially="DEFERRED",
+))
+
+call_allocations = Table(
+    "call_allocations", _metadata,
+    Column("accounting_call_id", Text, ForeignKey("provider_calls.accounting_call_id", ondelete="RESTRICT"), nullable=False),
+    Column("reservation_id", Text, nullable=False),
+    Column("account_id", Text, nullable=False),
+    Column("amount", money, nullable=False),
+    PrimaryKeyConstraint("accounting_call_id", "account_id", name="pk_call_allocations"),
+    ForeignKeyConstraint(["reservation_id", "account_id"], ["reservation_accounts.reservation_id", "reservation_accounts.account_id"], ondelete="RESTRICT", name="fk_call_allocations_reservation_account"),
+    CheckConstraint("amount >= 0 AND amount < 'Infinity'::numeric AND amount > '-Infinity'::numeric", name="ck_call_allocations_finite"),
+)
+
+usage_observations = Table(
+    "usage_observations", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("accounting_call_id", Text, ForeignKey("provider_calls.accounting_call_id", ondelete="RESTRICT"), nullable=False),
+    Column("provider_call_id", Text),
+    Column("source", Text, nullable=False),
+    Column("observation_identity", Text, nullable=False),
+    Column("payload_hash", String(64), nullable=False),
+    Column("completeness", String(12), nullable=False),
+    Column("input_tokens", Integer),
+    Column("output_tokens", Integer),
+    Column("cache_tokens", Integer),
+    Column("reasoning_tokens", Integer),
+    Column("total_tokens", Integer),
+    Column("reported_cost_usd", money),
+    Column("observed_at", instant, nullable=False),
+    Column("received_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("accounting_call_id", "source", "payload_hash", name="uq_usage_observation_payload"),
+    CheckConstraint("completeness IN ('UNKNOWN','PARTIAL','COMPLETE')", name="ck_usage_observation_completeness"),
+    CheckConstraint("(input_tokens IS NULL OR input_tokens >= 0) AND (output_tokens IS NULL OR output_tokens >= 0) AND (cache_tokens IS NULL OR cache_tokens >= 0) AND (reasoning_tokens IS NULL OR reasoning_tokens >= 0) AND (total_tokens IS NULL OR total_tokens >= 0)", name="ck_usage_observation_tokens"),
+)
+Index("ix_usage_observations_identity", usage_observations.c.accounting_call_id, usage_observations.c.observation_identity)
+
+usage_projections = Table(
+    "usage_projections", _metadata,
+    Column("accounting_call_id", Text, ForeignKey("provider_calls.accounting_call_id", ondelete="RESTRICT"), primary_key=True),
+    Column("completeness", String(12), nullable=False),
+    Column("has_conflict", Boolean, nullable=False, server_default=text("false")),
+    Column("settlement_state", String(12), nullable=False, server_default="PENDING"),
+    Column("input_tokens", Integer),
+    Column("output_tokens", Integer),
+    Column("cache_tokens", Integer),
+    Column("reasoning_tokens", Integer),
+    Column("total_tokens", Integer),
+    Column("reported_cost_usd", money),
+    Column("reported_cost_source", Text),
+    Column("evaluated_cost_usd", money),
+    Column("overrun", Boolean, nullable=False, server_default=text("false")),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("completeness IN ('UNKNOWN','PARTIAL','COMPLETE')", name="ck_usage_projection_completeness"),
+    CheckConstraint("settlement_state IN ('PENDING','SETTLED','CONFLICT')", name="ck_usage_projection_settlement"),
+)
+
+budget_ledger = Table(
+    "budget_ledger", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("account_id", Text, ForeignKey("budget_accounts.id", ondelete="RESTRICT"), nullable=False),
+    Column("reservation_id", Text, ForeignKey("budget_reservations.id", ondelete="RESTRICT")),
+    Column("accounting_call_id", Text, ForeignKey("provider_calls.accounting_call_id", ondelete="RESTRICT")),
+    Column("effect_key", Text, nullable=False),
+    Column("effect_type", String(16), nullable=False),
+    Column("amount", money, nullable=False),
+    Column("held_delta", money, nullable=False, server_default="0"),
+    Column("spent_delta", money, nullable=False, server_default="0"),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("account_id", "effect_key", name="uq_budget_ledger_effect"),
+    CheckConstraint("effect_type IN ('HOLD','SETTLE','RELEASE','ADJUSTMENT')", name="ck_budget_ledger_effect_type"),
+    CheckConstraint("amount > '-Infinity'::numeric AND amount < 'Infinity'::numeric AND held_delta > '-Infinity'::numeric AND held_delta < 'Infinity'::numeric AND spent_delta > '-Infinity'::numeric AND spent_delta < 'Infinity'::numeric", name="ck_budget_ledger_finite"),
+)
+
+evidence = Table(
+    "evidence", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("source_uri", Text, nullable=False),
+    Column("locator", Text),
+    Column("retrieved_at", instant, nullable=False),
+    Column("observed_at", instant),
+    Column("content_hash", String(64), nullable=False),
+    Column("derived_from", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("root_source_ids", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("access_scope", Text, nullable=False),
+    Column("retention_class", Text, nullable=False),
+    Column("content_version", Text, nullable=False),
+    Column("availability", Text, nullable=False),
+    Column("access_epoch", Integer, nullable=False),
+    Column("expiry_at", instant),
+    Column("artifact_ref", Text, ForeignKey("artifacts.artifact_ref", ondelete="RESTRICT")),
+    Column("registered_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("access_epoch >= 0", name="ck_evidence_access_epoch"),
+    CheckConstraint("availability IN ('STAGED','AVAILABLE','EXPIRED','REVOKED','UNAVAILABLE')", name="ck_evidence_availability"),
+)
+Index("ix_evidence_scope_expiry", evidence.c.scope, evidence.c.expiry_at)
+
+artifacts = Table(
+    "artifacts", _metadata,
+    Column("artifact_ref", Text, primary_key=True),
+    Column("content_hash", String(64), nullable=False),
+    Column("byte_size", Integer, nullable=False),
+    Column("retention_class", Text, nullable=False),
+    Column("storage_state", Text, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("deleted_at", instant),
+    CheckConstraint("byte_size >= 0", name="ck_artifacts_size"),
+    CheckConstraint("storage_state IN ('STAGED','AVAILABLE','DELETE_PENDING','DELETE_FAILED','DELETED')", name="ck_artifacts_state"),
+)
+
+evidence_imports = Table(
+    "evidence_imports", _metadata,
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), primary_key=True),
+    Column("request_key", String(128), primary_key=True),
+    Column("request_hash", String(64), nullable=False),
+    Column("evidence_id", Text, ForeignKey("evidence.id", ondelete="RESTRICT"), nullable=False, unique=True),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+)
+
+evidence_edges = Table(
+    "evidence_edges", _metadata,
+    Column("derived_id", Text, ForeignKey("evidence.id", ondelete="RESTRICT"), nullable=False),
+    Column("source_id", Text, ForeignKey("evidence.id", ondelete="RESTRICT"), nullable=False),
+    PrimaryKeyConstraint("derived_id", "source_id", name="pk_evidence_edges"),
+    CheckConstraint("derived_id <> source_id", name="ck_evidence_edge_not_self"),
+)
+
+position_topics = Table(
+    "position_topics", _metadata,
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("topic_id", Text, nullable=False),
+    Column("current_version", Integer, nullable=False, server_default="0"),
+    PrimaryKeyConstraint("scope", "topic_id", name="pk_position_topics"),
+    CheckConstraint("current_version >= 0", name="ck_position_topic_version"),
+)
+
+position_versions = Table(
+    "position_versions", _metadata,
+    Column("scope", Text, nullable=False),
+    Column("topic_id", Text, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("base_version", Integer, nullable=False),
+    Column("body", JSONB, nullable=False),
+    Column("operation_id", Text, nullable=False, unique=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT"), nullable=False),
+    Column("reason_for_change", Text, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    ForeignKeyConstraint(["scope", "topic_id"], ["position_topics.scope", "position_topics.topic_id"], ondelete="RESTRICT", name="fk_position_version_topic"),
+    PrimaryKeyConstraint("scope", "topic_id", "version", name="pk_position_versions"),
+    CheckConstraint("version > 0 AND base_version >= 0 AND version = base_version + 1 AND input_revision >= 1", name="ck_position_version_order"),
+)
+
+position_evidence = Table(
+    "position_evidence", _metadata,
+    Column("scope", Text, nullable=False), Column("topic_id", Text, nullable=False), Column("version", Integer, nullable=False),
+    Column("evidence_id", Text, ForeignKey("evidence.id", ondelete="RESTRICT"), nullable=False),
+    ForeignKeyConstraint(["scope", "topic_id", "version"], ["position_versions.scope", "position_versions.topic_id", "position_versions.version"], ondelete="RESTRICT", name="fk_position_evidence_version"),
+    PrimaryKeyConstraint("scope", "topic_id", "version", "evidence_id", name="pk_position_evidence"),
+)
+
+dissent = Table(
+    "dissent", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("conclusion_id", Text, ForeignKey("conclusions.id", ondelete="RESTRICT"), nullable=False),
+    Column("local_objection_id", Text, nullable=False),
+    Column("body", JSONB, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    UniqueConstraint("conclusion_id", "local_objection_id", name="uq_dissent_local_id"),
+)
+
+position_dissent = Table(
+    "position_dissent", _metadata,
+    Column("scope", Text, nullable=False), Column("topic_id", Text, nullable=False), Column("version", Integer, nullable=False),
+    Column("dissent_id", Text, ForeignKey("dissent.id", ondelete="RESTRICT"), nullable=False),
+    ForeignKeyConstraint(["scope", "topic_id", "version"], ["position_versions.scope", "position_versions.topic_id", "position_versions.version"], ondelete="RESTRICT", name="fk_position_dissent_version"),
+    PrimaryKeyConstraint("scope", "topic_id", "version", "dissent_id", name="pk_position_dissent"),
+)
+
+position_commit_receipts = Table(
+    "position_commit_receipts", _metadata,
+    Column("operation_id", Text, primary_key=True),
+    Column("request_hash", String(64), nullable=False),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("receipt", JSONB, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+)
+
+memory_projections = Table(
+    "memory_projections", _metadata,
+    Column("scope", Text, nullable=False), Column("topic_id", Text, nullable=False),
+    Column("target_registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("desired_version", Integer, nullable=False),
+    Column("applied_version", Integer, nullable=False, server_default="0"),
+    Column("state", Text, nullable=False),
+    Column("pending_reason", Text),
+    Column("observed_memory_version", Integer),
+    Column("observed_payload_digest", String(64)),
+    Column("projection_format_version", Integer, nullable=False, server_default="1"),
+    Column("payload_digest", String(64)),
+    Column("operation_id", Text),
+    Column("request_hash", String(64)),
+    Column("next_retry_at", instant),
+    Column("claim_owner", Text),
+    Column("claim_expires_at", instant),
+    Column("claim_fence", Integer, nullable=False, server_default="0"),
+    Column("attempt_count", Integer, nullable=False, server_default="0"),
+    Column("last_attempt_at", instant),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    ForeignKeyConstraint(["scope", "topic_id"], ["position_topics.scope", "position_topics.topic_id"], ondelete="RESTRICT", name="fk_memory_projection_topic"),
+    PrimaryKeyConstraint("scope", "topic_id", "target_registry_id", name="pk_memory_projections"),
+    CheckConstraint("desired_version >= 0 AND applied_version >= 0 AND applied_version <= desired_version", name="ck_memory_projection_versions"),
+    CheckConstraint("state IN ('PENDING_UNSUPPORTED','PENDING','CLAIMED','UNKNOWN','APPLIED','DRIFT','CONFLICT')", name="ck_memory_projection_state"),
+    CheckConstraint("claim_fence >= 0 AND attempt_count >= 0 AND projection_format_version IN (1,2)", name="ck_memory_projection_claim_format"),
+)
+Index("ix_memory_projection_due", memory_projections.c.state, memory_projections.c.next_retry_at, memory_projections.c.updated_at)
+
+memory_projection_operations = Table(
+    "memory_projection_operations", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("topic_id", Text, nullable=False),
+    Column("target_registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("source_version", Integer, nullable=False),
+    Column("base_applied_version", Integer, nullable=False),
+    Column("format_version", Integer, nullable=False),
+    Column("payload_digest", String(64), nullable=False),
+    Column("request_hash", String(64), nullable=False),
+    Column("original_operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("state", Text, nullable=False),
+    Column("observation", JSONB),
+    Column("failure_reason", Text),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    Column("completed_at", instant),
+    ForeignKeyConstraint(["scope", "topic_id"], ["position_topics.scope", "position_topics.topic_id"], ondelete="RESTRICT", name="fk_projection_operation_topic"),
+    UniqueConstraint("scope", "topic_id", "target_registry_id", "source_version", "request_hash", name="uq_projection_operation_request"),
+    CheckConstraint("source_version >= 1 AND base_applied_version >= 0 AND format_version IN (1,2)", name="ck_projection_operation_version"),
+    CheckConstraint("state IN ('PENDING','STARTED','UNKNOWN','COMPLETED','SUPERSEDED','DRIFT','CONFLICT')", name="ck_projection_operation_state"),
+)
+Index("ix_projection_operation_pending", memory_projection_operations.c.state, memory_projection_operations.c.updated_at)
+
+memory_projection_write_guards = Table(
+    "memory_projection_write_guards", _metadata,
+    Column("id", Text, primary_key=True),
+    Column("operation_id", Text, ForeignKey("memory_projection_operations.id", ondelete="RESTRICT"), nullable=False),
+    Column("scope", Text, ForeignKey("authorization_scopes.id", ondelete="RESTRICT"), nullable=False),
+    Column("registry_id", Text, ForeignKey("agent_registry.id", ondelete="RESTRICT"), nullable=False),
+    Column("topic_id", Text, nullable=False),
+    Column("request_hash", String(64), nullable=False),
+    Column("principal_id", Text, nullable=False),
+    Column("policy_version", Text, nullable=False),
+    Column("authz_epoch", Integer, nullable=False),
+    Column("lease_owner", Text, nullable=False),
+    Column("lease_fence", Integer, nullable=False),
+    Column("claim_owner", Text, nullable=False),
+    Column("claim_fence", Integer, nullable=False),
+    Column("source_version", Integer, nullable=False),
+    Column("payload_digest", String(64), nullable=False),
+    Column("state", Text, nullable=False),
+    Column("observation", JSONB),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    Column("updated_at", instant, nullable=False, server_default=text("now()")),
+    Column("resolved_at", instant),
+    CheckConstraint("authz_epoch >= 0 AND lease_fence >= 1 AND claim_fence >= 1 AND source_version >= 1", name="ck_projection_write_guard_identity"),
+    CheckConstraint("state IN ('AUTHORIZED','EFFECT_CONFIRMED','NO_EFFECT')", name="ck_projection_write_guard_state"),
+)
+Index("ix_projection_write_guard_active", memory_projection_write_guards.c.registry_id, memory_projection_write_guards.c.state)
+
+context_manifests = Table(
+    "context_manifests", _metadata,
+    Column("operation_id", Text, ForeignKey("operations.id", ondelete="RESTRICT"), primary_key=True),
+    Column("task_id", Text, ForeignKey("tasks.id", ondelete="RESTRICT"), nullable=False),
+    Column("input_revision", Integer, nullable=False),
+    Column("manifest_hash", String(64), nullable=False),
+    Column("manifest", JSONB, nullable=False),
+    Column("created_at", instant, nullable=False, server_default=text("now()")),
+    CheckConstraint("input_revision >= 1", name="ck_context_manifest_revision"),
+)
 
 
 def metadata() -> MetaData:
-    """Return the SQLAlchemy metadata populated as schema tables are implemented."""
     return _metadata

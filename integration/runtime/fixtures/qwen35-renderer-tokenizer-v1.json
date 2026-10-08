@@ -1,0 +1,442 @@
+{
+  "identity": {
+    "gguf_blob_digest": "ce18b852ff0f7f7fc3cbe3467b4a87d3b27e7b3e611bf41e0a529220604aa79f",
+    "model": "orcarouter/Qwen3.8-27B-Uncensored:iq4_xs",
+    "ollama_manifest_digest": "84e6355d6764e264ccdfe486243821e7000eaff08827557af4e3dc537c772c2a"
+  },
+  "raw_token_vectors": [
+    {
+      "name": "korean_and_ascii",
+      "text": "안녕하세요, HEKATE Phase 6C입니다.",
+      "token_count": 13,
+      "token_ids": [
+        148924,
+        154982,
+        88005,
+        11,
+        11349,
+        42,
+        2260,
+        26679,
+        220,
+        21,
+        34,
+        151396,
+        13
+      ]
+    },
+    {
+      "name": "ascii_merge",
+      "text": "hello world",
+      "token_count": 2,
+      "token_ids": [
+        14556,
+        1814
+      ]
+    },
+    {
+      "name": "unicode_and_combining",
+      "text": "🧭 café é",
+      "token_count": 6,
+      "token_ids": [
+        9008,
+        100,
+        255,
+        50203,
+        378,
+        52033
+      ]
+    },
+    {
+      "name": "literal_control_token",
+      "text": "literal <|im_start|> is user text",
+      "token_count": 6,
+      "token_ids": [
+        34600,
+        220,
+        248045,
+        369,
+        1156,
+        1414
+      ]
+    },
+    {
+      "name": "qwen_special_token",
+      "text": "<|im_start|>assistant",
+      "token_count": 2,
+      "token_ids": [
+        248045,
+        74455
+      ]
+    },
+    {
+      "name": "contractions_and_punctuation",
+      "text": "we're testing contractions, punctuation!!!",
+      "token_count": 8,
+      "token_ids": [
+        868,
+        2224,
+        7262,
+        5838,
+        3885,
+        11,
+        59429,
+        11726
+      ]
+    },
+    {
+      "name": "unicode_whitespace",
+      "text": "    　a\r\n\t",
+      "token_count": 14,
+      "token_ids": [
+        126,
+        227,
+        3966,
+        157,
+        248,
+        222,
+        373,
+        222,
+        373,
+        101,
+        21742,
+        64,
+        317,
+        197
+      ]
+    },
+    {
+      "name": "rank_stale_pair_regression",
+      "text": " HEKATE",
+      "token_count": 3,
+      "token_ids": [
+        11349,
+        42,
+        2260
+      ]
+    }
+  ],
+  "rendered_prompts": [
+    {
+      "messages": [
+        {
+          "content": "  Trusted policy for HEKATE.\n",
+          "role": "system"
+        },
+        {
+          "content": "Task constraints: concise answer.",
+          "role": "system"
+        },
+        {
+          "content": "  질문: 상태를 설명해줘.  ",
+          "role": "user"
+        },
+        {
+          "content": "Earlier answer with context.",
+          "role": "assistant",
+          "thinking": "ignored thinking field"
+        },
+        {
+          "content": "Task data: evidence says ‘검증 필요’.",
+          "role": "user"
+        }
+      ],
+      "name": "system_developer_history",
+      "rendered_sha256": "e81208a97f7c1df6427495fc95c534c119f257d0752ba4e556854dd4194fbb8f",
+      "rendered_utf8_base64": "PHxpbV9zdGFydHw+c3lzdGVtClRydXN0ZWQgcG9saWN5IGZvciBIRUtBVEUuPHxpbV9lbmR8Pgo8fGltX3N0YXJ0fD5zeXN0ZW0KVGFzayBjb25zdHJhaW50czogY29uY2lzZSBhbnN3ZXIuPHxpbV9lbmR8Pgo8fGltX3N0YXJ0fD51c2VyCuyniOusuDog7IOB7YOc66W8IOyEpOuqhe2VtOykmC48fGltX2VuZHw+Cjx8aW1fc3RhcnR8PmFzc2lzdGFudApFYXJsaWVyIGFuc3dlciB3aXRoIGNvbnRleHQuPHxpbV9lbmR8Pgo8fGltX3N0YXJ0fD51c2VyClRhc2sgZGF0YTogZXZpZGVuY2Ugc2F5cyDigJjqsoDspp0g7ZWE7JqU4oCZLjx8aW1fZW5kfD4KPHxpbV9zdGFydHw+YXNzaXN0YW50Cjx0aGluaz4KCjwvdGhpbms+Cgo=",
+      "token_count": 69,
+      "token_ids": [
+        248045,
+        8678,
+        198,
+        1237,
+        26271,
+        4687,
+        364,
+        11349,
+        42,
+        2260,
+        13,
+        248046,
+        198,
+        248045,
+        8678,
+        198,
+        6065,
+        16484,
+        25,
+        61446,
+        4087,
+        13,
+        248046,
+        198,
+        248045,
+        846,
+        198,
+        149472,
+        49849,
+        25,
+        229231,
+        159667,
+        32762,
+        169494,
+        13,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        31946,
+        4087,
+        440,
+        2193,
+        13,
+        248046,
+        198,
+        248045,
+        846,
+        198,
+        6065,
+        795,
+        25,
+        5721,
+        2640,
+        3260,
+        152039,
+        149606,
+        152243,
+        22878,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        248068,
+        271,
+        248069,
+        271
+      ]
+    },
+    {
+      "messages": [
+        {
+          "content": "You are HEKATE. Preserve untrusted task data.",
+          "role": "system"
+        },
+        {
+          "content": "Question: Should the position change?",
+          "role": "user"
+        },
+        {
+          "content": "Current position: keep v2 unless evidence changes.",
+          "role": "assistant"
+        },
+        {
+          "content": "Evidence excerpt: temperature measured at 21°C; provenance: local sensor.",
+          "role": "user"
+        }
+      ],
+      "name": "position_and_evidence",
+      "rendered_sha256": "499641694aeb898f4b4a53b9e9b74749891f1d9b71a1985bf4a39a3022556c25",
+      "rendered_utf8_base64": "PHxpbV9zdGFydHw+c3lzdGVtCllvdSBhcmUgSEVLQVRFLiBQcmVzZXJ2ZSB1bnRydXN0ZWQgdGFzayBkYXRhLjx8aW1fZW5kfD4KPHxpbV9zdGFydHw+dXNlcgpRdWVzdGlvbjogU2hvdWxkIHRoZSBwb3NpdGlvbiBjaGFuZ2U/PHxpbV9lbmR8Pgo8fGltX3N0YXJ0fD5hc3Npc3RhbnQKQ3VycmVudCBwb3NpdGlvbjoga2VlcCB2MiB1bmxlc3MgZXZpZGVuY2UgY2hhbmdlcy48fGltX2VuZHw+Cjx8aW1fc3RhcnR8PnVzZXIKRXZpZGVuY2UgZXhjZXJwdDogdGVtcGVyYXR1cmUgbWVhc3VyZWQgYXQgMjHCsEM7IHByb3ZlbmFuY2U6IGxvY2FsIHNlbnNvci48fGltX2VuZHw+Cjx8aW1fc3RhcnR8PmFzc2lzdGFudAo8dGhpbms+Cgo8L3RoaW5rPgoK",
+      "token_count": 73,
+      "token_ids": [
+        248045,
+        8678,
+        198,
+        2523,
+        513,
+        11349,
+        42,
+        2260,
+        13,
+        78503,
+        632,
+        80946,
+        3274,
+        795,
+        13,
+        248046,
+        198,
+        248045,
+        846,
+        198,
+        14162,
+        25,
+        11910,
+        279,
+        2234,
+        2222,
+        30,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        5237,
+        2234,
+        25,
+        2426,
+        343,
+        17,
+        7014,
+        5721,
+        4203,
+        13,
+        248046,
+        198,
+        248045,
+        846,
+        198,
+        89408,
+        47801,
+        25,
+        9039,
+        16384,
+        506,
+        220,
+        17,
+        16,
+        29922,
+        26,
+        16134,
+        663,
+        25,
+        2136,
+        11661,
+        13,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        248068,
+        271,
+        248069,
+        271
+      ]
+    },
+    {
+      "messages": [
+        {
+          "content": "Return the requested JSON.",
+          "role": "user"
+        }
+      ],
+      "name": "thinking_off_prefix",
+      "rendered_sha256": "f5e8972fe4844de434e0d0df414f77db332288ccaf32b332418b9cc7e4d04164",
+      "rendered_utf8_base64": "PHxpbV9zdGFydHw+dXNlcgpSZXR1cm4gdGhlIHJlcXVlc3RlZCBKU09OLjx8aW1fZW5kfD4KPHxpbV9zdGFydHw+YXNzaXN0YW50Cjx0aGluaz4KCjwvdGhpbms+Cgo=",
+      "token_count": 17,
+      "token_ids": [
+        248045,
+        846,
+        198,
+        5423,
+        279,
+        10897,
+        4566,
+        13,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        248068,
+        271,
+        248069,
+        271
+      ]
+    },
+    {
+      "messages": [
+        {
+          "content": "policy",
+          "role": "system"
+        },
+        {
+          "content": "{",
+          "role": "assistant"
+        }
+      ],
+      "name": "assistant_prefill",
+      "rendered_sha256": "f6698252827562069a36a18d1ffec9b1a45e6c5cd060d19f162a2b89e78a4412",
+      "rendered_utf8_base64": "PHxpbV9zdGFydHw+c3lzdGVtCnBvbGljeTx8aW1fZW5kfD4KPHxpbV9zdGFydHw+YXNzaXN0YW50Cns=",
+      "token_count": 10,
+      "token_ids": [
+        248045,
+        8678,
+        198,
+        33639,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        90
+      ]
+    },
+    {
+      "messages": [
+        {
+          "content": " 정책　",
+          "role": "system"
+        },
+        {
+          "content": "　질문　",
+          "role": "user"
+        }
+      ],
+      "name": "unicode_whitespace_trim",
+      "rendered_sha256": "f32866b1fc2a208092a2ad6d2103e286a3cb2e0ca211c149bf70760bb653425a",
+      "rendered_utf8_base64": "PHxpbV9zdGFydHw+c3lzdGVtCuygleyxhTx8aW1fZW5kfD4KPHxpbV9zdGFydHw+dXNlcgrsp4jrrLg8fGltX2VuZHw+Cjx8aW1fc3RhcnR8PmFzc2lzdGFudAo8dGhpbms+Cgo8L3RoaW5rPgoK",
+      "token_count": 20,
+      "token_ids": [
+        248045,
+        8678,
+        198,
+        179186,
+        248046,
+        198,
+        248045,
+        846,
+        198,
+        149472,
+        49849,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        248068,
+        271,
+        248069,
+        271
+      ]
+    }
+  ],
+  "renderer_reference": {
+    "commit": "d8ab4b4f0ca24b51d3a46b3bf4f462e58ce66b1f",
+    "reference_runtime": "Go 1.26.0 container golang:1.26.0",
+    "renderer": "qwen3.5",
+    "repository": "ollama/ollama",
+    "source": "model/renderers/qwen35.go",
+    "source_sha256": "a37c9ccf217c01e2558dce439198e9446e163e7f7a18e48e4848f6a6e2e35b23",
+    "tag": "v0.34.0",
+    "thinking": false
+  },
+  "schema_version": "1",
+  "tokenizer_reference": {
+    "commit": "0f3a71be15af836d277c9f918adfafb45732677e",
+    "cpu_vocab_only": true,
+    "merge_count": 247587,
+    "reference_gguf": "tokenizer-only extraction from installed GGUF metadata; no tensors or weights",
+    "repository": "ggml-org/llama.cpp",
+    "tag": "b10760",
+    "tokenizer_array_digests": {
+      "merges": "7e299304d9ad9dc312acdbcb1f6ccf0dce1256bf1aa986d651f13814dfd27e7b",
+      "token_type": "f6fdca1063d1ae1cc77ba1f5087d259f044c2634e64b65e31bc844ec00e9acab",
+      "tokens": "5ee0f927bcaa4b9fe85c244776ae9487468e427f83e053fc81f2a186f14936a3"
+    },
+    "vocab_size": 248320
+  }
+}

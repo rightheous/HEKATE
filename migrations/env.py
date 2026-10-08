@@ -1,15 +1,73 @@
-"""Alembic entry point; online/offline runners are wired during DB implementation."""
+from __future__ import annotations
+
+import asyncio
+import os
+from logging.config import fileConfig
 
 from alembic import context
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from hekate.infrastructure.postgres.tables import metadata
+
+config = context.config
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
 
 target_metadata = metadata()
 
 
+def database_url() -> str:
+    value = os.environ.get("HEKATE_DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    if not value or "change-me" in value:
+        raise RuntimeError("set HEKATE_DATABASE_URL to a dedicated PostgreSQL database")
+    return value
+
+
 def run_migrations_offline() -> None:
-    raise NotImplementedError
+    context.configure(
+        url=database_url(),
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+        compare_type=True,
+        compare_server_default=True,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def run_sync_migrations(connection) -> None:
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        compare_type=True,
+        compare_server_default=True,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_async_migrations() -> None:
+    section = config.get_section(config.config_ini_section, {})
+    section["sqlalchemy.url"] = database_url().replace("%", "%%")
+    connectable = async_engine_from_config(
+        section,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    try:
+        async with connectable.connect() as connection:
+            await connection.run_sync(run_sync_migrations)
+    finally:
+        await connectable.dispose()
 
 
 def run_migrations_online() -> None:
-    raise NotImplementedError
+    asyncio.run(run_async_migrations())
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()

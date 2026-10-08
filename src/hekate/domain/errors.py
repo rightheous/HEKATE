@@ -19,6 +19,14 @@ class PolicyDenied(HekateError):
     pass
 
 
+class AuthorizationChanged(PolicyDenied):
+    """The authorization snapshot used to approve work is no longer current."""
+
+
+class EvidenceUnavailable(PolicyDenied):
+    """A selected Evidence reference is no longer usable for new work."""
+
+
 class BudgetDenied(HekateError):
     pass
 
@@ -43,7 +51,22 @@ class FailureClass(StrEnum):
     UNKNOWN_EXECUTION = "UnknownExecution"
     STORAGE_UNAVAILABLE = "StorageUnavailable"
     PROVIDER_TRANSIENT = "ProviderTransient"
+    UNEXPECTED = "Unexpected"
 
 
 def classify_failure(error: Exception) -> FailureClass:
-    raise NotImplementedError
+    if isinstance(error, Conflict):
+        return FailureClass.CONFLICT
+    if isinstance(error, StaleInput):
+        return FailureClass.STALE_INPUT
+    if isinstance(error, PolicyDenied):
+        return FailureClass.POLICY_DENIED
+    if isinstance(error, BudgetDenied):
+        return FailureClass.BUDGET_DENIED
+    if isinstance(error, UnknownExecution):
+        return FailureClass.UNKNOWN_EXECUTION
+    if isinstance(error, StorageUnavailable):
+        return FailureClass.STORAGE_UNAVAILABLE
+    if isinstance(error, ProviderTransient):
+        return FailureClass.PROVIDER_TRANSIENT
+    return FailureClass.UNEXPECTED

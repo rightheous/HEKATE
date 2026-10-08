@@ -1,0 +1,77 @@
+{
+  "schema_version": "1",
+  "probe": "phase6a-memory-projection",
+  "run_id": "p6a-20261004T204455Z-f6d990fb",
+  "executed_at": "2026-10-04T20:44:55.161626Z",
+  "baseline": {
+    "head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+    "branch": "phase5b-bounded-deliberation",
+    "source_worktree": "/home/hekate/hekate-phase5b-bounded-deliberation",
+    "copy_manifest": "integration/runtime/artifacts/p6a-baseline-20261004T184731Z-f941096c.json",
+    "phase4_phase5a_phase5b_changes": "selected tracked diff and clean nonignored implementation/docs/artifacts copied before Phase 6A edits"
+  },
+  "branch": "phase6a-memory-projection",
+  "head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "production_dispatch": "blocked",
+  "real_provider_calls": 0,
+  "projection_inference_calls": 0,
+  "overall_status": "blocked",
+  "results": {},
+  "execution": {
+    "command": "uv run --locked python scripts/phase6a_memory_projection_probe.py --database-url <isolated-db> --empty-migration-database-url <isolated-empty-db> --node-bin /tmp/node-v22.19.0/bin/node",
+    "result": "failed"
+  },
+  "limitations": [
+    "Projection is a bounded reference in persistent HEKATE core memory; PostgreSQL remains authoritative.",
+    "Actual provider access and production dispatch remain disabled; a local synthetic fake provider is used.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Conclusion exact reuse, schema repair/retry, vector search, and automatic deliberation remain out of scope."
+  ],
+  "runtime": {
+    "node_version": "22.19.0",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "sdk_version": "0.8.25",
+    "app_server_version": "0.33.8",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "patched_image_id": "sha256:f430b84341d6316963190ad8eaed240f6bbddbd925fe4aa4a0e05b9d39da0d08",
+    "runtime_patch_sha256": "7d16b269f6eed2db384703d2f35ac0cd3d75bf0dd68be362def12daaf3ae5f79",
+    "bridge_protocol_version": "1",
+    "patch_sha256": "7d16b269f6eed2db384703d2f35ac0cd3d75bf0dd68be362def12daaf3ae5f79"
+  },
+  "database": {
+    "name": "hekate_phase6a_runtime_20261004_p6a_6",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "migration_head": "0011_phase6a_memory_projection"
+  },
+  "failure": {
+    "type": "TimeoutError",
+    "message": "Projection did not reach APPLIED v1: {'desired_version': 1, 'applied_version': 0, 'observed_memory_version': None, 'observed_payload_digest': None, 'payload_digest': 'ffb556e96b58dbbe7854f6cdeb852fb3aa8315920919f965aea0a08bdf00eb21', 'state': 'PENDING', 'pending_reason': 'StorageUnavailable', 'operation_id': '6c9a9e7a-fbd9-5a93-b7f8-e86cbfcbc139', 'request_hash': '8ba584e69ad6ea8a8dc99f9ac0910ebcc17bfe18fceae85d1a3d211c721755da', 'claim_fence': 9, 'attempt_count': 9}",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/hekate/hekate-phase6a-memory-projection/scripts/phase6a_memory_projection_probe.py\", line 431, in _run\n    projection_v1 = await _wait_projection(engine, str(scope), TOPIC, 1)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hekate/hekate-phase6a-memory-projection/scripts/phase6a_memory_projection_probe.py\", line 236, in _wait_projection\n    raise TimeoutError(f\"Projection did not reach APPLIED v{target_version}: {last}\")\nTimeoutError: Projection did not reach APPLIED v1: {'desired_version': 1, 'applied_version': 0, 'observed_memory_version': None, 'observed_payload_digest': None, 'payload_digest': 'ffb556e96b58dbbe7854f6cdeb852fb3aa8315920919f965aea0a08bdf00eb21', 'state': 'PENDING', 'pending_reason': 'StorageUnavailable', 'operation_id': '6c9a9e7a-fbd9-5a93-b7f8-e86cbfcbc139', 'request_hash': '8ba584e69ad6ea8a8dc99f9ac0910ebcc17bfe18fceae85d1a3d211c721755da', 'claim_fence': 9, 'attempt_count': 9}\n"
+  },
+  "provider_fixture_errors": [],
+  "provider_observations": [
+    {
+      "task_id": "4ce32b34-d55d-42ed-9f05-d3fcf0fa4749",
+      "topic_id": "phase6a-memory-primary",
+      "registry_id": "18640fc8-df4f-5107-bed3-c1ce27b79a55",
+      "target_position_version": 0,
+      "runtime_memory_v1_loaded_outside_task_capsule": false,
+      "output_schema_present": true
+    }
+  ],
+  "projection_runtime_errors": [],
+  "fake_provider_requests": 1,
+  "bridge_stderr_tail": "",
+  "app_server_log_tail": "Listening on ws://0.0.0.0:4500\nWebSocket: ws://0.0.0.0:4500/ws\n",
+  "code_fingerprint_sha256": "708ee14c2333d555a8a4cd5a96e2f06066fdc2aadf33aa9e9bf457e93fc4e1ac",
+  "migration": {
+    "empty_database": "hekate_phase6a_empty_20261004_p6a_6",
+    "upgrade_head": "0011_phase6a_memory_projection",
+    "downgrade_head": "0010_p5b_delib_maint",
+    "reupgrade_head": "0011_phase6a_memory_projection",
+    "passed": true,
+    "populated_database_downgrade_guard": null
+  },
+  "artifact_path": "integration/runtime/artifacts/p6a-20261004T204455Z-f6d990fb.json"
+}

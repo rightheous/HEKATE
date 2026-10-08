@@ -1,0 +1,386 @@
+{
+  "schema_version": "1",
+  "manifest_type": "phase6f_submission_manifest",
+  "created_at": "2026-10-07T04:49:18Z",
+  "worktree": "/home/hekate/hekate-phase6f-reviewed-qwen",
+  "branch": "phase6f-reviewed-qwen",
+  "head": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "verdict": {
+    "later_functional_path": "PASS",
+    "goal_wide_actual_local_qwen_generations": 5,
+    "original_limit": 4,
+    "over_by": 1,
+    "original_goal_instruction_compliance": "NOT_MET"
+  },
+  "submission_candidates": [
+    {
+      "path": "docs/local-quickstart.md",
+      "bytes": 10145,
+      "sha256": "fc826cd80bf784204888a314a83c5a0dc2473977b46603a9597fcf1ff3436a89",
+      "reason": "Corrects local execution instructions so a new allowance cannot be mistaken for authorization or a reset of the exceeded Goal-wide cap."
+    },
+    {
+      "path": "integration/letta/patches/provider-call-context-usage.patch",
+      "bytes": 52835,
+      "sha256": "0c6a0fc39eb32a26b00d500e555afaf3adf184bcb8a08a2a2a79944bdb64a78d",
+      "reason": "Pinned Letta runtime behavior change; must ship with the matching lock digest."
+    },
+    {
+      "path": "integration/letta/versions.lock.json",
+      "bytes": 1187,
+      "sha256": "5ffbc65f57edea21f5eda382e50510268f1b236ff6b74ca98147a9ac3907ad42",
+      "reason": "Pins the runtime patch digest to the submitted patch."
+    },
+    {
+      "path": "scripts/integration_probe.py",
+      "bytes": 100586,
+      "sha256": "a7793342b03491f2e8741a75be619865587c7f8edabf000a09a2a860694bf664",
+      "reason": "Integration probe updates for the reviewed profile and provider request verification."
+    },
+    {
+      "path": "scripts/phase6e_local_cli_probe.py",
+      "bytes": 55192,
+      "sha256": "596821c6eeba13073861c6905aa9fcfce066c32af92a8c6794d26c8b90f3d6ab",
+      "reason": "CLI integration driver changes used by the reviewed local flow."
+    },
+    {
+      "path": "src/hekate/application/turns.py",
+      "bytes": 71869,
+      "sha256": "7b9d83284e0ca49960acccfcb73fd8690a3dc9ba0c15ed6f96fbb7281e65d323",
+      "reason": "Connects reviewed workflow stages to the ordinary Task/turn path."
+    },
+    {
+      "path": "src/hekate/diagnostics.py",
+      "bytes": 18380,
+      "sha256": "48a9fe8d6cb2bb1db0e910cc65b05ae1e49e787dccc0dfa59797356f2f49fab8",
+      "reason": "Reports reviewed profile/runtime readiness."
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/gateway_entry.py",
+      "bytes": 8967,
+      "sha256": "05a84089f5cf63745c1c679c435f2814c4cb43c4cac210914aeef1452c748f48",
+      "reason": "Connects the local gateway entry to the reviewed provider path."
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+      "bytes": 54855,
+      "sha256": "946d7c4e298045ac0cfc45423b0fbc7444fd803db3349a1b3112911de4d13feb",
+      "reason": "Enforces per-stage generation allowance and final provider request checks."
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/qwen_local_profile.py",
+      "bytes": 2413,
+      "sha256": "9cc0131c2b20a3060199769f62a8cd348753542cf940f98d68c21cf26f78b154",
+      "reason": "Defines the bounded local Qwen execution profile."
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/token_accounting.py",
+      "bytes": 21132,
+      "sha256": "11b6e587b8248bd6851f298c2291d762fa7b152902dd319fc21899aaa6ef292e",
+      "reason": "Accounts local request usage and measured input."
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/task_repository.py",
+      "bytes": 40448,
+      "sha256": "7585b88e035bc4d6cf113bbbf3177c156b04a7209623896713ac32cce192caca",
+      "reason": "Persists the reviewed workflow/task relationships used by the path."
+    },
+    {
+      "path": "src/hekate/ports/store.py",
+      "bytes": 20396,
+      "sha256": "2a567aec01eb8c71b07dd69a85d3f0932d46178f5bcdd6d6b475e1f50893f72b",
+      "reason": "Exposes the required workflow/store contract."
+    },
+    {
+      "path": "src/hekate/settings.py",
+      "bytes": 28678,
+      "sha256": "5012ec6c6f46643babd1e6375a3f40fdcffb5ac4bfb77626d8abaf15c99c8a94",
+      "reason": "Loads the opt-in reviewed-profile configuration."
+    },
+    {
+      "path": "tests/unit/test_phase6e_local_settings.py",
+      "bytes": 5410,
+      "sha256": "b1a18097103509554ff67996a6e8378702a687eb2776d4237b875190486592fc",
+      "reason": "Covers relevant local settings compatibility and reviewed-profile caps."
+    },
+    {
+      "path": "tests/unit/test_qwen_ollama.py",
+      "bytes": 18232,
+      "sha256": "361fbbad00282a0bc683b1061b672a31195fe1bc0fbb90d40d902fa2404954c4",
+      "reason": "Covers the pinned local Qwen measurement/profile boundary."
+    },
+    {
+      "path": "config/local-reviewed.example/local.env.example",
+      "bytes": 563,
+      "sha256": "a44953ace337f7d7f6f2072028345679641d281bce201cda32a38c0f8fd31b22",
+      "reason": "Example environment for the opt-in reviewed profile."
+    },
+    {
+      "path": "config/local-reviewed.example/local.yaml",
+      "bytes": 564,
+      "sha256": "f884f3efc094c0b96d1b6b187c7d6d78f3d3256a1656615948deac36b5e3f6d7",
+      "reason": "Example reviewed-profile runtime configuration."
+    },
+    {
+      "path": "config/local-reviewed.example/models.yaml",
+      "bytes": 1619,
+      "sha256": "a193cfd01180f137e8884425c2dc542ad3a4494e76417abc0e1249c0c4424d04",
+      "reason": "Example pinned model profile."
+    },
+    {
+      "path": "config/local-reviewed.example/policy.yaml",
+      "bytes": 576,
+      "sha256": "9fe969e218045e950a4497e386b712198f94019c461f9e9cf81e9d12541b98b0",
+      "reason": "Example policy caps for one Critic/review/synthesis."
+    },
+    {
+      "path": "config/local-reviewed.example/pricing.yaml",
+      "bytes": 193,
+      "sha256": "af429d9759d1737133987fcedcf5f881327f36022f9cb432f95289114214f444",
+      "reason": "Example explicit local tariff configuration."
+    },
+    {
+      "path": "docs/implementation/phase6f-reviewed-qwen.md",
+      "bytes": 16864,
+      "sha256": "0dd1421d7774de5fa6441e9352e58f2a64ae9b1de1cd1411a3e3382028496bc7",
+      "reason": "Implementation note with corrected Goal-wide verdict and historical evidence scope."
+    },
+    {
+      "path": "docs/implementation/phase6f-submission-review.md",
+      "bytes": 4950,
+      "sha256": "0fbb135a29c2defcdf0a756e5d4d17e90a25d6a3b755fc2b99d78d75bbb0e98d",
+      "reason": "Human-readable submission and local-preservation review."
+    },
+    {
+      "path": "scripts/phase6f_reviewed_qwen_probe.py",
+      "bytes": 68288,
+      "sha256": "a6d6f6806ca6036b4129443e7a30be85e7d424e9e561bff5302c52312cd63854",
+      "reason": "Reproducible fake/real Phase 6F integration driver."
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/reviewed_qwen_profile.py",
+      "bytes": 6716,
+      "sha256": "58162e4a5d46f942c4de3a387ed49bf82509ae0477ce5dd479db189838fe7147",
+      "reason": "Defines trusted role-specific schema and profile binding."
+    },
+    {
+      "path": "tests/unit/test_phase6f_generation_allowance.py",
+      "bytes": 5331,
+      "sha256": "b29e0b6a702b9138355b51fbbccc1d0aa20232f2ba5bab7eeffc378f93b84810",
+      "reason": "Focused test coverage for bounded/restarted allowance claims."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-real-20261007T012852Z-1619873d-reviewed-qwen.json",
+      "bytes": 78565,
+      "sha256": "5a163796ab42165ed8fef029326fc52f16dc87148825a15b545657e8800077d9",
+      "reason": "Raw first-run record; its erroneous zero count is paired with the reconciliation below."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-reconciliation-20261007T013542Z-cbff8805-actual-action-mismatch.json",
+      "bytes": 5478,
+      "sha256": "cbbfb8e9c9e58d157a6eec9f3e8b33e44e5cf269bb02151b9df6f89d47b92c47",
+      "reason": "Confirms the first distinct completed, measured, settled Qwen call and the direct-commit action mismatch."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-real-20261007T014451Z-00bf2b19-reviewed-qwen.json",
+      "bytes": 65860,
+      "sha256": "858f586c968c2b1c13d7f0cb2ee373064a6a6994dcf21b13513d6caa3b30d163",
+      "reason": "Intervening attempt blocked before Task execution; confirms zero additional provider generations."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-real-20261007T014647Z-b30b6924-reviewed-qwen.json",
+      "bytes": 68940,
+      "sha256": "6c4c6940d27ff78ab0f4c0fb8d656998afb2f036c164997e5d5d7696a9e44a5d",
+      "reason": "Later real Task A planning, Critic, and synthesis run; three distinct calls."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-real-continuation-20261007T020150Z-0b69db56-task-b-readback.json",
+      "bytes": 55667,
+      "sha256": "491a31fd446743f968ee9bc23ebad0eda78974eddc818d2f17a27241d05935d1",
+      "reason": "Task B continuation after restart; evidence for its one additional actual call and zero-generation model-load response."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-real-final-20261007T022149Z-ed55f657-reviewed-qwen.json",
+      "bytes": 21319,
+      "sha256": "9fc0eff595aa0bab25b1b5c7f6b947727a24b16c71053d1add2ecb2401939ddd",
+      "reason": "Historical PASS for the later path only; included with its scope limitation."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-real-final-20261007T022353Z-5e0707fd-task-a-b-replay.json",
+      "bytes": 3120,
+      "sha256": "fa02239c009855131906fdec43dc976c3dd7d37e6b2deeb8fdb7552d0b97dfb6",
+      "reason": "Confirms same-key Task A/B replay added no generation or durable effect."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-final-audit-20261007T022514Z-9a75b54e-reviewed-qwen.json",
+      "bytes": 22455,
+      "sha256": "a8039f0b6db2b2d9953895d19ecc775da206d81d690071f4e38a04bd86db0703",
+      "reason": "Prior combined PASS report; retained unchanged and explicitly superseded for Goal-wide count/compliance."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T021533Z-c4d3fa51-reviewed-qwen.json",
+      "bytes": 157580,
+      "sha256": "0fa972ce7f72cf2961e205e831fc03fddba58fbcd6507b9bc7fda7d63b53669e",
+      "reason": "Final fake full path; four fake requests, zero local Qwen generations, non-empty dissent verification."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-correction-20261007T044918Z-00e29651-generation-count.json",
+      "bytes": 18556,
+      "sha256": "c41eb2ead37863953e1ed63dbf5d42bac0923d4edf9b3eb12b5280180f62f126",
+      "reason": "New Goal-wide count correction and the authoritative compliance verdict."
+    }
+  ],
+  "candidate_summary": {
+    "file_count_excluding_this_manifest": 36,
+    "total_bytes_excluding_this_manifest": 1113929,
+    "tracked_modified_files_included": 16,
+    "patch_and_lock_both_included": true
+  },
+  "manifest_file": "docs/implementation/phase6f-submission-manifest.json",
+  "manifest_self_hash_excluded": true,
+  "local_preserve": [
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T011123Z-28e9cea9-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T011648Z-67aca025-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T012057Z-d0db0453-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T012541Z-e01852d6-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T012658Z-c9f2a53c-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T013325Z-2919d524-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T013750Z-a1f07bf9-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T014514Z-a32790e9-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-fake-20261007T015718Z-1f0aeecb-reviewed-qwen.json",
+      "classification": "intermediate fake verification artifact",
+      "reason": "Keep unchanged for history; the selected final fake artifact covers the final probe fingerprint."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-real-reconciliation-20261007T021014Z-b0c47acf-task-b-replay.json",
+      "classification": "superseded intermediate real reconciliation",
+      "reason": "Its premature incomplete label came from treating the permitted empty objection list as missing dissent; the selected later audits correct that interpretation. Keep unchanged, do not treat as final verdict."
+    },
+    {
+      "path": "integration/runtime/artifacts/p6f-reconciliation-20261007T013919Z-f1161c10-latest-fake-and-real-mismatch.json",
+      "classification": "duplicate first-run reconciliation diagnostic",
+      "reason": "It repeats the first run call; the selected 013542 reconciliation is the count source. Keep unchanged and do not count it again."
+    },
+    {
+      "path": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-real-20261007T012852Z-1619873d/",
+      "classification": "private real-run state",
+      "reason": "Contains local Letta state, archive, private allowance and request capture; not opened or hashed."
+    },
+    {
+      "path": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-real-20261007T012852Z-1619873d/real/state/",
+      "classification": "private real-run runtime state",
+      "reason": "Keep database/runtime state and private files locally; not part of submission."
+    },
+    {
+      "path": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-real-20261007T014647Z-b30b6924/",
+      "classification": "private successful real-run state",
+      "reason": "Contains local Letta state, archive, private allowance and request capture; not opened or hashed."
+    },
+    {
+      "path": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-real-20261007T014647Z-b30b6924/real/state/",
+      "classification": "private successful runtime state",
+      "reason": "Keep database/runtime state and private files locally; not part of submission."
+    },
+    {
+      "path": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-fake-20261007T021533Z-c4d3fa51/",
+      "classification": "private final fake-run state",
+      "reason": "Contains local test Letta state, archive, private allowance and request capture; not opened or hashed."
+    },
+    {
+      "path": "/home/hekate/.local/share/hekate/phase6f-reviewed-qwen/p6f-fake-20261007T021533Z-c4d3fa51/fake/state/",
+      "classification": "private fake runtime state",
+      "reason": "Keep database/runtime state and private files locally; not part of submission."
+    },
+    {
+      "path": "hekate-p6f-1619873d",
+      "classification": "preserved PostgreSQL volume",
+      "reason": "Database data remains local and was not queried in this correction."
+    },
+    {
+      "path": "hekate-p6f-b30b6924",
+      "classification": "preserved PostgreSQL volume",
+      "reason": "Database data remains local and was not queried in this correction."
+    },
+    {
+      "path": "hekate-p6f-c4d3fa51",
+      "classification": "preserved PostgreSQL volume",
+      "reason": "Database data remains local and was not queried in this correction."
+    },
+    {
+      "path": "Ollama local Qwen model weights outside the repository",
+      "classification": "large model asset",
+      "reason": "Preserve locally; do not submit or copy; artifact reports 16,240,185,450 bytes."
+    },
+    {
+      "path": "private credential files, environment values, raw request captures, caches, build output, node_modules, and virtual environments",
+      "classification": "private/generated/local-only data",
+      "reason": "Do not submit; selected candidate text files are separately secret-scanned without printing matching values."
+    },
+    {
+      "path": "original full Phase 6F user request attachment",
+      "classification": "external instruction source",
+      "reason": "Not copied into the submission package; correction records only the governing count and rule."
+    }
+  ],
+  "not_executed": [
+    "git add",
+    "commit",
+    "push",
+    "PR creation",
+    "merge",
+    "tests",
+    "runtime probes",
+    "model loads",
+    "inference",
+    "database/service access"
+  ],
+  "correction_artifact_path": "integration/runtime/artifacts/p6f-correction-20261007T044918Z-00e29651-generation-count.json",
+  "verification": {
+    "referenced_source_json_artifacts": "parsed successfully",
+    "candidate_json_files": "parsed successfully; final refresh verified separately",
+    "selected_text_secret_scan": "zero high-confidence credential-pattern matches across 36 candidate files",
+    "patch_sha256_matches_versions_lock": true,
+    "whitespace": "git diff --check passed; selected Markdown/JSON trailing-whitespace scan passed (14 files, zero findings)",
+    "staged_paths": 0,
+    "runtime_tests_probes_or_inference_during_correction": 0,
+    "database_or_service_access_during_correction": false
+  },
+  "git_state": {
+    "tracked_modified_paths": 16,
+    "untracked_status_entries": 28,
+    "staged_paths": 0
+  }
+}

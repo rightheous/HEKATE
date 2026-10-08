@@ -1,0 +1,1583 @@
+{
+  "format_version": 1,
+  "reviewed_at_utc": "2026-10-06 20:01:37 UTC",
+  "worktree": "/home/hekate/hekate-phase6c-ollama-qwen-profile",
+  "branch": "phase6c-ollama-qwen-profile",
+  "head": "9c25acca594d3edb5db4f2ce710e490b7e6d95b7",
+  "purpose": "Submission candidate review for existing Phase 6C/6D changes; not a new runtime verification or staging receipt.",
+  "counts_before_review_files": {
+    "modified": 17,
+    "untracked": 200,
+    "total": 217,
+    "source_docs_fixtures": 29,
+    "diagnostic_files": 188
+  },
+  "checks": {
+    "pattern_scan_files": 50,
+    "pattern_findings": [],
+    "json_errors": [],
+    "diff_check_exit": 0,
+    "diff_check_output": "",
+    "patch_actual_sha256": "70e395632b9899edd213a4bf2e52acaa0662443f954217c0eb6271461db4be05",
+    "patch_lock": [
+      {
+        "file": "integration/letta/patches/provider-call-context-usage.patch",
+        "name": "provider-call-context-and-memory-projection",
+        "sha256": "70e395632b9899edd213a4bf2e52acaa0662443f954217c0eb6271461db4be05",
+        "source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03"
+      }
+    ],
+    "source_license_asset": {
+      "tokenizer_bytes": 7960382,
+      "model_weights_included": false
+    },
+    "scope": "Selected submission candidates only. Pattern scan is not a full secret audit. Runtime tests were not rerun."
+  },
+  "submission_candidate": {
+    "files": [
+      {
+        "path": "bridge/letta/src/main.ts",
+        "status": "modified",
+        "bytes": 44471,
+        "sha256": "b1bc30daa2985944d29e98b76f0e5e3b08e3d65dc6405358967c0a5317acf9e0",
+        "kind": "source"
+      },
+      {
+        "path": "bridge/letta/src/protocol.ts",
+        "status": "modified",
+        "bytes": 7527,
+        "sha256": "8332ee2e22239654f6c9ba55f4bced997648a0793cd1f9f4162b9adf9b1331d3",
+        "kind": "source"
+      },
+      {
+        "path": "contracts/generated/bridge.v1.schema.json",
+        "status": "modified",
+        "bytes": 39085,
+        "sha256": "87c60a59cb5ec3689e7653b716a594a149b934bf7d4e9143222da0af52bb0e33",
+        "kind": "source"
+      },
+      {
+        "path": "integration/letta/patches/provider-call-context-usage.patch",
+        "status": "modified",
+        "bytes": 52788,
+        "sha256": "70e395632b9899edd213a4bf2e52acaa0662443f954217c0eb6271461db4be05",
+        "kind": "source"
+      },
+      {
+        "path": "integration/letta/versions.lock.json",
+        "status": "modified",
+        "bytes": 1187,
+        "sha256": "760cbce19a44ce787738b2d7e8e9287f0a89724a6e72476526b31e8988307e1f",
+        "kind": "source"
+      },
+      {
+        "path": "pyproject.toml",
+        "status": "modified",
+        "bytes": 1122,
+        "sha256": "6ac20065ee3e9423930601eea8af1092df857895c5ceb2d9e6f0e91da3f66232",
+        "kind": "source"
+      },
+      {
+        "path": "scripts/phase3_runtime_probe.py",
+        "status": "modified",
+        "bytes": 115194,
+        "sha256": "a87e6e46f7c3430d2bb8ee5719a630aba91744fa8b183ccb59d2f1ae906953db",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/application/lifecycle.py",
+        "status": "modified",
+        "bytes": 82336,
+        "sha256": "ff69faf8dd14406cf228441701f5e86d28944a55ebcfefea4f678f752fea16cf",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/application/operations.py",
+        "status": "modified",
+        "bytes": 30655,
+        "sha256": "61c1f3d4fb0f25b01a0f1cfbac07d5e07dc5536a3ee8a19b50c9c4db2a23525f",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/application/turns.py",
+        "status": "modified",
+        "bytes": 70788,
+        "sha256": "1b0a18148a20828819f98fb07811a1348908f4a7dc07049296d58c8cb3f0187b",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/domain/bridge_contracts.py",
+        "status": "modified",
+        "bytes": 9448,
+        "sha256": "e7be903b0c095d7e900315e52bb66053d3e2b0387b22d6d6024121869777d9c8",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/domain/models.py",
+        "status": "modified",
+        "bytes": 42606,
+        "sha256": "29b948c162979dedc7892c3690444860052fbd8abb3384c58c3fc2fc725433e4",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/infrastructure/letta/adapter.py",
+        "status": "modified",
+        "bytes": 11803,
+        "sha256": "be3a4d2a1a160a4a2172e69b2ad3ae93c1e4c5b1eeffdb6f55718b634c631a9e",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/infrastructure/letta/provider_gateway.py",
+        "status": "modified",
+        "bytes": 35474,
+        "sha256": "7fe05d6f0508fc6e6e268283827d78751de373cf7b00728c9589cba4f9385334",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/infrastructure/letta/token_accounting.py",
+        "status": "modified",
+        "bytes": 20258,
+        "sha256": "7004f5d1e7d8362f0857312a9f6f897a679c570e0ed0ac454a25092e6ab532aa",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/ports/runtime.py",
+        "status": "modified",
+        "bytes": 1937,
+        "sha256": "5b83330c93b5c5a2e81e2685a07b7f5beaf8eae06b3ba84ebd4402579cf8d8fe",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/settings.py",
+        "status": "modified",
+        "bytes": 19583,
+        "sha256": "2b9543d1f700aa7e3faeac4f8b5857e274d13056436a2932e1777afef2d792e0",
+        "kind": "source"
+      },
+      {
+        "path": "config/local-candidates.yaml",
+        "status": "new",
+        "bytes": 5216,
+        "sha256": "16b43c49b7fa70756a8bf3e5d6f8aed9e383c0a1c62936f13ff0412161b4b1e8",
+        "kind": "source"
+      },
+      {
+        "path": "docs/implementation/phase6c-ollama-qwen-profile.md",
+        "status": "new",
+        "bytes": 13344,
+        "sha256": "424666f0516723a8804213d4a7867c8dd6b2775ebaff88fcdada6eae94de612a",
+        "kind": "doc"
+      },
+      {
+        "path": "docs/implementation/phase6d-local-qwen-smoke.md",
+        "status": "new",
+        "bytes": 27615,
+        "sha256": "4b4b5d2a8f3d193fe1a687fe74c16faab73a706edd4dd1dec3e7f35918c4db9d",
+        "kind": "doc"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6b-legacy-c469d211.json",
+        "status": "new",
+        "bytes": 98190,
+        "sha256": "26057797c95fa4ce6c9f17416f29ea54ab4956653d0d7083a3a41e8bb348c703",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T200837Z-60478a24-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 24004,
+        "sha256": "b3fa69c7617990919bd168d033b9f54f8fdf59962fe01cc7bced30be93e21913",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-permit-guard-20261005T201406Z-ce684841.json",
+        "status": "new",
+        "bytes": 7249,
+        "sha256": "57b273e2bc260661c236acb213de9769fec285b2d0ee4e09e259c6c857c23ce9",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 64872,
+        "sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery.json",
+        "status": "new",
+        "bytes": 933391,
+        "sha256": "a8cfb2e876965e5ca92e6c6263346c78423e6e1e9ddb0f027abb2d72d239ad60",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms.json",
+        "status": "new",
+        "bytes": 2463922,
+        "sha256": "7b7a51c5b21a85be6bb8c0d782fc8e3bba16f5be7ece9b1b5d3ee2fcf61e23ab",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms.json",
+        "status": "new",
+        "bytes": 2537296,
+        "sha256": "e7fb99e253ce8fd67066027ccd435476fe32e5e7144807b4042fab8bc3e61a61",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193535Z-9c58f9a2-qwen-output-diagnosis.json",
+        "status": "new",
+        "bytes": 21969,
+        "sha256": "aa9afe334653065fcd218b4b992342ddc2dfbabef34405190fed9ec085baae8b",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 188848,
+        "sha256": "2480401cddc6ffcf659b45e671a42ea04d7992f92faff8c79c8ea1c6e3c4009e",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/app-server-assistant.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 239692,
+        "sha256": "cfb83eddc22e77b8ec5c992b200d2bdbd122773893a3d711a942f5497a0c3434",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 64402,
+        "sha256": "b75304b91316305af181b50126d39e6663546209d064dc5e466f1163707f579a",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "5e140dd0e1c79754a8d0baddd34c10bba4a4b5d474f0736754a0a847f63fb5bb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193948Z-8bc886ed-output-observed-qwen-followup.json",
+        "status": "new",
+        "bytes": 1524411,
+        "sha256": "85c4df3887910c0b8cd6addedd2950b5941ce2003ca256f0f3ddeda1e35bc59c",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/fixtures/qwen35-renderer-tokenizer-v1.json",
+        "status": "new",
+        "bytes": 10059,
+        "sha256": "18767749bad4b998bb1fd7322c9904c9ade72de09821686bd03661a1e74f3e41",
+        "kind": "fixture"
+      },
+      {
+        "path": "scripts/build_qwen35_unicode_flags.py",
+        "status": "new",
+        "bytes": 3428,
+        "sha256": "141acd43566d8f0eff98751d21503dbf5576e9b5fab6da3a7c7ea309bdc8a54a",
+        "kind": "source"
+      },
+      {
+        "path": "scripts/phase6c_ollama_qwen_probe.py",
+        "status": "new",
+        "bytes": 215295,
+        "sha256": "9efdd31d610032f1dc0b39dd2f057e42f2a80678041df722241b844656869df5",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/infrastructure/letta/assets/qwen35_installed_tokenizer.v1.json",
+        "status": "new",
+        "bytes": 7960382,
+        "sha256": "136b59c238ba4f19057d312f7c694aa09135a53717a1c0cfcd711dae9c62e85f",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/infrastructure/letta/assets/qwen35_unicode_flags.v1.json",
+        "status": "new",
+        "bytes": 31786,
+        "sha256": "3b9692e9f9b318f297d1337e45ba5764c594ee7be1d7b5c49b162290af487d69",
+        "kind": "source"
+      },
+      {
+        "path": "src/hekate/infrastructure/letta/qwen_ollama.py",
+        "status": "new",
+        "bytes": 47158,
+        "sha256": "2f3e87b276677a2415850e7ab7f335c386c88ac15ea8c374e9bd0dd225954525",
+        "kind": "source"
+      },
+      {
+        "path": "tests/unit/test_phase6d_local_probe_guard.py",
+        "status": "new",
+        "bytes": 18195,
+        "sha256": "116a545e294e7e7d561b645ebf33e106a29ab8340954bb52b19175c0b7eb6486",
+        "kind": "source"
+      },
+      {
+        "path": "tests/unit/test_provider_gateway_sse.py",
+        "status": "new",
+        "bytes": 3233,
+        "sha256": "feca18b5d64ab0530b9f5ab145c75d2ac59a9a3b45f2023891e06fd65a02c4d1",
+        "kind": "source"
+      },
+      {
+        "path": "tests/unit/test_qwen_ollama.py",
+        "status": "new",
+        "bytes": 15209,
+        "sha256": "b8ad2456a2566e01a6abfddb557c2ff89ac9cb5dde6456a63d14e594140ccfa8",
+        "kind": "source"
+      }
+    ],
+    "bytes": 17110769,
+    "suggested_subject": "feat: integrate local Qwen and complete validated turn execution"
+  },
+  "retain_local": {
+    "files": [
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T191002Z-90f92a3c-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 7377,
+        "sha256": "18f41f55e7322885023282b8bee0d3ba63f55229674e811cee0f87dceec43306",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T191053Z-a665f0e5-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 8024,
+        "sha256": "698274ceb1b14abf4a8524832ca716b2619d99ea9d5a51afc2c7e8c01087bf82",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T192350Z-bb82cf44-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 9119,
+        "sha256": "3aed30f51bdade7107907d790ebb025371e4f7fb4e072f22bc5a754aa474284a",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T192725Z-b5d3f5d4-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 9764,
+        "sha256": "159dc087dc7e7d73c39572b4f505e03fcac85366b2a5cfb8a171fb1a082da005",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T192816Z-d398b639-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 9926,
+        "sha256": "5b4efd45c0c388192f6a1cb1cd122375d99ee97290816f3aa09048533af9ce30",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T193240Z-5c7c8a12-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 10657,
+        "sha256": "bbc7338f194e8306732f52c64ae44868aac9fa00c9d0207a31cca9aa60c57010",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T193813Z-3f4976d7-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 11040,
+        "sha256": "d9abd0a865c0235c948e3f00f84379d458afc02284c815ee16f36b2d10404012",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T195527Z-95497de9-qwen-gateway-fix.json",
+        "status": "new",
+        "bytes": 10160,
+        "sha256": "06ccfdb68ce7711e77071c80d025f5770b2e7e6f9c0f4a73ff022ca0ade8f050",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T195857Z-88cf29ba-qwen-gateway-fix2.json",
+        "status": "new",
+        "bytes": 11798,
+        "sha256": "4a76bc98cfddba41f88f9f54265664d662afa7759feac41900330ceeef0f039f",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T200014Z-0b9cc823-ollama-qwen-fake-runtime.json",
+        "status": "new",
+        "bytes": 20946,
+        "sha256": "2e0812402ea728f2afc8153fe42edebff6b069d742b559d6a708142ec7f2b22f",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6c-20261005T200713Z-12c8ffe3-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 24004,
+        "sha256": "08cf26438cce79a08e6d84d8ac46300ef1212d9747527244bb9164471df89be3",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T-fake-preflight.json",
+        "status": "new",
+        "bytes": 29642,
+        "sha256": "a4376e14c43039ed9b0ed69166dcfc528e4cdfebb955b098bb0e67628105d121",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T042104Z-b6afec32-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 16414,
+        "sha256": "181192476d5e7f92d52a0697337941c520cf14c3287903c0de020bebdbdccae6",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T042733Z-e831c9f2-fake-preflight-guard-fix.json",
+        "status": "new",
+        "bytes": 30367,
+        "sha256": "26e1a29cd5a62faa7188d21827761ab0949852989790383fca71ee02ba3953f5",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T043331Z-09ba3308-reconciliation.json",
+        "status": "new",
+        "bytes": 14995,
+        "sha256": "6c4d3f3fe211f5bbd66822df2bd9f575f9f487a21da5d29e596ba5244c69b903",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T150013Z-8a559c66-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 29843,
+        "sha256": "f06b7ecaf3fee4e8c5fb32185b65f687a0bf61296c20e96e0f57340aeb62ee47",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T150156Z-7f915cee-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 33187,
+        "sha256": "81612df2ebd972ab71ef2b8db65ef56ceabe2fae222bb9b22c94177b1c3a9ba1",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T150950Z-ffa98a36-independent-attempt-diagnostic.json",
+        "status": "new",
+        "bytes": 16331,
+        "sha256": "8382b3fa7a76c1504f548d0e361e25a6fe01eeee50a7b55a04a4279f2db3f557",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T161742Z-42352247-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 15162,
+        "sha256": "2befcfbe7c8ababe42676f12e081d3b3ff395e2ec86c97a5baea2697bb77c22b",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T161852Z-63372b9d-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 31359,
+        "sha256": "730408b8e3fd9761ab0ea8afe1ade16354e06f1dd109382ead90e318b9f36ae5",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T162115Z-20957d28-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 32615,
+        "sha256": "5d97729d331c7115ce0d318b75cd533c6aa0ce650d51ab2a757e6b8e54f2f9d5",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T162211Z-18c1dad6-ollama-qwen-runtime.json",
+        "status": "new",
+        "bytes": 38484,
+        "sha256": "7cb2fc9106fe41a8b516b0a9fa679e3bda1c4ffc944b1b9931ecd3406d184638",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T162747Z-5d2e64a0-native-schema-followup-analysis.json",
+        "status": "new",
+        "bytes": 11782,
+        "sha256": "dc459080c7d234a97db11bcdaa9ead9b6f9b01b6327b150c4ad3e8958bd18567",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T183818Z-b87c47fe-output-delivery.json",
+        "status": "new",
+        "bytes": 52921,
+        "sha256": "24e85a65abccbddf624f7b6ad22010bf4756b8457c02721f1b4dd73eaaaf7006",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T184109Z-4c6ff15b-output-delivery.json",
+        "status": "new",
+        "bytes": 53979,
+        "sha256": "8b693308e7ce14e0f23ef890a9ed6389203425e88a245a5c91a8c3df32b1a752",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T184215Z-a75f28c4-output-delivery.json",
+        "status": "new",
+        "bytes": 59401,
+        "sha256": "9e260017c473fb41403d102dd8ab0a25e5c40a6370b70f5bcb5af154121fe76d",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T184411Z-e45f71c9-output-delivery.json",
+        "status": "new",
+        "bytes": 59401,
+        "sha256": "1aaaa46f9e22b90b2736cb6b422aaa3e5e8ef4a602cb10a1d61a51139b12ddae",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T185955Z-14316386-output-delivery.json",
+        "status": "new",
+        "bytes": 21001,
+        "sha256": "e60087b1893e6abe711bc9d6c2c76a4297e846deccf71b1d2d29764b173de7b2",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/adapter.jsonl",
+        "status": "new",
+        "bytes": 374097,
+        "sha256": "282214af44d87b0c58ef73fc38b3d6294bdd4b1e7db874bfc755fd8e10d04d5b",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 26297922,
+        "sha256": "896e0933d29dcaf5333dbf0cb8f98c888ef50cd52954883ee149594b4b0d7744",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f7d0ca2fc5e231866d0ea65d0d21e88c1f0d9e4e771c6bedb16e5d10a841ae41",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 53731,
+        "sha256": "cd25d4a19185b69258e6e7827d949ebb692e2285efdd9b36d0ae4759a6baf12a",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 53544,
+        "sha256": "cfdeddba3a4b479d82655390057c67131111c4d0fe5a98b30cd0caa22b8f6063",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 760,
+        "sha256": "0ee50a0d6dbf00f91fb3f247462f23714e6d72470dcac77663460d145438ed60",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f7d0ca2fc5e231866d0ea65d0d21e88c1f0d9e4e771c6bedb16e5d10a841ae41",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f7d0ca2fc5e231866d0ea65d0d21e88c1f0d9e4e771c6bedb16e5d10a841ae41",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190028Z-41ef1e30-output-delivery.json",
+        "status": "new",
+        "bytes": 376391,
+        "sha256": "6bb466d24c4911a6f3dd0fe2e4de3752803b1e0cb1e3cdfc7d8c58d638c9952b",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 374631,
+        "sha256": "59ed50e718ec8298fa6c2069a27b8efaad0f51743733abb501723a765471e4d1",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 494262,
+        "sha256": "761839fc633f96b8930f214dee0dadeb878e18fb288080a160484b3aec455d91",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f598486c53a22bf2e6df85d1b98f4c3c69f13f943cfa35c0654688b57ed7a05d",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 53731,
+        "sha256": "cf0186416461144ec546fe70029e34e7c0d79cc424fd2727296e1718b7d74d1b",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 53544,
+        "sha256": "4efaccca5e0750bae4e3d7b337b03fba7ad93dccdc87c33ceeab170486afe792",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 760,
+        "sha256": "af6cf02741660a698189596c83dcffbb4b237874e3c24c135e18a89e8a0422a4",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f598486c53a22bf2e6df85d1b98f4c3c69f13f943cfa35c0654688b57ed7a05d",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f598486c53a22bf2e6df85d1b98f4c3c69f13f943cfa35c0654688b57ed7a05d",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190356Z-4b91a03c-output-delivery.json",
+        "status": "new",
+        "bytes": 773700,
+        "sha256": "f1c9b424128b31d542022efc99b9af3f03a6d5e1d67d57b6ad4ea28603fb1e9c",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 374631,
+        "sha256": "eff959d4d7df390ff41d05d0dd78505d6ef2c702521cfb2d331b45e06084d864",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 494262,
+        "sha256": "a900d168c23ab51beb4d36ae853fac403f52630cfc6539738d661c1ba6f4ae8b",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f8711d2b1dd12750d83bc2f783e346f84ede31d4b74e29f4b751c282380608cb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 53731,
+        "sha256": "2ddc4dcafea6e36891c9cc98141eab9acb78379005faa92766da5a84b17a6b46",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 53544,
+        "sha256": "a9055f3e2bffce67fd98a2195da09c7da5260bed4834c8d336c86230f7c8f715",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 760,
+        "sha256": "676e5673fc5b1104efdc2fce5ee61bfd8f40e4b8ce4b75fa13703900595bf0f0",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f8711d2b1dd12750d83bc2f783e346f84ede31d4b74e29f4b751c282380608cb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "f8711d2b1dd12750d83bc2f783e346f84ede31d4b74e29f4b751c282380608cb",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190449Z-4d4c7316-output-delivery.json",
+        "status": "new",
+        "bytes": 775163,
+        "sha256": "c76ad5162c9079b58db8d782c8e91afa80ef0a0a53bdc0ade0484e05e00adce1",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 190244,
+        "sha256": "f4b62838d0fd9ca978b411d6448e5d2c1bd23cfa05009a695a0ab18aaaecda20",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 224471,
+        "sha256": "b51d0a7feba30b3d0b5036dc4af2fae792306aee2ee11efeebaf588a8ad30fee",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 669,
+        "sha256": "4256735f07346f244ce48f83aea95a60cbdde5e0c15276e0f17d640cec2af9ce",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 669,
+        "sha256": "4256735f07346f244ce48f83aea95a60cbdde5e0c15276e0f17d640cec2af9ce",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 669,
+        "sha256": "4256735f07346f244ce48f83aea95a60cbdde5e0c15276e0f17d640cec2af9ce",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T190724Z-ab1a653c-output-observed-qwen.json",
+        "status": "new",
+        "bytes": 1379230,
+        "sha256": "f116488d1ab1ff3283501cd205276dd60b9e32275c05d041b4cc380328d238b2",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 374631,
+        "sha256": "6836aa97bb247c09d7c87229b39f3174cd2c5a5181a9e8402ecad8fae66354cc",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/app-server-assistant.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "4d06e3465d6eaa26ef6050ac1a1330b782f3d0350945e37fbeea65311dc6196f",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 494956,
+        "sha256": "c2e832f4f3462fd017bacec9c0895a7a92731a37b9627304108d6ebcc5e55519",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "4d06e3465d6eaa26ef6050ac1a1330b782f3d0350945e37fbeea65311dc6196f",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 53731,
+        "sha256": "76177370faf7d63a97c80a8a737fdb7680bb8401a67d3ca2989afc3f9e6193a4",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 53544,
+        "sha256": "6ca0b3b0c7353e850a1200897d28ad4a7e1488c2ff8fd8c0342997de462f114c",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 760,
+        "sha256": "cf648b4efadc6cd3aae265eb12a3e56fb677fd7be40c8f4f3d7af5f2dd780679",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "4d06e3465d6eaa26ef6050ac1a1330b782f3d0350945e37fbeea65311dc6196f",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "4d06e3465d6eaa26ef6050ac1a1330b782f3d0350945e37fbeea65311dc6196f",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192013Z-6500d045-output-delivery.json",
+        "status": "new",
+        "bytes": 933398,
+        "sha256": "9f677b1f274ba63b84c85a9fb6f6c8fd8e17984b3b3d8d2b434d0884b82c6006",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/app-server-assistant.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 7090,
+        "sha256": "810c5636b612ec7bfa221d958bc7ae78098f6259153ad767a7772bc1f1c064b6",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 64872,
+        "sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192100Z-f8468a25-captured-sse-30000ms.json",
+        "status": "new",
+        "bytes": 254693,
+        "sha256": "20e9d0c7dd8c915c97a94d5911580d735078e5ced46683eb69a57558f49ee451",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/app-server-assistant.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 7095,
+        "sha256": "7a175a7f88248592b43834b30a2b8380368ae0962208b5675ed140abebb75234",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 64872,
+        "sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192300Z-1fdc33bd-captured-sse-240000ms.json",
+        "status": "new",
+        "bytes": 254722,
+        "sha256": "b40c9f06e8388abb0bd3b49e9dd27db9aa2ecb04303a16e54d8df824c4b230ac",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 374631,
+        "sha256": "2abbc114c47c122cffda91b641b5377f3b6b951be203b9b00f81d803b114b5a3",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/app-server-assistant.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "02dee3b773e87bb78a93032b2bfec22a7127a5e904e2bede014c5d787455a659",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 494956,
+        "sha256": "798f1961594aa87a6e26722861bfb84cfd95bb2aeb6a5b71fecce46bf1624fa6",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "02dee3b773e87bb78a93032b2bfec22a7127a5e904e2bede014c5d787455a659",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 53731,
+        "sha256": "fa0494facc33ab805e8cb3f5444ce8427563a4626dbcf74a50a81d30464078f3",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 53544,
+        "sha256": "11663b1c6fa48ea28e48f88b141f4649dcb1f5d9e7a24760abbddeda81b1e29c",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 760,
+        "sha256": "69b15016c6be12ca639481cb8cdf69be5a3579da6eaeadfb45ed4981ebcc960e",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "02dee3b773e87bb78a93032b2bfec22a7127a5e904e2bede014c5d787455a659",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192628Z-27d0c82c-output-delivery-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 1519,
+        "sha256": "02dee3b773e87bb78a93032b2bfec22a7127a5e904e2bede014c5d787455a659",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 190244,
+        "sha256": "489a1bb4b43dafbb28ef18463509932943c5c6da1a42ac440ad4ee08cd576fab",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/app-server-assistant.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 188278,
+        "sha256": "77e017aaef5ee82e4837915d0d7103e53902a438f54a9b0ac6f4aa4903a88843",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 493,
+        "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 493,
+        "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 64872,
+        "sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 493,
+        "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192706Z-13da10c0-captured-sse-30000ms.json",
+        "status": "new",
+        "bytes": 2459100,
+        "sha256": "dab7bf8c2bf7e8f9bb492cdc29e007da563782b32c9dd77dce44c50ca7e8777a",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 190244,
+        "sha256": "a9b6f7abf6be547e0bb91686fd9c092c2ba97c9b47ac4c02ba5b4492cba739c9",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/app-server-assistant.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 188278,
+        "sha256": "a441bcf12ede5583333131c17cdd43f024c8d264cc0f1228965548894211208c",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 493,
+        "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 493,
+        "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 64872,
+        "sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 493,
+        "sha256": "e5fef849a4cde44fa7b0b6e85e56f93bad8e8eaa249155f052fa03c0c263a152",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T192911Z-57507dd1-captured-sse-30000ms-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/adapter-observations.jsonl",
+        "status": "new",
+        "bytes": 190244,
+        "sha256": "301a83836bcd31f3ea90eed1e9ddebbc846e87c6fc3402c7e1bffbf8e29ace5a",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/app-server-assistant.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/bridge-observations.jsonl",
+        "status": "new",
+        "bytes": 241406,
+        "sha256": "8209b0321f9516a2949b5a0590f10b3c48d2ddc9a40fc755111759b13447507c",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/bridge-raw-output.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/fake-complete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/fake-incomplete-response.sse",
+        "status": "new",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/postgres-raw-output.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/provider-choice-0.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/provider-response.sse",
+        "status": "new",
+        "bytes": 64872,
+        "sha256": "a8ce0a5c7ec82f3fd1eadc2c33b64b8fbe5b234b32ecf5ec87595b36f20b7829",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/sdk-assistant.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-20261006T193011Z-57b83bb2-captured-sse-240000ms-capture/sdk-result.txt",
+        "status": "new",
+        "bytes": 763,
+        "sha256": "652fa52fb4023a574f3fe25488c2632c4c3d90aa70f1d438178ecb83075e1563",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-qwen-independent-authorized-attempt-ledger.json",
+        "status": "new",
+        "bytes": 4075,
+        "sha256": "0507b8df05d6df1e7d206ac1ca3df271e2d139039732fc2fffedf2349822b103",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-qwen-native-schema-authorized-attempt-ledger.json",
+        "status": "new",
+        "bytes": 5065,
+        "sha256": "70d735460f904608935e92510142c9dc183d5846359baa631d3515f53beb8b4d",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-qwen-output-observed-authorized-attempt-ledger.json",
+        "status": "new",
+        "bytes": 131556,
+        "sha256": "9d6488950dfce8e5baa8a48d087cdd5e803da7356d5c6589b1f6e1332581c150",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-qwen-output-observed-followup-authorized-attempt-ledger.json",
+        "status": "new",
+        "bytes": 131008,
+        "sha256": "e0b0fa75385b3e048a1aab97171c7704b063fd0c4016554859ba54b1eab07fb3",
+        "kind": "artifact"
+      },
+      {
+        "path": "integration/runtime/artifacts/p6d-qwen-single-attempt-ledger.json",
+        "status": "new",
+        "bytes": 1729,
+        "sha256": "6b4ede914aca1ed3a5ce14486fd9c3fb32f514aadae2b92b68dae067c9c72a54",
+        "kind": "artifact"
+      }
+    ],
+    "bytes": 40830581,
+    "reason": "Historical/intermediate diagnostic records, raw capture directories not selected as evidence, and consumed one-attempt authorization ledgers. Preserve files and state; do not stage by default."
+  },
+  "additional_review_documents": [
+    "docs/implementation/phase6cd-change-review.md",
+    "docs/implementation/phase6cd-submission-manifest.json"
+  ],
+  "unchanged_boundaries": [
+    "Production dispatch remains blocked.",
+    "Previous UNKNOWN and failed task state is preserved.",
+    "No stage, commit, push, PR, merge, model inference, runtime start, or database mutation performed."
+  ],
+  "release_remaining": [
+    "Normal CLI/worker configuration and local profile admission outside the probe.",
+    "Real Qwen Evidence/Critic/synthesis/Position/projection integration verification.",
+    "HTTP API/auth and operator recovery/evaluation surfaces contain placeholder functions; determine release scope before claiming complete v0.1.",
+    "G7 resume remains unsupported; G8 profile validation is bounded to observed requests, not blanket production approval."
+  ],
+  "hash_note": "File hashes describe the pre-submission snapshot. Original artifacts retain their historical fingerprints. The two review documents do not hash themselves."
+}

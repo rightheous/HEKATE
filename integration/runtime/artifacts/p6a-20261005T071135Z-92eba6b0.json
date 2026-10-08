@@ -1,0 +1,657 @@
+{
+  "schema_version": "1",
+  "probe": "phase6a-memory-projection",
+  "run_id": "p6a-20261005T071135Z-92eba6b0",
+  "executed_at": "2026-10-05T07:11:35.471138Z",
+  "baseline": {
+    "head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+    "branch": "phase5b-bounded-deliberation",
+    "source_worktree": "/home/hekate/hekate-phase5b-bounded-deliberation",
+    "copy_manifest": "integration/runtime/artifacts/p6a-baseline-20261004T184731Z-f941096c.json",
+    "phase4_phase5a_phase5b_changes": "selected tracked diff and clean nonignored implementation/docs/artifacts copied before Phase 6A edits"
+  },
+  "branch": "phase6a-memory-projection",
+  "head": "dfe099875d757d8f023252a42bda89778847502e",
+  "production_dispatch": "blocked",
+  "real_provider_calls": 0,
+  "projection_inference_calls": 0,
+  "overall_status": "pass",
+  "results": {
+    "populated_downgrade_guard": {
+      "refused": true,
+      "head_unchanged": true
+    }
+  },
+  "execution": {
+    "command": "uv run --locked python scripts/phase6a_memory_projection_probe.py --database-url <isolated-db> --empty-migration-database-url <isolated-empty-db> --node-bin /tmp/node-v22.19.0/bin/node",
+    "result": "passed"
+  },
+  "limitations": [
+    "Projection is a bounded reference in persistent HEKATE core memory; PostgreSQL remains authoritative.",
+    "Actual provider access and production dispatch remain disabled; a local synthetic fake provider is used.",
+    "G7 same-execution resume and G8 full-request tokenization remain deferred.",
+    "Conclusion exact reuse, schema repair/retry, vector search, and automatic deliberation remain out of scope."
+  ],
+  "runtime": {
+    "node_version": "22.19.0",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "sdk_version": "0.8.25",
+    "app_server_version": "0.33.8",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "patched_image_id": "sha256:02d7d5a101f636e5c1744ecadb344213b5b794b91ce36f41fa5c973b8e36a2db",
+    "runtime_patch_sha256": "d6f4706748a4fc7878a1ba50946243cd246bf94e183d6b1ee02e81a93fa1ff19",
+    "bridge_protocol_version": "1",
+    "patch_sha256": "d6f4706748a4fc7878a1ba50946243cd246bf94e183d6b1ee02e81a93fa1ff19"
+  },
+  "database": {
+    "name": "hekate_phase6a_readback_20261005a",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "migration_head": "0012_projection_write_guard"
+  },
+  "hardening_scenarios": {
+    "same_worker_task_projection_serialization_and_cancel_recovery": {
+      "worker_id": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+      "topics": [
+        "phase6a-memory-serial-a",
+        "phase6a-memory-serial-b"
+      ],
+      "worker_claimed_both_topics": true,
+      "one_runtime_write_at_completion_barrier": true,
+      "other_topic_wait_reason": "persistent_HEKATE_lease_busy",
+      "queued_task_status_while_write_unresolved": "QUEUED",
+      "queued_task_provider_calls_while_write_unresolved": 0,
+      "projection_cancel_propagated": true,
+      "expired_lease_new_owner_denied_while_write_guard_authorized": true,
+      "durable_guard_after_runtime_completion": "EFFECT_CONFIRMED",
+      "same_operation_readback_recovery": "APPLIED",
+      "runtime_write_attempts_for_cancelled_topic_including_recovery": 1,
+      "both_topics_applied_after_recovery": [
+        1,
+        1
+      ],
+      "runtime_readback_digests_match": true,
+      "provider_request_delta": 0
+    },
+    "authorization_revocation_at_serialized_runtime_write_boundary": {
+      "prepared_actor_epoch": 1,
+      "database_epoch_at_gate_release": 2,
+      "old_epoch_write_guard": {
+        "state": "NO_EFFECT",
+        "authz_epoch": 1,
+        "observation": {
+          "reason": "projection_authorization_snapshot_changed_at_runtime_write",
+          "decision": "DENIED_BEFORE_RUNTIME_WRITE"
+        }
+      },
+      "old_epoch_operation_state": "PENDING",
+      "old_epoch_projection_state": "PENDING",
+      "old_epoch_applied_version": 0,
+      "runtime_memory_before": {
+        "present": false,
+        "version": 0,
+        "digest": null,
+        "revision": "57e9051659db5aee1aa72a1db64aa9b96de45260"
+      },
+      "runtime_memory_after_denial": {
+        "present": false,
+        "version": 0,
+        "digest": null,
+        "revision": "57e9051659db5aee1aa72a1db64aa9b96de45260"
+      },
+      "memory_revision_unchanged_at_denial": true,
+      "task_response_and_position_receipt_unchanged": true,
+      "provider_and_budget_ledger_unchanged": true,
+      "current_epoch_retry_state": "APPLIED",
+      "current_epoch_effect_guard_states": [
+        {
+          "state": "NO_EFFECT",
+          "authz_epoch": 1,
+          "source_version": 1,
+          "payload_digest": "0884edab25b599b82785d5763d95f2247ff4863b1745237ed8e135fc049e9c65",
+          "observation": {
+            "reason": "projection_authorization_snapshot_changed_at_runtime_write",
+            "decision": "DENIED_BEFORE_RUNTIME_WRITE"
+          }
+        },
+        {
+          "state": "EFFECT_CONFIRMED",
+          "authz_epoch": 2,
+          "source_version": 1,
+          "payload_digest": "0884edab25b599b82785d5763d95f2247ff4863b1745237ed8e135fc049e9c65",
+          "observation": {
+            "kind": "memory",
+            "payload": "{\"applicability\":[\"the submitted decision and stated inspection scope\"],\"assumptions\":[],\"confidence\":{\"basis\":[\"the bounded synthetic task context\"],\"level\":\"medium\",\"missing_evidence\":[]},\"format_version\":2,\"provenance\":{\"conclusion_id\":\"f92867f4-659e-5061-af4b-59429d9b10f7\",\"created_at\":\"2026-10-05T07:12:23.426336+00:00\",\"dissent_refs\":[],\"evidence_refs\":[],\"input_revision\":1,\"position_operation_id\":\"6a957bd1-9c6b-5a41-9fef-4f041f6aee3a:position.commit\",\"reason_for_change\":\"Persist the Phase 6A bounded Position fixture.\",\"registry_id\":\"284a8a57-7f82-5484-bbda-9bf02b82c9bf\",\"task_id\":\"953c0679-2ff4-4c67-8164-c63949f968ff\"},\"scope\":\"phase6a:p6a-20261005T071135Z-92eba6b0\",\"source_version\":1,\"statement\":\"Phase6A authorization revocation marker must not reach runtime memory.\",\"topic_id\":\"phase6a-memory-auth-revoke\",\"truncated\":false,\"uncertainty\":\"Use only within the described scope.\"}",
+            "present": true,
+            "topic_id": "phase6a-memory-auth-revoke",
+            "verified": true,
+            "agent_fence": 30,
+            "lease_fence": 30,
+            "format_version": 2,
+            "payload_digest": "0884edab25b599b82785d5763d95f2247ff4863b1745237ed8e135fc049e9c65",
+            "source_version": 1,
+            "memory_revision": "c2b9aad55153ca7ffcadf08c34c95c448f3200ae"
+          }
+        }
+      ],
+      "final_memory_version": 1,
+      "provider_requests_for_denial_and_projection_retry": 0
+    },
+    "read_back_guard_snapshot_and_stale_claim_fencing": {
+      "topic_id": "phase6a-memory-readback-race",
+      "worker_a": {
+        "id": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+        "claim_fence": 2,
+        "captured_guard_ids": []
+      },
+      "worker_b": {
+        "id": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+        "claim_fence": 3,
+        "captured_guard_ids_before_runtime_read": []
+      },
+      "agent_lease": {
+        "owner": "projection:aab27c276d43b1394fd1213af8c7dabda1ec337721e2e3116c44d39bbb4d0a2f",
+        "fence": 35,
+        "same_for_a_and_b": true
+      },
+      "runtime_observation_a": {
+        "topic_id": "phase6a-memory-readback-race",
+        "present": true,
+        "source_version": 1,
+        "payload_digest": "513840b02ac384cbc1621d7603b061d9776d7e051389776a370e508d59ec5dc3",
+        "memory_revision": "e490966aeaa31ba9344d71efb35ac0dc41284e32",
+        "agent_fence": 33
+      },
+      "same_version_digest_post_snapshot_grant": {
+        "candidate_ids_captured_before_read": [],
+        "grant_inserted_after_snapshot": true,
+        "matching_observation_version": 2,
+        "matching_observation_digest": "52a780ac78e4ffb7aa165b0fb0e3a1974dac164fc9141cced8e3d3ed5691e4f0",
+        "matching_observation_agent_fence": 35,
+        "guard_state_before_test_transaction_rollback": "AUTHORIZED",
+        "authorized_guards_including_real_b_before_rollback": 2,
+        "test_transaction_rolled_back_without_persisting_observation": true
+      },
+      "read_back_transaction_rollback": {
+        "injected_after_candidate_update": true,
+        "guard_after_rollback": "AUTHORIZED",
+        "projection_after_rollback": {
+          "state": "CLAIMED",
+          "operation_id": "3e3e4498-f8e7-5b67-84e1-d651d9c28e5a",
+          "claim_owner": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+          "claim_fence": 3,
+          "applied_version": 1,
+          "desired_version": 2
+        },
+        "operation_after_rollback": "STARTED",
+        "lease_after_rollback": {
+          "owner_worker": "projection:aab27c276d43b1394fd1213af8c7dabda1ec337721e2e3116c44d39bbb4d0a2f",
+          "fence": 35
+        }
+      },
+      "guard_and_projection_before_a_resumed": {
+        "guard": {
+          "id": "172fe09d-d71a-456c-b50e-dd748e7eaf92",
+          "operation_id": "3e3e4498-f8e7-5b67-84e1-d651d9c28e5a",
+          "request_hash": "c52ab97930cacb1bdc91e8577406c9f5d09d850f9895760b86d9885580d2f277",
+          "scope": "phase6a:p6a-20261005T071135Z-92eba6b0",
+          "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+          "topic_id": "phase6a-memory-readback-race",
+          "state": "AUTHORIZED",
+          "lease_owner": "projection:aab27c276d43b1394fd1213af8c7dabda1ec337721e2e3116c44d39bbb4d0a2f",
+          "lease_fence": 35,
+          "claim_owner": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+          "claim_fence": 3,
+          "source_version": 2,
+          "payload_digest": "52a780ac78e4ffb7aa165b0fb0e3a1974dac164fc9141cced8e3d3ed5691e4f0"
+        },
+        "projection": {
+          "state": "CLAIMED",
+          "operation_id": "3e3e4498-f8e7-5b67-84e1-d651d9c28e5a",
+          "claim_owner": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+          "claim_fence": 3,
+          "applied_version": 1,
+          "desired_version": 2
+        },
+        "operation_state": "STARTED",
+        "lease": {
+          "owner_worker": "projection:aab27c276d43b1394fd1213af8c7dabda1ec337721e2e3116c44d39bbb4d0a2f",
+          "fence": 35,
+          "expires_at": "2026-10-05 07:14:32.871549+00:00"
+        }
+      },
+      "after_a_resumed": {
+        "guard": {
+          "state": "AUTHORIZED",
+          "claim_owner": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+          "claim_fence": 3,
+          "lease_owner": "projection:aab27c276d43b1394fd1213af8c7dabda1ec337721e2e3116c44d39bbb4d0a2f",
+          "lease_fence": 35,
+          "operation_id": "3e3e4498-f8e7-5b67-84e1-d651d9c28e5a"
+        },
+        "projection": {
+          "state": "CLAIMED",
+          "operation_id": "3e3e4498-f8e7-5b67-84e1-d651d9c28e5a",
+          "claim_owner": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+          "claim_fence": 3,
+          "applied_version": 1,
+          "desired_version": 2
+        },
+        "operation_state": "STARTED",
+        "lease": {
+          "owner_worker": "projection:aab27c276d43b1394fd1213af8c7dabda1ec337721e2e3116c44d39bbb4d0a2f",
+          "fence": 35,
+          "expires_at": "2026-10-05 07:14:32.871549+00:00"
+        },
+        "a_did_not_release_successor_lease": true
+      },
+      "expired_lease_unrelated_takeover_denied": true,
+      "after_b_runtime_write": {
+        "guard": {
+          "state": "EFFECT_CONFIRMED",
+          "claim_owner": "phase6a-worker-p6a-20261005T071135Z-92eba6b0",
+          "claim_fence": 3,
+          "source_version": 2,
+          "payload_digest": "52a780ac78e4ffb7aa165b0fb0e3a1974dac164fc9141cced8e3d3ed5691e4f0"
+        },
+        "operation": {
+          "state": "COMPLETED",
+          "observation": {
+            "payload": "{\"applicability\":[\"the submitted decision and stated inspection scope\"],\"assumptions\":[],\"confidence\":{\"basis\":[\"the bounded synthetic task context\"],\"level\":\"medium\",\"missing_evidence\":[]},\"format_version\":2,\"provenance\":{\"conclusion_id\":\"b32395b0-155e-5024-b203-13b0ab9a44bf\",\"created_at\":\"2026-10-05T07:12:32.564750+00:00\",\"dissent_refs\":[],\"evidence_refs\":[],\"input_revision\":1,\"position_operation_id\":\"0db22e5d-543d-563b-bff4-b7b6a7b860ea:position.commit\",\"reason_for_change\":\"Persist the Phase 6A bounded Position fixture.\",\"registry_id\":\"284a8a57-7f82-5484-bbda-9bf02b82c9bf\",\"task_id\":\"7507d81f-4ce6-4e04-a1ce-815ff662cc5b\"},\"scope\":\"phase6a:p6a-20261005T071135Z-92eba6b0\",\"source_version\":2,\"statement\":\"Phase6A read-back race target: source advances to version two after the next commit.\",\"topic_id\":\"phase6a-memory-readback-race\",\"truncated\":false,\"uncertainty\":\"Use only within the described scope.\"}",
+            "present": true,
+            "topic_id": "phase6a-memory-readback-race",
+            "verified": true,
+            "agent_fence": 35,
+            "lease_fence": 35,
+            "format_version": 2,
+            "payload_digest": "52a780ac78e4ffb7aa165b0fb0e3a1974dac164fc9141cced8e3d3ed5691e4f0",
+            "source_version": 2,
+            "memory_revision": "7c99530f4b27452d7d1299c10e2e91c70582f69e"
+          }
+        },
+        "projection_state": "APPLIED",
+        "applied_version": 2,
+        "runtime_version": 2,
+        "runtime_digest": "52a780ac78e4ffb7aa165b0fb0e3a1974dac164fc9141cced8e3d3ed5691e4f0",
+        "projection_digest": "52a780ac78e4ffb7aa165b0fb0e3a1974dac164fc9141cced8e3d3ed5691e4f0",
+        "confirmation_audit_count": 1,
+        "worker_restart_added_runtime_writes": 0
+      },
+      "fake_provider_request_delta": 0,
+      "runtime_write_delta": 1
+    }
+  },
+  "positions": {
+    "task_v1": "91ed6330-4708-4806-aa27-e178d9532d8c",
+    "task_v2": "0f25ac7d-1c37-4d56-adf5-43a92bbe1fb5",
+    "task_v3": "6d7151ec-c526-4506-be3f-0cf53d74fb7f",
+    "task_other_topic": "08f1006c-5cec-49d9-8f7b-5275d11df414",
+    "readback_race_v1": "1be9621e-2b14-429f-a46c-99ef4f221f2a",
+    "readback_race_v2": "7507d81f-4ce6-4e04-a1ce-815ff662cc5b",
+    "topic_versions": {
+      "phase6a-memory-auth-revoke": 1,
+      "phase6a-memory-followup": 1,
+      "phase6a-memory-primary": 3,
+      "phase6a-memory-readback-race": 2,
+      "phase6a-memory-serial-a": 1,
+      "phase6a-memory-serial-b": 1
+    },
+    "commit_receipts": 9,
+    "task_response_states": {
+      "v1": {
+        "status": "COMPLETED",
+        "outcome": "POSITION_COMMITTED",
+        "stop_reason": "COMPLETED",
+        "responses": 1
+      },
+      "v2": {
+        "status": "COMPLETED",
+        "outcome": "POSITION_COMMITTED",
+        "stop_reason": "COMPLETED",
+        "responses": 1
+      },
+      "v3": {
+        "status": "COMPLETED",
+        "outcome": "POSITION_COMMITTED",
+        "stop_reason": "COMPLETED",
+        "responses": 1
+      },
+      "other_topic": {
+        "status": "COMPLETED",
+        "outcome": "POSITION_COMMITTED",
+        "stop_reason": "COMPLETED",
+        "responses": 1
+      }
+    }
+  },
+  "projection": {
+    "scope": "phase6a:p6a-20261005T071135Z-92eba6b0",
+    "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+    "provider_agent_id": "agent-local-740fe55f-fb98-4c0a-b6fe-c9cd62c2ea3c",
+    "position_v1": {
+      "desired": 1,
+      "applied": 1,
+      "observed": 1,
+      "digest": "cce1f7ec7b336c172c932a7976ec45ba12e8d306c396d240f7db806f78062c76"
+    },
+    "position_v2": {
+      "desired": 2,
+      "applied": 2,
+      "observed": 2,
+      "digest": "d11f2d00be018f8fa16b595b307fe2e28ded754bd8fa841195ea3e9b311be448"
+    },
+    "position_v3": {
+      "desired": 3,
+      "applied": 3,
+      "observed": 3,
+      "digest": "a87ab5ec098e1f0d399a2672458819352f3d30aae2da5470992f39eeb764411e"
+    },
+    "other_topic": {
+      "desired": 1,
+      "applied": 1,
+      "observed": 1,
+      "digest": "bf62676b1b203edd37e691367e090cdd0bb712369d39e583ef7f9a1253d78c04"
+    },
+    "operations": [
+      {
+        "id": "3c4b7af3-ccb2-53b8-bf0e-edef844833f4",
+        "topic_id": "phase6a-memory-auth-revoke",
+        "source_version": 1,
+        "base_applied_version": 0,
+        "format_version": 2,
+        "payload_digest": "0884edab25b599b82785d5763d95f2247ff4863b1745237ed8e135fc049e9c65",
+        "request_hash": "0b421823cbb5b4fe74035b307fb0f7cb356bc86fe9420a51bbaadf2b5cad90ea",
+        "original_operation_id": "6a957bd1-9c6b-5a41-9fef-4f041f6aee3a",
+        "state": "PENDING",
+        "failure_reason": "runtime_memory_write_authorization_denied_before_effect"
+      },
+      {
+        "id": "824dca49-7934-551f-9db9-6f94cd07c421",
+        "topic_id": "phase6a-memory-auth-revoke",
+        "source_version": 1,
+        "base_applied_version": 0,
+        "format_version": 2,
+        "payload_digest": "0884edab25b599b82785d5763d95f2247ff4863b1745237ed8e135fc049e9c65",
+        "request_hash": "343e76922ae94605334dc1841096972d6ce29ed34c73d86d5b0cd22de726175d",
+        "original_operation_id": "6a957bd1-9c6b-5a41-9fef-4f041f6aee3a",
+        "state": "COMPLETED",
+        "failure_reason": null
+      },
+      {
+        "id": "7e15a2a0-525a-59c7-80c3-048eceac02e3",
+        "topic_id": "phase6a-memory-followup",
+        "source_version": 1,
+        "base_applied_version": 0,
+        "format_version": 2,
+        "payload_digest": "bf62676b1b203edd37e691367e090cdd0bb712369d39e583ef7f9a1253d78c04",
+        "request_hash": "55b27c7ae34a3384e7bb286c74500f349a6fa268063d68a6e66cdfd9d05c59aa",
+        "original_operation_id": "2f963540-b487-5f90-abc0-bfb028f44940",
+        "state": "COMPLETED",
+        "failure_reason": null
+      },
+      {
+        "id": "2b556bd3-ec23-54ee-bbf1-12afaa0b753f",
+        "topic_id": "phase6a-memory-primary",
+        "source_version": 1,
+        "base_applied_version": 0,
+        "format_version": 2,
+        "payload_digest": "cce1f7ec7b336c172c932a7976ec45ba12e8d306c396d240f7db806f78062c76",
+        "request_hash": "670fcf4e199bd53606251bbbe36689725b805fde1e0fe6279f38d93d8b74ba69",
+        "original_operation_id": "897794fd-1d7d-54d4-bd62-c2952e70ac0e",
+        "state": "COMPLETED",
+        "failure_reason": null
+      },
+      {
+        "id": "b7f915eb-7a2b-5027-9268-01cd7f85108e",
+        "topic_id": "phase6a-memory-primary",
+        "source_version": 2,
+        "base_applied_version": 1,
+        "format_version": 2,
+        "payload_digest": "d11f2d00be018f8fa16b595b307fe2e28ded754bd8fa841195ea3e9b311be448",
+        "request_hash": "d07918bb203cde58e18485015c3a82e7a4dc2416ea07dc947dbc7bffb13f916f",
+        "original_operation_id": "759bdd70-acf8-55a6-b407-2b3d67efe411",
+        "state": "COMPLETED",
+        "failure_reason": null
+      },
+      {
+        "id": "718a3eec-f8b0-5283-9143-a9ee0f4a8293",
+        "topic_id": "phase6a-memory-primary",
+        "source_version": 3,
+        "base_applied_version": 2,
+        "format_version": 2,
+        "payload_digest": "a87ab5ec098e1f0d399a2672458819352f3d30aae2da5470992f39eeb764411e",
+        "request_hash": "dd0dd75d93bab6cc4418203e7f418187984fff960118bea0f743acc5b8c2c21a",
+        "original_operation_id": "d205176e-e2f5-5e01-b0f7-c36db9343a7e",
+        "state": "COMPLETED",
+        "failure_reason": null
+      },
+      {
+        "id": "790b6ce1-772c-55d9-9974-74ace6b8504a",
+        "topic_id": "phase6a-memory-readback-race",
+        "source_version": 1,
+        "base_applied_version": 0,
+        "format_version": 2,
+        "payload_digest": "513840b02ac384cbc1621d7603b061d9776d7e051389776a370e508d59ec5dc3",
+        "request_hash": "1ec33dad85cfe565cf8fcc31f848e676b642d21171c8c3f6d5005871a9103ff3",
+        "original_operation_id": "643dd8e6-76c8-56ca-bacc-e2c20d16b72a",
+        "state": "COMPLETED",
+        "failure_reason": null
+      },
+      {
+        "id": "3e3e4498-f8e7-5b67-84e1-d651d9c28e5a",
+        "topic_id": "phase6a-memory-readback-race",
+        "source_version": 2,
+        "base_applied_version": 1,
+        "format_version": 2,
+        "payload_digest": "52a780ac78e4ffb7aa165b0fb0e3a1974dac164fc9141cced8e3d3ed5691e4f0",
+        "request_hash": "c52ab97930cacb1bdc91e8577406c9f5d09d850f9895760b86d9885580d2f277",
+        "original_operation_id": "0db22e5d-543d-563b-bff4-b7b6a7b860ea",
+        "state": "COMPLETED",
+        "failure_reason": null
+      },
+      {
+        "id": "4b26b357-8804-5f81-9259-7200ea744eaa",
+        "topic_id": "phase6a-memory-serial-a",
+        "source_version": 1,
+        "base_applied_version": 0,
+        "format_version": 2,
+        "payload_digest": "cb13b6650b671fd3365f98062ec50731925f25391358ff641a6fb98779879006",
+        "request_hash": "12739dc3927acf1b386afc68b60371a3c32c5465a8b3291e52e13568671a790a",
+        "original_operation_id": "22de6517-b1f2-5a01-ba25-999d7c4fae5a",
+        "state": "COMPLETED",
+        "failure_reason": null
+      },
+      {
+        "id": "e115ff14-e6b0-5a63-bfef-96adb45da366",
+        "topic_id": "phase6a-memory-serial-b",
+        "source_version": 1,
+        "base_applied_version": 0,
+        "format_version": 2,
+        "payload_digest": "aac0a521ca41cabb988f931cb00465280e70f5427fdfea0879abd23c9b34adad",
+        "request_hash": "3e6527ba7a4ad83c805448166d58d6bab7af436070493d9504faa1e19d20de7d",
+        "original_operation_id": "9b10dcd2-9f07-5285-a2ac-eac507649fa6",
+        "state": "COMPLETED",
+        "failure_reason": null
+      }
+    ],
+    "confirmation_audit_count": 9,
+    "worker_restart_retained_memory": true,
+    "next_task_runtime_core_memory_loaded_outside_task_capsule": true,
+    "real_postgres_agent_lease_takeover": {
+      "old_owner": "p6a-old-agent-owner:p6a-20261005T071135Z-92eba6b0",
+      "old_fence": 7,
+      "replacement_owner": "p6a-new-agent-owner:p6a-20261005T071135Z-92eba6b0",
+      "replacement_fence": 8,
+      "runtime_global_agent_fence": 13,
+      "claim_fence_for_final_topic": 4
+    },
+    "stale_agent_lease_rejected_on_existing_topic": true,
+    "stale_agent_lease_rejected_on_new_topic": true,
+    "stale_rejections_preserved_digest_version_and_runtime_revision": true,
+    "same_version_different_digest_rejected": true,
+    "response_loss_readback_and_db_rollback": {
+      "runtime_v3_effect_survived_response_loss": true,
+      "finish_transaction_rolled_back_before_audit": true,
+      "two_real_postgres_claimers_returned_one_job": true,
+      "worker_restarted_and_confirmed_existing_effect": true
+    },
+    "writes_attempted": 12,
+    "read_calls": 31,
+    "confirmed_logical_effects": 9,
+    "provider_call_count_before_projection_retry_tests": 2,
+    "provider_call_count_after_all_projection_tests": 9,
+    "projection_inference_calls": 0
+  },
+  "accounting": {
+    "fake_provider_requests": 9,
+    "real_provider_calls": 0,
+    "provider_call_rows": 9,
+    "commit_receipts": 9,
+    "system_spent_usd": "0.000405",
+    "system_held_usd": "0.000000",
+    "projection_cost_calls": 0,
+    "compaction_calls": 0,
+    "synthetic_pricing_only": true,
+    "unknown_or_unsettled_rows_in_isolated_phase6a_database": 0,
+    "phase5b_unknown_hold_and_phase4_allocated_fixture": "separate Phase 5B regression database/artifact; not modified by Phase 6A probe"
+  },
+  "runtime_memory_contract": {
+    "path": "root MemFS core memory file hekate_positions.md",
+    "namespace": "hekate.position.v1",
+    "format_version": 2,
+    "entry_limit_bytes": 4096,
+    "document_limit_bytes": 32768,
+    "topic_limit": 8,
+    "atomic_commit_and_readback": true,
+    "provider_or_inference_call_for_projection": false,
+    "persistent_agent_binding_verified_by_runtime_tags": true
+  },
+  "provider_observations": [
+    {
+      "task_id": "91ed6330-4708-4806-aa27-e178d9532d8c",
+      "topic_id": "phase6a-memory-primary",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "0f25ac7d-1c37-4d56-adf5-43a92bbe1fb5",
+      "topic_id": "phase6a-memory-primary",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 1,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": true,
+      "runtime_memory_source_version": 1,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "6d7151ec-c526-4506-be3f-0cf53d74fb7f",
+      "topic_id": "phase6a-memory-primary",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 2,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": true,
+      "runtime_memory_source_version": 2,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "08f1006c-5cec-49d9-8f7b-5275d11df414",
+      "topic_id": "phase6a-memory-followup",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "b44c552f-7edf-4963-aa77-fcd1d9608a07",
+      "topic_id": "phase6a-memory-serial-a",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "3a41a26d-834d-47ee-b121-79b01244b356",
+      "topic_id": "phase6a-memory-serial-b",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "953c0679-2ff4-4c67-8164-c63949f968ff",
+      "topic_id": "phase6a-memory-auth-revoke",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "1be9621e-2b14-429f-a46c-99ef4f221f2a",
+      "topic_id": "phase6a-memory-readback-race",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 0,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": false,
+      "runtime_memory_source_version": null,
+      "output_schema_present": true
+    },
+    {
+      "task_id": "7507d81f-4ce6-4e04-a1ce-815ff662cc5b",
+      "topic_id": "phase6a-memory-readback-race",
+      "registry_id": "284a8a57-7f82-5484-bbda-9bf02b82c9bf",
+      "target_position_version": 1,
+      "prior_position_runtime_memory_loaded_outside_task_capsule": true,
+      "runtime_memory_source_version": 1,
+      "output_schema_present": true
+    }
+  ],
+  "projection_runtime_errors": [
+    {
+      "call": "memory.project",
+      "type": "RuntimeError",
+      "detail": "Letta memory projection was not confirmed (REJECTED): same projection version is already bound to a different payload digest"
+    },
+    {
+      "call": "memory.project",
+      "type": "RuntimeError",
+      "detail": "Letta memory projection was not confirmed (REJECTED): agent lease fence is stale across the memory namespace"
+    },
+    {
+      "call": "memory.project",
+      "type": "RuntimeError",
+      "detail": "Letta memory projection was not confirmed (REJECTED): agent lease fence is stale across the memory namespace"
+    },
+    {
+      "call": "memory.project",
+      "type": "RuntimeError",
+      "detail": "Letta memory projection was not confirmed (REJECTED): projection_authorization_snapshot_changed_at_runtime_write"
+    }
+  ],
+  "provider_fixture_errors": [],
+  "provider_requests_by_scenario": {
+    "normal_phase6a_v1_v2_v3_other_topic": 4,
+    "same_worker_serialization_position_tasks": 2,
+    "queued_task_blocked_by_active_projection": 0,
+    "authorization_denial_and_current_epoch_projection_retry": 1,
+    "read_back_guard_claim_race_v1_v2_tasks": 2
+  },
+  "runtime_memory_write_attempts": 12,
+  "runtime_memory_commits_inferred_from_revision_changes": "recorded per hardening scenario; denied write left revision unchanged",
+  "code_fingerprint_sha256": "1ed97fe530cdbffb76f27d20f96fead83cd12392027c03ed2eb86522705affed",
+  "migration": {
+    "empty_database": "hekate_phase6a_migration_20261005a",
+    "upgrade_head": "0012_projection_write_guard",
+    "downgrade_head": "0011_phase6a_memory_projection",
+    "reupgrade_head": "0012_projection_write_guard",
+    "passed": true,
+    "populated_database_downgrade_guard": {
+      "refused": true,
+      "head_unchanged": true
+    }
+  },
+  "artifact_path": "integration/runtime/artifacts/p6a-20261005T071135Z-92eba6b0.json"
+}

@@ -4,6 +4,18 @@
 
 HEKATE is a persistent personal AI orchestration system built on top of existing agent runtimes such as [Letta](https://github.com/letta-ai/letta).
 
+## Personal local use
+
+The personal local CLI is implemented. Start with the [personal local guide](docs/personal-use.md)
+and the `config/personal-local.example` profile. The [local quickstart](docs/local-quickstart.md)
+also retains the simpler setup and Phase 6F verification instructions.
+
+The implemented path includes persistent HEKATE, bounded Critic review, PostgreSQL Task and
+budget state, Evidence import, versioned Position commits, and Letta memory projection.
+The architecture below describes both implemented foundations and longer-term design goals.
+
+---
+
 HEKATE does not attempt to build a new language model, reasoning algorithm, or memory framework.
 
 Instead, it focuses on a different problem:
@@ -944,19 +956,15 @@ The goal is a system that can think deeply when necessary, remain simple when it
 
 ## Status
 
-**HEKATE is currently in the architecture and integration-validation stage.**
+The supported personal local Qwen path is implemented and has been exercised through the CLI,
+including persisted answers, usage settlement, and replay without extra provider requests.
+See the [personal local guide](docs/personal-use.md) for the supported commands and operating limits.
 
-The immediate goal is not feature breadth.
+Local mode uses an explicitly selected candidate profile and a private loopback runtime.
+Production dispatch remains disabled. HTTP product APIs, operator recovery for unknown
+executions, and hosted-provider dispatch are outside the current scope. Web research is not
+connected in the current personal profile.
 
-The immediate goal is to prove one reliable path:
-
-```text
-User
-→ Persistent HEKATE
-→ Optional Critic
-→ Structured Conclusion
-→ HEKATE Judgment
-→ Safe Cleanup
-```
-
-Once that path is measurable, reliable, and useful, HEKATE can grow from there.
+The recorded Phase 6F Goal-wide generation limit was exceeded. The personal profile is a
+separate implementation path and does not change that historical result; see the
+[Phase 6F correction](docs/implementation/phase6f-submission-review.md).

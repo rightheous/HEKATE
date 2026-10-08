@@ -1,0 +1,1232 @@
+{
+  "artifact": "integration/runtime/artifacts/p3-20261005T135809Z-adb3ad1e.json",
+  "base_commit": "6eb11d128cd697d93ef746b0e69d9e3d1dbfce22",
+  "branch": "phase6b-token-accounting",
+  "bridge_capabilities": {
+    "capabilities": {
+      "agent_create": true,
+      "agent_delete": true,
+      "agent_get": true,
+      "agent_list": true,
+      "event_collection": true,
+      "memory_projection": true,
+      "pre_provider_call": false,
+      "provider_usage_by_call_id": false,
+      "session_prepare": true,
+      "session_turn": true
+    },
+    "limitations": [
+      "Provider-call authorization is enforced by the probe gateway using metadata emitted by its pinned runtime patch.",
+      "Runtime usage fields are forwarded when present; the stock SDK contract does not guarantee physical provider-call identity."
+    ],
+    "protocol_version": "1",
+    "sdk_version": "0.8.25"
+  },
+  "checked_out_head": "5ed7acba82ee6d3633d7f22e3a195a8534f25a34",
+  "database": {
+    "migration_head": "0013_provider_token_measurement",
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+  },
+  "executed_at": "2026-10-05T13:58:09.852285Z",
+  "executed_at_finished": "2026-10-05T13:58:31.679163Z",
+  "limitations": [
+    "Synthetic profile only; no real provider key or external provider URL was configured.",
+    "The fake chat contract is token-measured at the final gateway request; G8 production remains blocked because no production model/request-framing evidence is configured.",
+    "G7 physical provider-call identity depends on the pinned runtime patch; stock SDK capabilities remain false.",
+    "No production readiness, API ingress, business loop, Critic lifecycle, same-execution resume, or operator recovery is claimed."
+  ],
+  "observed_totals": {
+    "budget_accounts": [
+      {
+        "held_amount": "79.999680",
+        "id": "system-budget:phase3",
+        "limit_amount": "100",
+        "scope_kind": "SYSTEM",
+        "spent_amount": "0.000225"
+      },
+      {
+        "held_amount": "0.000000",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t1",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000045"
+      },
+      {
+        "held_amount": "9.99968",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t2",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000090"
+      },
+      {
+        "held_amount": "0.000000",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0.000090"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t4",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t5-cancellation",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t5-db-authorize",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t5-db-consume",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t5-post-forward-db-failure",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:t5-revision",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      },
+      {
+        "held_amount": "10",
+        "id": "task-budget:p3-20261005T135809Z-adb3ad1e:token-boundary",
+        "limit_amount": "20",
+        "scope_kind": "TASK",
+        "spent_amount": "0"
+      }
+    ],
+    "calls_pending_execution_or_settlement": 8,
+    "database_call_count": 13,
+    "database_consumed_permit_count": 9,
+    "database_permit_count": 13,
+    "database_provider_calls": [
+      {
+        "accounting_call_id": "68277d61-4403-47c6-9dc5-3722c8bb1094",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t1:operation-1",
+        "permit_id": "cc425c23-2f50-5be3-9b73-8341b7ec0862",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-2",
+        "settlement_state": "SETTLED"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t2-compaction",
+        "call_kind": "compaction",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2:roles",
+        "permit_id": "6307d2b4-ad51-5075-9293-0ad609c380bf",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-6",
+        "settlement_state": "CONFLICT"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t2-main",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2:roles",
+        "permit_id": "c6efc013-3c13-5265-8b55-80be07caa7fd",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": "SETTLED"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-consumed-before-send",
+        "call_kind": "compaction",
+        "call_state": "CONSUMED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2:roles",
+        "permit_id": "b3728869-56b0-5451-a3d1-b271e6ed56c9",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-consume-failure",
+        "call_kind": "compaction",
+        "call_state": "ALLOCATED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2:roles",
+        "permit_id": "e8f22d41-3248-5387-89ca-bed55eb756c3",
+        "permit_state": "REVOKED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "1c763717-c371-4eee-bfc9-a72adea54c7b",
+        "call_kind": "compaction",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction:runtime-compaction",
+        "permit_id": "3c8ddb6b-831d-57ee-bd39-9ca28c102c13",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-3",
+        "settlement_state": "SETTLED"
+      },
+      {
+        "accounting_call_id": "66948888-a809-48c3-8761-31143691ffaa",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction:runtime-compaction",
+        "permit_id": "76daa0a1-5cae-57a1-9212-507d61c57191",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-4",
+        "settlement_state": "SETTLED"
+      },
+      {
+        "accounting_call_id": "a6963563-f3fd-4523-bd70-0e322272d05b",
+        "call_kind": "turn",
+        "call_state": "UNKNOWN",
+        "completeness": null,
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t4:disconnect",
+        "permit_id": "df4fba08-0d45-5b68-ac02-5479c9ae7f1f",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-authorize-cancellation",
+        "call_kind": "turn",
+        "call_state": "ALLOCATED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t5-cancellation:t5-cancellation",
+        "permit_id": "0ad25c98-df7d-5cdf-b59b-7d3e0904eb4c",
+        "permit_state": "ISSUED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-db-consume",
+        "call_kind": "turn",
+        "call_state": "ALLOCATED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t5-db-consume:t5-db-consume",
+        "permit_id": "bb6b962c-d324-5fff-8450-a6848b18638c",
+        "permit_state": "ISSUED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-post-forward-db-failure",
+        "call_kind": "turn",
+        "call_state": "CONSUMED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t5-post-forward-db-failure:t5-post-forward-db-failure",
+        "permit_id": "11e32cd0-3880-51a2-a5a7-d0d4d1212b92",
+        "permit_state": "CONSUMED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-authorize-revision",
+        "call_kind": "turn",
+        "call_state": "ALLOCATED",
+        "completeness": null,
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t5-revision:t5-revision",
+        "permit_id": "0ba7a9d2-d45b-5094-9390-d572d9d2d6f1",
+        "permit_state": "ISSUED",
+        "provider_call_id": null,
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:token-boundary-exact",
+        "call_kind": "turn",
+        "call_state": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:token-boundary:token-boundary",
+        "permit_id": "06b37bda-5ee9-570c-8cbf-7d1105c10e30",
+        "permit_state": "CONSUMED",
+        "provider_call_id": "fake-response-1",
+        "settlement_state": "SETTLED"
+      }
+    ],
+    "fake_provider_forward_requests": 8,
+    "fake_provider_responses": [
+      "fake-response-1",
+      "fake-response-2",
+      "fake-response-3",
+      "fake-response-4",
+      "fake-response-5",
+      "fake-response-6",
+      "fake-response-8"
+    ],
+    "inbox_counts": {
+      "pending": 1,
+      "processed": 25,
+      "rows": 26
+    },
+    "ledger_effect_counts": [
+      {
+        "count": 20,
+        "effect_type": "HOLD"
+      },
+      {
+        "count": 4,
+        "effect_type": "RELEASE"
+      },
+      {
+        "count": 12,
+        "effect_type": "SETTLE"
+      }
+    ],
+    "pending_call_reasons": [
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t2-compaction",
+        "call_state": "QUIESCENT",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2:roles",
+        "permit_state": "CONSUMED",
+        "reason": "usage_conflict_requires_reconciliation",
+        "settlement_state": "CONFLICT"
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-consumed-before-send",
+        "call_state": "CONSUMED",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2:roles",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-consume-failure",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2:roles",
+        "permit_state": "REVOKED",
+        "reason": "permit_revoked_before_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "a6963563-f3fd-4523-bd70-0e322272d05b",
+        "call_state": "UNKNOWN",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t4:disconnect",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-authorize-cancellation",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t5-cancellation:t5-cancellation",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-db-consume",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t5-db-consume:t5-db-consume",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-post-forward-db-failure",
+        "call_state": "CONSUMED",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t5-post-forward-db-failure:t5-post-forward-db-failure",
+        "permit_state": "CONSUMED",
+        "reason": "provider_call_not_confirmed_quiescent",
+        "settlement_state": null
+      },
+      {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-authorize-revision",
+        "call_state": "ALLOCATED",
+        "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t5-revision:t5-revision",
+        "permit_state": "ISSUED",
+        "reason": "permit_not_consumed_proven_no_forward",
+        "settlement_state": null
+      }
+    ],
+    "provider_gateway_metrics": {
+      "observation_conflicts": 0,
+      "observation_write_attempts": 11,
+      "observation_write_failures": 1,
+      "upstream_forward_attempts": 7
+    },
+    "provider_gateway_requests": {
+      "requests": 20,
+      "status_counts": {
+        "200": 7,
+        "401": 1,
+        "402": 10,
+        "404": 1,
+        "500": 1
+      }
+    },
+    "real_provider_calls": 0
+  },
+  "overall_status": "pass",
+  "probe": "phase3-runtime-dispatch",
+  "real_provider_calls": 0,
+  "results": {
+    "T1_actual_db_runtime_gateway_fake_provider": {
+      "agent_tools": [],
+      "blocked_tool_attempts": 0,
+      "call_plan": {
+        "compaction_calls": 0,
+        "main_turn_calls": 1,
+        "max_input_tokens": 16384,
+        "max_output_tokens": 64,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "consumed_permit_count": 1,
+      "disabled_toolset_confirmed": true,
+      "fake_provider_requests": 1,
+      "operation": {
+        "accounting_call_id": "68277d61-4403-47c6-9dc5-3722c8bb1094",
+        "attempt_status": "SUCCEEDED",
+        "call_kind": "turn",
+        "call_status": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "dispatch_state": "QUIESCENT",
+        "evaluated_cost_usd": "0.000045",
+        "execution_state": "QUIESCENT",
+        "hold_state": "QUIESCENT",
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 32768,
+          "measured_at": "2026-10-05T13:58:20.763483Z",
+          "measured_input_tokens": 6308,
+          "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+          "pricing_version": "synthetic-v1",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+          "request_digest": "d7a950cc32df81508bb8fe346281737683a617934185866221d96e819f38e765",
+          "requested_output_tokens": 64,
+          "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "permit_id": "cc425c23-2f50-5be3-9b73-8341b7ec0862",
+        "permit_state": "CONSUMED",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "provider_call_id": "fake-response-2",
+        "request_digest": "d7a950cc32df81508bb8fe346281737683a617934185866221d96e819f38e765",
+        "settlement_state": "SETTLED",
+        "state": "COMPLETED"
+      },
+      "outbox": {
+        "claim_fence": 1,
+        "send_intent_at": "2026-10-05 13:58:20.566273+00:00",
+        "send_intent_fence": 1,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "ACKED"
+      },
+      "passed": true,
+      "permit_count": 1,
+      "repeated_collect_no_resend_or_duplicate_settlement": true,
+      "settlement_ledger_entries": 2,
+      "terminal_applied_after_gateway_commit": true,
+      "terminal_waited_for_individual_call_evidence": true,
+      "tool_executor_calls": 0
+    },
+    "T1_same_accounting_id_replay": {
+      "blocked_without_forward": true,
+      "error": null,
+      "passed": true,
+      "provider_requests_after": 2,
+      "provider_requests_before": 2,
+      "status": 402
+    },
+    "T2_actual_runtime_compaction": {
+      "all_calls_quiescent_and_settled": true,
+      "all_physical_calls_measured": true,
+      "bridge_stderr_tail": "",
+      "call_kinds": [
+        "compaction",
+        "turn"
+      ],
+      "call_plan": {
+        "compaction_calls": 2,
+        "main_turn_calls": 1,
+        "max_input_tokens": 8192,
+        "max_output_tokens": 64,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "call_records": [
+        {
+          "accounting_call_id": "1c763717-c371-4eee-bfc9-a72adea54c7b",
+          "attempt_status": "SUCCEEDED",
+          "call_kind": "compaction",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "dispatch_state": "QUIESCENT",
+          "evaluated_cost_usd": "0.000045",
+          "execution_state": "QUIESCENT",
+          "hold_state": "QUIESCENT",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 32768,
+            "measured_at": "2026-10-05T13:58:22.144013Z",
+            "measured_input_tokens": 7024,
+            "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+            "pricing_version": "synthetic-v1",
+            "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+            "request_digest": "d7108f4fef15b9317ddbe1524cbe21f97fc57dd8d562e8dcd8b1fa2f3cda7aab",
+            "requested_output_tokens": 1,
+            "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "permit_id": "3c8ddb6b-831d-57ee-bd39-9ca28c102c13",
+          "permit_state": "CONSUMED",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "provider_call_id": "fake-response-3",
+          "request_digest": "d7108f4fef15b9317ddbe1524cbe21f97fc57dd8d562e8dcd8b1fa2f3cda7aab",
+          "settlement_state": "SETTLED",
+          "state": "COMPLETED"
+        },
+        {
+          "accounting_call_id": "66948888-a809-48c3-8761-31143691ffaa",
+          "attempt_status": "SUCCEEDED",
+          "call_kind": "turn",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "dispatch_state": "QUIESCENT",
+          "evaluated_cost_usd": "0.000045",
+          "execution_state": "QUIESCENT",
+          "hold_state": "QUIESCENT",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 32768,
+            "measured_at": "2026-10-05T13:58:22.538535Z",
+            "measured_input_tokens": 6079,
+            "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+            "pricing_version": "synthetic-v1",
+            "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+            "request_digest": "85704891e48f48a1299099a77aff87db7878d0c29faa921c41ff15bf3f294906",
+            "requested_output_tokens": 1,
+            "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "permit_id": "76daa0a1-5cae-57a1-9212-507d61c57191",
+          "permit_state": "CONSUMED",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "provider_call_id": "fake-response-4",
+          "request_digest": "85704891e48f48a1299099a77aff87db7878d0c29faa921c41ff15bf3f294906",
+          "settlement_state": "SETTLED",
+          "state": "COMPLETED"
+        }
+      ],
+      "consumed_permit_count": 2,
+      "database_measurement_pairs": [
+        [
+          "85704891e48f48a1299099a77aff87db7878d0c29faa921c41ff15bf3f294906",
+          6079
+        ],
+        [
+          "d7108f4fef15b9317ddbe1524cbe21f97fc57dd8d562e8dcd8b1fa2f3cda7aab",
+          7024
+        ]
+      ],
+      "fake_independent_measurement_pairs": [
+        [
+          "85704891e48f48a1299099a77aff87db7878d0c29faa921c41ff15bf3f294906",
+          6079
+        ],
+        [
+          "d7108f4fef15b9317ddbe1524cbe21f97fc57dd8d562e8dcd8b1fa2f3cda7aab",
+          7024
+        ]
+      ],
+      "fake_provider_requests": 2,
+      "operation": {
+        "accounting_call_id": "1c763717-c371-4eee-bfc9-a72adea54c7b",
+        "attempt_status": "SUCCEEDED",
+        "call_kind": "compaction",
+        "call_status": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "dispatch_state": "QUIESCENT",
+        "evaluated_cost_usd": "0.000045",
+        "execution_state": "QUIESCENT",
+        "hold_state": "QUIESCENT",
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 32768,
+          "measured_at": "2026-10-05T13:58:22.144013Z",
+          "measured_input_tokens": 7024,
+          "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+          "pricing_version": "synthetic-v1",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+          "request_digest": "d7108f4fef15b9317ddbe1524cbe21f97fc57dd8d562e8dcd8b1fa2f3cda7aab",
+          "requested_output_tokens": 1,
+          "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "permit_id": "3c8ddb6b-831d-57ee-bd39-9ca28c102c13",
+        "permit_state": "CONSUMED",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "provider_call_id": "fake-response-3",
+        "request_digest": "d7108f4fef15b9317ddbe1524cbe21f97fc57dd8d562e8dcd8b1fa2f3cda7aab",
+        "settlement_state": "SETTLED",
+        "state": "COMPLETED"
+      },
+      "outbox": {
+        "claim_fence": 1,
+        "send_intent_at": "2026-10-05 13:58:22.056926+00:00",
+        "send_intent_fence": 1,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "ACKED"
+      },
+      "passed": true,
+      "permit_count": 2,
+      "physical_call_count": 2,
+      "runtime_observation": {
+        "events": [
+          {
+            "binding": {
+              "agent_registry_id": "ha:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction",
+              "attempt_id": "attempt:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction:runtime-compaction",
+              "conversation_id": "local-conv-6",
+              "fence": 1,
+              "input_revision": 1,
+              "provider_agent_id": "agent-local-8b407fe6-a329-430b-91bc-ec1ecc384857",
+              "task_id": "task:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction"
+            },
+            "business_result": null,
+            "error_code": null,
+            "event_id": "operation:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction:runtime-compaction:7:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction:runtime-compaction",
+            "schema_version": "1",
+            "success": null,
+            "usage": {
+              "accounting_call_id": "1c763717-c371-4eee-bfc9-a72adea54c7b",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 4,
+              "provider_call_id": "fake-response-3",
+              "source": "runtime_reported",
+              "total_tokens": 41
+            }
+          },
+          {
+            "binding": {
+              "agent_registry_id": "ha:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction",
+              "attempt_id": "attempt:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction:runtime-compaction",
+              "conversation_id": "local-conv-6",
+              "fence": 1,
+              "input_revision": 1,
+              "provider_agent_id": "agent-local-8b407fe6-a329-430b-91bc-ec1ecc384857",
+              "task_id": "task:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction"
+            },
+            "business_result": null,
+            "error_code": null,
+            "event_id": "operation:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction:runtime-compaction:10:stream_event",
+            "event_type": "usage_statistics",
+            "operation_id": "operation:p3-20261005T135809Z-adb3ad1e:t2-runtime-compaction:runtime-compaction",
+            "schema_version": "1",
+            "success": null,
+            "usage": {
+              "accounting_call_id": "66948888-a809-48c3-8761-31143691ffaa",
+              "completeness": "COMPLETE",
+              "cost_usd": null,
+              "input_tokens": 37,
+              "output_tokens": 4,
+              "provider_call_id": "fake-response-4",
+              "source": "runtime_reported",
+              "total_tokens": 41
+            }
+          }
+        ],
+        "state": "COMPLETE"
+      },
+      "settlement_ledger_entries": 4
+    },
+    "T2_roles_retry_and_compaction_plan": {
+      "call_plan": {
+        "compaction_calls": 3,
+        "main_turn_calls": 1,
+        "max_input_tokens": 128,
+        "max_output_tokens": 16,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "call_records": [
+        {
+          "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t2-compaction",
+          "attempt_status": "PENDING",
+          "call_kind": "compaction",
+          "call_status": "QUIESCENT",
+          "completeness": "COMPLETE",
+          "dispatch_state": "SEND_INTENT",
+          "evaluated_cost_usd": "0.000045",
+          "execution_state": "PENDING",
+          "hold_state": "PENDING",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 32768,
+            "measured_at": "2026-10-05T13:58:28.566453Z",
+            "measured_input_tokens": 22,
+            "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+            "pricing_version": "synthetic-v1",
+            "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+            "request_digest": "2039f244f256b5bfb8ac71c862094c15e19d17f75b66570aa1313c6958bbad5a",
+            "requested_output_tokens": 16,
+            "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "permit_id": "6307d2b4-ad51-5075-9293-0ad609c380bf",
+          "permit_state": "CONSUMED",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "provider_call_id": "fake-response-6",
+          "request_digest": "2039f244f256b5bfb8ac71c862094c15e19d17f75b66570aa1313c6958bbad5a",
+          "settlement_state": "SETTLED",
+          "state": "ADMITTED"
+        },
+        {
+          "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t2-main",
+          "attempt_status": "PENDING",
+          "call_kind": "turn",
+          "call_status": "QUIESCENT",
+          "completeness": null,
+          "dispatch_state": "SEND_INTENT",
+          "evaluated_cost_usd": null,
+          "execution_state": "PENDING",
+          "hold_state": "PENDING",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 32768,
+            "measured_at": "2026-10-05T13:58:28.877716Z",
+            "measured_input_tokens": 22,
+            "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+            "pricing_version": "synthetic-v1",
+            "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+            "request_digest": "57eaed310295f4dd008244e28577c1f5ff492236edd3e095766abd610bf0818a",
+            "requested_output_tokens": 16,
+            "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "permit_id": "c6efc013-3c13-5265-8b55-80be07caa7fd",
+          "permit_state": "CONSUMED",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "provider_call_id": null,
+          "request_digest": "57eaed310295f4dd008244e28577c1f5ff492236edd3e095766abd610bf0818a",
+          "settlement_state": null,
+          "state": "ADMITTED"
+        },
+        {
+          "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-consumed-before-send",
+          "attempt_status": "PENDING",
+          "call_kind": "compaction",
+          "call_status": "CONSUMED",
+          "completeness": null,
+          "dispatch_state": "SEND_INTENT",
+          "evaluated_cost_usd": null,
+          "execution_state": "PENDING",
+          "hold_state": "PENDING",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "permit_id": "b3728869-56b0-5451-a3d1-b271e6ed56c9",
+          "permit_state": "CONSUMED",
+          "profile_digest": null,
+          "provider_call_id": null,
+          "request_digest": null,
+          "settlement_state": null,
+          "state": "ADMITTED"
+        },
+        {
+          "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t5-consume-failure",
+          "attempt_status": "PENDING",
+          "call_kind": "compaction",
+          "call_status": "ALLOCATED",
+          "completeness": null,
+          "dispatch_state": "SEND_INTENT",
+          "evaluated_cost_usd": null,
+          "execution_state": "PENDING",
+          "hold_state": "PENDING",
+          "measurement_data": null,
+          "measurement_status": "LEGACY_UNMEASURED",
+          "permit_id": "e8f22d41-3248-5387-89ca-bed55eb756c3",
+          "permit_state": "REVOKED",
+          "profile_digest": null,
+          "provider_call_id": null,
+          "request_digest": null,
+          "settlement_state": null,
+          "state": "ADMITTED"
+        }
+      ],
+      "compaction_and_main_have_distinct_accounting_ids": true,
+      "compaction_limit_enforced": true,
+      "compaction_status": 200,
+      "concurrent_claim_count": 1,
+      "consumed_permit_count": 3,
+      "expired_send_marker_reclaimed": false,
+      "extra_compaction_status": 402,
+      "invalid_binding_status": 402,
+      "main_turn_status": 500,
+      "operation": {
+        "accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t2-compaction",
+        "attempt_status": "PENDING",
+        "call_kind": "compaction",
+        "call_status": "QUIESCENT",
+        "completeness": "COMPLETE",
+        "dispatch_state": "SEND_INTENT",
+        "evaluated_cost_usd": "0.000045",
+        "execution_state": "PENDING",
+        "hold_state": "PENDING",
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 32768,
+          "measured_at": "2026-10-05T13:58:28.566453Z",
+          "measured_input_tokens": 22,
+          "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+          "pricing_version": "synthetic-v1",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+          "request_digest": "2039f244f256b5bfb8ac71c862094c15e19d17f75b66570aa1313c6958bbad5a",
+          "requested_output_tokens": 16,
+          "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "permit_id": "6307d2b4-ad51-5075-9293-0ad609c380bf",
+        "permit_state": "CONSUMED",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "provider_call_id": "fake-response-6",
+        "request_digest": "2039f244f256b5bfb8ac71c862094c15e19d17f75b66570aa1313c6958bbad5a",
+        "settlement_state": "SETTLED",
+        "state": "ADMITTED"
+      },
+      "outbox": {
+        "claim_fence": 2,
+        "send_intent_at": "2026-10-05 13:58:23.735258+00:00",
+        "send_intent_fence": 2,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "CLAIMED"
+      },
+      "passed": true,
+      "permit_consume_failure_blocked": true,
+      "permit_count": 4,
+      "permit_failure_forward_delta": 0,
+      "retry_provider_request_delta": 0,
+      "same_consumed_id_replay_status": 402,
+      "settlement_ledger_entries": 2,
+      "stale_ack_blocked": true,
+      "stale_claim_fence_blocked": true,
+      "unapproved_500_retry_blocked": true,
+      "unapproved_retry_status": 402
+    },
+    "T3_outbox_claim_fence_and_send_marker": {
+      "concurrent_claim_count": 1,
+      "expired_send_marker_reclaimed": false,
+      "passed": true,
+      "pre_send_claim_expiry_reclaimed": true,
+      "stale_ack_blocked": true,
+      "stale_claim_fence_blocked": true
+    },
+    "T4_bridge_loss_keeps_unknown_hold": {
+      "call_plan": {
+        "compaction_calls": 0,
+        "main_turn_calls": 1,
+        "max_input_tokens": 16384,
+        "max_output_tokens": 64,
+        "model": "hekate-fake-model",
+        "pricing_version": "synthetic-v1",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "profile_id": "phase3-fake-v1",
+        "retry_calls": 0
+      },
+      "call_records": [
+        {
+          "accounting_call_id": "a6963563-f3fd-4523-bd70-0e322272d05b",
+          "attempt_status": "DISPATCHED",
+          "call_kind": "turn",
+          "call_status": "RUNNING",
+          "completeness": null,
+          "dispatch_state": "UNKNOWN",
+          "evaluated_cost_usd": null,
+          "execution_state": "UNKNOWN",
+          "hold_state": "UNKNOWN",
+          "measurement_data": {
+            "additional_reserved_tokens": 0,
+            "context_window_tokens": 32768,
+            "measured_at": "2026-10-05T13:58:30.061637Z",
+            "measured_input_tokens": 6307,
+            "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+            "pricing_version": "synthetic-v1",
+            "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+            "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+            "request_digest": "f5f4ccbee7a4f2567094ca8f4987151629ee6cb62d37cfc8c1f53a89e94af208",
+            "requested_output_tokens": 64,
+            "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+            "usage_semantics": "aggregate_input_output_v1",
+            "verification_state": "TEST_CONTRACT_VERIFIED"
+          },
+          "measurement_status": "MEASURED",
+          "permit_id": "df4fba08-0d45-5b68-ac02-5479c9ae7f1f",
+          "permit_state": "CONSUMED",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "provider_call_id": null,
+          "request_digest": "f5f4ccbee7a4f2567094ca8f4987151629ee6cb62d37cfc8c1f53a89e94af208",
+          "settlement_state": null,
+          "state": "UNKNOWN"
+        }
+      ],
+      "consumed_permit_count": 1,
+      "fake_provider_requests": 1,
+      "new_claim_after_unknown": false,
+      "operation": {
+        "accounting_call_id": "a6963563-f3fd-4523-bd70-0e322272d05b",
+        "attempt_status": "DISPATCHED",
+        "call_kind": "turn",
+        "call_status": "RUNNING",
+        "completeness": null,
+        "dispatch_state": "UNKNOWN",
+        "evaluated_cost_usd": null,
+        "execution_state": "UNKNOWN",
+        "hold_state": "UNKNOWN",
+        "measurement_data": {
+          "additional_reserved_tokens": 0,
+          "context_window_tokens": 32768,
+          "measured_at": "2026-10-05T13:58:30.061637Z",
+          "measured_input_tokens": 6307,
+          "pricing_digest": "97ae6761ff38501549669296dce7bce8e1914ee4ade7101f374a74ef21f13b7d",
+          "pricing_version": "synthetic-v1",
+          "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+          "renderer_identity": "hekate.fake.chat-renderer.v1/1:7c7262ce5fbd10af37c56fdac7c40252301700384194ce6b5d0c87b18a145fc7",
+          "request_digest": "f5f4ccbee7a4f2567094ca8f4987151629ee6cb62d37cfc8c1f53a89e94af208",
+          "requested_output_tokens": 64,
+          "tokenizer_identity": "tiktoken/0.14.0:hekate-cl100k-base-0.14.0:223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+          "usage_semantics": "aggregate_input_output_v1",
+          "verification_state": "TEST_CONTRACT_VERIFIED"
+        },
+        "measurement_status": "MEASURED",
+        "permit_id": "df4fba08-0d45-5b68-ac02-5479c9ae7f1f",
+        "permit_state": "CONSUMED",
+        "profile_digest": "0db25f0642f68e221c439fd4e24c3125431f22a73b8571380977fca68238f682",
+        "provider_call_id": null,
+        "request_digest": "f5f4ccbee7a4f2567094ca8f4987151629ee6cb62d37cfc8c1f53a89e94af208",
+        "settlement_state": null,
+        "state": "UNKNOWN"
+      },
+      "outbox": {
+        "claim_fence": 1,
+        "send_intent_at": "2026-10-05 13:58:30.002391+00:00",
+        "send_intent_fence": 1,
+        "send_intent_owner": "phase3-probe-worker",
+        "status": "ACKED"
+      },
+      "passed": true,
+      "permit_count": 1,
+      "sdk_terminal_without_provider_quiescence_blocked": true,
+      "session_reprepare_blocked_by_db_hold": true,
+      "settlement_ledger_entries": 0,
+      "state_after_sdk_terminal_only": "UNKNOWN"
+    },
+    "T5_db_and_permit_failures_do_not_forward": {
+      "authorization_then_cancellation_race": {
+        "authorized_before_mutation": true,
+        "blocked_before_forward": true,
+        "gateway_status": 402,
+        "permit_state": "ISSUED",
+        "provider_call_state": "ALLOCATED",
+        "provider_forward_delta": 0,
+        "task_mutation_result": "STOPPING"
+      },
+      "authorization_then_revision_race": {
+        "authorized_before_mutation": true,
+        "blocked_before_forward": true,
+        "gateway_status": 402,
+        "permit_state": "ISSUED",
+        "provider_call_state": "ALLOCATED",
+        "provider_forward_delta": 0,
+        "task_mutation_result": 2
+      },
+      "authorize_storage_failure": {
+        "blocked_before_forward": true,
+        "gateway_status": 402,
+        "permit_state": null,
+        "provider_call_state": null,
+        "provider_forward_delta": 0
+      },
+      "consume_storage_failure": {
+        "blocked_before_forward": true,
+        "gateway_status": 402,
+        "permit_state": "ISSUED",
+        "provider_call_state": "ALLOCATED",
+        "provider_forward_delta": 0
+      },
+      "invalid_binding_status": 402,
+      "passed": true,
+      "post_forward_observation_storage_failure": {
+        "blocked_after_write_failure": true,
+        "call_state_after_write_failure": "CONSUMED",
+        "first_gateway_status": 200,
+        "first_provider_forward_delta": 1,
+        "observation_write_failure_delta": 1,
+        "permit_state_after_write_failure": "CONSUMED",
+        "replay_provider_forward_delta": 0,
+        "same_id_replay_status": 402,
+        "settlement_state_after_write_failure": null
+      },
+      "provider_forward_delta_for_failures": 0,
+      "revoked_permit_consume_blocked": true,
+      "same_consumed_id_replay_status": 402
+    },
+    "T6_inbox_replay_and_conflict": {
+      "conflict_projection_state": "CONFLICT",
+      "conflicting_payload_preserved": true,
+      "conflicting_terminal_outcome_preserved": true,
+      "late_conflict_did_not_reverse_spend": true,
+      "late_usage_accounting_call_id": "acc:p3-20261005T135809Z-adb3ad1e:t2-main",
+      "late_usage_after_cancel_settled_original_call": true,
+      "late_usage_call_state": "QUIESCENT",
+      "late_usage_settlement_ledger_entries": 2,
+      "late_usage_settlement_state": "SETTLED",
+      "late_usage_task_state": "STOPPING",
+      "new_pending_row_inserted": true,
+      "passed": true,
+      "processed_duplicate_is_noop": true,
+      "restart_pending_inbox_processed_count": 1,
+      "restart_pending_inbox_scan_ran": true,
+      "terminal_replay_is_noop": true,
+      "unprocessed_insert_duplicate": true,
+      "unprocessed_row_applied": true
+    },
+    "T7_private_gateway_fail_closed": {
+      "external_test_profile_rejected": true,
+      "invalid_bearer_status": 401,
+      "open_proxy_status": 404,
+      "passed": true,
+      "production_settings_rejected_without_profile": true,
+      "real_provider_calls": 0
+    },
+    "T8_phase6b_final_request_token_guards": {
+      "changed_body_same_accounting_id": {
+        "after": 1,
+        "operation_call_rows_before": 1,
+        "provider_requests_after": 1,
+        "status": 402
+      },
+      "context_overflow": {
+        "call_rows": 0,
+        "forward_delta": 0,
+        "status": 402
+      },
+      "context_window": 31,
+      "exact_input_and_context_boundary": {
+        "call_id": "acc:p3-20261005T135809Z-adb3ad1e:token-boundary-exact",
+        "fake_independent_input_tokens": 23,
+        "fake_received_digest": "c38d389dcee976ccc9dbbfe055430e1a07d9ba06d32daa0f6c95dcf630928cc1",
+        "gateway_status": 200,
+        "matched": true,
+        "measured_input_tokens": 23,
+        "measurement_status": "MEASURED",
+        "permit_state": "CONSUMED",
+        "request_digest": "c38d389dcee976ccc9dbbfe055430e1a07d9ba06d32daa0f6c95dcf630928cc1"
+      },
+      "input_ceiling": 23,
+      "input_overflow": {
+        "call_rows": 0,
+        "forward_delta": 0,
+        "status": 402
+      },
+      "passed": true,
+      "profile_digest_changed_after_admission": {
+        "call_rows": 0,
+        "original_profile_digest": "f077c71a1f63faa0d3e38df462ba7b66becc2995ad557ddbadd96d37ddb1854a",
+        "provider_forward_delta": 0,
+        "replacement_profile_digest": "d3817838745a1f8022d8b3f973654d04def0fe11365fadadbf6ce67e622e495d",
+        "status": 402
+      },
+      "provider_requests_in_scenario": 1,
+      "real_provider_calls": 0,
+      "system_history_memory_schema_overflow": {
+        "call_rows": 0,
+        "forward_delta": 0,
+        "full_request_components": [
+          "system",
+          "memory",
+          "history",
+          "tool_schema",
+          "structured_output_schema"
+        ],
+        "measured_tokens": 125,
+        "status": 402
+      },
+      "unsupported_input": {
+        "call_rows": 0,
+        "forward_delta": 0,
+        "status": 402
+      }
+    }
+  },
+  "run_id": "p3-20261005T135809Z-adb3ad1e",
+  "runtime": {
+    "app_server_base_image_digest": "sha256:dd72786542f76ada2df2634ac0e31b5866eba71f9b578058dbf3ebbe9d46aa60",
+    "app_server_source_commit": "0bb6f741a2cd80159837255a8b23964beeb27e03",
+    "app_server_version": "0.33.8",
+    "bridge_protocol_version": "1",
+    "node_archive_sha256": "c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2",
+    "node_version": "22.19.0",
+    "patched_image_id": "sha256:02d7d5a101f636e5c1744ecadb344213b5b794b91ce36f41fa5c973b8e36a2db",
+    "runtime_patch_sha256": "d6f4706748a4fc7878a1ba50946243cd246bf94e183d6b1ee02e81a93fa1ff19",
+    "sdk_version": "0.8.25"
+  },
+  "schema_version": "1",
+  "verification": {
+    "command": "uv run python scripts/phase3_verify.py",
+    "commands": [
+      {
+        "command": "python -m compileall -q src scripts tests",
+        "exit_code": 0,
+        "name": "python_compile",
+        "status": "passed"
+      },
+      {
+        "command": "python -m unittest discover -s tests/contract -p test_phase3_bridge_and_gateway.py -v",
+        "exit_code": 0,
+        "name": "phase3_contract_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 6,
+        "tests_run": 6
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "phase2_migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_TEST_DATABASE_URL=$HEKATE_PHASE2_TEST_DATABASE_URL python -m unittest discover -s tests/persistence -v",
+        "exit_code": 0,
+        "name": "phase2_postgres_tests",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 19,
+        "tests_run": 19
+      },
+      {
+        "command": "npm test (pinned Node.js 22.19.0)",
+        "exit_code": 0,
+        "name": "bridge_tests_and_build",
+        "status": "passed",
+        "tests_failed": 0,
+        "tests_passed": 15,
+        "tests_run": 15
+      },
+      {
+        "checks_failed": 0,
+        "checks_passed": 7,
+        "checks_run": 7,
+        "command": "python -c <generated schema byte comparison>",
+        "exit_code": 0,
+        "name": "schema_reproducibility",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic upgrade head",
+        "exit_code": 0,
+        "name": "migration_upgrade",
+        "status": "passed"
+      },
+      {
+        "command": "HEKATE_DATABASE_URL=$HEKATE_TEST_DATABASE_URL python -m alembic check",
+        "exit_code": 0,
+        "name": "migration_check",
+        "status": "passed"
+      },
+      {
+        "command": "git diff --check",
+        "exit_code": 0,
+        "name": "diff_check",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3_runtime_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_probe",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/phase3b_single_hekate_probe.py (dedicated loopback DB, pinned Node runtime)",
+        "exit_code": 0,
+        "name": "pinned_runtime_single_hekate_probe",
+        "status": "passed"
+      }
+    ],
+    "commands_failed": 0,
+    "commands_passed": 11,
+    "commands_run": 11,
+    "phase3b_artifact": "integration/runtime/artifacts/p3b-20261005T135833Z-795ff18f.json",
+    "phase3b_runtime_scenarios": {
+      "failed_count": 0,
+      "passed_count": 8,
+      "scenario_count": 8
+    },
+    "runtime_scenarios": {
+      "command": "uv run python scripts/phase3_runtime_probe.py",
+      "failed_count": 0,
+      "passed_count": 10,
+      "scenario_count": 10,
+      "scenario_results": {
+        "T1_actual_db_runtime_gateway_fake_provider": true,
+        "T1_same_accounting_id_replay": true,
+        "T2_actual_runtime_compaction": true,
+        "T2_roles_retry_and_compaction_plan": true,
+        "T3_outbox_claim_fence_and_send_marker": true,
+        "T4_bridge_loss_keeps_unknown_hold": true,
+        "T5_db_and_permit_failures_do_not_forward": true,
+        "T6_inbox_replay_and_conflict": true,
+        "T7_private_gateway_fail_closed": true,
+        "T8_phase6b_final_request_token_guards": true
+      },
+      "scope": "PostgreSQL + pinned Letta App Server + Python bridge + DB gateway + isolated fake provider"
+    },
+    "status": "passed"
+  },
+  "working_tree_change_count_at_probe": 38,
+  "working_tree_dirty_at_probe": true
+}

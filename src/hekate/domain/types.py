@@ -19,6 +19,8 @@ ReservationId = NewType("ReservationId", str)
 ProviderAgentId = NewType("ProviderAgentId", str)
 ConversationId = NewType("ConversationId", str)
 ProviderCallId = NewType("ProviderCallId", str)
+AccountingCallId = NewType("AccountingCallId", str)
+PermitId = NewType("PermitId", str)
 ResultId = NewType("ResultId", str)
 PrincipalId = NewType("PrincipalId", str)
 ScopeId = NewType("ScopeId", str)
@@ -40,6 +42,8 @@ class IdKind(StrEnum):
     EVIDENCE = "evidence"
     TOPIC = "topic"
     RESERVATION = "reservation"
+    ACCOUNTING_CALL = "accounting_call"
+    PERMIT = "permit"
     RESULT = "result"
 
 
@@ -113,6 +117,24 @@ class AgentEvent(StrEnum):
     FAIL = "FAIL"
 
 
+class ReservationPurpose(StrEnum):
+    OPERATION_ENVELOPE = "operation_envelope"
+    FINAL_RESPONSE = "final_response"
+
+
+class ExecutionState(StrEnum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    UNKNOWN = "UNKNOWN"
+    QUIESCENT = "QUIESCENT"
+
+
+class UsageState(StrEnum):
+    UNKNOWN = "UNKNOWN"
+    PARTIAL = "PARTIAL"
+    COMPLETE = "COMPLETE"
+
+
 class StopReason(StrEnum):
     USER_CANCELLED = "USER_CANCELLED"
     DEADLINE = "DEADLINE"
@@ -121,6 +143,8 @@ class StopReason(StrEnum):
     COMPLETED = "COMPLETED"
     NEEDS_USER_INPUT = "NEEDS_USER_INPUT"
     ERROR = "ERROR"
+    ROUND_LIMIT = "ROUND_LIMIT"
+    NO_NEW_WORK = "NO_NEW_WORK"
 
 
 def new_id(kind: IdKind) -> DomainId:

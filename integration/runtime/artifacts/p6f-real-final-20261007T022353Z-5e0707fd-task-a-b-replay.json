@@ -1,0 +1,83 @@
+{
+  "artifact_path": "integration/runtime/artifacts/p6f-real-final-20261007T022353Z-5e0707fd-task-a-b-replay.json",
+  "branch": "phase6f-reviewed-qwen",
+  "code_fingerprint_sha256": "f3e7a970e8ed36fd1444f8df2c1bd4e044534b07b54877d5293a2bee010d2049",
+  "commit_push_pr_merge": "not performed",
+  "database": {
+    "container": "hekate-p6f-b30b6924",
+    "database_name": "hekate_p6f_real",
+    "read_only_task_state_confirmation": true,
+    "worker_gateway_and_app_server_running": false
+  },
+  "finished_at": "2026-10-07T02:23:53Z",
+  "head": "09202b8e46a0fcf61cd692a466a8e18ca5b56c34",
+  "legacy_databases_and_fixtures": "not accessed or modified",
+  "post_replay_state_counts": [
+    {
+      "attempts": 4,
+      "operations": 4,
+      "position_receipts": 1,
+      "provider_calls": 4,
+      "tasks": 2
+    }
+  ],
+  "probe": "phase6f-real-task-a-b-replay-audit",
+  "production_dispatch": "BLOCKED",
+  "replay_effects": {
+    "accounting_unchanged": true,
+    "generation_allowance_unchanged": true,
+    "max_actual_generations": 4,
+    "new_provider_generations": 0,
+    "provider_capture_unchanged": true,
+    "task_operation_attempt_call_and_receipt_counts_unchanged": true,
+    "task_snapshots_unchanged": true,
+    "task_submission_receipts_unchanged": true,
+    "total_actual_local_qwen_generations_after_replay": 4,
+    "workflow_and_projection_unchanged": true
+  },
+  "replayed_cli_results": {
+    "task_a": {
+      "outcome": "POSITION_COMMITTED",
+      "receipt": {
+        "input_revision": 1,
+        "request_key": "p6f-real-p6f-real-20261007T014647Z-b30b6924-task-a",
+        "schema_version": "1",
+        "state": "QUEUED",
+        "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854"
+      },
+      "returned_state": "COMPLETED",
+      "returned_task_id": "18029ea5-1901-45d6-8a0b-315d94af4854"
+    },
+    "task_b": {
+      "outcome": "PROVISIONAL_ANSWER",
+      "receipt": {
+        "input_revision": 1,
+        "request_key": "p6f-real-p6f-real-20261007T014647Z-b30b6924-task-b",
+        "schema_version": "1",
+        "state": "QUEUED",
+        "task_id": "3621cf56-8187-4a80-9fa8-52bd2dc031fe"
+      },
+      "returned_state": "COMPLETED",
+      "returned_task_id": "3621cf56-8187-4a80-9fa8-52bd2dc031fe"
+    }
+  },
+  "schema_version": "1",
+  "source_real_workflow_artifact": "integration/runtime/artifacts/p6f-real-20261007T014647Z-b30b6924-reviewed-qwen.json",
+  "started_at": "2026-10-07T02:23:53Z",
+  "status": "PASS",
+  "supersedes_final_reconciliation": "integration/runtime/artifacts/p6f-real-final-20261007T022149Z-ed55f657-reviewed-qwen.json",
+  "task_a": {
+    "outcome": "POSITION_COMMITTED",
+    "request_key": "p6f-real-p6f-real-20261007T014647Z-b30b6924-task-a",
+    "returned_task_id": "18029ea5-1901-45d6-8a0b-315d94af4854",
+    "state": "COMPLETED",
+    "task_id": "18029ea5-1901-45d6-8a0b-315d94af4854"
+  },
+  "task_b": {
+    "outcome": "PROVISIONAL_ANSWER",
+    "request_key": "p6f-real-p6f-real-20261007T014647Z-b30b6924-task-b",
+    "returned_task_id": "3621cf56-8187-4a80-9fa8-52bd2dc031fe",
+    "state": "COMPLETED",
+    "task_id": "3621cf56-8187-4a80-9fa8-52bd2dc031fe"
+  }
+}

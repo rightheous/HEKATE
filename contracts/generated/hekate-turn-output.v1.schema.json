@@ -1,0 +1,546 @@
+{
+  "$comment": "Parser enforces a 1048576-byte UTF-8 JSON payload limit.",
+  "$defs": {
+    "AnswerProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "answer",
+          "title": "Action",
+          "type": "string"
+        },
+        "answer": {
+          "title": "Answer",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "action",
+        "answer"
+      ],
+      "title": "AnswerProposal",
+      "type": "object"
+    },
+    "Assessment": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "confidence"
+      ],
+      "title": "Assessment",
+      "type": "object"
+    },
+    "CommitProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "commit",
+          "title": "Action",
+          "type": "string"
+        },
+        "base_version": {
+          "title": "Base Version",
+          "type": "integer"
+        },
+        "input_revision": {
+          "title": "Input Revision",
+          "type": "integer"
+        },
+        "operation_id": {
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "proposed_position": {
+          "$ref": "#/$defs/PositionBody"
+        },
+        "reason_for_change": {
+          "title": "Reason For Change",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        },
+        "topic_id": {
+          "title": "Topic Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "action",
+        "operation_id",
+        "task_id",
+        "topic_id",
+        "base_version",
+        "input_revision",
+        "proposed_position",
+        "reason_for_change"
+      ],
+      "title": "CommitProposal",
+      "type": "object"
+    },
+    "ConclusionCapsule": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "title": "Agent Id",
+          "type": "string"
+        },
+        "assessment": {
+          "$ref": "#/$defs/Assessment"
+        },
+        "assumptions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Assumptions",
+          "type": "array"
+        },
+        "attempt_id": {
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "evidence_used": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Evidence Used",
+          "type": "array"
+        },
+        "input_revision": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Revision"
+        },
+        "objections": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Objection"
+          },
+          "maxItems": 1000,
+          "title": "Objections",
+          "type": "array"
+        },
+        "position_recommendation": {
+          "$ref": "#/$defs/PositionRecommendation"
+        },
+        "recommended_next_step": {
+          "$ref": "#/$defs/RecommendedNextStep"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        },
+        "unresolved": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Unresolved",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "attempt_id",
+        "agent_id",
+        "status",
+        "assessment",
+        "recommended_next_step",
+        "position_recommendation"
+      ],
+      "title": "ConclusionCapsule",
+      "type": "object"
+    },
+    "Confidence": {
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Basis",
+          "type": "array"
+        },
+        "level": {
+          "title": "Level",
+          "type": "string"
+        },
+        "missing_evidence": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Missing Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "level",
+        "basis"
+      ],
+      "title": "Confidence",
+      "type": "object"
+    },
+    "ContinuationProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "continue",
+          "title": "Action",
+          "type": "string"
+        },
+        "decision_impact": {
+          "title": "Decision Impact",
+          "type": "string"
+        },
+        "expected_information_gain": {
+          "title": "Expected Information Gain",
+          "type": "string"
+        },
+        "next_action": {
+          "title": "Next Action",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "unresolved_issue": {
+          "title": "Unresolved Issue",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "action",
+        "unresolved_issue",
+        "next_action",
+        "expected_information_gain",
+        "decision_impact"
+      ],
+      "title": "ContinuationProposal",
+      "type": "object"
+    },
+    "Objection": {
+      "additionalProperties": false,
+      "properties": {
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "condition": {
+          "title": "Condition",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "severity": {
+          "title": "Severity",
+          "type": "string"
+        },
+        "suggested_validation": {
+          "title": "Suggested Validation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "severity",
+        "claim",
+        "condition",
+        "suggested_validation"
+      ],
+      "title": "Objection",
+      "type": "object"
+    },
+    "PositionBody": {
+      "additionalProperties": false,
+      "description": "Wire body: applicability is content; authorization scope is supplied separately.",
+      "properties": {
+        "applicability": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Applicability",
+          "type": "array"
+        },
+        "assumptions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Assumptions",
+          "type": "array"
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "dissent_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Dissent Refs",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        },
+        "uncertainty": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uncertainty"
+        }
+      },
+      "required": [
+        "statement",
+        "confidence"
+      ],
+      "title": "PositionBody",
+      "type": "object"
+    },
+    "PositionRecommendation": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "summary"
+      ],
+      "title": "PositionRecommendation",
+      "type": "object"
+    },
+    "RecommendedNextStep": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "RecommendedNextStep",
+      "type": "object"
+    },
+    "SimpleProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "retrieve_evidence",
+            "request_information",
+            "wait",
+            "stop",
+            "abstain"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "action"
+      ],
+      "title": "SimpleProposal",
+      "type": "object"
+    },
+    "SpawnProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "spawn",
+          "title": "Action",
+          "type": "string"
+        },
+        "expected_decision_impact": {
+          "title": "Expected Decision Impact",
+          "type": "string"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string"
+        },
+        "role": {
+          "const": "critic",
+          "title": "Role",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "target_uncertainty": {
+          "title": "Target Uncertainty",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "action",
+        "role",
+        "purpose",
+        "target_uncertainty",
+        "expected_decision_impact",
+        "task_id"
+      ],
+      "title": "SpawnProposal",
+      "type": "object"
+    }
+  },
+  "$id": "urn:hekate:contract:hekate-turn-output:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "conclusion": {
+      "$ref": "#/$defs/ConclusionCapsule"
+    },
+    "proposal": {
+      "discriminator": {
+        "mapping": {
+          "abstain": "#/$defs/SimpleProposal",
+          "answer": "#/$defs/AnswerProposal",
+          "commit": "#/$defs/CommitProposal",
+          "continue": "#/$defs/ContinuationProposal",
+          "request_information": "#/$defs/SimpleProposal",
+          "retrieve_evidence": "#/$defs/SimpleProposal",
+          "spawn": "#/$defs/SpawnProposal",
+          "stop": "#/$defs/SimpleProposal",
+          "wait": "#/$defs/SimpleProposal"
+        },
+        "propertyName": "action"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AnswerProposal"
+        },
+        {
+          "$ref": "#/$defs/SpawnProposal"
+        },
+        {
+          "$ref": "#/$defs/ContinuationProposal"
+        },
+        {
+          "$ref": "#/$defs/SimpleProposal"
+        },
+        {
+          "$ref": "#/$defs/CommitProposal"
+        }
+      ],
+      "title": "Proposal"
+    },
+    "schema_version": {
+      "const": "1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "proposal",
+    "conclusion"
+  ],
+  "title": "HekateTurnOutput",
+  "type": "object"
+}

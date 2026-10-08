@@ -1,0 +1,6 @@
+version: local-qwen35-external-tariff-v1
+effective_at: "2026-10-05T00:00:00Z"
+prices:
+  orcarouter/Qwen3.8-27B-Uncensored:iq4_xs:
+    input_usd_per_million: "0"
+    output_usd_per_million: "0"

@@ -1,0 +1,373 @@
+{
+  "artifact_kind": "phase6a_baseline_copy_manifest",
+  "created_at_utc": "2026-10-04T18:47:31.528172Z",
+  "run_id": "f941096c",
+  "source_worktree": "/home/hekate/hekate-phase5b-bounded-deliberation",
+  "source_branch": "phase5b-bounded-deliberation",
+  "source_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "target_worktree": "/home/hekate/hekate-phase6a-memory-projection",
+  "target_branch": "phase6a-memory-projection",
+  "target_head": "a58df8c5c0f253635a5fafc2d016eec407bfce8a",
+  "tracked_modified_count": 38,
+  "new_code_docs_count": 11,
+  "selected_artifact_count": 10,
+  "copied_file_count": 59,
+  "copy_scope": "Only reviewed tracked modifications, required untracked Phase 5A/5B source/docs/schema/migrations, and ten linked evidence artifacts. No env files, credentials, databases, archives, caches, or node_modules copied.",
+  "files": [
+    {
+      "path": "bridge/letta/src/main.ts",
+      "sha256": "5155111ba5de683ee735db858c3425f698107768bcfe612231e03a1622f2ff33",
+      "source_sha256": "5155111ba5de683ee735db858c3425f698107768bcfe612231e03a1622f2ff33",
+      "target_sha256": "5155111ba5de683ee735db858c3425f698107768bcfe612231e03a1622f2ff33"
+    },
+    {
+      "path": "bridge/letta/src/protocol.ts",
+      "sha256": "f23b8d61336f173362b122b12a128993a85049345f25860c0222e994d0d42733",
+      "source_sha256": "f23b8d61336f173362b122b12a128993a85049345f25860c0222e994d0d42733",
+      "target_sha256": "f23b8d61336f173362b122b12a128993a85049345f25860c0222e994d0d42733"
+    },
+    {
+      "path": "config/policy.yaml",
+      "sha256": "b68f48bef69aa36bfe140906820ef3c75a5886f1e4cc0964b0b6a4ec52ee6c7a",
+      "source_sha256": "b68f48bef69aa36bfe140906820ef3c75a5886f1e4cc0964b0b6a4ec52ee6c7a",
+      "target_sha256": "b68f48bef69aa36bfe140906820ef3c75a5886f1e4cc0964b0b6a4ec52ee6c7a"
+    },
+    {
+      "path": "contracts/generated/bridge.v1.schema.json",
+      "sha256": "a711f619ab2f2a43914a3088f58fcc40519061902ebc84092b0e6ea1417c2925",
+      "source_sha256": "a711f619ab2f2a43914a3088f58fcc40519061902ebc84092b0e6ea1417c2925",
+      "target_sha256": "a711f619ab2f2a43914a3088f58fcc40519061902ebc84092b0e6ea1417c2925"
+    },
+    {
+      "path": "contracts/generated/critic-turn-output.v1.schema.json",
+      "sha256": "3a6fba3e269f1684d1c263aec30fdffbf33d413e66500bbafa16221ccdfd8076",
+      "source_sha256": "3a6fba3e269f1684d1c263aec30fdffbf33d413e66500bbafa16221ccdfd8076",
+      "target_sha256": "3a6fba3e269f1684d1c263aec30fdffbf33d413e66500bbafa16221ccdfd8076"
+    },
+    {
+      "path": "contracts/generated/task-capsule.v1.schema.json",
+      "sha256": "7ffd5a3cca6b231ba72c4d6946cb07135c16145ea014e4b54691ddd520b18ab1",
+      "source_sha256": "7ffd5a3cca6b231ba72c4d6946cb07135c16145ea014e4b54691ddd520b18ab1",
+      "target_sha256": "7ffd5a3cca6b231ba72c4d6946cb07135c16145ea014e4b54691ddd520b18ab1"
+    },
+    {
+      "path": "docs/implementation/phase3.md",
+      "sha256": "1c39fc744073c01fa69f9d7272a1175617384c940e36f22c7400e06dc0b26b59",
+      "source_sha256": "1c39fc744073c01fa69f9d7272a1175617384c940e36f22c7400e06dc0b26b59",
+      "target_sha256": "1c39fc744073c01fa69f9d7272a1175617384c940e36f22c7400e06dc0b26b59"
+    },
+    {
+      "path": "docs/implementation/phase3b.md",
+      "sha256": "dc519d1915926b0387a71dcfd866d0ae364226f6f1483d4d8239c824cc3b26d3",
+      "source_sha256": "dc519d1915926b0387a71dcfd866d0ae364226f6f1483d4d8239c824cc3b26d3",
+      "target_sha256": "dc519d1915926b0387a71dcfd866d0ae364226f6f1483d4d8239c824cc3b26d3"
+    },
+    {
+      "path": "docs/implementation/phase4-evidence-position.md",
+      "sha256": "4c7c95c5f76fddedff751fb798a3e6e93b84a7181cd77938885106bfdd3000d9",
+      "source_sha256": "4c7c95c5f76fddedff751fb798a3e6e93b84a7181cd77938885106bfdd3000d9",
+      "target_sha256": "4c7c95c5f76fddedff751fb798a3e6e93b84a7181cd77938885106bfdd3000d9"
+    },
+    {
+      "path": "docs/implementation/phase5a-critic-synthesis.md",
+      "sha256": "31865d63628b3901be6021c66587395f03674b64530c06a45612ae9d89f3b3bb",
+      "source_sha256": "31865d63628b3901be6021c66587395f03674b64530c06a45612ae9d89f3b3bb",
+      "target_sha256": "31865d63628b3901be6021c66587395f03674b64530c06a45612ae9d89f3b3bb"
+    },
+    {
+      "path": "docs/implementation/phase5b-bounded-deliberation.md",
+      "sha256": "790507bcd8ea288e59df1244bc10358c33e2dd0f08803e1f3e5b475345bd5d12",
+      "source_sha256": "790507bcd8ea288e59df1244bc10358c33e2dd0f08803e1f3e5b475345bd5d12",
+      "target_sha256": "790507bcd8ea288e59df1244bc10358c33e2dd0f08803e1f3e5b475345bd5d12"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3-20261004T180726Z-b5af8b70.json",
+      "sha256": "809e6395b890051c6bc63aef1ab6293be13a6d9a90ef4c104549ddcfbde4040e",
+      "source_sha256": "809e6395b890051c6bc63aef1ab6293be13a6d9a90ef4c104549ddcfbde4040e",
+      "target_sha256": "809e6395b890051c6bc63aef1ab6293be13a6d9a90ef4c104549ddcfbde4040e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p3b-20261004T180742Z-cd3ec2a4.json",
+      "sha256": "4b7fe47a772c9bb4728a138538daa0ee5d9f6ac86b4af42ea18c368568e09c01",
+      "source_sha256": "4b7fe47a772c9bb4728a138538daa0ee5d9f6ac86b4af42ea18c368568e09c01",
+      "target_sha256": "4b7fe47a772c9bb4728a138538daa0ee5d9f6ac86b4af42ea18c368568e09c01"
+    },
+    {
+      "path": "integration/runtime/artifacts/p4-20261003T122338Z-91d88833-archive-cancel-full.json",
+      "sha256": "6c3150fb8e4dfde2a9bfbfc26d7bb45219069a0ff386cadc636c34655f3cdc5e",
+      "source_sha256": "6c3150fb8e4dfde2a9bfbfc26d7bb45219069a0ff386cadc636c34655f3cdc5e",
+      "target_sha256": "6c3150fb8e4dfde2a9bfbfc26d7bb45219069a0ff386cadc636c34655f3cdc5e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p4-20261003T165018Z-b67da98c.json",
+      "sha256": "458bdbec2f356b415c336325b92c68aa98a0f5f5e9cc36b0119ac793293d4dc8",
+      "source_sha256": "458bdbec2f356b415c336325b92c68aa98a0f5f5e9cc36b0119ac793293d4dc8",
+      "target_sha256": "458bdbec2f356b415c336325b92c68aa98a0f5f5e9cc36b0119ac793293d4dc8"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261003T172744Z-9c99d9a1.json",
+      "sha256": "d504e958901ada2e23cb909beed9df2522b97702eab699205c06aea551539e45",
+      "source_sha256": "d504e958901ada2e23cb909beed9df2522b97702eab699205c06aea551539e45",
+      "target_sha256": "d504e958901ada2e23cb909beed9df2522b97702eab699205c06aea551539e45"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261003T193348Z-40e88886.json",
+      "sha256": "e0158df97a17ad74bcf0c978d1b9cd1b630d8adb38d327208e4f50080cc38c06",
+      "source_sha256": "e0158df97a17ad74bcf0c978d1b9cd1b630d8adb38d327208e4f50080cc38c06",
+      "target_sha256": "e0158df97a17ad74bcf0c978d1b9cd1b630d8adb38d327208e4f50080cc38c06"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261004T081107Z-719917a0.json",
+      "sha256": "a4b00e65f1cda057ae97283e1953853a01a30b4b127224692aa173e308319a6e",
+      "source_sha256": "a4b00e65f1cda057ae97283e1953853a01a30b4b127224692aa173e308319a6e",
+      "target_sha256": "a4b00e65f1cda057ae97283e1953853a01a30b4b127224692aa173e308319a6e"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5a-20261004T132502Z-d8cdea18.json",
+      "sha256": "a3e82221cae48c66c8efa6c41bcfb02370c9e9cad5d549387272ecf31b47108c",
+      "source_sha256": "a3e82221cae48c66c8efa6c41bcfb02370c9e9cad5d549387272ecf31b47108c",
+      "target_sha256": "a3e82221cae48c66c8efa6c41bcfb02370c9e9cad5d549387272ecf31b47108c"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-20261004T180912Z-2651b371.json",
+      "sha256": "461ad3baa38c0c9569f0383fd74ba9dd6651896b1d1f91f8f6ed434ba8dc7547",
+      "source_sha256": "461ad3baa38c0c9569f0383fd74ba9dd6651896b1d1f91f8f6ed434ba8dc7547",
+      "target_sha256": "461ad3baa38c0c9569f0383fd74ba9dd6651896b1d1f91f8f6ed434ba8dc7547"
+    },
+    {
+      "path": "integration/runtime/artifacts/p5b-baseline-20261004T090022Z-38167ca2.json",
+      "sha256": "c339e170888a0701e9a583fc9ae2d81284ab5a9e19789dd6014271f7b93885b8",
+      "source_sha256": "c339e170888a0701e9a583fc9ae2d81284ab5a9e19789dd6014271f7b93885b8",
+      "target_sha256": "c339e170888a0701e9a583fc9ae2d81284ab5a9e19789dd6014271f7b93885b8"
+    },
+    {
+      "path": "migrations/versions/0007_phase5a_critic_workflows.py",
+      "sha256": "6f988a5d89a288560a393faad2ae9cb12e4f1585defcfdfb4e0218e73d474caa",
+      "source_sha256": "6f988a5d89a288560a393faad2ae9cb12e4f1585defcfdfb4e0218e73d474caa",
+      "target_sha256": "6f988a5d89a288560a393faad2ae9cb12e4f1585defcfdfb4e0218e73d474caa"
+    },
+    {
+      "path": "migrations/versions/0008_phase5b_deliberation_steps.py",
+      "sha256": "f5af1fe16db89be05b4adf98216688e26bb16fc662956aaa2000027198f321be",
+      "source_sha256": "f5af1fe16db89be05b4adf98216688e26bb16fc662956aaa2000027198f321be",
+      "target_sha256": "f5af1fe16db89be05b4adf98216688e26bb16fc662956aaa2000027198f321be"
+    },
+    {
+      "path": "migrations/versions/0009_phase5b_parent_attempt_identity.py",
+      "sha256": "4d003e16591a123b14a831779c8af9c51b8982bdbcec1c4dab4ac617952f94c4",
+      "source_sha256": "4d003e16591a123b14a831779c8af9c51b8982bdbcec1c4dab4ac617952f94c4",
+      "target_sha256": "4d003e16591a123b14a831779c8af9c51b8982bdbcec1c4dab4ac617952f94c4"
+    },
+    {
+      "path": "migrations/versions/0010_p5b_delib_maint.py",
+      "sha256": "337ee1937a92ec3a79d614199036e26eb413679ad9dda4b426aaff02e266eb07",
+      "source_sha256": "337ee1937a92ec3a79d614199036e26eb413679ad9dda4b426aaff02e266eb07",
+      "target_sha256": "337ee1937a92ec3a79d614199036e26eb413679ad9dda4b426aaff02e266eb07"
+    },
+    {
+      "path": "scripts/phase3_runtime_probe.py",
+      "sha256": "4e75f0ba8072878f0a66c4eb0d3b30b4cf0f836c3b002eb77d79a0fc20a16084",
+      "source_sha256": "4e75f0ba8072878f0a66c4eb0d3b30b4cf0f836c3b002eb77d79a0fc20a16084",
+      "target_sha256": "4e75f0ba8072878f0a66c4eb0d3b30b4cf0f836c3b002eb77d79a0fc20a16084"
+    },
+    {
+      "path": "scripts/phase3_verify.py",
+      "sha256": "2f93565b0e7edda0e960ef67c2b5727ac7786ce2559920ac2c5e85dca0baad42",
+      "source_sha256": "2f93565b0e7edda0e960ef67c2b5727ac7786ce2559920ac2c5e85dca0baad42",
+      "target_sha256": "2f93565b0e7edda0e960ef67c2b5727ac7786ce2559920ac2c5e85dca0baad42"
+    },
+    {
+      "path": "scripts/phase3b_single_hekate_probe.py",
+      "sha256": "43b7b1c8345817c9be2e15a4fc7e2e7eeacc576610a53ecffa6c74624c371077",
+      "source_sha256": "43b7b1c8345817c9be2e15a4fc7e2e7eeacc576610a53ecffa6c74624c371077",
+      "target_sha256": "43b7b1c8345817c9be2e15a4fc7e2e7eeacc576610a53ecffa6c74624c371077"
+    },
+    {
+      "path": "scripts/phase4_evidence_position_probe.py",
+      "sha256": "b2326879e1b8b7160d6b1272aaad15f2676f38e5b0ed4d845b51d9496e41306a",
+      "source_sha256": "b2326879e1b8b7160d6b1272aaad15f2676f38e5b0ed4d845b51d9496e41306a",
+      "target_sha256": "b2326879e1b8b7160d6b1272aaad15f2676f38e5b0ed4d845b51d9496e41306a"
+    },
+    {
+      "path": "scripts/phase5a_critic_synthesis_probe.py",
+      "sha256": "8aa4c5ea5c8cb7abd43136310cf6e68d86de66701d451d8b5564fe7f6eb58627",
+      "source_sha256": "8aa4c5ea5c8cb7abd43136310cf6e68d86de66701d451d8b5564fe7f6eb58627",
+      "target_sha256": "8aa4c5ea5c8cb7abd43136310cf6e68d86de66701d451d8b5564fe7f6eb58627"
+    },
+    {
+      "path": "scripts/phase5b_bounded_deliberation_probe.py",
+      "sha256": "227e2d15633123596460da3397d7d04eca11395a8200cd801264c62358f7a98c",
+      "source_sha256": "227e2d15633123596460da3397d7d04eca11395a8200cd801264c62358f7a98c",
+      "target_sha256": "227e2d15633123596460da3397d7d04eca11395a8200cd801264c62358f7a98c"
+    },
+    {
+      "path": "src/hekate/application/budgets.py",
+      "sha256": "fae63071af715e04059fe6c409bb8162b75425191721104c3e90979bcc0aa87c",
+      "source_sha256": "fae63071af715e04059fe6c409bb8162b75425191721104c3e90979bcc0aa87c",
+      "target_sha256": "fae63071af715e04059fe6c409bb8162b75425191721104c3e90979bcc0aa87c"
+    },
+    {
+      "path": "src/hekate/application/evidence.py",
+      "sha256": "a174ad8dfd26be4663c3456f93f9b5f51b822dd0b81e2e0021e5a2ed969e34e9",
+      "source_sha256": "a174ad8dfd26be4663c3456f93f9b5f51b822dd0b81e2e0021e5a2ed969e34e9",
+      "target_sha256": "a174ad8dfd26be4663c3456f93f9b5f51b822dd0b81e2e0021e5a2ed969e34e9"
+    },
+    {
+      "path": "src/hekate/application/lifecycle.py",
+      "sha256": "0f98c2eaf51ad72bbd3ab2436d8ceb4ec360b62b52873f68a52e2cd8ffd6e93f",
+      "source_sha256": "0f98c2eaf51ad72bbd3ab2436d8ceb4ec360b62b52873f68a52e2cd8ffd6e93f",
+      "target_sha256": "0f98c2eaf51ad72bbd3ab2436d8ceb4ec360b62b52873f68a52e2cd8ffd6e93f"
+    },
+    {
+      "path": "src/hekate/application/operations.py",
+      "sha256": "579a3931fd8ab47a1f0797d8a52370da280e0f7c3c6ac2cf031aacb2dfb89d2b",
+      "source_sha256": "579a3931fd8ab47a1f0797d8a52370da280e0f7c3c6ac2cf031aacb2dfb89d2b",
+      "target_sha256": "579a3931fd8ab47a1f0797d8a52370da280e0f7c3c6ac2cf031aacb2dfb89d2b"
+    },
+    {
+      "path": "src/hekate/application/positions.py",
+      "sha256": "833c9b6a36510d77d94f8bcf3653034b2f9c16da2211258f2f68475b018eed1e",
+      "source_sha256": "833c9b6a36510d77d94f8bcf3653034b2f9c16da2211258f2f68475b018eed1e",
+      "target_sha256": "833c9b6a36510d77d94f8bcf3653034b2f9c16da2211258f2f68475b018eed1e"
+    },
+    {
+      "path": "src/hekate/application/results.py",
+      "sha256": "edaf656eefad22052ba98713113ce6a4c2b8d6fa5b3d3290854bb64cc5c68b53",
+      "source_sha256": "edaf656eefad22052ba98713113ce6a4c2b8d6fa5b3d3290854bb64cc5c68b53",
+      "target_sha256": "edaf656eefad22052ba98713113ce6a4c2b8d6fa5b3d3290854bb64cc5c68b53"
+    },
+    {
+      "path": "src/hekate/application/tasks.py",
+      "sha256": "7e05907c674790e756b225d2f7f5ec73d81121795a13d4094a902147498e3f20",
+      "source_sha256": "7e05907c674790e756b225d2f7f5ec73d81121795a13d4094a902147498e3f20",
+      "target_sha256": "7e05907c674790e756b225d2f7f5ec73d81121795a13d4094a902147498e3f20"
+    },
+    {
+      "path": "src/hekate/application/turns.py",
+      "sha256": "e930fd09304f83bf1c789e0002394ea2f163342fdcfe00a14b5f70c6ccb677a8",
+      "source_sha256": "e930fd09304f83bf1c789e0002394ea2f163342fdcfe00a14b5f70c6ccb677a8",
+      "target_sha256": "e930fd09304f83bf1c789e0002394ea2f163342fdcfe00a14b5f70c6ccb677a8"
+    },
+    {
+      "path": "src/hekate/domain/bridge_contracts.py",
+      "sha256": "4a6b7941618402a00c78e9a4c7096e0587f97a34984e5c5ed701d8fa2cb8f8e8",
+      "source_sha256": "4a6b7941618402a00c78e9a4c7096e0587f97a34984e5c5ed701d8fa2cb8f8e8",
+      "target_sha256": "4a6b7941618402a00c78e9a4c7096e0587f97a34984e5c5ed701d8fa2cb8f8e8"
+    },
+    {
+      "path": "src/hekate/domain/capsules.py",
+      "sha256": "5ffe1d5a18cb5516d2634ef5fb5f8e3761ff13bd18c92a0fb62357bf969bc7a3",
+      "source_sha256": "5ffe1d5a18cb5516d2634ef5fb5f8e3761ff13bd18c92a0fb62357bf969bc7a3",
+      "target_sha256": "5ffe1d5a18cb5516d2634ef5fb5f8e3761ff13bd18c92a0fb62357bf969bc7a3"
+    },
+    {
+      "path": "src/hekate/domain/errors.py",
+      "sha256": "fcdf8d67b504a656245a0d72187ca2f7018a51ca1a3f3a41bdf3e03537b2d146",
+      "source_sha256": "fcdf8d67b504a656245a0d72187ca2f7018a51ca1a3f3a41bdf3e03537b2d146",
+      "target_sha256": "fcdf8d67b504a656245a0d72187ca2f7018a51ca1a3f3a41bdf3e03537b2d146"
+    },
+    {
+      "path": "src/hekate/domain/models.py",
+      "sha256": "1b3aef6929a46816b3b85d2c763a7f9b0c68803a50f2ea56a808fe077f06f7da",
+      "source_sha256": "1b3aef6929a46816b3b85d2c763a7f9b0c68803a50f2ea56a808fe077f06f7da",
+      "target_sha256": "1b3aef6929a46816b3b85d2c763a7f9b0c68803a50f2ea56a808fe077f06f7da"
+    },
+    {
+      "path": "src/hekate/domain/types.py",
+      "sha256": "43e64ad65ace3b7c965dfded67bc5060e990d1b235fc0cc21a9a9c0924d244f3",
+      "source_sha256": "43e64ad65ace3b7c965dfded67bc5060e990d1b235fc0cc21a9a9c0924d244f3",
+      "target_sha256": "43e64ad65ace3b7c965dfded67bc5060e990d1b235fc0cc21a9a9c0924d244f3"
+    },
+    {
+      "path": "src/hekate/infrastructure/archive.py",
+      "sha256": "c2272e6d3c350f6ed4e1f4d835f60d6ef57cd9077ce3e9c83c2f3b3852bc1e94",
+      "source_sha256": "c2272e6d3c350f6ed4e1f4d835f60d6ef57cd9077ce3e9c83c2f3b3852bc1e94",
+      "target_sha256": "c2272e6d3c350f6ed4e1f4d835f60d6ef57cd9077ce3e9c83c2f3b3852bc1e94"
+    },
+    {
+      "path": "src/hekate/infrastructure/letta/adapter.py",
+      "sha256": "4fc68691386a4778ecffb1e52359146b7908bc437e467e91dbe7b809bfb40631",
+      "source_sha256": "4fc68691386a4778ecffb1e52359146b7908bc437e467e91dbe7b809bfb40631",
+      "target_sha256": "4fc68691386a4778ecffb1e52359146b7908bc437e467e91dbe7b809bfb40631"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/agent_repository.py",
+      "sha256": "7d280f2bc0955f2369fd2cbde2be82191a31c855d62a5faa0b54bcd5e1b8bfd2",
+      "source_sha256": "7d280f2bc0955f2369fd2cbde2be82191a31c855d62a5faa0b54bcd5e1b8bfd2",
+      "target_sha256": "7d280f2bc0955f2369fd2cbde2be82191a31c855d62a5faa0b54bcd5e1b8bfd2"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/budget_repository.py",
+      "sha256": "bacbe63a1c2f712e13730fe7fc5b8da3241777039e6cb46cc6186322d805f1b4",
+      "source_sha256": "bacbe63a1c2f712e13730fe7fc5b8da3241777039e6cb46cc6186322d805f1b4",
+      "target_sha256": "bacbe63a1c2f712e13730fe7fc5b8da3241777039e6cb46cc6186322d805f1b4"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/critic_workflow_repository.py",
+      "sha256": "238d8c31fd8ba5705ff1000d2b4201b5039411244f6489ba69cbcbdcf19f5cc6",
+      "source_sha256": "238d8c31fd8ba5705ff1000d2b4201b5039411244f6489ba69cbcbdcf19f5cc6",
+      "target_sha256": "238d8c31fd8ba5705ff1000d2b4201b5039411244f6489ba69cbcbdcf19f5cc6"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/database.py",
+      "sha256": "01f2c115aa4d9348cbf8f1ac1ef2d21b65d1f43a024eb3496b2f80d742916737",
+      "source_sha256": "01f2c115aa4d9348cbf8f1ac1ef2d21b65d1f43a024eb3496b2f80d742916737",
+      "target_sha256": "01f2c115aa4d9348cbf8f1ac1ef2d21b65d1f43a024eb3496b2f80d742916737"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/deliberation_repository.py",
+      "sha256": "e80538d235d5f619a48810c9973da92ef74a76f8f809b267a90108dac318c2b3",
+      "source_sha256": "e80538d235d5f619a48810c9973da92ef74a76f8f809b267a90108dac318c2b3",
+      "target_sha256": "e80538d235d5f619a48810c9973da92ef74a76f8f809b267a90108dac318c2b3"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/delivery_repository.py",
+      "sha256": "87f25fa78efe3fcccd9907dfb5442556a99fbce4297bf1b3f87336feb9636177",
+      "source_sha256": "87f25fa78efe3fcccd9907dfb5442556a99fbce4297bf1b3f87336feb9636177",
+      "target_sha256": "87f25fa78efe3fcccd9907dfb5442556a99fbce4297bf1b3f87336feb9636177"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/knowledge_repository.py",
+      "sha256": "1e0b756de55bfc8d515007b94665c51fad3b653cc35a84638aa44d7b84e441f4",
+      "source_sha256": "1e0b756de55bfc8d515007b94665c51fad3b653cc35a84638aa44d7b84e441f4",
+      "target_sha256": "1e0b756de55bfc8d515007b94665c51fad3b653cc35a84638aa44d7b84e441f4"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/tables.py",
+      "sha256": "a4be621d399462fbefdf8516cf9c4cf07e4f33315c1b51500ffc05b9a2378424",
+      "source_sha256": "a4be621d399462fbefdf8516cf9c4cf07e4f33315c1b51500ffc05b9a2378424",
+      "target_sha256": "a4be621d399462fbefdf8516cf9c4cf07e4f33315c1b51500ffc05b9a2378424"
+    },
+    {
+      "path": "src/hekate/infrastructure/postgres/task_repository.py",
+      "sha256": "b8ea3e0c0120f8c9fb6e20d65e657c3368cf657397ed25bcc4ac4833daf08051",
+      "source_sha256": "b8ea3e0c0120f8c9fb6e20d65e657c3368cf657397ed25bcc4ac4833daf08051",
+      "target_sha256": "b8ea3e0c0120f8c9fb6e20d65e657c3368cf657397ed25bcc4ac4833daf08051"
+    },
+    {
+      "path": "src/hekate/ports/store.py",
+      "sha256": "bcef9f9970707e4303055ff1c3ae4b7109da4ac159ed25e23b7babef03298121",
+      "source_sha256": "bcef9f9970707e4303055ff1c3ae4b7109da4ac159ed25e23b7babef03298121",
+      "target_sha256": "bcef9f9970707e4303055ff1c3ae4b7109da4ac159ed25e23b7babef03298121"
+    },
+    {
+      "path": "src/hekate/settings.py",
+      "sha256": "e37cdc8c3ea45f5d4f593daeed24998de25a82bcd8241e52730a82609b14bdc8",
+      "source_sha256": "e37cdc8c3ea45f5d4f593daeed24998de25a82bcd8241e52730a82609b14bdc8",
+      "target_sha256": "e37cdc8c3ea45f5d4f593daeed24998de25a82bcd8241e52730a82609b14bdc8"
+    },
+    {
+      "path": "src/hekate/worker/service.py",
+      "sha256": "bbdaa459f6275f51b8cbf51b52b2cb9ef90088c0700774ee777cfaa1474acd72",
+      "source_sha256": "bbdaa459f6275f51b8cbf51b52b2cb9ef90088c0700774ee777cfaa1474acd72",
+      "target_sha256": "bbdaa459f6275f51b8cbf51b52b2cb9ef90088c0700774ee777cfaa1474acd72"
+    },
+    {
+      "path": "tests/persistence/test_phase2_postgres.py",
+      "sha256": "4fb50cff55367fa9d8e2104805ec97b8b590ea32ba40787c5326083d4d9315c0",
+      "source_sha256": "4fb50cff55367fa9d8e2104805ec97b8b590ea32ba40787c5326083d4d9315c0",
+      "target_sha256": "4fb50cff55367fa9d8e2104805ec97b8b590ea32ba40787c5326083d4d9315c0"
+    }
+  ],
+  "all_digests_match": true
+}
